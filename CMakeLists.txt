@@ -3,8 +3,8 @@ include(ExternalProject)
 project(
 	zenohcpp
 	VERSION 0.6.0.1
-	DESCRIPTION "The C++ bindings for Zenoh"
-	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-cpp"
+	DESCRIPTION "C++ bindings for Zenoh"
+	HOMEPAGE_URL "https://github.com/ZettaScaleLabs/zenoh-cpp"
 	LANGUAGES CXX
 )
 
@@ -35,14 +35,20 @@ endif()
 # 	message(FATAL_ERROR "Unknown CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 # endif()
 
-set(zenohc_install_path "${CMAKE_CURRENT_BINARY_DIR}/zenohc_install")
+set(zenohc_prefix "zenohc")
+set(zenohc_download_path "${CMAKE_CURRENT_BINARY_DIR}/${zenohc_prefix}/download")
+set(zenohc_install_path "${CMAKE_CURRENT_BINARY_DIR}/${zenohc_prefix}/install")
 
+message(STATUS "zenoh-c build-time download path: ${zenohc_download_path}")
 message(STATUS "zenoh-c build-time install path: ${zenohc_install_path}")
 
 ExternalProject_add(
     zenohc_project
 	CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${zenohc_install_path}
-    SOURCE_DIR "${PROJECT_SOURCE_DIR}/zenoh-c"
+	PREFIX ${zenohc_prefix}
+    #SOURCE_DIR "../../zenoh-c"
+    SOURCE_DIR ${zenohc_download_path}
+    GIT_REPOSITORY https://github.com/milyin/zenoh-c
 )
 
 set(libzenohc_include "${zenohc_install_path}/include/zenohc")
