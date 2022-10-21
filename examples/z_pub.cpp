@@ -23,8 +23,8 @@
 #endif
 
 int main(int argc, char **argv) {
-    char *keyexpr = "demo/example/zenoh-c-pub";
-    char *value = "Pub from C!";
+    const char *keyexpr = "demo/example/zenoh-c-pub";
+    const char *value = "Pub from C!";
 
     if (argc > 1) keyexpr = argv[1];
     if (argc > 2) value = argv[2];
