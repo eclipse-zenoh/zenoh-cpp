@@ -1,0 +1,101 @@
+cmake_minimum_required(VERSION 3.10)
+include(ExternalProject)
+project(
+	zenohcpp
+	VERSION 0.6.0.1
+	DESCRIPTION "The C++ bindings for Zenoh"
+	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-cpp"
+	LANGUAGES CXX
+)
+
+if(NOT CMAKE_BUILD_TYPE)
+	set(default_build_type "RelWithDebInfo")
+	message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+	set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+		STRING "Choose the type of build." FORCE)
+
+	# Set the possible values of build type for cmake-gui
+	set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+		"Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
+
+# if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+# 	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/debug")
+# elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+# 	set(CARGO_FLAGS ${CARGO_FLAGS} "--release")
+# 	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/release")
+# elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+# 	set(CARGO_FLAGS ${CARGO_FLAGS} "--release")
+# 	set(ENV{RUSTFLAGS} "-g")
+# 	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/release")
+# elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+# 	set(CARGO_FLAGS ${CARGO_FLAGS} "--release")
+# 	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/release")
+# else()
+# 	message(FATAL_ERROR "Unknown CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+# endif()
+
+set(zenohc_install_path "${CMAKE_CURRENT_BINARY_DIR}/zenohc_install")
+
+message(STATUS "zenoh-c build-time install path: ${zenohc_install_path}")
+
+ExternalProject_add(
+    zenohc_project
+	CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${zenohc_install_path}
+    SOURCE_DIR "${PROJECT_SOURCE_DIR}/zenoh-c"
+)
+
+set(libzenohc_include "${zenohc_install_path}/include/zenohc")
+# Hack to make it work, otherwise INTERFACE_INCLUDE_DIRECTORIES will not be propagated
+file(MAKE_DIRECTORY ${libzenohc_include})
+message(STATUS "zenoh-c headers: ${libzenohc_include}")
+
+if(APPLE)
+	set(libzenohc "${zenohc_install_path}/lib/libzenohc.dylib")
+	set(libzenohc_static "${zenohc_install_path}/lib/libzenohc.a")
+elseif(UNIX)
+	set(libzenohc "${zenohc_install_path}/lib/libzenohc.so")
+	set(libzenohc_static "${zenohc_install_path}/lib/libzenohc.a")
+elseif(WIN32)
+	set(libzenohc "${zenohc_install_path}/lib/zenohc.dll")
+	set(libzenohc_static "${zenohc_install_path}/lib/zenohc.lib")
+endif()
+message(STATUS "zenoh-c static library path : ${libzenohc_static}")
+message(STATUS "zenoh-c dynamic library path : ${libzenohc}")
+
+add_library(zenohc_static STATIC IMPORTED)
+add_dependencies(zenohc_static zenohc_project)
+set_property(TARGET zenohc_static PROPERTY IMPORTED_LOCATION "${libzenohc_static}")
+set_property(TARGET zenohc_static PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${libzenohc_include}")
+
+add_library(zenohcpp INTERFACE)
+add_dependencies(zenohcpp zenohc_project)
+target_include_directories(zenohcpp INTERFACE "${CMAKE_SOURCE_DIR}/include")
+
+if(APPLE OR UNIX OR WIN32)
+	file(GLOB examples_files "${CMAKE_SOURCE_DIR}/examples/*.cpp")
+	add_custom_target(examples)
+	foreach(file ${examples_files})
+		get_filename_component(target ${file} NAME_WE)
+		add_executable(${target} EXCLUDE_FROM_ALL ${file})
+		add_dependencies(examples ${target})
+		add_dependencies(${target} zenohc_static)
+		add_dependencies(${target} zenohcpp)
+		set_property(TARGET ${target} PROPERTY CXX_STANDARD 17)
+		set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples")
+		target_link_libraries(${target} PUBLIC zenohc_static)
+
+		if(APPLE)
+			find_library(FFoundation Foundation)
+			find_library(FSecurity Security)
+			target_link_libraries(${target} PUBLIC ${FFoundation} ${FSecurity})
+		elseif(UNIX)
+			target_link_libraries(${target} PUBLIC rt pthread m dl)
+		elseif(WIN32)
+			target_link_libraries(${target} PUBLIC ws2_32 crypt32 secur32 bcrypt ncrypt userenv ntdll iphlpapi runtimeobject)
+		endif()
+
+	endforeach()
+else()
+	message(WARNING "You platform doesn't seem to support building the examples or tests.")
+endif()
