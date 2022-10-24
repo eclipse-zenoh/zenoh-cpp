@@ -46,9 +46,9 @@ ExternalProject_add(
     zenohc_project
 	CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${zenohc_install_path}
 	PREFIX ${zenohc_prefix}
-    #SOURCE_DIR "../../zenoh-c"
-    SOURCE_DIR ${zenohc_download_path}
-    GIT_REPOSITORY https://github.com/milyin/zenoh-c
+    SOURCE_DIR "../../zenoh-c"
+    # SOURCE_DIR ${zenohc_download_path}
+    # GIT_REPOSITORY https://github.com/milyin/zenoh-c
 )
 
 set(libzenohc_include "${zenohc_install_path}/include/zenohc")

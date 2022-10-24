@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    char *keyexpr = "test/thr";
+    const char *keyexpr = "test/thr";
     size_t len = atoi(argv[1]);
     uint8_t *value = (uint8_t *)malloc(len);
     memset(value, 1, len);
