@@ -17,7 +17,7 @@
 #include "zenoh.h"
 
 int main(int argc, char **argv) {
-    char *expr = "demo/example/**";
+    const char *expr = "demo/example/**";
     if (argc > 1) {
         expr = argv[1];
     }

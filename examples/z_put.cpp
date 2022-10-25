@@ -17,8 +17,8 @@
 #include "zenoh.h"
 
 int main(int argc, char **argv) {
-    char *keyexpr = "demo/example/zenoh-c-put";
-    char *value = "Put from C!";
+    const char *keyexpr = "demo/example/zenoh-c-put";
+    const char *value = "Put from C!";
 
     if (argc > 1) keyexpr = argv[1];
     if (argc > 2) value = argv[2];
