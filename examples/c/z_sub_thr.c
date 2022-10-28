@@ -27,7 +27,7 @@ typedef struct {
 } z_stats_t;
 
 z_stats_t *z_stats_make() {
-    z_stats_t *stats = static_cast<z_stats_t*>(malloc(sizeof(z_stats_t)));
+    z_stats_t *stats = (z_stats_t*)malloc(sizeof(z_stats_t));
     stats->count = 0;
     stats->finished_rounds = 0;
     stats->first_start = 0;
