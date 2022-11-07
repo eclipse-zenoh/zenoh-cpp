@@ -14,21 +14,23 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "zenoh.h"
+#include "zenohcpp.h"
+
+using namespace zenoh;
 
 int main(int argc, char **argv) {
     const char *expr = "demo/example/**";
     if (argc > 1) {
         expr = argv[1];
     }
-    z_keyexpr_t keyexpr = z_keyexpr(expr);
-    if (!z_check(keyexpr)) {
+    KeyExprRef keyexpr(expr);
+    if (!keyexpr.check()) {
         printf("%s is not a valid key expression", expr);
         exit(-1);
     }
-    z_owned_config_t config = z_config_default();
+    Config config;
     if (argc > 2) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
+        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[2])) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
@@ -38,31 +40,25 @@ int main(int argc, char **argv) {
     }
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    Session s(std::move(config));
+    if (!s.check()) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     printf("Sending Query '%s'...\n", expr);
-    z_get_options_t opts = z_get_options_default();
-    opts.target = Z_QUERY_TARGET_ALL;
-    z_owned_reply_channel_t channel = zc_reply_fifo_new(16);
-    z_get(z_loan(s), keyexpr, "", z_move(channel.send),
-          &opts);  // here, the send is moved and will be dropped by zenoh when adequate
-    z_owned_reply_t reply = z_reply_null();
-    for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {
-        if (z_reply_is_ok(&reply)) {
-            z_sample_t sample = z_reply_ok(&reply);
-            char *keystr = z_keyexpr_to_string(sample.keyexpr);
-            printf(">> Received ('%s': '%.*s')\n", keystr, (int)sample.payload.len, sample.payload.start);
-            free(keystr);
+    auto opts = GetOptions().set_target(Z_QUERY_TARGET_ALL);
+    ReplyFIFO channel(16);
+    s.get(keyexpr, "",  channel.take_send(), opts);
+    Reply reply;
+    for(channel.get_recv().call(reply); reply.check(); channel.get_recv().call(reply)) {
+        if (reply.is_ok()) {
+            auto sample = reply.ok();
+            auto keystr = sample.get_keyexpr().str();
+            printf(">> Received ('%s': '%.*s')\n", keystr.c_str(), (int)sample.payload.len, sample.payload.start);
         } else {
             printf("Received an error\n");
         }
     }
-    z_drop(z_move(reply));
-    z_drop(z_move(channel));
-    z_close(z_move(s));
     return 0;
 }
