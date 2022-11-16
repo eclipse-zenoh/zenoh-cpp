@@ -47,7 +47,8 @@ int main(int argc, char **argv) {
     }
 
     printf("Sending Query '%s'...\n", expr);
-    auto opts = GetOptions().set_target(Z_QUERY_TARGET_ALL);
+    GetOptions opts;
+    opts.set_target(Z_QUERY_TARGET_ALL);
     ReplyFIFO channel(16);
     s.get(keyexpr, "",  channel.take_send(), opts);
     Reply reply;
