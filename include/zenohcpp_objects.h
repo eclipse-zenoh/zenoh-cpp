@@ -1,25 +1,10 @@
 #pragma once
 
 #include "zenoh.h"
+#include "zenohcpp_base.h"
 #include "zenohcpp_params.h"
 
-#include <utility>
-
 namespace zenoh {
-
-template<typename ZC_OWNED_TYPE> class Owned {
-public:
-    Owned& operator=(const Owned& v) = delete;
-    Owned(const Owned& v) = delete;
-    Owned(ZC_OWNED_TYPE&& v) : _0(v) { v = {}; }
-    Owned(Owned&& v) : Owned(std::move(v._0)) {}
-    virtual ~Owned() { z_drop(&_0); }
-    ZC_OWNED_TYPE take() { auto r = _0; _0 = {}; return r; }
-    bool check() { return z_check(_0); }
-protected:
-    Owned() : _0({}) {};
-    ZC_OWNED_TYPE _0;
-};
 
 class KeyExprView {
 public:
@@ -51,6 +36,8 @@ public:
     using Owned::Owned;
     bool is_ok() const { return z_reply_is_ok(&_0); }
 };
+
+typedef Closure<::z_owned_closure_reply_t, ::z_owned_reply_t, Reply> ClosureReply;
 
 class Session : public Owned<::z_owned_session_t> {
 public:
