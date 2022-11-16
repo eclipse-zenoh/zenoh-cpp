@@ -50,9 +50,8 @@ int main(int argc, char **argv) {
     GetOptions opts;
     opts.set_target(Z_QUERY_TARGET_ALL);
 
-    session.get(keyexpr, "", [](Reply r) {
-
-    }, opts);
+    session.get(keyexpr, "", [](Reply r) {}, opts);
+    session.get(keyexpr, "", [](Reply&& r) {}, opts);
 
 
     // s.get(keyexpr, "",  channel.take_send(), opts);
