@@ -1,4 +1,4 @@
 #pragma once
 
-#include "zenohcpp_params.h"
+#include "zenohcpp_structs.h"
 #include "zenohcpp_objects.h"
