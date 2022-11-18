@@ -34,8 +34,13 @@ class Session : public Owned<::z_owned_session_t> {
 public:
     using Owned::Owned;
     explicit Session(Config&& v) : Owned(_z_open(std::move(v))) {} 
+
     bool get(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, const GetOptions& options) 
-        { auto c = callback.take(); return z_get(z_session_loan(&_0), keyexpr, parameters, &c, &options); }
+        { auto c = callback.take(); return ::z_get(::z_session_loan(&_0), keyexpr, parameters, &c, &options); }
+
+    bool put(KeyExprView keyexpr, const Bytes& payload, const PutOptions& options)
+        { return ::z_put(::z_session_loan(&_0), keyexpr, payload.start, payload.len, &options) == 0; }
+
 private:
     static ::z_owned_session_t _z_open(Config&& v) {
         auto config = v.take();

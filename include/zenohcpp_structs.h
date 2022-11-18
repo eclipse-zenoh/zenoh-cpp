@@ -2,13 +2,18 @@
 
 #include "zenoh.h"
 #include <string_view>
+#include "string.h"
 
 namespace zenoh
 {
 
 struct Bytes : public ::z_bytes_t {
-    // operator std::string_view() const { return std::string_view(to_const_char_ptr(start),len); }
-    // static const char* to_const_char_ptr(const uint8_t* buf) { return reinterpret_cast<const char*>(buf); };
+    Bytes() : ::z_bytes_t({}) {}
+    Bytes(::z_bytes_t v) : ::z_bytes_t(v) {}
+    Bytes(const char* s) : ::z_bytes_t({
+        start: reinterpret_cast<const uint8_t*>(s),
+        len: strlen(s)
+    }) {}
     std::string_view as_string_view() const { return std::string_view(reinterpret_cast<const char*>(start),len); }
 };
 
@@ -24,6 +29,18 @@ struct GetOptions : public ::z_get_options_t
     GetOptions() : ::z_get_options_t(::z_get_options_default()) {}
     GetOptions& set_target(z_query_target_t v) { target = v; return *this; }
     GetOptions& set_consolidation(z_consolidation_mode_t v) { consolidation.mode = v; return *this; }
+};
+
+typedef ::z_encoding_prefix_t EncodingPrefix;
+
+struct Encoding : public ::z_encoding_t {
+    Encoding(EncodingPrefix _prefix) : ::z_encoding_t(::z_encoding(_prefix, nullptr)) {}
+    Encoding(EncodingPrefix _prefix, const char* _suffix) : ::z_encoding_t(::z_encoding(_prefix, _suffix)) {}
+};
+
+struct PutOptions : public ::z_put_options_t {
+    PutOptions() : ::z_put_options_t(::z_put_options_default()) {}
+    PutOptions& set_encoding(Encoding e) { encoding = e; return *this; };
 };
 
 struct Sample : public ::z_sample_t {
