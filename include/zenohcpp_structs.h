@@ -28,6 +28,8 @@ struct KeyExprView : public ::z_keyexpr_t {
 typedef ::z_encoding_prefix_t EncodingPrefix;
 
 struct Encoding : public ::z_encoding_t {
+    Encoding() : ::z_encoding_t(::z_encoding_default()) {}
+    Encoding(::z_encoding_t v) : ::z_encoding_t(v) {}
     Encoding(EncodingPrefix _prefix) : ::z_encoding_t(::z_encoding(_prefix, nullptr)) {}
     Encoding(EncodingPrefix _prefix, const char* _suffix) : ::z_encoding_t(::z_encoding(_prefix, _suffix)) {}
 };
@@ -38,6 +40,12 @@ struct Sample : public ::z_sample_t {
 };
 
 struct Value : public ::z_value_t {
+    Value() : ::z_value_t({}) {}
+    Value(::z_value_t v) : ::z_value_t(v) {}
+    Value(const char* v) : ::z_value_t({
+        payload: Bytes(v),
+        encoding: Encoding()
+    }) {}
     const Bytes& get_payload() const {  return static_cast<const Bytes&>(payload); }
     const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
     std::string_view as_string_view() const { return get_payload().as_string_view(); }
