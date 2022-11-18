@@ -52,21 +52,18 @@ int main(int argc, char **argv) {
     GetOptions opts;
     opts.set_target(Z_QUERY_TARGET_ALL);
 
-    // TODO: make builder wrapper for get
     session.get(keyexpr, "", [](Reply reply) {
-        // TODO: make 'Variant' wrapper for Reply
-        if (reply.is_ok()) {
-            auto sample = reply.ok(); 
-            auto keyexpr = sample.get_keyexpr();
+        auto result = reply.get();
+        printf("ENTER\n");
+        if (auto sample = std::get_if<Sample>(&result)) {
             std::cout 
                 << "Received ('" 
-                << sample.get_keyexpr().as_bytes().as_string_view()
+                << sample->get_keyexpr().as_string_view()
                 << ": " 
-                << sample.get_payload().as_string_view() 
+                << sample->get_payload().as_string_view() 
                 << ")\n";
-
-        } else {
-            std::cout << "Received an error\n";
+        } else if (auto error = std::get_if<Error>(&result)) {
+            std::cout << "Received an error :" << error->as_string_view() << "\n";
         }
     }, opts);
 

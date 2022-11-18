@@ -3,6 +3,7 @@
 #include "zenoh.h"
 #include "zenohcpp_base.h"
 #include "zenohcpp_structs.h"
+#include <variant>
 
 namespace zenoh {
 
@@ -25,7 +26,13 @@ struct Reply : public Owned<::z_owned_reply_t> {
 public:
     using Owned::Owned;
     bool is_ok() const { return ::z_reply_is_ok(&_0); }
-    Sample ok() const { return Sample{::z_reply_ok(&_0)}; }
+    std::variant<Sample,Error> get() const {
+        if (is_ok()) {
+            return Sample{::z_reply_ok(&_0)}; 
+        } else {
+            return Error{::z_reply_err(&_0)}; 
+        }
+    }
 };
 
 typedef Closure<::z_owned_closure_reply_t, ::z_owned_reply_t, Reply> ClosureReply;
