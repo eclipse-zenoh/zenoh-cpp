@@ -51,10 +51,10 @@ struct Value : public ::z_value_t {
     std::string_view as_string_view() const { return get_payload().as_string_view(); }
 };
 
-typedef Value Error;
+typedef Value ErrorMessage;
+typedef int8_t ErrNo;
 
-struct GetOptions : public ::z_get_options_t
-{
+struct GetOptions : public ::z_get_options_t {
     GetOptions() : ::z_get_options_t(::z_get_options_default()) {}
     GetOptions& set_target(z_query_target_t v) { target = v; return *this; }
     GetOptions& set_consolidation(z_consolidation_mode_t v) { consolidation.mode = v; return *this; }

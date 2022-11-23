@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
                 << ": " 
                 << sample->get_payload().as_string_view() 
                 << ")\n";
-        } else if (auto error = std::get_if<Error>(&result)) {
+        } else if (auto error = std::get_if<ErrorMessage>(&result)) {
             std::cout << "Received an error :" << error->as_string_view() << "\n";
         }
     }, opts);

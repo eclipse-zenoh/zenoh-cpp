@@ -23,11 +23,7 @@ int main(int argc, char **argv) {
     }
 
     printf("Opening session...\n");
-    Session session(std::move(config));
-    if (!session.check()) {
-        printf("Unable to open session!\n");
-        exit(-1);
-    }
+    auto session = std::get<Session>(open(std::move(config)));
 
     printf("Putting Data ('%s': '%s')...\n", keyexpr, value);
     PutOptions options;

@@ -26,11 +26,11 @@ struct Reply : public Owned<::z_owned_reply_t> {
 public:
     using Owned::Owned;
     bool is_ok() const { return ::z_reply_is_ok(&_0); }
-    std::variant<Sample,Error> get() const {
+    std::variant<Sample,ErrorMessage> get() const {
         if (is_ok()) {
             return Sample{::z_reply_ok(&_0)}; 
         } else {
-            return Error{::z_reply_err(&_0)}; 
+            return ErrorMessage{::z_reply_err(&_0)}; 
         }
     }
 };
@@ -41,15 +41,35 @@ class Session : public Owned<::z_owned_session_t> {
 public:
     using Owned::Owned;
 
-    friend std::variant<Session,Error> open(Config&& config);
+    friend std::variant<Session,ErrorMessage> open(Config&& config);
 
+    bool get(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, const GetOptions& options, ErrNo& error) 
+        { return get_impl(keyexpr, parameters, std::move(callback), options, error); }
     bool get(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, const GetOptions& options) 
-        { auto c = callback.take(); return ::z_get(::z_session_loan(&_0), keyexpr, parameters, &c, &options); }
+        { ErrNo error; return get_impl(keyexpr, parameters, std::move(callback), options, error); }
+    bool get(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback) 
+        { ErrNo error; GetOptions options; return get_impl(keyexpr, parameters, std::move(callback), options, error); }
 
-    bool put(KeyExprView keyexpr, const Bytes& payload, const PutOptions& options)
-        { return ::z_put(::z_session_loan(&_0), keyexpr, payload.start, payload.len, &options) == 0; }
+    bool put(KeyExprView keyexpr, const Bytes& payload, const PutOptions& options, ErrNo& error) 
+        { return put_impl(keyexpr, payload, options, error); }
+    bool put(KeyExprView keyexpr, const Bytes& payload, const PutOptions& options) 
+        { ErrNo error; return put_impl(keyexpr, payload, options, error); }
+    bool put(KeyExprView keyexpr, const Bytes& payload) 
+        { ErrNo error; PutOptions options; return put_impl(keyexpr, payload, options, error); }
 
 private:
+
+    bool get_impl(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, const GetOptions& options, ErrNo& error) { 
+        auto c = callback.take(); 
+        error = ::z_get(::z_session_loan(&_0), keyexpr, parameters, &c, &options); 
+        return error == 0;
+    }
+
+    bool put_impl(KeyExprView keyexpr, const Bytes& payload, const PutOptions& options, ErrNo& error) { 
+        error = ::z_put(::z_session_loan(&_0), keyexpr, payload.start, payload.len, &options); 
+        return error == 0;
+    }
+
     Session(Config&& v) : Owned(_z_open(std::move(v))) {} 
     static ::z_owned_session_t _z_open(Config&& v) {
         auto config = v.take();
@@ -57,7 +77,7 @@ private:
     };
 };
 
-std::variant<Session,Error> open(Config&& config) {
+std::variant<Session,ErrorMessage> open(Config&& config) {
     Session session(std::move(config));
     if (session.check()) {
         return std::move(session);
