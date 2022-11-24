@@ -15,6 +15,8 @@
 #include <string.h>
 
 #include <iostream>
+#include <mutex>
+#include <condition_variable>
 
 #include "zenohcpp.h"
 
@@ -48,20 +50,33 @@ int main(int argc, char **argv) {
     GetOptions opts;
     opts.set_target(Z_QUERY_TARGET_ALL);
 
-    session.get(keyexpr, "", [](Reply reply) {
-        auto result = reply.get();
-        printf("ENTER\n");
-        if (auto sample = std::get_if<Sample>(&result)) {
-            std::cout 
-                << "Received ('" 
-                << sample->get_keyexpr().as_string_view()
-                << ": " 
-                << sample->get_payload().as_string_view() 
-                << ")\n";
-        } else if (auto error = std::get_if<ErrorMessage>(&result)) {
-            std::cout << "Received an error :" << error->as_string_view() << "\n";
+    std::mutex m;
+    std::condition_variable done_signal;
+    bool done = false;
+
+    session.get(keyexpr, "", [&m, &done, &done_signal](std::optional<Reply> reply) {
+        if (reply.has_value()) {
+            auto result = reply->get();
+            if (auto sample = std::get_if<Sample>(&result)) {
+                std::cout 
+                    << "Received ('" 
+                    << sample->get_keyexpr().as_string_view()
+                    << ": " 
+                    << sample->get_payload().as_string_view() 
+                    << ")\n";
+            } else if (auto error = std::get_if<ErrorMessage>(&result)) {
+                std::cout << "Received an error :" << error->as_string_view() << "\n";
+            }
+        } else {
+            std::cout << "No more replies\n";
+            std::lock_guard lock(m);
+            done = true;
+            done_signal.notify_all();
         }
     }, opts);
+
+    std::unique_lock lock(m);
+    done_signal.wait(lock, [&done] {return done;});
 
     return 0;
 }
