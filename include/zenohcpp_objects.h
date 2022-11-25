@@ -35,39 +35,65 @@ public:
     }
 };
 
-typedef Closure<::z_owned_closure_reply_t, ::z_owned_reply_t, Reply> ClosureReply;
+typedef Closure<::z_owned_closure_reply_t, struct ::z_owned_reply_t*, Reply> ClosureReply;
+
+typedef Closure<::z_owned_closure_query_t, const ::z_query_t*, Query> ClosureQuery;
+
+struct Queryable : public Owned<::z_owned_queryable_t> {
+public:
+    using Owned::Owned;
+};
 
 class Session : public Owned<::z_owned_session_t> {
 public:
     using Owned::Owned;
 
-    friend std::variant<Session,ErrorMessage> open(Config&& config);
+    friend std::variant<Session, ErrorMessage> open(Config&& config);
 
     bool get(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, const GetOptions& options, ErrNo& error) 
-        { return get_impl(keyexpr, parameters, std::move(callback), options, error); }
+        { return get_impl(keyexpr, parameters, std::move(callback), &options, error); }
     bool get(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, const GetOptions& options) 
-        { ErrNo error; return get_impl(keyexpr, parameters, std::move(callback), options, error); }
+        { ErrNo error; return get_impl(keyexpr, parameters, std::move(callback), &options, error); }
+    bool get(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, ErrNo& error) 
+        { return get_impl(keyexpr, parameters, std::move(callback), nullptr, error); }
     bool get(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback) 
-        { ErrNo error; GetOptions options; return get_impl(keyexpr, parameters, std::move(callback), options, error); }
+        { ErrNo error; return get_impl(keyexpr, parameters, std::move(callback), nullptr, error); }
 
     bool put(KeyExprView keyexpr, const Bytes& payload, const PutOptions& options, ErrNo& error) 
-        { return put_impl(keyexpr, payload, options, error); }
+        { return put_impl(keyexpr, payload, &options, error); }
     bool put(KeyExprView keyexpr, const Bytes& payload, const PutOptions& options) 
-        { ErrNo error; return put_impl(keyexpr, payload, options, error); }
+        { ErrNo error; return put_impl(keyexpr, payload, &options, error); }
+    bool put(KeyExprView keyexpr, const Bytes& payload, ErrNo& error) 
+        { return put_impl(keyexpr, payload, nullptr, error); }
     bool put(KeyExprView keyexpr, const Bytes& payload) 
-        { ErrNo error; PutOptions options; return put_impl(keyexpr, payload, options, error); }
+        { ErrNo error; PutOptions options; return put_impl(keyexpr, payload, nullptr, error); }
+
+    std::variant<Queryable, ErrorMessage> declare_queryable(KeyExprView keyexpr, ClosureQuery&& callback, const QueryableOptions& options)
+        { return declare_queryable_impl(keyexpr, std::move(callback), &options); }
+    std::variant<Queryable, ErrorMessage> declare_queryable(KeyExprView keyexpr, ClosureQuery&& callback)
+        { return declare_queryable_impl(keyexpr, std::move(callback), nullptr); }
 
 private:
 
-    bool get_impl(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, const GetOptions& options, ErrNo& error) { 
+    bool get_impl(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, const GetOptions* options, ErrNo& error) { 
         auto c = callback.take(); 
-        error = ::z_get(::z_session_loan(&_0), keyexpr, parameters, &c, &options); 
+        error = ::z_get(::z_session_loan(&_0), keyexpr, parameters, &c, options); 
         return error == 0;
     }
 
-    bool put_impl(KeyExprView keyexpr, const Bytes& payload, const PutOptions& options, ErrNo& error) { 
-        error = ::z_put(::z_session_loan(&_0), keyexpr, payload.start, payload.len, &options); 
+    bool put_impl(KeyExprView keyexpr, const Bytes& payload, const PutOptions* options, ErrNo& error) { 
+        error = ::z_put(::z_session_loan(&_0), keyexpr, payload.start, payload.len, options); 
         return error == 0;
+    }
+
+    std::variant<Queryable, ErrorMessage> declare_queryable_impl(KeyExprView keyexpr, ClosureQuery&& callback, const QueryableOptions* options) {
+        auto c = callback.take();
+        Queryable queryable(::z_declare_queryable(::z_session_loan(&_0), keyexpr, &c, options));
+        if (queryable.check()) {
+            return std::move(queryable);
+        } else {
+            return "Unable to create queryable";
+        }
     }
 
     Session(Config&& v) : Owned(_z_open(std::move(v))) {} 

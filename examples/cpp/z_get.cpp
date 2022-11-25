@@ -61,9 +61,9 @@ int main(int argc, char **argv) {
                 std::cout 
                     << "Received ('" 
                     << sample->get_keyexpr().as_string_view()
-                    << ": " 
+                    << "' : '" 
                     << sample->get_payload().as_string_view() 
-                    << ")\n";
+                    << "')\n";
             } else if (auto error = std::get_if<ErrorMessage>(&result)) {
                 std::cout << "Received an error :" << error->as_string_view() << "\n";
             }

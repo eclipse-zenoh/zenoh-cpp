@@ -35,7 +35,7 @@ private:
     template<typename LAMBDA> ZC_CLOSURE_TYPE wrap_lambda_to_closure(LAMBDA&& lambda) {
         return {
             context: new LAMBDA(std::move(lambda)),
-            call: [](ZC_CLOSURE_CALL_PARAM* pvalue, void* ctx){ 
+            call: [](ZC_CLOSURE_CALL_PARAM pvalue, void* ctx){ 
                     static_cast<LAMBDA*>(ctx)->operator()(std::optional<ZCPP_CLOSURE_CALL_PARAM>(std::in_place, std::move(*pvalue))); 
                 },
             drop: [](void* ctx){

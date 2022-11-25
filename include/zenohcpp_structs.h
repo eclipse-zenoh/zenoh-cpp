@@ -65,5 +65,38 @@ struct PutOptions : public ::z_put_options_t {
     PutOptions& set_encoding(Encoding e) { encoding = e; return *this; };
 };
 
+struct QueryReplyOptions : public ::z_query_reply_options_t {
+    QueryReplyOptions() : ::z_query_reply_options_t(::z_query_reply_options_default()) {}
+    QueryReplyOptions& set_encoding(Encoding e) { encoding = e; return *this; };
+};
+
+class Query : public ::z_query_t {
+public:
+    Query() = delete;
+    Query(::z_query_t query) : ::z_query_t(query) {}
+    KeyExprView get_keyexpr() const { return KeyExprView(::z_query_keyexpr(this)); }
+    Bytes get_parameters() const { return Bytes(::z_query_parameters(this)); }
+
+    bool reply(KeyExprView key, const Bytes& payload, const QueryReplyOptions& options, ErrNo& error) const
+        { return reply_impl(key, payload, &options, error); }
+    bool reply(KeyExprView key, const Bytes& payload, const QueryReplyOptions& options) const
+        { ErrNo error; return reply_impl(key, payload, &options, error); }
+    bool reply(KeyExprView key, const Bytes& payload, ErrNo& error) const
+        { return reply_impl(key, payload, nullptr, error); }
+    bool reply(KeyExprView key, const Bytes& payload) const
+        { ErrNo error; return reply_impl(key, payload, nullptr, error); }
+
+private:
+    bool reply_impl(KeyExprView key, const Bytes& payload, const QueryReplyOptions* options, ErrNo& error) const {
+        error = ::z_query_reply(this, key, payload.start, payload.len, options);
+        return error == 0;
+    }
+};
+
+struct QueryableOptions : public ::z_queryable_options_t {
+    QueryableOptions() : ::z_queryable_options_t(::z_queryable_options_default()) {}
+    bool get_complete() const { return complete; }
+    QueryableOptions& set_complete(bool v) { complete = v; return *this; }
+};
 
 }
