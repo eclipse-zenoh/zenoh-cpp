@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <string.h>
+
 #include <iostream>
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 #include <windows.h>
@@ -54,7 +55,6 @@ int main(int argc, char **argv) {
         }
     }
 
-
     printf("Opening session...\n");
     auto session = std::get<Session>(open(std::move(config)));
 
@@ -70,7 +70,8 @@ int main(int argc, char **argv) {
         if (query.has_value()) {
             auto keystr = query->get_keyexpr();
             auto pred = query->get_parameters();
-            std::cout << ">> [Queryable ] Received Query '" << keystr.as_string_view() << "' : '" << pred.as_string_view() << "'\n";
+            std::cout << ">> [Queryable ] Received Query '" << keystr.as_string_view() << "' : '"
+                      << pred.as_string_view() << "'\n";
             QueryReplyOptions options;
             options.set_encoding(Encoding(Z_ENCODING_PREFIX_TEXT_PLAIN));
             query->reply(expr, value, options);
