@@ -7,6 +7,11 @@
 
 namespace zenoh {
 
+typedef int8_t ErrNo;
+typedef ::z_sample_kind_t SampleKind;
+typedef ::z_encoding_prefix_t EncodingPrefix;
+typedef ::z_reliability_t Reliability;
+
 struct Bytes : public ::z_bytes_t {
     Bytes() : ::z_bytes_t({}) {}
     Bytes(::z_bytes_t v) : ::z_bytes_t(v) {}
@@ -22,8 +27,6 @@ struct KeyExprView : public ::z_keyexpr_t {
     std::string_view as_string_view() const { return as_bytes().as_string_view(); }
 };
 
-typedef ::z_encoding_prefix_t EncodingPrefix;
-
 struct Encoding : public ::z_encoding_t {
     Encoding() : ::z_encoding_t(::z_encoding_default()) {}
     Encoding(::z_encoding_t v) : ::z_encoding_t(v) {}
@@ -31,9 +34,17 @@ struct Encoding : public ::z_encoding_t {
     Encoding(EncodingPrefix _prefix, const char* _suffix) : ::z_encoding_t(::z_encoding(_prefix, _suffix)) {}
 };
 
+struct Timestamp : ::z_timestamp_t {
+    // TODO: add utility methods to interpret time as mils, seconds, minutes, etc
+    uint64_t get_time() const { return time; }
+    const Bytes& get_id() const { return static_cast<const Bytes&>(id); }
+};
+
 struct Sample : public ::z_sample_t {
     const KeyExprView& get_keyexpr() const { return static_cast<const KeyExprView&>(keyexpr); }
     const Bytes& get_payload() const { return static_cast<const Bytes&>(payload); }
+    const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
+    SampleKind get_kind() const { return kind; }
 };
 
 struct Value : public ::z_value_t {
@@ -46,7 +57,6 @@ struct Value : public ::z_value_t {
 };
 
 typedef Value ErrorMessage;
-typedef int8_t ErrNo;
 
 struct GetOptions : public ::z_get_options_t {
     GetOptions() : ::z_get_options_t(::z_get_options_default()) {}
@@ -110,6 +120,14 @@ struct QueryableOptions : public ::z_queryable_options_t {
     bool get_complete() const { return complete; }
     QueryableOptions& set_complete(bool v) {
         complete = v;
+        return *this;
+    }
+};
+
+struct PullSubscriberOptions : public ::z_pull_subscriber_options_t {
+    Reliability get_reliability() const { return reliability; }
+    PullSubscriberOptions& set_reliability(Reliability& v) {
+        reliability = v;
         return *this;
     }
 };

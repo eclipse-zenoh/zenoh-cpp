@@ -37,9 +37,21 @@ struct Reply : public Owned<::z_owned_reply_t> {
     }
 };
 
+struct PullSubscriber : public Owned<::z_owned_pull_subscriber_t> {
+   public:
+    using Owned::Owned;
+    bool pull() { return z_subscriber_pull(z_loan(_0)) == 0; }
+    bool pull(ErrNo& error) {
+        error = z_subscriber_pull(z_loan(_0));
+        return error == 0;
+    }
+};
+
 typedef Closure<::z_owned_closure_reply_t, struct ::z_owned_reply_t*, Reply> ClosureReply;
 
 typedef Closure<::z_owned_closure_query_t, const ::z_query_t*, Query> ClosureQuery;
+
+typedef Closure<::z_owned_closure_sample_t, const ::z_sample_t*, Sample> ClosureSample;
 
 struct Queryable : public Owned<::z_owned_queryable_t> {
    public:
@@ -92,6 +104,14 @@ class Session : public Owned<::z_owned_session_t> {
         return declare_queryable_impl(keyexpr, std::move(callback), nullptr);
     }
 
+    std::variant<PullSubscriber, ErrorMessage> declare_pull_subscriber(KeyExprView keyexpr, ClosureSample&& callback,
+                                                                       const PullSubscriberOptions& options) {
+        return declare_pull_subscriber_impl(keyexpr, std::move(callback), &options);
+    }
+    std::variant<PullSubscriber, ErrorMessage> declare_pull_subscriber(KeyExprView keyexpr, ClosureSample&& callback) {
+        return declare_pull_subscriber_impl(keyexpr, std::move(callback), nullptr);
+    }
+
    private:
     bool get_impl(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, const GetOptions* options,
                   ErrNo& error) {
@@ -113,6 +133,18 @@ class Session : public Owned<::z_owned_session_t> {
             return std::move(queryable);
         } else {
             return "Unable to create queryable";
+        }
+    }
+
+    std::variant<PullSubscriber, ErrorMessage> declare_pull_subscriber_impl(KeyExprView keyexpr,
+                                                                            ClosureSample&& callback,
+                                                                            const PullSubscriberOptions* options) {
+        auto c = callback.take();
+        PullSubscriber pull_subscriber(::z_declare_pull_subscriber(::z_session_loan(&_0), keyexpr, &c, options));
+        if (pull_subscriber.check()) {
+            return std::move(pull_subscriber);
+        } else {
+            return "Unable to create pull subscriber";
         }
     }
 
