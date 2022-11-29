@@ -11,6 +11,8 @@ typedef int8_t ErrNo;
 typedef ::z_sample_kind_t SampleKind;
 typedef ::z_encoding_prefix_t EncodingPrefix;
 typedef ::z_reliability_t Reliability;
+typedef ::z_congestion_control_t CongestionControl;
+typedef ::z_priority_t Priority;
 
 struct Bytes : public ::z_bytes_t {
     Bytes() : ::z_bytes_t({}) {}
@@ -77,6 +79,21 @@ struct PutOptions : public ::z_put_options_t {
         encoding = e;
         return *this;
     };
+};
+
+struct DeleteOptions : public ::z_delete_options_t {
+    DeleteOptions() : ::z_delete_options_t(::z_delete_options_default()) {}
+    DeleteOptions(::z_delete_options_t v) : ::z_delete_options_t(v) {}
+    CongestionControl get_congestion_control() const { return congestion_control; }
+    DeleteOptions& set_congestion_control(CongestionControl v) {
+        congestion_control = v;
+        return *this;
+    }
+    Priority get_priority() const { return priority; }
+    DeleteOptions& set_priority(Priority v) {
+        priority = v;
+        return *this;
+    }
 };
 
 struct QueryReplyOptions : public ::z_query_reply_options_t {

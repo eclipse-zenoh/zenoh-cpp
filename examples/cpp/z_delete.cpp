@@ -17,13 +17,10 @@
 #include "zenohcpp.h"
 
 using namespace zenoh;
-
 int main(int argc, char **argv) {
     const char *keyexpr = "demo/example/zenoh-cpp-put";
-    const char *value = "Put from CPP!";
 
     if (argc > 1) keyexpr = argv[1];
-    if (argc > 2) value = argv[2];
 
     Config config;
     if (argc > 3) {
@@ -39,12 +36,10 @@ int main(int argc, char **argv) {
     printf("Opening session...\n");
     auto session = std::get<Session>(open(std::move(config)));
 
-    printf("Putting Data ('%s': '%s')...\n", keyexpr, value);
-    PutOptions options;
-    options.set_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN);
-
-    if (!session.put(keyexpr, value, options)) {
-        printf("Put failed...\n");
+    printf("Deleting resources matching '%s'...\n", keyexpr);
+    ErrNo error;
+    if (!session.delete_resource(keyexpr, error)) {
+        std::cout << "Delete failed with error " << error << std::endl;
     }
 
     return 0;

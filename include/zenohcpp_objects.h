@@ -96,6 +96,22 @@ class Session : public Owned<::z_owned_session_t> {
         return put_impl(keyexpr, payload, nullptr, error);
     }
 
+    bool delete_resource(KeyExprView keyexpr, const DeleteOptions& options, ErrNo& error) {
+        return delete_impl(keyexpr, &options, error);
+    }
+    bool delete_resource(KeyExprView keyexpr, const DeleteOptions& options) {
+        ErrNo error;
+        return delete_impl(keyexpr, &options, error);
+    }
+    bool delete_resource(KeyExprView keyexpr, ErrNo& error) {
+        return delete_impl(keyexpr, nullptr, error);
+    }
+    bool delete_resource(KeyExprView keyexpr) {
+        ErrNo error;
+        PutOptions options;
+        return delete_impl(keyexpr, nullptr, error);
+    }
+
     std::variant<Queryable, ErrorMessage> declare_queryable(KeyExprView keyexpr, ClosureQuery&& callback,
                                                             const QueryableOptions& options) {
         return declare_queryable_impl(keyexpr, std::move(callback), &options);
@@ -125,6 +141,10 @@ class Session : public Owned<::z_owned_session_t> {
         return error == 0;
     }
 
+    bool delete_impl(KeyExprView keyexpr, const DeleteOptions* options, ErrNo& error) {
+        error = ::z_delete(::z_session_loan(&_0), keyexpr, options);
+        return error == 0;
+    }
     std::variant<Queryable, ErrorMessage> declare_queryable_impl(KeyExprView keyexpr, ClosureQuery&& callback,
                                                                  const QueryableOptions* options) {
         auto c = callback.take();
