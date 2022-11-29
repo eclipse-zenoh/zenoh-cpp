@@ -14,51 +14,56 @@ typedef ::z_reliability_t Reliability;
 typedef ::z_congestion_control_t CongestionControl;
 typedef ::z_priority_t Priority;
 
-struct Bytes : public ::z_bytes_t {
-    Bytes() : ::z_bytes_t({}) {}
-    Bytes(::z_bytes_t v) : ::z_bytes_t(v) {}
-    Bytes(const char* s) : ::z_bytes_t({start : reinterpret_cast<const uint8_t*>(s), len : strlen(s)}) {}
+template <typename ZC_COPYABLE_TYPE>
+struct Copyable : public ZC_COPYABLE_TYPE {
+    Copyable() = delete;
+    Copyable(const Copyable& v) { *this = v; }
+    Copyable(ZC_COPYABLE_TYPE v) : ZC_COPYABLE_TYPE(v) {}
+};
+
+struct Bytes : public Copyable<::z_bytes_t> {
+    using Copyable::Copyable;
+    Bytes(const char* s) : Copyable({start : reinterpret_cast<const uint8_t*>(s), len : strlen(s)}) {}
     std::string_view as_string_view() const { return std::string_view(reinterpret_cast<const char*>(start), len); }
 };
 
-struct Id : public ::z_id_t {
-    Id() : ::z_id_t({}) {}
-    Id(::z_id_t v) : ::z_id_t(v) {}
+struct Id : public Copyable<::z_id_t> {
+    using Copyable::Copyable;
 };
 
-struct KeyExprView : public ::z_keyexpr_t {
-    KeyExprView(const char* name) : ::z_keyexpr_t(z_keyexpr(name)) {}
-    KeyExprView(const z_keyexpr_t& v) : ::z_keyexpr_t(v) {}
+struct KeyExprView : public Copyable<::z_keyexpr_t> {
+    using Copyable::Copyable;
+    KeyExprView(const char* name) : Copyable(z_keyexpr(name)) {}
     bool check() const { return z_keyexpr_is_initialized(this); }
     Bytes as_bytes() const { return Bytes{::z_keyexpr_as_bytes(*this)}; }
     std::string_view as_string_view() const { return as_bytes().as_string_view(); }
 };
 
-struct Encoding : public ::z_encoding_t {
-    Encoding() : ::z_encoding_t(::z_encoding_default()) {}
-    Encoding(::z_encoding_t v) : ::z_encoding_t(v) {}
-    Encoding(EncodingPrefix _prefix) : ::z_encoding_t(::z_encoding(_prefix, nullptr)) {}
-    Encoding(EncodingPrefix _prefix, const char* _suffix) : ::z_encoding_t(::z_encoding(_prefix, _suffix)) {}
+struct Encoding : public Copyable<::z_encoding_t> {
+    using Copyable::Copyable;
+    Encoding() : Copyable(::z_encoding_default()) {}
+    Encoding(EncodingPrefix _prefix) : Copyable(::z_encoding(_prefix, nullptr)) {}
+    Encoding(EncodingPrefix _prefix, const char* _suffix) : Copyable(::z_encoding(_prefix, _suffix)) {}
 };
 
-struct Timestamp : ::z_timestamp_t {
+struct Timestamp : Copyable<::z_timestamp_t> {
+    using Copyable::Copyable;
     // TODO: add utility methods to interpret time as mils, seconds, minutes, etc
     uint64_t get_time() const { return time; }
     const Bytes& get_id() const { return static_cast<const Bytes&>(id); }
 };
 
-struct Sample : public ::z_sample_t {
-    Sample(::z_sample_t v) : ::z_sample_t(v) {}
+struct Sample : public Copyable<::z_sample_t> {
+    using Copyable::Copyable;
     const KeyExprView& get_keyexpr() const { return static_cast<const KeyExprView&>(keyexpr); }
     const Bytes& get_payload() const { return static_cast<const Bytes&>(payload); }
     const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
     SampleKind get_kind() const { return kind; }
 };
 
-struct Value : public ::z_value_t {
-    Value() : ::z_value_t({}) {}
-    Value(::z_value_t v) : ::z_value_t(v) {}
-    Value(const char* v) : ::z_value_t({payload : Bytes(v), encoding : Encoding()}) {}
+struct Value : public Copyable<::z_value_t> {
+    using Copyable::Copyable;
+    Value(const char* v) : Copyable({payload : Bytes(v), encoding : Encoding()}) {}
     const Bytes& get_payload() const { return static_cast<const Bytes&>(payload); }
     const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
     std::string_view as_string_view() const { return get_payload().as_string_view(); }
@@ -66,8 +71,9 @@ struct Value : public ::z_value_t {
 
 typedef Value ErrorMessage;
 
-struct GetOptions : public ::z_get_options_t {
-    GetOptions() : ::z_get_options_t(::z_get_options_default()) {}
+struct GetOptions : public Copyable<::z_get_options_t> {
+    using Copyable::Copyable;
+    GetOptions() : Copyable(::z_get_options_default()) {}
     GetOptions& set_target(z_query_target_t v) {
         target = v;
         return *this;
@@ -78,17 +84,19 @@ struct GetOptions : public ::z_get_options_t {
     }
 };
 
-struct PutOptions : public ::z_put_options_t {
-    PutOptions() : ::z_put_options_t(::z_put_options_default()) {}
+struct PutOptions : public Copyable<::z_put_options_t> {
+    using Copyable::Copyable;
+    PutOptions() : Copyable(::z_put_options_default()) {}
+    const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
     PutOptions& set_encoding(Encoding e) {
         encoding = e;
         return *this;
     };
 };
 
-struct DeleteOptions : public ::z_delete_options_t {
-    DeleteOptions() : ::z_delete_options_t(::z_delete_options_default()) {}
-    DeleteOptions(::z_delete_options_t v) : ::z_delete_options_t(v) {}
+struct DeleteOptions : public Copyable<::z_delete_options_t> {
+    using Copyable::Copyable;
+    DeleteOptions() : Copyable(::z_delete_options_default()) {}
     CongestionControl get_congestion_control() const { return congestion_control; }
     DeleteOptions& set_congestion_control(CongestionControl v) {
         congestion_control = v;
@@ -101,18 +109,20 @@ struct DeleteOptions : public ::z_delete_options_t {
     }
 };
 
-struct QueryReplyOptions : public ::z_query_reply_options_t {
-    QueryReplyOptions() : ::z_query_reply_options_t(::z_query_reply_options_default()) {}
+struct QueryReplyOptions : public Copyable<::z_query_reply_options_t> {
+    using Copyable::Copyable;
+    QueryReplyOptions() : Copyable(::z_query_reply_options_default()) {}
     QueryReplyOptions& set_encoding(Encoding e) {
         encoding = e;
         return *this;
     };
 };
 
-class Query : public ::z_query_t {
+class Query : public Copyable<::z_query_t> {
    public:
+    using Copyable::Copyable;
     Query() = delete;
-    Query(::z_query_t query) : ::z_query_t(query) {}
+    Query(::z_query_t query) : Copyable(query) {}
     KeyExprView get_keyexpr() const { return KeyExprView(::z_query_keyexpr(this)); }
     Bytes get_parameters() const { return Bytes(::z_query_parameters(this)); }
 
@@ -138,8 +148,9 @@ class Query : public ::z_query_t {
     }
 };
 
-struct QueryableOptions : public ::z_queryable_options_t {
-    QueryableOptions() : ::z_queryable_options_t(::z_queryable_options_default()) {}
+struct QueryableOptions : public Copyable<::z_queryable_options_t> {
+    using Copyable::Copyable;
+    QueryableOptions() : Copyable(::z_queryable_options_default()) {}
     bool get_complete() const { return complete; }
     QueryableOptions& set_complete(bool v) {
         complete = v;
@@ -147,10 +158,26 @@ struct QueryableOptions : public ::z_queryable_options_t {
     }
 };
 
-struct PullSubscriberOptions : public ::z_pull_subscriber_options_t {
+struct PullSubscriberOptions : public Copyable<::z_pull_subscriber_options_t> {
+    using Copyable::Copyable;
     Reliability get_reliability() const { return reliability; }
     PullSubscriberOptions& set_reliability(Reliability& v) {
         reliability = v;
+        return *this;
+    }
+};
+
+struct PublisherOptions : public Copyable<::z_publisher_options_t> {
+    using Copyable::Copyable;
+    PublisherOptions() : Copyable(::z_publisher_options_default()) {}
+    CongestionControl get_congestion_control() const { return congestion_control; }
+    PublisherOptions& set_congestion_control(CongestionControl v) {
+        congestion_control = v;
+        return *this;
+    }
+    Priority get_priority() const { return priority; }
+    PublisherOptions& set_priority(Priority v) {
+        priority = v;
         return *this;
     }
 };

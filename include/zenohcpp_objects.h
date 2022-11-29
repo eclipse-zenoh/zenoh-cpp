@@ -24,7 +24,7 @@ class Config : public Owned<::z_owned_config_t> {
     }
 };
 
-struct Reply : public Owned<::z_owned_reply_t> {
+class Reply : public Owned<::z_owned_reply_t> {
    public:
     using Owned::Owned;
     bool is_ok() const { return ::z_reply_is_ok(&_0); }
@@ -37,7 +37,7 @@ struct Reply : public Owned<::z_owned_reply_t> {
     }
 };
 
-struct PullSubscriber : public Owned<::z_owned_pull_subscriber_t> {
+class PullSubscriber : public Owned<::z_owned_pull_subscriber_t> {
    public:
     using Owned::Owned;
     bool pull() { return z_subscriber_pull(z_loan(_0)) == 0; }
@@ -47,6 +47,16 @@ struct PullSubscriber : public Owned<::z_owned_pull_subscriber_t> {
     }
 };
 
+class Queryable : public Owned<::z_owned_queryable_t> {
+   public:
+    using Owned::Owned;
+};
+
+class Publisher : public Owned<::z_owned_publisher_t> {
+   public:
+    using Owned::Owned;
+};
+
 typedef Closure<::z_owned_closure_reply_t, struct ::z_owned_reply_t*, Reply> ClosureReply;
 
 typedef Closure<::z_owned_closure_query_t, const ::z_query_t*, Query> ClosureQuery;
@@ -54,11 +64,6 @@ typedef Closure<::z_owned_closure_query_t, const ::z_query_t*, Query> ClosureQue
 typedef Closure<::z_owned_closure_sample_t, const ::z_sample_t*, Sample> ClosureSample;
 
 typedef Closure<::z_owned_closure_zid_t, const ::z_id_t*, Id> ClosureZid;
-
-struct Queryable : public Owned<::z_owned_queryable_t> {
-   public:
-    using Owned::Owned;
-};
 
 class Session : public Owned<::z_owned_session_t> {
    public:
@@ -192,11 +197,22 @@ class Session : public Owned<::z_owned_session_t> {
         }
     }
 
+    // std::variant<Publisher, ErrorMessage> declare_publisher_impl(KeyExprView keyexpr,
+    //                                                              const PullSubscriberOptions* options) {
+    //     auto c = callback.take();
+    //     PullSubscriber pull_subscriber(::z_declare_pull_subscriber(::z_session_loan(&_0), keyexpr, &c, options));
+    //     if (pull_subscriber.check()) {
+    //         return std::move(pull_subscriber);
+    //     } else {
+    //         return "Unable to create pull subscriber";
+    //     }
+    // }
+
     Session(Config&& v) : Owned(_z_open(std::move(v))) {}
     static ::z_owned_session_t _z_open(Config&& v) {
         auto config = v.take();
         return ::z_open(z_move(config));
-    };
+    }
 };
 
 std::variant<Session, ErrorMessage> open(Config&& config) {
