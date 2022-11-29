@@ -21,6 +21,11 @@ struct Bytes : public ::z_bytes_t {
     std::string_view as_string_view() const { return std::string_view(reinterpret_cast<const char*>(start), len); }
 };
 
+struct Id : public ::z_id_t {
+    Id() : ::z_id_t({}) {}
+    Id(::z_id_t v) : ::z_id_t(v) {}
+};
+
 struct KeyExprView : public ::z_keyexpr_t {
     KeyExprView(const char* name) : ::z_keyexpr_t(z_keyexpr(name)) {}
     KeyExprView(const z_keyexpr_t& v) : ::z_keyexpr_t(v) {}

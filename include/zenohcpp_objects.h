@@ -53,6 +53,8 @@ typedef Closure<::z_owned_closure_query_t, const ::z_query_t*, Query> ClosureQue
 
 typedef Closure<::z_owned_closure_sample_t, const ::z_sample_t*, Sample> ClosureSample;
 
+typedef Closure<::z_owned_closure_zid_t, const ::z_id_t*, Id> ClosureZid;
+
 struct Queryable : public Owned<::z_owned_queryable_t> {
    public:
     using Owned::Owned;
@@ -61,6 +63,8 @@ struct Queryable : public Owned<::z_owned_queryable_t> {
 class Session : public Owned<::z_owned_session_t> {
    public:
     using Owned::Owned;
+
+    Id info_zid() const { return ::z_info_zid(::z_session_loan(&_0)); }
 
     friend std::variant<Session, ErrorMessage> open(Config&& config);
 
@@ -126,6 +130,26 @@ class Session : public Owned<::z_owned_session_t> {
     }
     std::variant<PullSubscriber, ErrorMessage> declare_pull_subscriber(KeyExprView keyexpr, ClosureSample&& callback) {
         return declare_pull_subscriber_impl(keyexpr, std::move(callback), nullptr);
+    }
+
+    bool info_routers_zid(ClosureZid&& callback, ErrNo& error) {
+        auto c = callback.take();
+        error = ::z_info_routers_zid(::z_session_loan(&_0), &c);
+        return error == 0;
+    }
+    bool info_routers_zid(ClosureZid&& callback) {
+        auto c = callback.take();
+        return ::z_info_routers_zid(::z_session_loan(&_0), &c) == 0;
+    }
+
+    bool info_peers_zid(ClosureZid&& callback, ErrNo& error) {
+        auto c = callback.take();
+        error = ::z_info_peers_zid(::z_session_loan(&_0), &c);
+        return error == 0;
+    }
+    bool info_peers_zid(ClosureZid&& callback) {
+        auto c = callback.take();
+        return ::z_info_peers_zid(::z_session_loan(&_0), &c) == 0;
     }
 
    private:
