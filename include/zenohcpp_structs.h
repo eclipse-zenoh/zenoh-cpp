@@ -41,6 +41,7 @@ struct Timestamp : ::z_timestamp_t {
 };
 
 struct Sample : public ::z_sample_t {
+    Sample(::z_sample_t v) : ::z_sample_t(v) {}
     const KeyExprView& get_keyexpr() const { return static_cast<const KeyExprView&>(keyexpr); }
     const Bytes& get_payload() const { return static_cast<const Bytes&>(payload); }
     const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }

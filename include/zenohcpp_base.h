@@ -35,12 +35,22 @@ class Closure : public Owned<ZC_CLOSURE_TYPE> {
     template <typename LAMBDA>
     Closure(LAMBDA&& lambda) : Owned<ZC_CLOSURE_TYPE>(wrap_lambda_to_closure<LAMBDA>(std::move(lambda))) {}
 
-    // TODO: more constructors to be added here
+    template<typename FUNC> Closure(const FUNC& func) : Owned<ZC_CLOSURE_TYPE>(wrap_func_to_closure<FUNC>(func)) {}
+
+    // TODO: more constructors to be added here    
 
     // Closure is valid if it can be called. The drop operation is optional
     bool check() const { return Owned<ZC_CLOSURE_TYPE>::_0.call != nullptr; }
 
    private:
+
+    template <typename FUNC> ZC_CLOSURE_TYPE wrap_func_to_closure(const FUNC& func) {
+        auto lambda = [func](std::optional<ZCPP_CLOSURE_CALL_PARAM> v) {
+            func(v);
+        };
+        return wrap_lambda_to_closure(std::move(lambda));
+    }
+
     template <typename LAMBDA>
     ZC_CLOSURE_TYPE wrap_lambda_to_closure(LAMBDA&& lambda) {
         return {
