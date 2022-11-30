@@ -5,6 +5,7 @@
 
 #include "string.h"
 #include "zenoh.h"
+#include "zenohcpp_base.h"
 
 namespace zenoh {
 
@@ -14,13 +15,6 @@ typedef ::z_encoding_prefix_t EncodingPrefix;
 typedef ::z_reliability_t Reliability;
 typedef ::z_congestion_control_t CongestionControl;
 typedef ::z_priority_t Priority;
-
-template <typename ZC_COPYABLE_TYPE>
-struct Copyable : public ZC_COPYABLE_TYPE {
-    Copyable() = delete;  // May be overloaded in derived structs with corresponding z_XXX_default function
-    Copyable(const Copyable& v) { *this = v; }
-    Copyable(ZC_COPYABLE_TYPE v) : ZC_COPYABLE_TYPE(v) {}
-};
 
 struct Bytes : public Copyable<::z_bytes_t> {
     using Copyable::Copyable;

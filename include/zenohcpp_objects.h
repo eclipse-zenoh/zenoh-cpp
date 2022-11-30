@@ -15,6 +15,8 @@ class KeyExpr : Owned<::z_owned_keyexpr_t> {
     operator KeyExprView() const { return KeyExprView(::z_keyexpr_loan(&_0)); }
 };
 
+class ScoutingConfig;
+
 class Config : public Owned<::z_owned_config_t> {
    public:
     using Owned::Owned;
@@ -22,7 +24,17 @@ class Config : public Owned<::z_owned_config_t> {
     bool insert_json(const char* key, const char* value) {
         return zc_config_insert_json(::z_config_loan(&_0), key, value) == 0;
     }
+    operator ScoutingConfig();
 };
+
+class ScoutingConfig : public Owned<::z_owned_scouting_config_t> {
+   public:
+    using Owned::Owned;
+    ScoutingConfig() : Owned(::z_scouting_config_default()) {}
+    ScoutingConfig(Config& config) : Owned(std::move(ScoutingConfig(config))) {}
+};
+
+inline Config::operator ScoutingConfig() { return ScoutingConfig(::z_scouting_config_from(::z_loan(_0))); }
 
 class Reply : public Owned<::z_owned_reply_t> {
    public:
@@ -71,17 +83,36 @@ class Publisher : public Owned<::z_owned_publisher_t> {
    private:
     bool put_impl(const Bytes& payload, const PublisherPutOptions* options, ErrNo& error) {
         error = ::z_publisher_put(::z_loan(_0), payload.start, payload.len, options);
-        return error != 0;
+        return error == 0;
     }
 };
 
-typedef Closure<::z_owned_closure_reply_t, struct ::z_owned_reply_t*, Reply> ClosureReply;
+class Hello : public Owned<::z_owned_hello_t> {
+   public:
+    using Owned::Owned;
+};
+
+typedef Closure<::z_owned_closure_reply_t, ::z_owned_reply_t*, Reply> ClosureReply;
 
 typedef Closure<::z_owned_closure_query_t, const ::z_query_t*, Query> ClosureQuery;
 
 typedef Closure<::z_owned_closure_sample_t, const ::z_sample_t*, Sample> ClosureSample;
 
 typedef Closure<::z_owned_closure_zid_t, const ::z_id_t*, Id> ClosureZid;
+
+typedef Closure<::z_owned_closure_hello_t, ::z_owned_hello_t*, Hello> ClosureHello;
+
+bool scout(ScoutingConfig&& config, ClosureHello&& callback, ErrNo& error) {
+    auto c = config.take();
+    auto cb = callback.take();
+    error = ::z_scout(z_move(c), z_move(cb));
+    return error == 0;
+};
+
+bool scout(ScoutingConfig&& config, ClosureHello&& callback) {
+    ErrNo error;
+    return scout(std::move(config), std::move(callback));
+}
 
 class Session : public Owned<::z_owned_session_t> {
    public:

@@ -5,6 +5,13 @@
 
 namespace zenoh {
 
+template <typename ZC_COPYABLE_TYPE>
+struct Copyable : public ZC_COPYABLE_TYPE {
+    Copyable() = delete;  // May be overloaded in derived structs with corresponding z_XXX_default function
+    Copyable(const Copyable& v) { *this = v; }
+    Copyable(ZC_COPYABLE_TYPE v) : ZC_COPYABLE_TYPE(v) {}
+};
+
 template <typename ZC_OWNED_TYPE>
 class Owned {
    public:
