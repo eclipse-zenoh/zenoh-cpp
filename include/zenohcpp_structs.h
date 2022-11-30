@@ -156,6 +156,15 @@ struct QueryableOptions : public Copyable<::z_queryable_options_t> {
     }
 };
 
+struct SubscriberOptions : public Copyable<::z_subscriber_options_t> {
+    using Copyable::Copyable;
+    Reliability get_reliability() const { return reliability; }
+    SubscriberOptions& set_reliability(Reliability& v) {
+        reliability = v;
+        return *this;
+    }
+};
+
 struct PullSubscriberOptions : public Copyable<::z_pull_subscriber_options_t> {
     using Copyable::Copyable;
     Reliability get_reliability() const { return reliability; }

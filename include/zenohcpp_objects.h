@@ -51,6 +51,11 @@ class Reply : public Owned<::z_owned_reply_t> {
     }
 };
 
+class Subscriber : public Owned<::z_owned_subscriber_t> {
+   public:
+    using Owned::Owned;
+};
+
 class PullSubscriber : public Owned<::z_owned_pull_subscriber_t> {
    public:
     using Owned::Owned;
@@ -180,6 +185,14 @@ class Session : public Owned<::z_owned_session_t> {
         return declare_queryable_impl(keyexpr, std::move(callback), nullptr);
     }
 
+    std::variant<Subscriber, ErrorMessage> declare_subscriber(KeyExprView keyexpr, ClosureSample&& callback,
+                                                              const SubscriberOptions& options) {
+        return declare_subscriber_impl(keyexpr, std::move(callback), &options);
+    }
+    std::variant<Subscriber, ErrorMessage> declare_subscriber(KeyExprView keyexpr, ClosureSample&& callback) {
+        return declare_subscriber_impl(keyexpr, std::move(callback), nullptr);
+    }
+
     std::variant<PullSubscriber, ErrorMessage> declare_pull_subscriber(KeyExprView keyexpr, ClosureSample&& callback,
                                                                        const PullSubscriberOptions& options) {
         return declare_pull_subscriber_impl(keyexpr, std::move(callback), &options);
@@ -240,6 +253,17 @@ class Session : public Owned<::z_owned_session_t> {
             return std::move(queryable);
         } else {
             return "Unable to create queryable";
+        }
+    }
+
+    std::variant<Subscriber, ErrorMessage> declare_subscriber_impl(KeyExprView keyexpr, ClosureSample&& callback,
+                                                                   const SubscriberOptions* options) {
+        auto c = callback.take();
+        Subscriber subscriber(::z_declare_subscriber(::z_session_loan(&_0), keyexpr, &c, options));
+        if (subscriber.check()) {
+            return std::move(subscriber);
+        } else {
+            return "Unable to create subscriber";
         }
     }
 
