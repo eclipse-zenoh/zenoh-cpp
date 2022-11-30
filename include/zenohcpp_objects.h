@@ -40,9 +40,9 @@ class Reply : public Owned<::z_owned_reply_t> {
 class PullSubscriber : public Owned<::z_owned_pull_subscriber_t> {
    public:
     using Owned::Owned;
-    bool pull() { return z_subscriber_pull(z_loan(_0)) == 0; }
+    bool pull() { return z_subscriber_pull(::z_loan(_0)) == 0; }
     bool pull(ErrNo& error) {
-        error = z_subscriber_pull(z_loan(_0));
+        error = z_subscriber_pull(::z_loan(_0));
         return error == 0;
     }
 };
@@ -55,6 +55,24 @@ class Queryable : public Owned<::z_owned_queryable_t> {
 class Publisher : public Owned<::z_owned_publisher_t> {
    public:
     using Owned::Owned;
+    bool put(const Bytes& payload, const PublisherPutOptions& options, ErrNo& error) {
+        return put_impl(payload, &options, error);
+    }
+    bool put(const Bytes& payload, ErrNo& error) { return put_impl(payload, nullptr, error); }
+    bool put(const Bytes& payload, const PublisherPutOptions& options) {
+        ErrNo error;
+        return put_impl(payload, &options, error);
+    }
+    bool put(const Bytes& payload) {
+        ErrNo error;
+        return put_impl(payload, nullptr, error);
+    }
+
+   private:
+    bool put_impl(const Bytes& payload, const PublisherPutOptions* options, ErrNo& error) {
+        error = ::z_publisher_put(::z_loan(_0), payload.start, payload.len, options);
+        return error != 0;
+    }
 };
 
 typedef Closure<::z_owned_closure_reply_t, struct ::z_owned_reply_t*, Reply> ClosureReply;
@@ -137,6 +155,13 @@ class Session : public Owned<::z_owned_session_t> {
         return declare_pull_subscriber_impl(keyexpr, std::move(callback), nullptr);
     }
 
+    std::variant<Publisher, ErrorMessage> declare_publisher(KeyExprView keyexpr, const PublisherOptions& options) {
+        return declare_publisher_impl(keyexpr, &options);
+    }
+    std::variant<Publisher, ErrorMessage> declare_publisher(KeyExprView keyexpr) {
+        return declare_publisher_impl(keyexpr, nullptr);
+    }
+
     bool info_routers_zid(ClosureZid&& callback, ErrNo& error) {
         auto c = callback.take();
         error = ::z_info_routers_zid(::z_session_loan(&_0), &c);
@@ -197,16 +222,14 @@ class Session : public Owned<::z_owned_session_t> {
         }
     }
 
-    // std::variant<Publisher, ErrorMessage> declare_publisher_impl(KeyExprView keyexpr,
-    //                                                              const PullSubscriberOptions* options) {
-    //     auto c = callback.take();
-    //     PullSubscriber pull_subscriber(::z_declare_pull_subscriber(::z_session_loan(&_0), keyexpr, &c, options));
-    //     if (pull_subscriber.check()) {
-    //         return std::move(pull_subscriber);
-    //     } else {
-    //         return "Unable to create pull subscriber";
-    //     }
-    // }
+    std::variant<Publisher, ErrorMessage> declare_publisher_impl(KeyExprView keyexpr, const PublisherOptions* options) {
+        Publisher publisher(::z_declare_publisher(::z_session_loan(&_0), keyexpr, options));
+        if (publisher.check()) {
+            return std::move(publisher);
+        } else {
+            return "Unable to create publisher";
+        }
+    }
 
     Session(Config&& v) : Owned(_z_open(std::move(v))) {}
     static ::z_owned_session_t _z_open(Config&& v) {

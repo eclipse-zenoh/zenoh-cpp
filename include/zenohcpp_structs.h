@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <string_view>
 
 #include "string.h"
@@ -16,7 +17,7 @@ typedef ::z_priority_t Priority;
 
 template <typename ZC_COPYABLE_TYPE>
 struct Copyable : public ZC_COPYABLE_TYPE {
-    Copyable() = delete;
+    Copyable() = delete;  // May be overloaded in derived structs with corresponding z_XXX_default function
     Copyable(const Copyable& v) { *this = v; }
     Copyable(ZC_COPYABLE_TYPE v) : ZC_COPYABLE_TYPE(v) {}
 };
@@ -24,6 +25,9 @@ struct Copyable : public ZC_COPYABLE_TYPE {
 struct Bytes : public Copyable<::z_bytes_t> {
     using Copyable::Copyable;
     Bytes(const char* s) : Copyable({start : reinterpret_cast<const uint8_t*>(s), len : strlen(s)}) {}
+    Bytes(const std::string_view& s)
+        : Copyable({start : reinterpret_cast<const uint8_t*>(s.data()), len : s.length()}) {}
+    Bytes(const std::string& s) : Copyable({start : reinterpret_cast<const uint8_t*>(s.data()), len : s.length()}) {}
     std::string_view as_string_view() const { return std::string_view(reinterpret_cast<const char*>(start), len); }
 };
 
@@ -180,6 +184,16 @@ struct PublisherOptions : public Copyable<::z_publisher_options_t> {
         priority = v;
         return *this;
     }
+};
+
+struct PublisherPutOptions : public Copyable<::z_publisher_put_options_t> {
+    using Copyable::Copyable;
+    PublisherPutOptions() : Copyable(::z_publisher_put_options_default()) {}
+    const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
+    PublisherPutOptions& set_encoding(Encoding e) {
+        encoding = e;
+        return *this;
+    };
 };
 
 }  // namespace zenoh
