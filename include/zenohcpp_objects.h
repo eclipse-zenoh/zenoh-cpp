@@ -24,7 +24,7 @@ class Config : public Owned<::z_owned_config_t> {
     bool insert_json(const char* key, const char* value) {
         return zc_config_insert_json(::z_config_loan(&_0), key, value) == 0;
     }
-    operator ScoutingConfig();
+    ScoutingConfig create_scouting_config();
 };
 
 class ScoutingConfig : public Owned<::z_owned_scouting_config_t> {
@@ -34,7 +34,9 @@ class ScoutingConfig : public Owned<::z_owned_scouting_config_t> {
     ScoutingConfig(Config& config) : Owned(std::move(ScoutingConfig(config))) {}
 };
 
-inline Config::operator ScoutingConfig() { return ScoutingConfig(::z_scouting_config_from(::z_loan(_0))); }
+inline ScoutingConfig Config::create_scouting_config() {
+    return ScoutingConfig(::z_scouting_config_from(::z_loan(_0)));
+}
 
 class Reply : public Owned<::z_owned_reply_t> {
    public:
@@ -111,7 +113,7 @@ bool scout(ScoutingConfig&& config, ClosureHello&& callback, ErrNo& error) {
 
 bool scout(ScoutingConfig&& config, ClosureHello&& callback) {
     ErrNo error;
-    return scout(std::move(config), std::move(callback));
+    return scout(std::move(config), std::move(callback), error);
 }
 
 class Session : public Owned<::z_owned_session_t> {

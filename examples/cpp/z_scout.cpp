@@ -96,13 +96,23 @@ void drop(void *context) {
 }
 
 int main(int argc, char **argv) {
+    Config config;
+    if (argc > 1) {
+        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[1])) {
+            printf(
+                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
+                "JSON-serialized list of strings\n",
+                argv[1], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
+            exit(-1);
+        }
+    }
+
     int count = 0;
     std::mutex m;
     std::condition_variable done_signal;
     bool done = false;
 
-    ScoutingConfig config;
-    scout(std::move(config), [&m, &done, &done_signal, &count](std::optional<Hello> hello) {
+    scout(std::move(config.create_scouting_config()), [&m, &done, &done_signal, &count](std::optional<Hello> hello) {
         if (hello.has_value()) {
             auto zhello = hello->take();
             z_hello_t lhello = z_loan(zhello);
@@ -112,11 +122,18 @@ int main(int argc, char **argv) {
         } else {
             std::cout << "Dropping scout\n";
             if (!count) std::cout << "Did not find any zenoh process.\n";
+            std::lock_guard lock(m);
+            done = true;
+            done_signal.notify_all();
         }
     });
 
+    std::cout << "Scout started" << std::endl;
+
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });
+
+    std::cout << "Scout finished" << std::endl;
 
     return 0;
 }
