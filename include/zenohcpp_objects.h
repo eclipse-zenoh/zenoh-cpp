@@ -1,3 +1,16 @@
+//
+// Copyright (c) 2022 ZettaScale Technology
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
+// which is available at https://www.apache.org/licenses/LICENSE-2.0.
+//
+// SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+//
+// Contributors:
+//   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
+
 #pragma once
 
 #include <variant>
@@ -99,15 +112,15 @@ class Hello : public Owned<::z_owned_hello_t> {
     using Owned::Owned;
 };
 
-typedef Closure<::z_owned_closure_reply_t, ::z_owned_reply_t*, Reply> ClosureReply;
+typedef ClosureMoveParam<::z_owned_closure_reply_t, ::z_owned_reply_t, Reply> ClosureReply;
 
-typedef Closure<::z_owned_closure_query_t, const ::z_query_t*, Query> ClosureQuery;
+typedef ClosureConstPtrParam<::z_owned_closure_query_t, ::z_query_t*, Query> ClosureQuery;
 
-typedef Closure<::z_owned_closure_sample_t, const ::z_sample_t*, Sample> ClosureSample;
+typedef ClosureConstPtrParam<::z_owned_closure_sample_t, ::z_sample_t*, Sample> ClosureSample;
 
-typedef Closure<::z_owned_closure_zid_t, const ::z_id_t*, Id> ClosureZid;
+typedef ClosureConstPtrParam<::z_owned_closure_zid_t, ::z_id_t*, Id> ClosureZid;
 
-typedef Closure<::z_owned_closure_hello_t, ::z_owned_hello_t*, Hello> ClosureHello;
+typedef ClosureMoveParam<::z_owned_closure_hello_t, ::z_owned_hello_t*, Hello&&> ClosureHello;
 
 bool scout(ScoutingConfig&& config, ClosureHello&& callback, ErrNo& error) {
     auto c = config.take();
@@ -168,9 +181,7 @@ class Session : public Owned<::z_owned_session_t> {
         ErrNo error;
         return delete_impl(keyexpr, &options, error);
     }
-    bool delete_resource(KeyExprView keyexpr, ErrNo& error) {
-        return delete_impl(keyexpr, nullptr, error);
-    }
+    bool delete_resource(KeyExprView keyexpr, ErrNo& error) { return delete_impl(keyexpr, nullptr, error); }
     bool delete_resource(KeyExprView keyexpr) {
         ErrNo error;
         PutOptions options;

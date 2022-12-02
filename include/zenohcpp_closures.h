@@ -13,7 +13,16 @@
 
 #pragma once
 
+#include "zenoh.h"
 #include "zenohcpp_base.h"
 #include "zenohcpp_objects.h"
 #include "zenohcpp_structs.h"
-// #include "zenohcpp_channel.h"
+
+namespace zenoh {
+
+// template <class ZCPP_CALL_PARAM> ClosureReply : public Closure<::z_owned_closure_reply_t, ::z_owned_reply_t*,
+// ZCPP_CALL_PARAM> {}
+
+// template <> ClosureReply : public Closure<::z_owned_closure_reply_t, ::z_owned_reply_t*, > {}
+
+}  // namespace zenoh

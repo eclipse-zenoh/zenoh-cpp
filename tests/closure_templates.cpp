@@ -10,10 +10,11 @@
 //
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
+//
+#include <assert.h>
 
-#pragma once
+#include "zenohcpp.h"
 
-#include "zenohcpp_base.h"
-#include "zenohcpp_objects.h"
-#include "zenohcpp_structs.h"
-// #include "zenohcpp_channel.h"
+using namespace zenoh;
+
+int main(int argc, char **argv) {}
