@@ -114,13 +114,13 @@ class Hello : public Owned<::z_owned_hello_t> {
 
 typedef ClosureMoveParam<::z_owned_closure_reply_t, ::z_owned_reply_t, Reply> ClosureReply;
 
-typedef ClosureConstPtrParam<::z_owned_closure_query_t, ::z_query_t*, Query> ClosureQuery;
+typedef ClosureConstPtrParam<::z_owned_closure_query_t, ::z_query_t, Query> ClosureQuery;
 
-typedef ClosureConstPtrParam<::z_owned_closure_sample_t, ::z_sample_t*, Sample> ClosureSample;
+typedef ClosureConstPtrParam<::z_owned_closure_sample_t, ::z_sample_t, Sample> ClosureSample;
 
-typedef ClosureConstPtrParam<::z_owned_closure_zid_t, ::z_id_t*, Id> ClosureZid;
+typedef ClosureConstPtrParam<::z_owned_closure_zid_t, ::z_id_t, Id> ClosureZid;
 
-typedef ClosureMoveParam<::z_owned_closure_hello_t, ::z_owned_hello_t*, Hello&&> ClosureHello;
+typedef ClosureMoveParam<::z_owned_closure_hello_t, ::z_owned_hello_t, Hello> ClosureHello;
 
 bool scout(ScoutingConfig&& config, ClosureHello&& callback, ErrNo& error) {
     auto c = config.take();

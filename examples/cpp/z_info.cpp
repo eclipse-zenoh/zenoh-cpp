@@ -45,12 +45,12 @@ int main(int argc, char** argv) {
     print_zid(self_id);
 
     printf("routers ids:\n");
-    session.info_routers_zid([](auto id) {
-        if (id.has_value()) print_zid(*id);
+    session.info_routers_zid([](const Id* id) {
+        if (id) print_zid(*id);
     });
 
     printf("peers ids:\n");
-    session.info_peers_zid([](auto id) {
-        if (id.has_value()) print_zid(*id);
+    session.info_peers_zid([](const Id* id) {
+        if (id) print_zid(*id);
     });
 }

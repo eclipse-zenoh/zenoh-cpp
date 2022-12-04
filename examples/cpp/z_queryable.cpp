@@ -66,8 +66,8 @@ int main(int argc, char **argv) {
 
     printf("Declaring Queryable on '%s'...\n", expr);
 
-    auto queryable = std::get<Queryable>(session.declare_queryable(keyexpr, [](std::optional<Query> query) {
-        if (query.has_value()) {
+    auto queryable = std::get<Queryable>(session.declare_queryable(keyexpr, [](const Query *query) {
+        if (query) {
             auto keystr = query->get_keyexpr();
             auto pred = query->get_parameters();
             std::cout << ">> [Queryable ] Received Query '" << keystr.as_string_view() << "' : '"

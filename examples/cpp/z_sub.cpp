@@ -26,8 +26,8 @@ using namespace zenoh;
 
 const char *kind_to_str(z_sample_kind_t kind);
 
-void data_handler(std::optional<Sample> sample) {
-    if (sample.has_value()) {
+void data_handler(const Sample *sample) {
+    if (sample) {
         std::cout << ">> [Subscriber] Received " << kind_to_str(sample->get_kind()) << " ('"
                   << sample->get_keyexpr().as_string_view() << "' : '" << sample->get_payload().as_string_view()
                   << "')\n";
