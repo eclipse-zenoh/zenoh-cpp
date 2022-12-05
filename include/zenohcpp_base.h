@@ -162,22 +162,14 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
     ZC_CLOSURE_TYPE wrap_lambda(LAMBDA&& lambda) {
         constexpr bool is_function = std::is_function_v<std::remove_reference_t<LAMBDA>>;
         constexpr bool is_lvalue_param = std::is_invocable_v<LAMBDA, ZCPP_PARAM&>;
-        typedef std::conditional_t<
-            is_function,
-            std::conditional_t<is_lvalue_param, std::function<void(ZCPP_PARAM&)>, std::function<void(ZCPP_PARAM &&)>>,
-            LAMBDA>
-            CONTEXT_TYPE;
+        typedef std::conditional_t<is_function, std::function<std::remove_reference_t<LAMBDA>>, LAMBDA> CONTEXT_TYPE;
 
         void* context;
         void (*call)(ZC_PARAM*, void*);
         void (*drop)(void*);
 
         if constexpr (is_function) {
-            if constexpr (is_lvalue_param) {
-                context = new CONTEXT_TYPE([lambda](ZCPP_PARAM& v) { lambda(v); });
-            } else {
-                context = new CONTEXT_TYPE([lambda](ZCPP_PARAM&& v) { lambda(std::move(v)); });
-            }
+            context = new CONTEXT_TYPE(lambda);
         } else {
             context = new LAMBDA(std::move(lambda));
         }
