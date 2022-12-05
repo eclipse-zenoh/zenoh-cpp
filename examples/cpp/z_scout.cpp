@@ -112,9 +112,9 @@ int main(int argc, char **argv) {
     std::condition_variable done_signal;
     bool done = false;
 
-    scout(std::move(config.create_scouting_config()), [&m, &done, &done_signal, &count](std::optional<Hello> hello) {
-        if (hello.has_value()) {
-            auto zhello = hello->take();
+    scout(std::move(config.create_scouting_config()), [&m, &done, &done_signal, &count](Hello &hello) {
+        if (hello.check()) {
+            auto zhello = hello.take();
             z_hello_t lhello = z_loan(zhello);
             fprinthello(stdout, lhello);
             fprintf(stdout, "\n");
