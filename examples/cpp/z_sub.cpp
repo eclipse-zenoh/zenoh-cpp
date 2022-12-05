@@ -55,10 +55,8 @@ int main(int argc, char **argv) {
     printf("Opening session...\n");
     auto session = std::get<Session>(open(std::move(config)));
 
-    auto callback = ClosureSample(data_handler);
-
     printf("Declaring Subscriber on '%s'...\n", expr);
-    auto subscriber = std::get<Subscriber>(session.declare_subscriber(keyexpr, std::move(callback)));
+    auto subscriber = std::get<Subscriber>(session.declare_subscriber(keyexpr, data_handler));
 
     printf("Enter 'q' to quit...\n");
     char c = 0;

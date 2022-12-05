@@ -54,40 +54,25 @@ int main(int argc, char **argv) {
     std::condition_variable done_signal;
     bool done = false;
 
-    ClosureReply reply([&m, &done, &done_signal](std::optional<Reply> reply) {
-        if (reply.has_value()) {
-            auto result = reply->get();
-            if (auto sample = std::get_if<Sample>(&result)) {
-                std::cout << "Received ('" << sample->get_keyexpr().as_string_view() << "' : '"
-                          << sample->get_payload().as_string_view() << "')\n";
-            } else if (auto error = std::get_if<ErrorMessage>(&result)) {
-                std::cout << "Received an error :" << error->as_string_view() << "\n";
+    session.get(
+        keyexpr, "",
+        [&m, &done, &done_signal](Reply reply) {
+            if (reply.check()) {
+                auto result = reply.get();
+                if (auto sample = std::get_if<Sample>(&result)) {
+                    std::cout << "Received ('" << sample->get_keyexpr().as_string_view() << "' : '"
+                              << sample->get_payload().as_string_view() << "')\n";
+                } else if (auto error = std::get_if<ErrorMessage>(&result)) {
+                    std::cout << "Received an error :" << error->as_string_view() << "\n";
+                }
+            } else {
+                std::cout << "No more replies\n";
+                std::lock_guard lock(m);
+                done = true;
+                done_signal.notify_all();
             }
-        } else {
-            std::cout << "No more replies\n";
-            std::lock_guard lock(m);
-            done = true;
-            done_signal.notify_all();
-        }
-    });
-
-    // session.get(keyexpr, "", ClosureReply([&m, &done, &done_signal](std::optional<Reply> reply) {
-    //                 if (reply.has_value()) {
-    //                     auto result = reply->get();
-    //                     if (auto sample = std::get_if<Sample>(&result)) {
-    //                         std::cout << "Received ('" << sample->get_keyexpr().as_string_view() << "' : '"
-    //                                   << sample->get_payload().as_string_view() << "')\n";
-    //                     } else if (auto error = std::get_if<ErrorMessage>(&result)) {
-    //                         std::cout << "Received an error :" << error->as_string_view() << "\n";
-    //                     }
-    //                 } else {
-    //                     std::cout << "No more replies\n";
-    //                     std::lock_guard lock(m);
-    //                     done = true;
-    //                     done_signal.notify_all();
-    //                 }
-    //             }),
-    //             opts);
+        },
+        opts);
 
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });

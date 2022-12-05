@@ -18,11 +18,13 @@
 
 using namespace zenoh;
 
-void print_zid(const Id& id) {
-    for (int i = 0; i < 16; i++) {
-        printf("%02x", id.id[i]);
+void print_zid(const Id* id) {
+    if (id) {
+        for (int i = 0; i < 16; i++) {
+            printf("%02x", id->id[i]);
+        }
+        printf("\n");
     }
-    printf("\n");
 }
 
 int main(int argc, char** argv) {
@@ -42,15 +44,11 @@ int main(int argc, char** argv) {
 
     auto self_id = session.info_zid();
     printf("own id: ");
-    print_zid(self_id);
+    print_zid(&self_id);
 
     printf("routers ids:\n");
-    session.info_routers_zid([](const Id* id) {
-        if (id) print_zid(*id);
-    });
+    session.info_routers_zid(print_zid);
 
     printf("peers ids:\n");
-    session.info_peers_zid([](const Id* id) {
-        if (id) print_zid(*id);
-    });
+    session.info_peers_zid(print_zid);
 }
