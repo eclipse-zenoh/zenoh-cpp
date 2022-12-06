@@ -14,6 +14,7 @@
 #pragma once
 
 #include "zenohcpp_base.h"
+#include "zenohcpp_objects.h"
 #include "zenohcpp_structs.h"
 
 namespace zenoh {
@@ -23,9 +24,9 @@ class ClosureReplyChannelSend : public ClosureReply {
     using ClosureReply::ClosureReply;
 };
 
-class ClosureReplyChannelRecv : public Owned<::z_owned_reply_channel_closure_t> {
+class ClosureReplyChannelRecv : public ClosureMoveParam<::z_owned_reply_channel_closure_t, ::z_owned_reply_t, Reply> {
    public:
-    using Owned::Owned;
+    using ClosureMoveParam::ClosureMoveParam;
 };
 
 std::pair<ClosureReplyChannelSend, ClosureReplyChannelRecv> reply_fifo_new(uintptr_t bound) {

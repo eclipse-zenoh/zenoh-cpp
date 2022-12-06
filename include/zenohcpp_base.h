@@ -73,22 +73,24 @@ class Owned {
 // Base type for C++ wrappers for Zenoh closures which doesn't take ownership of passed value
 // It expects that
 // - ZCPP_PARAM type is derived from ZC_PARAM
-// - LAMBDA can be invoked as void(const ZCPP_PARAM*)
-// - LAMBDA called with nullptr to notify that closure is being destructed
+// - user's LAMBDA can be invoked with (const ZCPP_PARAM*)
+// - user's LAMBDA is called by zenoh with nullptr to notify that closure is being destructed
 //
 template <typename ZC_CLOSURE_TYPE, typename ZC_PARAM, typename ZCPP_PARAM,
           typename std::enable_if_t<std::is_base_of_v<ZC_PARAM, ZCPP_PARAM> && sizeof(ZC_PARAM) == sizeof(ZCPP_PARAM),
                                     bool> = true>
 class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
+    typedef decltype((*ZC_CLOSURE_TYPE::call)(nullptr, nullptr)) ZC_RETVAL;
+
    public:
     using Owned<ZC_CLOSURE_TYPE>::Owned;
 
     // Closure is valid if it can be called. The drop operation is optional
     bool check() const { return Owned<ZC_CLOSURE_TYPE>::_0.call != nullptr; }
 
-    void call(const ZC_PARAM* v) { Owned<ZC_CLOSURE_TYPE>::_0.call(v, Owned<ZC_CLOSURE_TYPE>::_0.context); }
+    ZC_RETVAL call(const ZC_PARAM* v) { return Owned<ZC_CLOSURE_TYPE>::_0.call(v, Owned<ZC_CLOSURE_TYPE>::_0.context); }
 
-    void operator()(const ZCPP_PARAM* v) { call(v); }
+    ZC_RETVAL operator()(const ZCPP_PARAM* v) { return call(v); }
 
     // Template constructors
 
@@ -104,7 +106,7 @@ class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
         typedef std::conditional_t<is_function, std::function<std::remove_reference_t<LAMBDA>>, LAMBDA> CONTEXT_TYPE;
 
         void* context;
-        void (*call)(ZC_PARAM*, void*);
+        ZC_RETVAL (*call)(ZC_PARAM*, void*);
         void (*drop)(void*);
 
         if constexpr (is_function) {
@@ -114,44 +116,43 @@ class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
 
         return {
             context,
-            call : [](const ZC_PARAM* pvalue, void* ctx) {
-                static_cast<CONTEXT_TYPE*>(ctx)->operator()(static_cast<const ZCPP_PARAM*>(pvalue));
+            call : [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+                return static_cast<CONTEXT_TYPE*>(ctx)->operator()(static_cast<const ZCPP_PARAM*>(pvalue));
             },
             drop : [](void* ctx) {
                 static_cast<CONTEXT_TYPE*>(ctx)->operator()(nullptr);
                 delete static_cast<CONTEXT_TYPE*>(ctx);
             },
         };
-    }
-
-    template <typename FUNC>
-    ZC_CLOSURE_TYPE wrap_func_to_closure(const FUNC& func) {
-        auto lambda = [func](const ZC_PARAM* v) { func(static_cast<const ZCPP_PARAM*>(v)); };
-        return wrap_lambda_to_closure(std::move(lambda));
-    }
+    }  // namespace zenoh
 };
 
 //
 // Base type for C++ wrappers for Zenoh closures which takes ownership of passed value
 // It expects that
 // - ZCPP_PARAM is derived from Owned<ZC_PARAM>
+// - user's LAMBDA can be invoked with ZCPP_PARAM, ZCPP_PARAM& or ZCPP_PARAM&&
+// - user's LAMBDA is called by zenoh with empty ZCPP_PARAM (when .check()==false) to notify that closure is being
+// destructed
 //
 template <typename ZC_CLOSURE_TYPE, typename ZC_PARAM, typename ZCPP_PARAM,
           typename std::enable_if_t<std::is_base_of_v<Owned<ZC_PARAM>, ZCPP_PARAM>, bool> = true>
 
 class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
+    typedef decltype((*ZC_CLOSURE_TYPE::call)(nullptr, nullptr)) ZC_RETVAL;
+
    public:
     using Owned<ZC_CLOSURE_TYPE>::Owned;
 
     // Closure is valid if it can be called. The drop operation is optional
     bool check() const { return Owned<ZC_CLOSURE_TYPE>::_0.call != nullptr; }
 
-    void call(ZC_PARAM* v) { Owned<ZC_CLOSURE_TYPE>::_0.call(v, Owned<ZC_CLOSURE_TYPE>::_0.context); }
+    ZC_RETVAL call(ZC_PARAM* v) { return Owned<ZC_CLOSURE_TYPE>::_0.call(v, Owned<ZC_CLOSURE_TYPE>::_0.context); }
 
-    void operator()(ZCPP_PARAM& v) { call(&(static_cast<ZC_PARAM&>(v))); }
-    void operator()(ZCPP_PARAM&& v) {
+    ZC_RETVAL operator()(ZCPP_PARAM& v) { return call(&(static_cast<ZC_PARAM&>(v))); }
+    ZC_RETVAL operator()(ZCPP_PARAM&& v) {
         ZCPP_PARAM take(std::move(v));
-        call(&(static_cast<ZC_PARAM&>(take)));
+        return call(&(static_cast<ZC_PARAM&>(take)));
     }
 
     template <typename LAMBDA>
@@ -165,7 +166,7 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
         typedef std::conditional_t<is_function, std::function<std::remove_reference_t<LAMBDA>>, LAMBDA> CONTEXT_TYPE;
 
         void* context;
-        void (*call)(ZC_PARAM*, void*);
+        ZC_RETVAL (*call)(ZC_PARAM*, void*);
         void (*drop)(void*);
 
         if constexpr (is_function) {
@@ -175,10 +176,16 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
         }
 
         if constexpr (is_lvalue_param) {
-            call = [](ZC_PARAM* pvalue, void* ctx) {
+            call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
                 ZCPP_PARAM wrapper(pvalue);
-                static_cast<CONTEXT_TYPE*>(ctx)->operator()(wrapper);
-                *pvalue = wrapper.take();
+                if constexpr (std::is_same_v<ZC_RETVAL, void>) {
+                    static_cast<CONTEXT_TYPE*>(ctx)->operator()(wrapper);
+                    *pvalue = wrapper.take();
+                } else {
+                    auto r = static_cast<CONTEXT_TYPE*>(ctx)->operator()(wrapper);
+                    *pvalue = wrapper.take();
+                    return r;
+                }
             };
             drop = [](void* ctx) {
                 ZCPP_PARAM wrapper(nullptr);
@@ -186,7 +193,9 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
                 delete static_cast<CONTEXT_TYPE*>(ctx);
             };
         } else {
-            call = [](ZC_PARAM* pvalue, void* ctx) { static_cast<CONTEXT_TYPE*>(ctx)->operator()(ZCPP_PARAM(pvalue)); };
+            call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+                return static_cast<CONTEXT_TYPE*>(ctx)->operator()(ZCPP_PARAM(pvalue));
+            };
             drop = [](void* ctx) {
                 static_cast<CONTEXT_TYPE*>(ctx)->operator()(ZCPP_PARAM(nullptr));
                 delete static_cast<CONTEXT_TYPE*>(ctx);
