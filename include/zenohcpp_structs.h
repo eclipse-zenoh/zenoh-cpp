@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include <iomanip>
+#include <iostream>
 #include <string>
 #include <string_view>
 
@@ -29,6 +31,21 @@ typedef ::z_reliability_t Reliability;
 typedef ::z_congestion_control_t CongestionControl;
 typedef ::z_priority_t Priority;
 
+enum class WhatAmI { Unknown = 0, Router = 1, Peer = 1 << 1, Client = 1 << 2 };
+
+inline const char* as_cstr(WhatAmI whatami) {
+    return whatami == WhatAmI::Router   ? "Router"
+           : whatami == WhatAmI::Peer   ? "Peer"
+           : whatami == WhatAmI::Client ? "Client"
+                                        : nullptr;
+}
+
+struct StrArray : public Copyable<::z_str_array_t> {
+    using Copyable::Copyable;
+    const char* operator[](size_t pos) const { return val[pos]; }
+    size_t get_len() const { return len; }
+};
+
 struct Bytes : public Copyable<::z_bytes_t> {
     using Copyable::Copyable;
     Bytes(const char* s) : Copyable({start : reinterpret_cast<const uint8_t*>(s), len : strlen(s)}) {}
@@ -40,6 +57,26 @@ struct Bytes : public Copyable<::z_bytes_t> {
 
 struct Id : public Copyable<::z_id_t> {
     using Copyable::Copyable;
+    bool is_some() const { return id[0] != 0; }
+};
+
+std::ostream& operator<<(std::ostream& os, const Id& id) {
+    for (size_t i = 0; id.id[i] != 0 && i < 16; i++)
+        os << std::hex << std::setfill('0') << std::setw(2) << (int)id.id[i];
+    return os;
+}
+
+struct HelloView : public Copyable<::z_hello_t> {
+    using Copyable::Copyable;
+
+    const Id& get_id() const { return static_cast<const Id&>(pid); }
+    WhatAmI get_whatami() const {
+        return whatami == Z_ROUTER   ? WhatAmI::Router
+               : whatami == Z_PEER   ? WhatAmI::Peer
+               : whatami == Z_CLIENT ? WhatAmI::Client
+                                     : WhatAmI::Unknown;
+    }
+    const StrArray& get_locators() const { return static_cast<const StrArray&>(locators); }
 };
 
 struct KeyExprView : public Copyable<::z_keyexpr_t> {

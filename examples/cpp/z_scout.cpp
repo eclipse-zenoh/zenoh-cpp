@@ -28,71 +28,29 @@
 
 using namespace zenoh;
 
-void fprintpid(FILE *stream, z_id_t pid) {
-    int len = 0;
-    for (int i = 0; i < 16; i++) {
-        if (pid.id[i]) {
-            len = i + 1;
-        }
+void printlocators(const StrArray &locs) {
+    std::cout << "[";
+    for (unsigned int i = 0; i < locs.get_len(); i++) {
+        std::cout << "\"" << locs[i] << "\"";
+        if (i < locs.get_len() - 1) std::cout << ", ";
     }
-    if (!len) {
-        fprintf(stream, "None");
-    } else {
-        fprintf(stream, "Some(");
-        for (unsigned int i = 0; i < len; i++) {
-            fprintf(stream, "%02X", (int)pid.id[i]);
-        }
-        fprintf(stream, ")");
-    }
+    std::cout << "]";
 }
 
-void fprintwhatami(FILE *stream, unsigned int whatami) {
-    if (whatami == Z_ROUTER) {
-        fprintf(stream, "\"Router\"");
-    } else if (whatami == Z_PEER) {
-        fprintf(stream, "\"Peer\"");
-    } else {
-        fprintf(stream, "\"Other\"");
-    }
-}
-
-void fprintlocators(FILE *stream, const z_str_array_t *locs) {
-    fprintf(stream, "[");
-    for (unsigned int i = 0; i < locs->len; i++) {
-        fprintf(stream, "\"");
-        fprintf(stream, "%s", locs->val[i]);
-        fprintf(stream, "\"");
-        if (i < locs->len - 1) {
-            fprintf(stream, ", ");
-        }
-    }
-    fprintf(stream, "]");
-}
-
-void fprinthello(FILE *stream, const z_hello_t hello) {
-    fprintf(stream, "Hello { pid: ");
-    fprintpid(stream, hello.pid);
-    fprintf(stream, ", whatami: ");
-    fprintwhatami(stream, hello.whatami);
-    fprintf(stream, ", locators: ");
-    fprintlocators(stream, &hello.locators);
-    fprintf(stream, " }");
-}
-
-void callback(z_owned_hello_t *hello, void *context) {
-    z_hello_t lhello = z_loan(*hello);
-    fprinthello(stdout, lhello);
-    fprintf(stdout, "\n");
-    (*(int *)context)++;
-}
-
-void drop(void *context) {
-    printf("Dropping scout\n");
-    int count = *(int *)context;
-    free(context);
-    if (!count) {
-        printf("Did not find any zenoh process.\n");
-    }
+void printhello(const HelloView &hello) {
+    std::cout << "Hello { pid: ";
+    if (hello.get_id().is_some())
+        std::cout << "Some(" << hello.get_id() << ")";
+    else
+        std::cout << "None";
+    std::cout << ", whatami: ";
+    if (auto s = as_cstr(hello.get_whatami()))
+        std::cout << s;
+    else
+        std::cout << "Unknown(" << hello.whatami << ")";
+    std::cout << ", locators: ";
+    printlocators(hello.get_locators());
+    std::cout << " }";
 }
 
 int main(int argc, char **argv) {
@@ -112,12 +70,10 @@ int main(int argc, char **argv) {
     std::condition_variable done_signal;
     bool done = false;
 
-    scout(std::move(config.create_scouting_config()), [&m, &done, &done_signal, &count](Hello &hello) {
+    scout(std::move(config.create_scouting_config()), [&m, &done, &done_signal, &count](Hello hello) {
         if (hello.check()) {
-            auto zhello = hello.take();
-            z_hello_t lhello = z_loan(zhello);
-            fprinthello(stdout, lhello);
-            fprintf(stdout, "\n");
+            printhello(hello);
+            std::cout << std::endl;
             count++;
         } else {
             std::cout << "Dropping scout\n";

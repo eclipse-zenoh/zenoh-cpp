@@ -110,6 +110,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
 class Hello : public Owned<::z_owned_hello_t> {
    public:
     using Owned::Owned;
+    operator HelloView() const { return HelloView(::z_hello_loan(&_0)); }
 };
 
 typedef ClosureMoveParam<::z_owned_closure_reply_t, ::z_owned_reply_t, Reply> ClosureReply;
