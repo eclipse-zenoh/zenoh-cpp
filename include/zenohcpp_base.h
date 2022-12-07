@@ -52,6 +52,7 @@ class Owned {
     Owned(ZC_OWNED_TYPE&& v) : _0(v) { ::z_null(v); }
     Owned(Owned&& v) : Owned(std::move(v._0)) {}
     ~Owned() { ::z_drop(&_0); }
+    void drop() { ::z_drop(&_0); }
     ZC_OWNED_TYPE take() {
         auto r = _0;
         ::z_null(_0);
@@ -94,28 +95,33 @@ class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
 
     // Template constructors
 
-    template <typename LAMBDA>
-    ClosureConstPtrParam(LAMBDA&& lambda) : Owned<ZC_CLOSURE_TYPE>(wrap_lambda(std::forward<LAMBDA>(lambda))) {}
+    template <typename T, typename std::enable_if_t<!std::is_function_v<T>, bool> = true>
+    ClosureConstPtrParam(T& obj) : Owned<ZC_CLOSURE_TYPE>(wrap_ref(obj)) {}
 
-    // TODO: more constructors to be added here
+    template <typename T, typename std::enable_if_t<std::is_function_v<T>, bool> = true>
+    ClosureConstPtrParam(T& func) : Owned<ZC_CLOSURE_TYPE>(wrap_func(func)) {}
+
+    template <typename T>
+    ClosureConstPtrParam(T&& obj)
+        : Owned<ZC_CLOSURE_TYPE>(wrap_forward(std::forward<std::remove_reference_t<T>>(obj))) {}
 
    private:
-    template <typename LAMBDA>
-    ZC_CLOSURE_TYPE wrap_lambda(LAMBDA&& lambda) {
-        constexpr bool is_function = std::is_function_v<std::remove_reference_t<LAMBDA>>;
-        typedef std::conditional_t<is_function, std::function<std::remove_reference_t<LAMBDA>>, LAMBDA> CONTEXT_TYPE;
-
-        void* context;
-        ZC_RETVAL (*call)(ZC_PARAM*, void*);
-        void (*drop)(void*);
-
-        if constexpr (is_function) {
-            context = new CONTEXT_TYPE(lambda);
-        } else
-            context = new LAMBDA(std::move(lambda));
-
+    template <typename T>
+    ZC_CLOSURE_TYPE wrap_ref(T& obj) {
         return {
-            context,
+            context : &obj,
+            call : [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+                return static_cast<T*>(ctx)->operator()(static_cast<const ZCPP_PARAM*>(pvalue));
+            },
+            drop : [](void* ctx) { static_cast<T*>(ctx)->operator()(nullptr); }
+        };
+    }
+
+    template <typename T>
+    ZC_CLOSURE_TYPE wrap_func(T& func) {
+        typedef std::function<T> CONTEXT_TYPE;
+        return {
+            context : new CONTEXT_TYPE(func),
             call : [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
                 return static_cast<CONTEXT_TYPE*>(ctx)->operator()(static_cast<const ZCPP_PARAM*>(pvalue));
             },
@@ -124,7 +130,23 @@ class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
                 delete static_cast<CONTEXT_TYPE*>(ctx);
             },
         };
-    }  // namespace zenoh
+    }
+
+    template <typename T>
+    ZC_CLOSURE_TYPE wrap_forward(T&& obj) {
+        typedef std::remove_reference_t<T> CONTEXT_TYPE;
+
+        return {
+            context : new CONTEXT_TYPE(std::forward<CONTEXT_TYPE>(obj)),
+            call : [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+                return static_cast<CONTEXT_TYPE*>(ctx)->operator()(static_cast<const ZCPP_PARAM*>(pvalue));
+            },
+            drop : [](void* ctx) {
+                static_cast<CONTEXT_TYPE*>(ctx)->operator()(nullptr);
+                delete static_cast<CONTEXT_TYPE*>(ctx);
+            },
+        };
+    }
 };
 
 //
@@ -155,15 +177,23 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
         return call(&(static_cast<ZC_PARAM&>(take)));
     }
 
-    template <typename LAMBDA>
-    ClosureMoveParam(LAMBDA&& lambda) : Owned<ZC_CLOSURE_TYPE>(wrap_lambda<LAMBDA>(std::forward<LAMBDA>(lambda))) {}
+    template <typename T, typename std::enable_if_t<!std::is_function_v<T>, bool> = true>
+    ClosureMoveParam(T& obj) : Owned<ZC_CLOSURE_TYPE>(wrap_lambda<false, true>(obj)) {}
+
+    template <typename T, typename std::enable_if_t<std::is_function_v<T>, bool> = true>
+    ClosureMoveParam(T& func) : Owned<ZC_CLOSURE_TYPE>(wrap_lambda<true, false>(func)) {}
+
+    template <typename T>
+    ClosureMoveParam(T&& obj)
+        : Owned<ZC_CLOSURE_TYPE>(wrap_lambda<false, false>(std::forward<std::remove_reference_t<T>>(obj))) {}
 
    private:
-    template <typename LAMBDA>
+    template <bool is_function, bool is_objref, typename LAMBDA>
     ZC_CLOSURE_TYPE wrap_lambda(LAMBDA&& lambda) {
-        constexpr bool is_function = std::is_function_v<std::remove_reference_t<LAMBDA>>;
         constexpr bool is_lvalue_param = std::is_invocable_v<LAMBDA, ZCPP_PARAM&>;
-        typedef std::conditional_t<is_function, std::function<std::remove_reference_t<LAMBDA>>, LAMBDA> CONTEXT_TYPE;
+        typedef std::conditional_t<is_function, std::function<std::remove_reference_t<LAMBDA>>,
+                                   std::remove_reference_t<LAMBDA>>
+            CONTEXT_TYPE;
 
         void* context;
         ZC_RETVAL (*call)(ZC_PARAM*, void*);
@@ -171,6 +201,8 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
 
         if constexpr (is_function) {
             context = new CONTEXT_TYPE(lambda);
+        } else if constexpr (is_objref) {
+            context = &lambda;
         } else {
             context = new LAMBDA(std::move(lambda));
         }
@@ -190,7 +222,7 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
             drop = [](void* ctx) {
                 ZCPP_PARAM wrapper(nullptr);
                 static_cast<CONTEXT_TYPE*>(ctx)->operator()(wrapper);
-                delete static_cast<CONTEXT_TYPE*>(ctx);
+                if constexpr (!is_objref) delete static_cast<CONTEXT_TYPE*>(ctx);
             };
         } else {
             call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
@@ -198,7 +230,7 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
             };
             drop = [](void* ctx) {
                 static_cast<CONTEXT_TYPE*>(ctx)->operator()(ZCPP_PARAM(nullptr));
-                delete static_cast<CONTEXT_TYPE*>(ctx);
+                if constexpr (!is_objref) delete static_cast<CONTEXT_TYPE*>(ctx);
             };
         }
         return {context, call, drop};

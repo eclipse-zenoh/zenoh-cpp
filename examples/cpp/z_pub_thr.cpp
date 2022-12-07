@@ -48,10 +48,7 @@ int _main(int argc, char **argv) {
     printf("Declaring Publisher on '%s'...\n", keyexpr);
     auto pub = std::get<Publisher>(session.declare_publisher(keyexpr, options));
 
-    while (1) {
-        std::cout << ".";
-        pub.put(payload);
-    }
+    while (1) pub.put(payload);
 }
 
 int main(int argc, char **argv) {

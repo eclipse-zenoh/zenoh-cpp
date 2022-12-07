@@ -46,11 +46,12 @@ int _main(int argc, char** argv) {
 
     printf("peers ids:\n");
     session.info_peers_zid(print_zid);
+    return 0;
 }
 
 int main(int argc, char** argv) {
     try {
-        _main(argc, argv);
+        return _main(argc, argv);
     } catch (ErrorMessage e) {
         std::cout << "Received an error :" << e.as_string_view() << "\n";
     }
