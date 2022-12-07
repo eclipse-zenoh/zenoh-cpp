@@ -27,7 +27,7 @@
 
 using namespace zenoh;
 
-int main(int argc, char **argv) {
+int _main(int argc, char **argv) {
     const char *expr = "demo/example/**";
     if (argc > 1) {
         expr = argv[1];
@@ -48,32 +48,36 @@ int main(int argc, char **argv) {
         }
     }
 
-    try {
-        printf("Opening session...\n");
-        auto session = std::get<Session>(open(std::move(config)));
+    printf("Opening session...\n");
+    auto session = std::get<Session>(open(std::move(config)));
 
-        std::cout << "Sending Query '" << expr << "'...\n";
-        GetOptions opts;
-        opts.set_target(Z_QUERY_TARGET_ALL);
+    std::cout << "Sending Query '" << expr << "'...\n";
+    GetOptions opts;
+    opts.set_target(Z_QUERY_TARGET_ALL);
 
-        auto [send, recv] = reply_non_blocking_fifo_new(16);
-        session.get(keyexpr, "", std::move(send), opts);
+    auto [send, recv] = reply_non_blocking_fifo_new(16);
+    session.get(keyexpr, "", std::move(send), opts);
 
-        Reply reply(nullptr);
-        for (bool call_success = recv(reply); !call_success || reply.check(); call_success = recv(reply)) {
-            if (!call_success) {
-                std::cout << ".";
-                usleep(100);
-                continue;
-            }
-            auto sample = std::get<Sample>(reply.get());
-            std::cout << "\nReceived ('" << sample.get_keyexpr().as_string_view() << "' : '"
-                      << sample.get_payload().as_string_view() << "')";
+    Reply reply(nullptr);
+    for (bool call_success = recv(reply); !call_success || reply.check(); call_success = recv(reply)) {
+        if (!call_success) {
+            std::cout << ".";
+            usleep(100);
+            continue;
         }
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
+        auto sample = std::get<Sample>(reply.get());
+        std::cout << "\nReceived ('" << sample.get_keyexpr().as_string_view() << "' : '"
+                  << sample.get_payload().as_string_view() << "')";
     }
     std::cout << std::endl;
 
     return 0;
+}
+
+int main(int argc, char **argv) {
+    try {
+        _main(argc, argv);
+    } catch (ErrorMessage e) {
+        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    }
 }

@@ -46,12 +46,17 @@ struct StrArray : public Copyable<::z_str_array_t> {
     size_t get_len() const { return len; }
 };
 
-struct Bytes : public Copyable<::z_bytes_t> {
+struct BytesView : public Copyable<::z_bytes_t> {
     using Copyable::Copyable;
-    Bytes(const char* s) : Copyable({start : reinterpret_cast<const uint8_t*>(s), len : strlen(s)}) {}
-    Bytes(const std::string_view& s)
+    BytesView(void* s, size_t _len) : Copyable({start : reinterpret_cast<const uint8_t*>(s), len : _len}) {}
+    BytesView(const char* s) : Copyable({start : reinterpret_cast<const uint8_t*>(s), len : strlen(s)}) {}
+    template <typename T>
+    BytesView(const std::vector<T>& v)
+        : Copyable({start : reinterpret_cast<const uint8_t*>(&v[0]), len : v.size() * sizeof(T)}) {}
+    BytesView(const std::string_view& s)
         : Copyable({start : reinterpret_cast<const uint8_t*>(s.data()), len : s.length()}) {}
-    Bytes(const std::string& s) : Copyable({start : reinterpret_cast<const uint8_t*>(s.data()), len : s.length()}) {}
+    BytesView(const std::string& s)
+        : Copyable({start : reinterpret_cast<const uint8_t*>(s.data()), len : s.length()}) {}
     std::string_view as_string_view() const { return std::string_view(reinterpret_cast<const char*>(start), len); }
 };
 
@@ -83,7 +88,7 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     using Copyable::Copyable;
     KeyExprView(const char* name) : Copyable(z_keyexpr(name)) {}
     bool check() const { return z_keyexpr_is_initialized(this); }
-    Bytes as_bytes() const { return Bytes{::z_keyexpr_as_bytes(*this)}; }
+    BytesView as_bytes() const { return BytesView{::z_keyexpr_as_bytes(*this)}; }
     std::string_view as_string_view() const { return as_bytes().as_string_view(); }
 };
 
@@ -98,21 +103,21 @@ struct Timestamp : Copyable<::z_timestamp_t> {
     using Copyable::Copyable;
     // TODO: add utility methods to interpret time as mils, seconds, minutes, etc
     uint64_t get_time() const { return time; }
-    const Bytes& get_id() const { return static_cast<const Bytes&>(id); }
+    const BytesView& get_id() const { return static_cast<const BytesView&>(id); }
 };
 
 struct Sample : public Copyable<::z_sample_t> {
     using Copyable::Copyable;
     const KeyExprView& get_keyexpr() const { return static_cast<const KeyExprView&>(keyexpr); }
-    const Bytes& get_payload() const { return static_cast<const Bytes&>(payload); }
+    const BytesView& get_payload() const { return static_cast<const BytesView&>(payload); }
     const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
     SampleKind get_kind() const { return kind; }
 };
 
 struct Value : public Copyable<::z_value_t> {
     using Copyable::Copyable;
-    Value(const char* v) : Copyable({payload : Bytes(v), encoding : Encoding()}) {}
-    const Bytes& get_payload() const { return static_cast<const Bytes&>(payload); }
+    Value(const char* v) : Copyable({payload : BytesView(v), encoding : Encoding()}) {}
+    const BytesView& get_payload() const { return static_cast<const BytesView&>(payload); }
     const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
     std::string_view as_string_view() const { return get_payload().as_string_view(); }
 };
@@ -172,25 +177,25 @@ class Query : public Copyable<::z_query_t> {
     Query() = delete;
     Query(::z_query_t query) : Copyable(query) {}
     KeyExprView get_keyexpr() const { return KeyExprView(::z_query_keyexpr(this)); }
-    Bytes get_parameters() const { return Bytes(::z_query_parameters(this)); }
+    BytesView get_parameters() const { return BytesView(::z_query_parameters(this)); }
 
-    bool reply(KeyExprView key, const Bytes& payload, const QueryReplyOptions& options, ErrNo& error) const {
+    bool reply(KeyExprView key, const BytesView& payload, const QueryReplyOptions& options, ErrNo& error) const {
         return reply_impl(key, payload, &options, error);
     }
-    bool reply(KeyExprView key, const Bytes& payload, const QueryReplyOptions& options) const {
+    bool reply(KeyExprView key, const BytesView& payload, const QueryReplyOptions& options) const {
         ErrNo error;
         return reply_impl(key, payload, &options, error);
     }
-    bool reply(KeyExprView key, const Bytes& payload, ErrNo& error) const {
+    bool reply(KeyExprView key, const BytesView& payload, ErrNo& error) const {
         return reply_impl(key, payload, nullptr, error);
     }
-    bool reply(KeyExprView key, const Bytes& payload) const {
+    bool reply(KeyExprView key, const BytesView& payload) const {
         ErrNo error;
         return reply_impl(key, payload, nullptr, error);
     }
 
    private:
-    bool reply_impl(KeyExprView key, const Bytes& payload, const QueryReplyOptions* options, ErrNo& error) const {
+    bool reply_impl(KeyExprView key, const BytesView& payload, const QueryReplyOptions* options, ErrNo& error) const {
         error = ::z_query_reply(this, key, payload.start, payload.len, options);
         return error == 0;
     }

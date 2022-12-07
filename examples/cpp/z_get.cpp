@@ -22,7 +22,7 @@
 
 using namespace zenoh;
 
-int main(int argc, char **argv) {
+int _main(int argc, char **argv) {
     const char *expr = "demo/example/**";
     if (argc > 1) {
         expr = argv[1];
@@ -78,4 +78,12 @@ int main(int argc, char **argv) {
     done_signal.wait(lock, [&done] { return done; });
 
     return 0;
+}
+
+int main(int argc, char **argv) {
+    try {
+        _main(argc, argv);
+    } catch (ErrorMessage e) {
+        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    }
 }

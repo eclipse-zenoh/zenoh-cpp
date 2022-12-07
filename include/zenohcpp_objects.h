@@ -87,21 +87,21 @@ class Queryable : public Owned<::z_owned_queryable_t> {
 class Publisher : public Owned<::z_owned_publisher_t> {
    public:
     using Owned::Owned;
-    bool put(const Bytes& payload, const PublisherPutOptions& options, ErrNo& error) {
+    bool put(const BytesView& payload, const PublisherPutOptions& options, ErrNo& error) {
         return put_impl(payload, &options, error);
     }
-    bool put(const Bytes& payload, ErrNo& error) { return put_impl(payload, nullptr, error); }
-    bool put(const Bytes& payload, const PublisherPutOptions& options) {
+    bool put(const BytesView& payload, ErrNo& error) { return put_impl(payload, nullptr, error); }
+    bool put(const BytesView& payload, const PublisherPutOptions& options) {
         ErrNo error;
         return put_impl(payload, &options, error);
     }
-    bool put(const Bytes& payload) {
+    bool put(const BytesView& payload) {
         ErrNo error;
         return put_impl(payload, nullptr, error);
     }
 
    private:
-    bool put_impl(const Bytes& payload, const PublisherPutOptions* options, ErrNo& error) {
+    bool put_impl(const BytesView& payload, const PublisherPutOptions* options, ErrNo& error) {
         error = ::z_publisher_put(::z_loan(_0), payload.start, payload.len, options);
         return error == 0;
     }
@@ -159,17 +159,17 @@ class Session : public Owned<::z_owned_session_t> {
         return get_impl(keyexpr, parameters, std::move(callback), nullptr, error);
     }
 
-    bool put(KeyExprView keyexpr, const Bytes& payload, const PutOptions& options, ErrNo& error) {
+    bool put(KeyExprView keyexpr, const BytesView& payload, const PutOptions& options, ErrNo& error) {
         return put_impl(keyexpr, payload, &options, error);
     }
-    bool put(KeyExprView keyexpr, const Bytes& payload, const PutOptions& options) {
+    bool put(KeyExprView keyexpr, const BytesView& payload, const PutOptions& options) {
         ErrNo error;
         return put_impl(keyexpr, payload, &options, error);
     }
-    bool put(KeyExprView keyexpr, const Bytes& payload, ErrNo& error) {
+    bool put(KeyExprView keyexpr, const BytesView& payload, ErrNo& error) {
         return put_impl(keyexpr, payload, nullptr, error);
     }
-    bool put(KeyExprView keyexpr, const Bytes& payload) {
+    bool put(KeyExprView keyexpr, const BytesView& payload) {
         ErrNo error;
         PutOptions options;
         return put_impl(keyexpr, payload, nullptr, error);
@@ -248,7 +248,7 @@ class Session : public Owned<::z_owned_session_t> {
         return error == 0;
     }
 
-    bool put_impl(KeyExprView keyexpr, const Bytes& payload, const PutOptions* options, ErrNo& error) {
+    bool put_impl(KeyExprView keyexpr, const BytesView& payload, const PutOptions* options, ErrNo& error) {
         error = ::z_put(::z_session_loan(&_0), keyexpr, payload.start, payload.len, options);
         return error == 0;
     }

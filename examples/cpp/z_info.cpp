@@ -19,15 +19,10 @@
 using namespace zenoh;
 
 void print_zid(const Id* id) {
-    if (id) {
-        for (int i = 0; i < 16; i++) {
-            printf("%02x", id->id[i]);
-        }
-        printf("\n");
-    }
+    if (id) std::cout << id << std::endl;
 }
 
-int main(int argc, char** argv) {
+int _main(int argc, char** argv) {
     Config config;
     if (argc > 1) {
         if (config.insert_json(Z_CONFIG_CONNECT_KEY, argv[3]) < 0) {
@@ -51,4 +46,12 @@ int main(int argc, char** argv) {
 
     printf("peers ids:\n");
     session.info_peers_zid(print_zid);
+}
+
+int main(int argc, char** argv) {
+    try {
+        _main(argc, argv);
+    } catch (ErrorMessage e) {
+        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    }
 }

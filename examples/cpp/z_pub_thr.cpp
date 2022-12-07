@@ -10,30 +10,27 @@
 //
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
-
+//
 #include <stdio.h>
 #include <string.h>
-
-#include <condition_variable>
-#include <iostream>
 
 #include "zenohcpp.h"
 
 using namespace zenoh;
 
 int _main(int argc, char **argv) {
-    const char *expr = "demo/example/**";
-    if (argc > 1) {
-        expr = argv[1];
-    }
-    KeyExprView keyexpr(expr);
-    if (!keyexpr.check()) {
-        printf("%s is not a valid key expression", expr);
+    if (argc < 2) {
+        printf("USAGE:\n\tz_pub_thr <payload-size> [<zenoh-locator>]\n\n");
         exit(-1);
     }
+
+    const char *keyexpr = "test/thr";
+    size_t len = atoi(argv[1]);
+    std::vector<char> payload(len, 1);
+
     Config config;
     if (argc > 2) {
-        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[2])) {
+        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
@@ -45,21 +42,16 @@ int _main(int argc, char **argv) {
     printf("Opening session...\n");
     auto session = std::get<Session>(open(std::move(config)));
 
-    std::cout << "Sending Query '" << expr << "'...\n";
-    GetOptions opts;
-    opts.set_target(Z_QUERY_TARGET_ALL);
+    PublisherOptions options;
+    options.set_congestion_control(Z_CONGESTION_CONTROL_BLOCK);
 
-    auto [send, recv] = reply_fifo_new(16);
-    session.get(keyexpr, "", std::move(send), opts);
+    printf("Declaring Publisher on '%s'...\n", keyexpr);
+    auto pub = std::get<Publisher>(session.declare_publisher(keyexpr, options));
 
-    Reply reply(nullptr);
-    for (recv(reply); reply.check(); recv(reply)) {
-        auto sample = std::get<Sample>(reply.get());
-        std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
-                  << sample.get_payload().as_string_view() << "')\n";
+    while (1) {
+        std::cout << ".";
+        pub.put(payload);
     }
-
-    return 0;
 }
 
 int main(int argc, char **argv) {

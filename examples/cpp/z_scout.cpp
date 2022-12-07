@@ -53,7 +53,7 @@ void printhello(const HelloView &hello) {
     std::cout << " }";
 }
 
-int main(int argc, char **argv) {
+int _main(int argc, char **argv) {
     Config config;
     if (argc > 1) {
         if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[1])) {
@@ -92,4 +92,12 @@ int main(int argc, char **argv) {
     std::cout << "Scout finished" << std::endl;
 
     return 0;
+}
+
+int main(int argc, char **argv) {
+    try {
+        _main(argc, argv);
+    } catch (ErrorMessage e) {
+        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    }
 }

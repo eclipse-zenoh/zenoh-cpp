@@ -29,7 +29,7 @@
 
 using namespace zenoh;
 
-int main(int argc, char **argv) {
+int _main(int argc, char **argv) {
     const char *keyexpr = "demo/example/zenoh-cpp-pub";
     const char *value = "Pub from CPP!";
 
@@ -64,4 +64,12 @@ int main(int argc, char **argv) {
         pub.put(s);
     }
     return 0;
+}
+
+int main(int argc, char **argv) {
+    try {
+        _main(argc, argv);
+    } catch (ErrorMessage e) {
+        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    }
 }

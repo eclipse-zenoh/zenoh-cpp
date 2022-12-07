@@ -34,7 +34,7 @@ void data_handler(const Sample *sample) {
     }
 }
 
-int main(int argc, char **argv) {
+int _main(int argc, char **argv) {
     const char *expr = "demo/example/**";
     if (argc > 1) {
         expr = argv[1];
@@ -78,5 +78,13 @@ const char *kind_to_str(z_sample_kind_t kind) {
             return "DELETE";
         default:
             return "UNKNOWN";
+    }
+}
+
+int main(int argc, char **argv) {
+    try {
+        _main(argc, argv);
+    } catch (ErrorMessage e) {
+        std::cout << "Received an error :" << e.as_string_view() << "\n";
     }
 }

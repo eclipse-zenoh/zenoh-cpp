@@ -17,7 +17,8 @@
 #include "zenohcpp.h"
 
 using namespace zenoh;
-int main(int argc, char **argv) {
+
+int _main(int argc, char **argv) {
     const char *keyexpr = "demo/example/zenoh-cpp-put";
 
     if (argc > 1) keyexpr = argv[1];
@@ -43,4 +44,12 @@ int main(int argc, char **argv) {
     }
 
     return 0;
+}
+
+int main(int argc, char **argv) {
+    try {
+        _main(argc, argv);
+    } catch (ErrorMessage e) {
+        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    }
 }
