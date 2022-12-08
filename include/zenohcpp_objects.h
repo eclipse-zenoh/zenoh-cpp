@@ -35,7 +35,7 @@ class Config : public Owned<::z_owned_config_t> {
     using Owned::Owned;
     Config() : Owned(::z_config_default()) {}
     bool insert_json(const char* key, const char* value) {
-        return zc_config_insert_json(::z_config_loan(&_0), key, value) == 0;
+        return ::zc_config_insert_json(::z_config_loan(&_0), key, value) == 0;
     }
     ScoutingConfig create_scouting_config();
 };
@@ -100,9 +100,25 @@ class Publisher : public Owned<::z_owned_publisher_t> {
         return put_impl(payload, nullptr, error);
     }
 
+    bool delete_resource(const PublisherDeleteOptions& options, ErrNo& error) { return delete_impl(&options, error); }
+    bool delete_resource(ErrNo& error) { return delete_impl(nullptr, error); }
+    bool delete_resource(const PublisherDeleteOptions& options) {
+        ErrNo error;
+        return delete_impl(&options, error);
+    }
+    bool delete_resource() {
+        ErrNo error;
+        return delete_impl(nullptr, error);
+    }
+
    private:
     bool put_impl(const BytesView& payload, const PublisherPutOptions* options, ErrNo& error) {
         error = ::z_publisher_put(::z_loan(_0), payload.start, payload.len, options);
+        return error == 0;
+    }
+
+    bool delete_impl(const PublisherDeleteOptions* options, ErrNo& error) {
+        error = ::z_publisher_delete(::z_loan(_0), options);
         return error == 0;
     }
 };
