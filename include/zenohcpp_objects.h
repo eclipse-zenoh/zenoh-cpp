@@ -26,6 +26,7 @@ class KeyExpr : Owned<::z_owned_keyexpr_t> {
     using Owned::Owned;
     explicit KeyExpr(const char* name) : Owned(::z_keyexpr_new(name)) {}
     operator KeyExprView() const { return KeyExprView(::z_keyexpr_loan(&_0)); }
+    // TODO: add keyexpr operations: equals, includes, intersects, canonize, etc...
 };
 
 class ScoutingConfig;
