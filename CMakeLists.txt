@@ -137,8 +137,6 @@ function(add_tests glob)
 	endforeach()
 endfunction()
 
-
-
 if(APPLE OR UNIX OR WIN32)
 	add_custom_target(tests)
 	add_tests("${CMAKE_SOURCE_DIR}/tests/*.cpp")
@@ -153,3 +151,35 @@ if(APPLE OR UNIX OR WIN32)
 else()
 	message(WARNING "You platform doesn't seem to support building the examples or tests.")
 endif()
+
+#
+# Configure installation
+#
+message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
+include(GNUInstallDirs)
+set(CMAKE_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}/zenohcpp")
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/zenohcpp.pc.in" "${CMAKE_CURRENT_SOURCE_DIR}/zenohcpp.pc" @ONLY)
+if(APPLE OR UNIX)
+	install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc" DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" OPTIONAL)
+endif()
+set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+
+# Generate <Package>Config.cmake
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  "PackageConfig.cmake.in"
+  "${PROJECT_NAME}Config.cmake"
+  INSTALL_DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
+
+# Generate <Package>Version.cmake
+write_basic_package_version_file(
+  "${PROJECT_NAME}ConfigVersion.cmake"
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY SameMajorVersion)
+
+install(
+  FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+  DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
+  COMPONENT dev)
