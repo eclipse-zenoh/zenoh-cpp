@@ -30,7 +30,7 @@ int _main(int argc, char **argv) {
 
     Config config;
     if (argc > 2) {
-        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
+        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[2])) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",

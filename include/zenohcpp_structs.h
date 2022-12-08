@@ -48,15 +48,15 @@ struct StrArray : public Copyable<::z_str_array_t> {
 
 struct BytesView : public Copyable<::z_bytes_t> {
     using Copyable::Copyable;
-    BytesView(void* s, size_t _len) : Copyable({start : reinterpret_cast<const uint8_t*>(s), len : _len}) {}
-    BytesView(const char* s) : Copyable({start : reinterpret_cast<const uint8_t*>(s), len : strlen(s)}) {}
+    BytesView(void* s, size_t _len) : Copyable({.start = reinterpret_cast<const uint8_t*>(s), .len = _len}) {}
+    BytesView(const char* s) : Copyable({.start = reinterpret_cast<const uint8_t*>(s), .len = strlen(s)}) {}
     template <typename T>
     BytesView(const std::vector<T>& v)
-        : Copyable({start : reinterpret_cast<const uint8_t*>(&v[0]), len : v.size() * sizeof(T)}) {}
+        : Copyable({.start = reinterpret_cast<const uint8_t*>(&v[0]), .len = v.size() * sizeof(T)}) {}
     BytesView(const std::string_view& s)
-        : Copyable({start : reinterpret_cast<const uint8_t*>(s.data()), len : s.length()}) {}
+        : Copyable({.start = reinterpret_cast<const uint8_t*>(s.data()), .len = s.length()}) {}
     BytesView(const std::string& s)
-        : Copyable({start : reinterpret_cast<const uint8_t*>(s.data()), len : s.length()}) {}
+        : Copyable({.start = reinterpret_cast<const uint8_t*>(s.data()), .len = s.length()}) {}
     std::string_view as_string_view() const { return std::string_view(reinterpret_cast<const char*>(start), len); }
 };
 
@@ -116,7 +116,7 @@ struct Sample : public Copyable<::z_sample_t> {
 
 struct Value : public Copyable<::z_value_t> {
     using Copyable::Copyable;
-    Value(const char* v) : Copyable({payload : BytesView(v), encoding : Encoding()}) {}
+    Value(const char* v) : Copyable({.payload = BytesView(v), .encoding = Encoding()}) {}
     const BytesView& get_payload() const { return static_cast<const BytesView&>(payload); }
     const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
     std::string_view as_string_view() const { return get_payload().as_string_view(); }
