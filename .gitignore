@@ -34,5 +34,6 @@
 build/*
 .vscode/*
 target/*
+Testing/*
 
 zenohcpp.pc
