@@ -15,7 +15,7 @@ jobs:
     strategy: 
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [ubuntu-latest, macOS-latest]
 
     steps:
       - uses: actions/checkout@v2
@@ -32,6 +32,18 @@ jobs:
         run: |
           cd build
           cmake --build . --target examples
+
+      - name: make tests
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --target tests
+
+      - name: run tests
+        shell: bash
+        run: |
+          cd build
+          ctest
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
