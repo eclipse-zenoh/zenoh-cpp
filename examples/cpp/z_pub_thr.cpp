@@ -14,6 +14,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <vector>
+
 #include "zenohcpp.h"
 
 using namespace zenoh;

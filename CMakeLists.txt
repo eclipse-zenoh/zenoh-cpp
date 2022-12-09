@@ -2,12 +2,15 @@ cmake_minimum_required(VERSION 3.10)
 include(ExternalProject)
 project(
 	zenohcpp
-	VERSION 0.6.0.1
+	VERSION 0.7.0.1
 	DESCRIPTION "C++ bindings for Zenoh"
 	HOMEPAGE_URL "https://github.com/ZettaScaleLabs/zenoh-cpp"
 	LANGUAGES C CXX
 )
 
+#
+# Setting variables depending on build type and destination platform
+#
 if(NOT CMAKE_BUILD_TYPE)
 	set(default_build_type "RelWithDebInfo")
 	message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
@@ -16,7 +19,7 @@ if(NOT CMAKE_BUILD_TYPE)
 
 	# Set the possible values of build type for cmake-gui
 	set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-		"Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+		"Debug" "Release" "MinSizeRel" "RelWithDebInfo" "Headers")
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -27,9 +30,12 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
 	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/release")
 elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
 	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/release")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Headers")
+	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/headers") # not used
 else()
 	message(FATAL_ERROR "Unknown CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 endif()
+message(STATUS "build type: ${CMAKE_BUILD_TYPE}")
 
 set(zenohc_prefix "zenohc")
 set(zenohc_download_path "${CMAKE_CURRENT_BINARY_DIR}/${zenohc_prefix}/download")
@@ -37,15 +43,6 @@ set(zenohc_install_path "${CMAKE_CURRENT_BINARY_DIR}/${zenohc_prefix}/install")
 
 message(STATUS "zenoh-c build-time download path: ${zenohc_download_path}")
 message(STATUS "zenoh-c build-time install path: ${zenohc_install_path}")
-
-ExternalProject_add(
-    zenohc_project
-	CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${zenohc_install_path}
-	PREFIX ${zenohc_prefix}
-    # SOURCE_DIR "../../zenoh-c"
-    SOURCE_DIR ${zenohc_download_path}
-    GIT_REPOSITORY https://github.com/eclipse-zenoh/zenoh-c
-)
 
 set(libzenohc_include "${zenohc_install_path}/include/zenohc")
 file(MAKE_DIRECTORY ${libzenohc_include}) # INTERFACE_INCLUDE_DIRECTORIES requires that path should exist
@@ -63,6 +60,21 @@ elseif(WIN32)
 endif()
 message(STATUS "zenoh-c static library path : ${libzenohc_static}")
 message(STATUS "zenoh-c dynamic library path : ${libzenohc}")
+
+#
+# Configure targets depending on build type
+#
+
+if(NOT(CMAKE_BUILD_TYPE STREQUAL "Headers"))
+
+ExternalProject_add(
+    zenohc_project
+	CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${zenohc_install_path}
+	PREFIX ${zenohc_prefix}
+    # SOURCE_DIR "../../zenoh-c"
+    SOURCE_DIR ${zenohc_download_path}
+    GIT_REPOSITORY https://github.com/eclipse-zenoh/zenoh-c
+)
 
 add_library(zenohc SHARED IMPORTED)
 add_dependencies(zenohc zenohc_project)
@@ -152,6 +164,8 @@ if(APPLE OR UNIX OR WIN32)
 	add_examples("${CMAKE_SOURCE_DIR}/examples/cpp/*.cpp" "cpp" TRUE)
 else()
 	message(WARNING "You platform doesn't seem to support building the examples or tests.")
+endif()
+
 endif()
 
 #
