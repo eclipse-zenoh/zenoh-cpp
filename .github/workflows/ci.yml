@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  schedule:
+    - cron: "0 6 * * 1-5"
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy: 
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build
+        shell: bash
+        run: |
+          mkdir -p build && cd build 
+          cmake -DCMAKE_BUILD_TYPE=Release ..
+          cmake --build .
+
+      - name: make examples
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --target examples
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          # Artifact name
+          name: zenoh-cpp-${{ matrix.os }}
+          # Directory containing files to upload
+          path: |
+            target/release/examples
