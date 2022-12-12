@@ -63,7 +63,7 @@ if (NOT(zenohc_FOUND))
 	message(STATUS "zenohc build path: ${zenohc_build_path}")
 	message(STATUS "zenohc install path: ${zenohc_install_path}")
 	execute_process(COMMAND "cmake" ${zenohc_sources_path} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${zenohc_install_path} WORKING_DIRECTORY ${zenohc_build_path})
-	execute_process(COMMAND "cmake" --build . --target install WORKING_DIRECTORY ${zenohc_build_path})
+	execute_process(COMMAND "cmake" --build . --target install WORKING_DIRECTORY ${zenohc_build_path} TIMEOUT 1200)
 	find_package(zenohc ${CMAKE_PROJECT_VERSION} PATHS ${zenohc_install_path})
 endif()
 
