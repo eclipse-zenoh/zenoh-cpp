@@ -135,7 +135,7 @@ struct PutOptions : public Copyable<::z_put_options_t> {
 }
 ```
 
-These structures can be freely passed by value. They exacly matches corresponging [zenoh_c] structures (`z_put_options_t` in this case)
+These structures can be freely passed by value. They exacly matches corresponging [zenoh-c] structures (`z_put_options_t` in this case)
 and adds some necessary constructors and methods. For example `PutOptions` default constructor calls the zenoh function
 `z_put_options_default()`.
 
