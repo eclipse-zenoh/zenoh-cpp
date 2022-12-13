@@ -18,9 +18,8 @@ Check the website [zenoh.io](http://zenoh.io) and the [roadmap](https://github.c
 
 ## How to build and install it 
 
-The zenoh C++ API is just a set of C++ header wiles wrapping the [zenoh-c] (and [zenoh-pico] in nearest future) library. So to install and use the zenoh-cpp the
-[zenoh-c] should be installed also. Though this is not the case for running tests and examples in zenoh-cpp: the CMake build script downloads [zenoh-c] into build
-directory for these purposes.
+The zenoh C++ API is just a set of C++ header wiles wrapping the [zenoh-c] (and [zenoh-pico] in nearest future) library. 
+So to install and use the zenoh-cpp the [zenoh-c] should be installed also. 
 
 [zenoh-c]: https://github.com/eclipse-zenoh/zenoh-c
 [zenoh-cpp]: https://github.com/eclipse-zenoh/zenoh-cpp
@@ -41,31 +40,25 @@ The steps to install [zenoh-cpp]:
     brew install rust
     ```
 
-2. Clone the [zenoh-cpp] with `git`:
+2. Install [zenoh-c] library. If you don't want to use root privileges and install it into system `/usr/local` directory 
+add [CMAKE_INSTALL_PREFIX](https://cmake.org/cmake/help/v3.0/variable/CMAKE_INSTALL_PREFIX.html) parameter to `cmake` arguments.
 
-    ```bash
-    git clone https://github.com/eclipse-zenoh/zenoh-cpp.git
-    cd zenoh-cpp
+    ```sh
+    git clone https://github.com/eclipse-zenoh/zenoh-c.git &&
+    cd zenoh-c && mkdir -p build && cd build &&
+    cmake .. -DCMAKE_INSTALL_PREFIX=../../local &&
+    cmake --build . --target install
     ```
 
-3. Install:
-
-* Install [zenoh-c] library as described in it's readme
-
-* Install [zenoh-cpp] headers:
-
-    ```bash
-    cd /path/to/zenoh-cpp
-    mkdir -p build && cd build 
-    cmake .. -DCMAKE_BUILD_TYPE=Headers # configure
-    cmake --build . --target install # install - run with `sudo` if necessary
+3. Install [zenoh-cpp]. Use the same `CMAKE_INSTALL_PREFIX` parameter as for [zenoh-c].  The key point is that this
+parameter is not only install destination path, but is also included into `CMAKE_SYSTEM_PREFIX_PATH`. So the CMAKE's 
+[find_package](https://cmake.org/cmake/help/latest/command/find_package.html) command is able to find [zenoh-c].
+    ```sh
+    git clone https://github.com/eclipse-zenoh/zenoh-cpp.git &&
+    cd zenoh-cpp && mkdir -p build && cd build &&
+    cmake .. -DCMAKE_INSTALL_PREFIX=../../local &&
+    cmake --build . --target install
     ```
-
-    Option `CMAKE_BUILD_TYPE=Headers` excludes slow step of downloading and building [zenoh-c] which is required for building 
-    tests and examples only and not needed to do install.
-
-    To install headers into path other than `/usr/local` add `-DCMAKE_INSTALL_PREFIX=/destination/path` option on cmake
-    onfigure step.
 
 ## Building and running tests
 
@@ -135,7 +128,7 @@ struct PutOptions : public Copyable<::z_put_options_t> {
 }
 ```
 
-These structures can be freely passed by value. They exacly matches corresponging [zenoh_c] structures (`z_put_options_t` in this case)
+These structures can be freely passed by value. They exacly matches corresponging [zenoh-c] structures (`z_put_options_t` in this case)
 and adds some necessary constructors and methods. For example `PutOptions` default constructor calls the zenoh function
 `z_put_options_default()`.
 

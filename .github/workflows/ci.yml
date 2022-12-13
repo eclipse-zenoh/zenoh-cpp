@@ -20,12 +20,21 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: build
+      - name: build zenoh-c
+        shell: bash
+        run: |
+          git clone https://github.com/eclipse-zenoh/zenoh-c.git
+          cd zenoh-c
+          mkdir -p build && cd build 
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../../install
+          cmake --build . --target install
+
+      - name: build zenoh-cpp
         shell: bash
         run: |
           mkdir -p build && cd build 
-          cmake -DCMAKE_BUILD_TYPE=Release ..
-          cmake --build .
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../install
+          cmake --build . --target install
 
       - name: make examples
         shell: bash
