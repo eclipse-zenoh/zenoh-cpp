@@ -28,7 +28,7 @@ z_keyexpr_t keyexpr;
 void query_handler(const z_query_t *query, void *context) {
     char *keystr = z_keyexpr_to_string(z_query_keyexpr(query));
     z_bytes_t pred = z_query_parameters(query);
-    printf(">> [Queryable ] Received Query '%s%.*s'\n", keystr, (int)pred.len, pred.start);
+    printf(">> [Queryable ] Received Query '%s?%.*s'\n", keystr, (int)pred.len, pred.start);
     z_query_reply_options_t options = z_query_reply_options_default();
     options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
     z_query_reply(query, z_keyexpr((const char *)context), (const unsigned char *)value, strlen(value), &options);

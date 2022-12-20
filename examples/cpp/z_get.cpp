@@ -66,7 +66,7 @@ int _main(int argc, char **argv) {
                     std::cout << "Received an error :" << error->as_string_view() << "\n";
                 }
             } else {
-                std::cout << "No more replies\n";
+                // No more replies
                 std::lock_guard lock(m);
                 done = true;
                 done_signal.notify_all();

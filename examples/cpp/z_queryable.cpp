@@ -60,7 +60,7 @@ int _main(int argc, char **argv) {
         if (query) {
             auto keystr = query->get_keyexpr();
             auto pred = query->get_parameters();
-            std::cout << ">> [Queryable ] Received Query '" << keystr.as_string_view() << "' : '"
+            std::cout << ">> [Queryable ] Received Query '" << keystr.as_string_view() << "?"
                       << pred.as_string_view() << "'\n";
             QueryReplyOptions options;
             options.set_encoding(Encoding(Z_ENCODING_PREFIX_TEXT_PLAIN));
