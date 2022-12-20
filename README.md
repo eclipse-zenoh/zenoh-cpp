@@ -46,17 +46,20 @@ add [CMAKE_INSTALL_PREFIX](https://cmake.org/cmake/help/v3.0/variable/CMAKE_INST
     ```sh
     git clone https://github.com/eclipse-zenoh/zenoh-c.git &&
     cd zenoh-c && mkdir -p build && cd build &&
-    cmake .. -DCMAKE_INSTALL_PREFIX=../../local &&
+    cmake .. -DCMAKE_INSTALL_PREFIX=/home/username/local &&
     cmake --build . --target install
     ```
 
 3. Install [zenoh-cpp]. Use the same `CMAKE_INSTALL_PREFIX` parameter as for [zenoh-c].  The key point is that this
 parameter is not only install destination path, but is also included into `CMAKE_SYSTEM_PREFIX_PATH`. So the CMAKE's 
 [find_package](https://cmake.org/cmake/help/latest/command/find_package.html) command is able to find [zenoh-c].
+The path must be absolute, without environment variables and home directory shortcut `~`, otherwise cmake may not be able to
+find it. 
+
     ```sh
     git clone https://github.com/eclipse-zenoh/zenoh-cpp.git &&
     cd zenoh-cpp && mkdir -p build && cd build &&
-    cmake .. -DCMAKE_INSTALL_PREFIX=../../local &&
+    cmake .. -DCMAKE_INSTALL_PREFIX=/home/username/local &&
     cmake --build . --target install
     ```
 
