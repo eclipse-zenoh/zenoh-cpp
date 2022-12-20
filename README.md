@@ -25,8 +25,9 @@ C++ bindings are still so the Zenoh team will highly appreciate any help in test
 
 > :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in mantaining compatibility between the various git repositories in the Zenoh project.
 
-The zenoh C++ API is a set of C++ header files wrapping the [zenoh-c] (and [zenoh-pico] in nearest future) library. 
-So to install and use zenoh-cpp, [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) should be installed in the ststem. 
+The zenoh C++ API is a set of C++ header files wrapping the [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) (and [zenoh-pico(https://github.com/eclipse-zenoh/zenoh-pico)] in nearest future) library. 
+The zenoh C++ API is a set of C++ header files wrapping the [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) (and [zenoh-pico] in nearest future) library. 
+So to install and use zenoh-cpp, [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) should be installed in the system. 
 
 [zenoh-c]: https://github.com/eclipse-zenoh/zenoh-c
 [zenoh-cpp]: https://github.com/eclipse-zenoh/zenoh-cpp
@@ -47,7 +48,7 @@ The steps to install [zenoh-cpp]:
     brew install rust
     ```
 
-2. Install [zenoh-c] library. If you don't want to use root privileges and install it into system `/usr/local` directory 
+2. Install [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) library. If you don't want to use root privileges and install it into system `/usr/local` directory 
 add [CMAKE_INSTALL_PREFIX](https://cmake.org/cmake/help/v3.0/variable/CMAKE_INSTALL_PREFIX.html) parameter to `cmake` arguments.
 
     ```sh
@@ -57,7 +58,7 @@ add [CMAKE_INSTALL_PREFIX](https://cmake.org/cmake/help/v3.0/variable/CMAKE_INST
     cmake --build . --target install
     ```
 
-3. Install [zenoh-cpp]. Use the same `CMAKE_INSTALL_PREFIX` parameter as for [zenoh-c].  The key point is that this
+3. Install [zenoh-cpp]. Use the same `CMAKE_INSTALL_PREFIX` parameter as for [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c).  The key point is that this
 parameter is not only install destination path, but is also included into `CMAKE_SYSTEM_PREFIX_PATH`. So the CMAKE's 
 [find_package](https://cmake.org/cmake/help/latest/command/find_package.html) command is able to find [zenoh-c].
     ```sh
@@ -135,7 +136,7 @@ struct PutOptions : public Copyable<::z_put_options_t> {
 }
 ```
 
-These structures can be freely passed by value. They exacly matches corresponging [zenoh-c] structures (`z_put_options_t` in this case)
+These structures can be freely passed by value. They exacly matches corresponging [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) structures (`z_put_options_t` in this case)
 and adds some necessary constructors and methods. For example `PutOptions` default constructor calls the zenoh function
 `z_put_options_default()`.
 
@@ -157,11 +158,11 @@ class Config : public Owned<::z_owned_config_t> {
 }
 ```
 
-Classes which protects corresponding [zenoh-c] so-called `owned` structures from copying, allowing move semantic only. Corresponding utility functions like `z_check`, `z_null`, `z_drop` are integrated into the `Owned` base template.
+Classes which protects corresponding [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) so-called `owned` structures from copying, allowing move semantic only. Corresponding utility functions like `z_check`, `z_null`, `z_drop` are integrated into the `Owned` base template.
 
 * Closures
 
-It's classes representing [zenoh-c] callback structures:
+It's classes representing [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) callback structures:
 ```C++
 typedef ClosureMoveParam<::z_owned_closure_reply_t, ::z_owned_reply_t, Reply> ClosureReply;
 typedef ClosureConstPtrParam<::z_owned_closure_query_t, ::z_query_t, Query> ClosureQuery;
