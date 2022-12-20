@@ -18,12 +18,15 @@ Check the website [zenoh.io](http://zenoh.io) and the [roadmap](https://github.c
 
 This repository provides a C++ binding based on the [Zenoh C API](https://github.com/eclipse-zenoh/zenoh-c).
 
--------------------------------
+C++ bindings are still so the Zenoh team will highly appreciate any help in testing them on various platforms, system architecture, etc. and to report any issue you might encounter. This will help in greatly improving its maturity and robustness.
 
+-------------------------------
 ## How to build and install it 
 
-The zenoh C++ API is just a set of C++ header wiles wrapping the [zenoh-c] (and [zenoh-pico] in nearest future) library. 
-So to install and use the zenoh-cpp the [zenoh-c] should be installed also. 
+> :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in mantaining compatibility between the various git repositories in the Zenoh project.
+
+The zenoh C++ API is a set of C++ header files wrapping the [zenoh-c] (and [zenoh-pico] in nearest future) library. 
+So to install and use zenoh-cpp, [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) should be installed in the ststem. 
 
 [zenoh-c]: https://github.com/eclipse-zenoh/zenoh-c
 [zenoh-cpp]: https://github.com/eclipse-zenoh/zenoh-cpp
