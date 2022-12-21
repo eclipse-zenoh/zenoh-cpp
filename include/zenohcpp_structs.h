@@ -30,6 +30,8 @@ typedef ::z_encoding_prefix_t EncodingPrefix;
 typedef ::z_reliability_t Reliability;
 typedef ::z_congestion_control_t CongestionControl;
 typedef ::z_priority_t Priority;
+typedef ::z_consolidation_mode_t ConsolidationMode;
+typedef ::z_query_target_t QueryTarget;
 
 enum class WhatAmI { Unknown = 0, Router = 1, Peer = 1 << 1, Client = 1 << 2 };
 
@@ -127,11 +129,11 @@ typedef Value ErrorMessage;
 struct GetOptions : public Copyable<::z_get_options_t> {
     using Copyable::Copyable;
     GetOptions() : Copyable(::z_get_options_default()) {}
-    GetOptions& set_target(z_query_target_t v) {
+    GetOptions& set_target(QueryTarget v) {
         target = v;
         return *this;
     }
-    GetOptions& set_consolidation(z_consolidation_mode_t v) {
+    GetOptions& set_consolidation(ConsolidationMode v) {
         consolidation.mode = v;
         return *this;
     }
