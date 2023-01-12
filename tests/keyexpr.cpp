@@ -22,6 +22,9 @@ using namespace zenoh;
 void key_expr_view() {
     KeyExprView nul(nullptr);
     assert(!nul.check());
+    KeyExprView nulstr((const char*)nullptr);
+    assert(!nulstr.check());
+
     KeyExprView foo("FOO");
     assert(foo.check());
     assert(foo == "FOO");
@@ -32,6 +35,9 @@ void key_expr_view() {
 void key_expr() {
     KeyExpr nul(nullptr);
     assert(!nul.check());
+    KeyExpr nulstr((const char*)nullptr);
+    assert(!nulstr.check());
+
     KeyExpr foo("FOO");
     assert(foo.check());
     assert(foo == "FOO");

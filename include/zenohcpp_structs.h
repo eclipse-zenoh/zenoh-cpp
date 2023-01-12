@@ -102,6 +102,7 @@ inline bool _split_ret_to_bool_and_err(int8_t ret, ErrNo& error) {
 
 struct KeyExprView : public Copyable<::z_keyexpr_t> {
     using Copyable::Copyable;
+    KeyExprView(nullptr_t) : Copyable(::z_keyexpr(nullptr)) {}  // allow to create uninitialized KeyExprView
     KeyExprView(const char* name) : Copyable(::z_keyexpr(name)) {}
     bool check() const { return ::z_keyexpr_is_initialized(this); }
     BytesView as_bytes() const { return BytesView{::z_keyexpr_as_bytes(*this)}; }

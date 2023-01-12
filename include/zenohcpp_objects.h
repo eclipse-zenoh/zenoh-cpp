@@ -25,6 +25,7 @@ namespace zenoh {
 class KeyExpr : public Owned<::z_owned_keyexpr_t> {
    public:
     using Owned::Owned;
+    explicit KeyExpr(nullptr_t) : Owned(nullptr) {}
     explicit KeyExpr(const char* name) : Owned(::z_keyexpr_new(name)) {}
     KeyExprView as_keyexpr_view() const { return KeyExprView(::z_keyexpr_loan(&_0)); }
     operator KeyExprView() const { return as_keyexpr_view(); }
