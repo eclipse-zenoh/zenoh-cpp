@@ -61,6 +61,7 @@ struct BytesView : public Copyable<::z_bytes_t> {
         : Copyable({.start = reinterpret_cast<const uint8_t*>(s.data()), .len = s.length()}) {}
     std::string_view as_string_view() const { return std::string_view(reinterpret_cast<const char*>(start), len); }
     bool operator==(const BytesView& v) const { return as_string_view() == v.as_string_view(); }
+    size_t get_len() const { return len; }
 };
 
 struct Id : public Copyable<::z_id_t> {
@@ -87,12 +88,49 @@ struct HelloView : public Copyable<::z_hello_t> {
     const StrArray& get_locators() const { return static_cast<const StrArray&>(locators); }
 };
 
+class KeyExpr;
+
+inline bool _split_ret_to_bool_and_err(int8_t ret, ErrNo& error) {
+    if (ret < 0) {
+        error = ret;
+        return false;
+    } else {
+        error = 0;
+        return ret == 1;
+    }
+}
+
 struct KeyExprView : public Copyable<::z_keyexpr_t> {
     using Copyable::Copyable;
-    KeyExprView(const char* name) : Copyable(z_keyexpr(name)) {}
-    bool check() const { return z_keyexpr_is_initialized(this); }
+    KeyExprView(const char* name) : Copyable(::z_keyexpr(name)) {}
+    bool check() const { return ::z_keyexpr_is_initialized(this); }
     BytesView as_bytes() const { return BytesView{::z_keyexpr_as_bytes(*this)}; }
     std::string_view as_string_view() const { return as_bytes().as_string_view(); }
+
+    // operator == between keyexprs purposedly not defided to avoid ambiguity: it's not obvious is string
+    // equality or z_keyexpr_equals would be used by operator==
+    bool operator==(const std::string_view& v) { return as_string_view() == v; }
+    bool equals(const KeyExprView& v) const { return ::z_keyexpr_equals(*this, v) == 1; }
+
+    // operator += purposedly not defined to not provoke ambiguity between concat (which
+    // mechanically connects strings) and join (which works with path elements)
+    KeyExpr concat(const std::string_view& s) const;
+    KeyExpr join(const KeyExprView& v) const;
+
+    bool includes(const KeyExprView& v, ErrNo& error) const {
+        return _split_ret_to_bool_and_err(::z_keyexpr_includes(*this, v), error);
+    }
+    bool includes(const KeyExprView& v) const {
+        ErrNo error;
+        return includes(v, error);
+    }
+    bool intersects(const KeyExprView& v, ErrNo& error) const {
+        return _split_ret_to_bool_and_err(::z_keyexpr_intersects(*this, v), error);
+    }
+    bool intersects(const KeyExprView& v) const {
+        ErrNo error;
+        return includes(v, error);
+    }
 };
 
 struct Encoding : public Copyable<::z_encoding_t> {
