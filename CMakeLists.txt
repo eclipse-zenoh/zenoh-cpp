@@ -36,10 +36,18 @@ endif()
 message(STATUS "build type: ${CMAKE_BUILD_TYPE}")
 
 #
-# Configure targets depending on build type
+# Give priority to install directory when looking for zenoh-c
+# Useful for development when older zenohc version may be installed in system
 #
-
-find_package(zenohc ${CMAKE_PROJECT_VERSION} QUIET)
+# TODO: "if( NOT TARGET" below should be not necessary 
+# (see https://cmake.org/cmake/help/latest/command/find_package.html, search for "override the order")
+# but in fact cmake fails without it when zenohc is present both in CMAKE_INSTALL_PREFIX and in /usr/local.
+# Consider is it still necessary after next bumping up cmake version
+#
+find_package(zenohc ${CMAKE_PROJECT_VERSION} PATHS ${CMAKE_INSTALL_PREFIX} NO_DEFAULT_PATH QUIET)
+if(NOT TARGET zenohc::lib)
+	find_package(zenohc ${CMAKE_PROJECT_VERSION} QUIET)
+endif()
 
 add_library(zenohcpp INTERFACE)
 add_dependencies(zenohcpp zenohc::lib)

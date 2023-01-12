@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <variant>
 
 #include "zenoh.h"
@@ -21,13 +22,49 @@
 
 namespace zenoh {
 
-class KeyExpr : Owned<::z_owned_keyexpr_t> {
+class KeyExpr : public Owned<::z_owned_keyexpr_t> {
    public:
     using Owned::Owned;
+    explicit KeyExpr(nullptr_t) : Owned(nullptr) {}
     explicit KeyExpr(const char* name) : Owned(::z_keyexpr_new(name)) {}
-    operator KeyExprView() const { return KeyExprView(::z_keyexpr_loan(&_0)); }
-    // TODO: add keyexpr operations: equals, includes, intersects, canonize, etc...
+    KeyExprView as_keyexpr_view() const { return KeyExprView(::z_keyexpr_loan(&_0)); }
+    operator KeyExprView() const { return as_keyexpr_view(); }
+    BytesView as_bytes() const { return as_keyexpr_view().as_bytes(); }
+    std::string_view as_string_view() const { return as_keyexpr_view().as_string_view(); }
+    bool operator==(const std::string_view& v) { return as_string_view() == v; }
+    KeyExpr concat(const std::string_view& s) const { return as_keyexpr_view().concat(s); }
+    KeyExpr join(const KeyExprView& v) const { return as_keyexpr_view().join(v); }
+    bool equals(const KeyExprView& v) const { return as_keyexpr_view().equals(v); }
+    bool includes(const KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().includes(v, error); }
+    bool includes(const KeyExprView& v) const { return as_keyexpr_view().includes(v); }
+    bool intersects(const KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().intersects(v, error); }
+    bool intersects(const KeyExprView& v) const { return as_keyexpr_view().intersects(v); }
 };
+
+KeyExpr KeyExprView::concat(const std::string_view& s) const { return ::z_keyexpr_concat(*this, s.data(), s.length()); }
+KeyExpr KeyExprView::join(const KeyExprView& v) const { return ::z_keyexpr_join(*this, v); }
+
+bool keyexpr_canonize(std::string& s, ErrNo& error) {
+    uintptr_t len = s.length();
+    error = ::z_keyexpr_canonize(&s[0], &len);
+    s.resize(len);
+    return error == 0;
+}
+
+bool keyexpr_canonize(std::string& s) {
+    ErrNo error;
+    return keyexpr_canonize(s, error);
+}
+
+bool keyexpr_is_canon(const std::string_view& s, ErrNo& error) {
+    error = ::z_keyexpr_is_canon(s.begin(), s.length());
+    return error == 0;
+}
+
+bool keyexpr_is_canon(const std::string_view& s) {
+    ErrNo error;
+    return keyexpr_is_canon(s, error);
+}
 
 class ScoutingConfig;
 

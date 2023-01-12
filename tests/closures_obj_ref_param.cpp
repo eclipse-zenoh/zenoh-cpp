@@ -17,6 +17,9 @@
 
 using namespace zenoh;
 
+#undef NDEBUG
+#include <assert.h>
+
 int gcnt = 0;
 
 struct OnReply {
