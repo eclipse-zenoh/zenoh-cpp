@@ -18,6 +18,7 @@
 #include <string>
 #include <string_view>
 
+#include "assert.h"
 #include "string.h"
 #include "zenoh.h"
 #include "zenohcpp_base.h"
@@ -101,10 +102,38 @@ inline bool _split_ret_to_bool_and_err(int8_t ret, ErrNo& error) {
     }
 }
 
+bool keyexpr_canonize(std::string& s, ErrNo& error) {
+    uintptr_t len = s.length();
+    error = ::z_keyexpr_canonize(&s[0], &len);
+    s.resize(len);
+    return error == 0;
+}
+
+bool keyexpr_canonize(std::string& s) {
+    ErrNo error;
+    return keyexpr_canonize(s, error);
+}
+
+bool keyexpr_is_canon(const std::string_view& s, ErrNo& error) {
+    error = ::z_keyexpr_is_canon(s.begin(), s.length());
+    return error == 0;
+}
+
+bool keyexpr_is_canon(const std::string_view& s) {
+    ErrNo error;
+    return keyexpr_is_canon(s, error);
+}
+
+struct KeyExprUnchecked {
+    explicit KeyExprUnchecked(const char* _name) : name(_name) { assert(keyexpr_is_canon(name)); }
+    const char* name;
+};
+
 struct KeyExprView : public Copyable<::z_keyexpr_t> {
     using Copyable::Copyable;
     KeyExprView(nullptr_t) : Copyable(::z_keyexpr(nullptr)) {}  // allow to create uninitialized KeyExprView
     KeyExprView(const char* name) : Copyable(::z_keyexpr(name)) {}
+    KeyExprView(KeyExprUnchecked unchecked) : Copyable(::z_keyexpr_unchecked(unchecked.name)) {}
     bool check() const { return ::z_keyexpr_is_initialized(this); }
     BytesView as_bytes() const { return BytesView{::z_keyexpr_as_bytes(*this)}; }
     std::string_view as_string_view() const { return as_bytes().as_string_view(); }
@@ -301,6 +330,7 @@ class Query : public Copyable<::z_query_t> {
     using Copyable::Copyable;
     KeyExprView get_keyexpr() const { return KeyExprView(::z_query_keyexpr(this)); }
     BytesView get_parameters() const { return BytesView(::z_query_parameters(this)); }
+    Value get_value() const { return Value(::z_query_value(this)); }
 
     bool reply(KeyExprView key, const BytesView& payload, const QueryReplyOptions& options, ErrNo& error) const {
         return reply_impl(key, payload, &options, error);

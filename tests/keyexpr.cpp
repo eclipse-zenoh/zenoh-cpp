@@ -30,6 +30,10 @@ void key_expr_view() {
     assert(foo == "FOO");
     assert(foo.as_bytes() == "FOO");
     assert(foo.as_string_view() == "FOO");
+
+    KeyExprView unchecked(KeyExprUnchecked("*//*"));
+    assert(unchecked.check());
+    assert(!keyexpr_is_canon(unchecked.as_string_view()));
 }
 
 void key_expr() {
