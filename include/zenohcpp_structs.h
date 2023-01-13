@@ -373,6 +373,10 @@ struct PublisherOptions : public Copyable<::z_publisher_options_t> {
         priority = v;
         return *this;
     }
+    bool operator==(const PublisherOptions& v) const {
+        return get_priority() == v.get_priority() && get_congestion_control() == v.get_congestion_control();
+    }
+    bool operator!=(const PublisherOptions& v) const { return !operator==(v); }
 };
 
 struct PublisherPutOptions : public Copyable<::z_publisher_put_options_t> {
@@ -383,6 +387,8 @@ struct PublisherPutOptions : public Copyable<::z_publisher_put_options_t> {
         encoding = e;
         return *this;
     };
+    bool operator==(const PublisherPutOptions& v) const { return get_encoding() == v.get_encoding(); }
+    bool operator!=(const PublisherPutOptions& v) const { return !operator==(v); }
 };
 
 struct PublisherDeleteOptions : public Copyable<::z_publisher_delete_options_t> {

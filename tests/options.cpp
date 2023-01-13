@@ -145,6 +145,32 @@ void pull_subscriber_options() {
     assert(opts2 != opts);
 }
 
+void publisher_options() {
+    PublisherOptions opts;
+    opts.set_congestion_control(CongestionControl::Z_CONGESTION_CONTROL_BLOCK)
+        .set_priority(Priority::Z_PRIORITY_DATA_HIGH);
+
+    PublisherOptions opts2 = opts;
+    assert(opts2 == opts);
+    assert(opts.get_congestion_control() == CongestionControl::Z_CONGESTION_CONTROL_BLOCK);
+    assert(opts.get_priority() == Priority::Z_PRIORITY_DATA_HIGH);
+
+    opts2.set_priority(Priority::Z_PRIORITY_DATA_LOW);
+    assert(opts2 != opts);
+}
+
+void publisher_put_options() {
+    PublisherPutOptions opts;
+    opts.set_encoding(EncodingPrefix::Z_ENCODING_PREFIX_TEXT_PLAIN);
+
+    PublisherPutOptions opts2 = opts;
+    assert(opts2 == opts);
+    assert(opts.get_encoding() == Encoding(EncodingPrefix::Z_ENCODING_PREFIX_TEXT_PLAIN));
+
+    opts2.set_encoding(EncodingPrefix::Z_ENCODING_PREFIX_TEXT_HTML);
+    assert(opts2 != opts);
+}
+
 int main(int argc, char** argv) {
     encoding();
     value();
@@ -155,4 +181,5 @@ int main(int argc, char** argv) {
     queryable_options();
     subscriber_options();
     pull_subscriber_options();
+    publisher_options();
 };
