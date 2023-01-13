@@ -278,6 +278,10 @@ struct DeleteOptions : public Copyable<::z_delete_options_t> {
         priority = v;
         return *this;
     }
+    bool operator==(const DeleteOptions& v) const {
+        return get_priority() == v.get_priority() && get_congestion_control() == v.get_congestion_control();
+    }
+    bool operator!=(const DeleteOptions& v) const { return !operator==(v); }
 };
 
 struct QueryReplyOptions : public Copyable<::z_query_reply_options_t> {

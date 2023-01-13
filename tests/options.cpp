@@ -83,9 +83,24 @@ void put_options() {
     assert(opts2 != opts);
 }
 
+void delete_options() {
+    DeleteOptions opts;
+    opts.set_congestion_control(CongestionControl::Z_CONGESTION_CONTROL_BLOCK)
+        .set_priority(Priority::Z_PRIORITY_DATA_HIGH);
+
+    DeleteOptions opts2 = opts;
+    assert(opts2 == opts);
+    assert(opts.get_congestion_control() == CongestionControl::Z_CONGESTION_CONTROL_BLOCK);
+    assert(opts.get_priority() == Priority::Z_PRIORITY_DATA_HIGH);
+
+    opts2.set_priority(Priority::Z_PRIORITY_DATA_LOW);
+    assert(opts2 != opts);
+}
+
 int main(int argc, char** argv) {
     encoding();
     value();
     get_options();
     put_options();
+    delete_options();
 };
