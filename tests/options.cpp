@@ -53,17 +53,33 @@ void value() {
 void get_options() {
     GetOptions opts;
     opts.set_consolidation(QueryConsolidation())
-        .set_consolidation(Z_CONSOLIDATION_MODE_AUTO)
+        .set_consolidation(ConsolidationMode::Z_CONSOLIDATION_MODE_AUTO)
         .set_target(Z_QUERY_TARGET_ALL)
         .set_with_value("TEST");
 
     GetOptions opts2 = opts;
     assert(opts2 == opts);
-    assert(opts.get_consolidation() == QueryConsolidation(Z_CONSOLIDATION_MODE_AUTO));
-    assert(opts.get_target() == Z_QUERY_TARGET_ALL);
+    assert(opts.get_consolidation() == QueryConsolidation(ConsolidationMode::Z_CONSOLIDATION_MODE_AUTO));
+    assert(opts.get_target() == QueryTarget::Z_QUERY_TARGET_ALL);
     assert(opts.get_with_value() == Value("TEST"));
 
     opts2.set_consolidation(Z_CONSOLIDATION_MODE_LATEST);
+    assert(opts2 != opts);
+}
+
+void put_options() {
+    PutOptions opts;
+    opts.set_encoding(EncodingPrefix::Z_ENCODING_PREFIX_TEXT_PLAIN)
+        .set_congestion_control(CongestionControl::Z_CONGESTION_CONTROL_BLOCK)
+        .set_priority(Priority::Z_PRIORITY_DATA_HIGH);
+
+    PutOptions opts2 = opts;
+    assert(opts2 == opts);
+    assert(opts.get_encoding() == Encoding(EncodingPrefix::Z_ENCODING_PREFIX_TEXT_PLAIN));
+    assert(opts.get_congestion_control() == CongestionControl::Z_CONGESTION_CONTROL_BLOCK);
+    assert(opts.get_priority() == Priority::Z_PRIORITY_DATA_HIGH);
+
+    opts2.set_priority(Priority::Z_PRIORITY_DATA_LOW);
     assert(opts2 != opts);
 }
 
@@ -71,4 +87,5 @@ int main(int argc, char** argv) {
     encoding();
     value();
     get_options();
+    put_options();
 };

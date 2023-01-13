@@ -248,6 +248,21 @@ struct PutOptions : public Copyable<::z_put_options_t> {
         encoding = e;
         return *this;
     };
+    CongestionControl get_congestion_control() const { return congestion_control; }
+    PutOptions& set_congestion_control(CongestionControl v) {
+        congestion_control = v;
+        return *this;
+    };
+    Priority get_priority() const { return priority; }
+    PutOptions& set_priority(Priority v) {
+        priority = v;
+        return *this;
+    }
+    bool operator==(const PutOptions& v) const {
+        return get_priority() == v.get_priority() && get_congestion_control() == v.get_congestion_control() &&
+               get_encoding() == v.get_encoding();
+    }
+    bool operator!=(const PutOptions& v) const { return !operator==(v); }
 };
 
 struct DeleteOptions : public Copyable<::z_delete_options_t> {
