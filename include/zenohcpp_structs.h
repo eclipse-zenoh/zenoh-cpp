@@ -299,8 +299,6 @@ struct QueryReplyOptions : public Copyable<::z_query_reply_options_t> {
 class Query : public Copyable<::z_query_t> {
    public:
     using Copyable::Copyable;
-    Query() = delete;
-    Query(::z_query_t query) : Copyable(query) {}
     KeyExprView get_keyexpr() const { return KeyExprView(::z_query_keyexpr(this)); }
     BytesView get_parameters() const { return BytesView(::z_query_parameters(this)); }
 
@@ -334,24 +332,32 @@ struct QueryableOptions : public Copyable<::z_queryable_options_t> {
         complete = v;
         return *this;
     }
+    bool operator==(const QueryableOptions& v) const { return get_complete() == v.get_complete(); }
+    bool operator!=(const QueryableOptions& v) const { return !operator==(v); }
 };
 
 struct SubscriberOptions : public Copyable<::z_subscriber_options_t> {
     using Copyable::Copyable;
+    SubscriberOptions() : Copyable(::z_subscriber_options_default()) {}
     Reliability get_reliability() const { return reliability; }
-    SubscriberOptions& set_reliability(Reliability& v) {
+    SubscriberOptions& set_reliability(Reliability v) {
         reliability = v;
         return *this;
     }
+    bool operator==(const SubscriberOptions& v) const { return get_reliability() == v.get_reliability(); }
+    bool operator!=(const SubscriberOptions& v) const { return !operator==(v); }
 };
 
 struct PullSubscriberOptions : public Copyable<::z_pull_subscriber_options_t> {
     using Copyable::Copyable;
+    PullSubscriberOptions() : Copyable(::z_pull_subscriber_options_default()) {}
     Reliability get_reliability() const { return reliability; }
-    PullSubscriberOptions& set_reliability(Reliability& v) {
+    PullSubscriberOptions& set_reliability(Reliability v) {
         reliability = v;
         return *this;
     }
+    bool operator==(const PullSubscriberOptions& v) const { return get_reliability() == v.get_reliability(); }
+    bool operator!=(const PullSubscriberOptions& v) const { return !operator==(v); }
 };
 
 struct PublisherOptions : public Copyable<::z_publisher_options_t> {

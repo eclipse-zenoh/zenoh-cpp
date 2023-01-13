@@ -109,6 +109,42 @@ void query_reply_options() {
     assert(opts2 != opts);
 }
 
+void queryable_options() {
+    QueryableOptions opts;
+    opts.set_complete(true);
+
+    QueryableOptions opts2 = opts;
+    assert(opts2 == opts);
+    assert(opts.get_complete() == opts2.get_complete());
+
+    opts2.set_complete(false);
+    assert(opts2 != opts);
+}
+
+void subscriber_options() {
+    SubscriberOptions opts;
+    opts.set_reliability(Reliability::Z_RELIABILITY_BEST_EFFORT);
+
+    SubscriberOptions opts2 = opts;
+    assert(opts2 == opts);
+    assert(opts.get_reliability() == opts2.get_reliability());
+
+    opts2.set_reliability(Reliability::Z_RELIABILITY_RELIABLE);
+    assert(opts2 != opts);
+}
+
+void pull_subscriber_options() {
+    PullSubscriberOptions opts;
+    opts.set_reliability(Reliability::Z_RELIABILITY_BEST_EFFORT);
+
+    PullSubscriberOptions opts2 = opts;
+    assert(opts2 == opts);
+    assert(opts.get_reliability() == opts2.get_reliability());
+
+    opts2.set_reliability(Reliability::Z_RELIABILITY_RELIABLE);
+    assert(opts2 != opts);
+}
+
 int main(int argc, char** argv) {
     encoding();
     value();
@@ -116,4 +152,7 @@ int main(int argc, char** argv) {
     put_options();
     delete_options();
     query_reply_options();
+    queryable_options();
+    subscriber_options();
+    pull_subscriber_options();
 };
