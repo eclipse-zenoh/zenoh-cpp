@@ -56,4 +56,7 @@ void get_options() {
     assert(opts2 != opts);
 }
 
-int main(int argc, char** argv) { get_options(); };
+int main(int argc, char** argv) {
+    get_options();
+    encoding();
+};
