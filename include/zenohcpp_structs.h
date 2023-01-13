@@ -34,6 +34,8 @@ typedef ::z_priority_t Priority;
 typedef ::z_consolidation_mode_t ConsolidationMode;
 typedef ::z_query_target_t QueryTarget;
 
+inline QueryTarget query_target_default() { return ::z_query_target_default(); }
+
 enum class WhatAmI { Unknown = 0, Router = 1, Peer = 1 << 1, Client = 1 << 2 };
 
 inline const char* as_cstr(WhatAmI whatami) {
@@ -102,24 +104,24 @@ inline bool _split_ret_to_bool_and_err(int8_t ret, ErrNo& error) {
     }
 }
 
-bool keyexpr_canonize(std::string& s, ErrNo& error) {
+inline bool keyexpr_canonize(std::string& s, ErrNo& error) {
     uintptr_t len = s.length();
     error = ::z_keyexpr_canonize(&s[0], &len);
     s.resize(len);
     return error == 0;
 }
 
-bool keyexpr_canonize(std::string& s) {
+inline bool keyexpr_canonize(std::string& s) {
     ErrNo error;
     return keyexpr_canonize(s, error);
 }
 
-bool keyexpr_is_canon(const std::string_view& s, ErrNo& error) {
+inline bool keyexpr_is_canon(const std::string_view& s, ErrNo& error) {
     error = ::z_keyexpr_is_canon(s.begin(), s.length());
     return error == 0;
 }
 
-bool keyexpr_is_canon(const std::string_view& s) {
+inline bool keyexpr_is_canon(const std::string_view& s) {
     ErrNo error;
     return keyexpr_is_canon(s, error);
 }
