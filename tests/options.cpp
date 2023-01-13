@@ -97,10 +97,23 @@ void delete_options() {
     assert(opts2 != opts);
 }
 
+void query_reply_options() {
+    QueryReplyOptions opts;
+    opts.set_encoding(EncodingPrefix::Z_ENCODING_PREFIX_TEXT_PLAIN);
+
+    QueryReplyOptions opts2 = opts;
+    assert(opts2 == opts);
+    assert(opts.get_encoding() == Encoding(EncodingPrefix::Z_ENCODING_PREFIX_TEXT_PLAIN));
+
+    opts2.set_encoding(EncodingPrefix::Z_ENCODING_PREFIX_TEXT_HTML);
+    assert(opts2 != opts);
+}
+
 int main(int argc, char** argv) {
     encoding();
     value();
     get_options();
     put_options();
     delete_options();
+    query_reply_options();
 };

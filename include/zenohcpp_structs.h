@@ -287,10 +287,13 @@ struct DeleteOptions : public Copyable<::z_delete_options_t> {
 struct QueryReplyOptions : public Copyable<::z_query_reply_options_t> {
     using Copyable::Copyable;
     QueryReplyOptions() : Copyable(::z_query_reply_options_default()) {}
+    const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
     QueryReplyOptions& set_encoding(Encoding e) {
         encoding = e;
         return *this;
     };
+    bool operator==(const QueryReplyOptions& v) const { return get_encoding() == v.get_encoding(); }
+    bool operator!=(const QueryReplyOptions& v) const { return !operator==(v); }
 };
 
 class Query : public Copyable<::z_query_t> {
