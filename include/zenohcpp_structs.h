@@ -61,6 +61,7 @@ struct BytesView : public Copyable<::z_bytes_t> {
         : Copyable({.start = reinterpret_cast<const uint8_t*>(s.data()), .len = s.length()}) {}
     std::string_view as_string_view() const { return std::string_view(reinterpret_cast<const char*>(start), len); }
     bool operator==(const BytesView& v) const { return as_string_view() == v.as_string_view(); }
+    bool operator!=(const BytesView& v) const { return !operator==(v); }
     size_t get_len() const { return len; }
 };
 
@@ -110,7 +111,8 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
 
     // operator == between keyexprs purposedly not defided to avoid ambiguity: it's not obvious is string
     // equality or z_keyexpr_equals would be used by operator==
-    bool operator==(const std::string_view& v) { return as_string_view() == v; }
+    bool operator==(const std::string_view& v) const { return as_string_view() == v; }
+    bool operator!=(const std::string_view& v) const { return !operator==(v); }
     bool equals(const KeyExprView& v) const { return ::z_keyexpr_equals(*this, v) == 1; }
 
     // operator += purposedly not defined to not provoke ambiguity between concat (which
@@ -139,11 +141,21 @@ struct Encoding : public Copyable<::z_encoding_t> {
     Encoding() : Copyable(::z_encoding_default()) {}
     Encoding(EncodingPrefix _prefix) : Copyable(::z_encoding(_prefix, nullptr)) {}
     Encoding(EncodingPrefix _prefix, const char* _suffix) : Copyable(::z_encoding(_prefix, _suffix)) {}
+
+    Encoding& set_prefix(EncodingPrefix _prefix) {
+        prefix = _prefix;
+        return *this;
+    }
+    Encoding& set_suffix(const BytesView& _suffix) {
+        suffix = _suffix;
+        return *this;
+    }
     EncodingPrefix get_prefix() const { return prefix; }
     const BytesView& get_suffix() const { return static_cast<const BytesView&>(suffix); }
     bool operator==(const Encoding& v) const {
         return get_prefix() == v.get_prefix() && get_suffix() == v.get_suffix();
     }
+    bool operator!=(const Encoding& v) const { return !operator==(v); }
 };
 
 struct Timestamp : Copyable<::z_timestamp_t> {
@@ -170,6 +182,7 @@ struct Value : public Copyable<::z_value_t> {
     bool operator==(const Value& v) const {
         return get_payload() == v.get_payload() && get_encoding() == v.get_encoding();
     }
+    bool operator!=(const Value& v) const { return !operator==(v); }
 };
 
 typedef Value ErrorMessage;
@@ -184,6 +197,7 @@ struct QueryConsolidation : Copyable<::z_query_consolidation_t> {
     }
     ConsolidationMode get_mode() const { return mode; }
     bool operator==(const QueryConsolidation& v) const { return get_mode() == v.get_mode(); }
+    bool operator!=(const QueryConsolidation& v) const { return !operator==(v); }
 };
 
 struct GetOptions : public Copyable<::z_get_options_t> {
@@ -210,6 +224,7 @@ struct GetOptions : public Copyable<::z_get_options_t> {
         return get_target() == v.get_target() && get_consolidation() == v.get_consolidation() &&
                get_with_value() == v.get_with_value();
     }
+    bool operator!=(const GetOptions& v) const { return !operator==(v); }
 };
 
 struct PutOptions : public Copyable<::z_put_options_t> {

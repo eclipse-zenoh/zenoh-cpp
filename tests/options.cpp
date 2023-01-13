@@ -19,6 +19,26 @@ using namespace zenoh;
 #undef NDEBUG
 #include <assert.h>
 
+void encoding() {
+    Encoding def1;
+    Encoding def2;
+    assert(def1 == def2);
+
+    Encoding foo(EncodingPrefix::Z_ENCODING_PREFIX_APP_FLOAT, "foo");
+    Encoding bar(EncodingPrefix::Z_ENCODING_PREFIX_APP_INTEGER, "bar");
+    assert(foo != bar);
+    foo = bar;
+    assert(foo == bar);
+
+    Encoding encoding;
+    const char* foobar = "foobar";
+    encoding.set_prefix(EncodingPrefix::Z_ENCODING_PREFIX_APP_CUSTOM).set_suffix(std::string_view(foobar, 3));
+    assert(encoding.get_prefix() == EncodingPrefix::Z_ENCODING_PREFIX_APP_CUSTOM);
+    assert(encoding.get_suffix() ==
+           "foo");  // check that it can work witn non null-terminated strings. Though it doesn't
+                    // guarantee that such strinngs are correctly processed everywhere in zehon-c
+}
+
 void get_options() {
     GetOptions opts;
     opts.set_consolidation(QueryConsolidation())
@@ -31,6 +51,9 @@ void get_options() {
     assert(opts.get_consolidation() == QueryConsolidation(Z_CONSOLIDATION_MODE_AUTO));
     assert(opts.get_target() == Z_QUERY_TARGET_ALL);
     assert(opts.get_with_value() == Value("TEST"));
+
+    opts2.set_consolidation(Z_CONSOLIDATION_MODE_LATEST);
+    assert(opts2 != opts);
 }
 
 int main(int argc, char** argv) { get_options(); };
