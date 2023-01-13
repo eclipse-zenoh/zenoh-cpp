@@ -171,6 +171,13 @@ void publisher_put_options() {
     assert(opts2 != opts);
 }
 
+void publisher_delete_options() {
+    PublisherPutOptions opts;
+    PublisherPutOptions opts2;
+    assert(opts2 == opts);
+    assert(!(opts2 != opts));
+}
+
 int main(int argc, char** argv) {
     encoding();
     value();
@@ -182,4 +189,6 @@ int main(int argc, char** argv) {
     subscriber_options();
     pull_subscriber_options();
     publisher_options();
+    publisher_put_options();
+    publisher_delete_options();
 };

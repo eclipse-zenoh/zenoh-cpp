@@ -394,6 +394,8 @@ struct PublisherPutOptions : public Copyable<::z_publisher_put_options_t> {
 struct PublisherDeleteOptions : public Copyable<::z_publisher_delete_options_t> {
     using Copyable::Copyable;
     PublisherDeleteOptions() : Copyable(::z_publisher_delete_options_default()) {}
+    bool operator==(const PublisherOptions& v) const { return true; }
+    bool operator!=(const PublisherOptions& v) const { return !operator==(v); }
 };
 
 }  // namespace zenoh
