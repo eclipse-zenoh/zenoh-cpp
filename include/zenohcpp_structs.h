@@ -61,6 +61,7 @@ struct BytesView : public Copyable<::z_bytes_t> {
         : Copyable({.start = reinterpret_cast<const uint8_t*>(s.data()), .len = s.length()}) {}
     std::string_view as_string_view() const { return std::string_view(reinterpret_cast<const char*>(start), len); }
     bool operator==(const BytesView& v) const { return as_string_view() == v.as_string_view(); }
+    bool operator!=(const BytesView& v) const { return !operator==(v); }
     size_t get_len() const { return len; }
 };
 
@@ -110,7 +111,8 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
 
     // operator == between keyexprs purposedly not defided to avoid ambiguity: it's not obvious is string
     // equality or z_keyexpr_equals would be used by operator==
-    bool operator==(const std::string_view& v) { return as_string_view() == v; }
+    bool operator==(const std::string_view& v) const { return as_string_view() == v; }
+    bool operator!=(const std::string_view& v) const { return !operator==(v); }
     bool equals(const KeyExprView& v) const { return ::z_keyexpr_equals(*this, v) == 1; }
 
     // operator += purposedly not defined to not provoke ambiguity between concat (which
@@ -139,11 +141,21 @@ struct Encoding : public Copyable<::z_encoding_t> {
     Encoding() : Copyable(::z_encoding_default()) {}
     Encoding(EncodingPrefix _prefix) : Copyable(::z_encoding(_prefix, nullptr)) {}
     Encoding(EncodingPrefix _prefix, const char* _suffix) : Copyable(::z_encoding(_prefix, _suffix)) {}
+
+    Encoding& set_prefix(EncodingPrefix _prefix) {
+        prefix = _prefix;
+        return *this;
+    }
+    Encoding& set_suffix(const BytesView& _suffix) {
+        suffix = _suffix;
+        return *this;
+    }
     EncodingPrefix get_prefix() const { return prefix; }
     const BytesView& get_suffix() const { return static_cast<const BytesView&>(suffix); }
     bool operator==(const Encoding& v) const {
         return get_prefix() == v.get_prefix() && get_suffix() == v.get_suffix();
     }
+    bool operator!=(const Encoding& v) const { return !operator==(v); }
 };
 
 struct Timestamp : Copyable<::z_timestamp_t> {
@@ -163,13 +175,27 @@ struct Sample : public Copyable<::z_sample_t> {
 
 struct Value : public Copyable<::z_value_t> {
     using Copyable::Copyable;
-    Value(const char* v) : Copyable({.payload = BytesView(v), .encoding = Encoding()}) {}
+    Value(const BytesView& payload, const Encoding& encoding) : Copyable({.payload = payload, .encoding = encoding}) {}
+    Value(const BytesView& payload) : Value(payload, Encoding()) {}
+    Value(const char* payload) : Value(payload, Encoding()) {}
+
     const BytesView& get_payload() const { return static_cast<const BytesView&>(payload); }
+    Value& set_payload(const BytesView& _payload) {
+        payload = _payload;
+        return *this;
+    }
+
     const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
+    Value& set_encoding(const Encoding& _encoding) {
+        encoding = _encoding;
+        return *this;
+    }
+
     std::string_view as_string_view() const { return get_payload().as_string_view(); }
     bool operator==(const Value& v) const {
         return get_payload() == v.get_payload() && get_encoding() == v.get_encoding();
     }
+    bool operator!=(const Value& v) const { return !operator==(v); }
 };
 
 typedef Value ErrorMessage;
@@ -184,6 +210,7 @@ struct QueryConsolidation : Copyable<::z_query_consolidation_t> {
     }
     ConsolidationMode get_mode() const { return mode; }
     bool operator==(const QueryConsolidation& v) const { return get_mode() == v.get_mode(); }
+    bool operator!=(const QueryConsolidation& v) const { return !operator==(v); }
 };
 
 struct GetOptions : public Copyable<::z_get_options_t> {
@@ -210,6 +237,7 @@ struct GetOptions : public Copyable<::z_get_options_t> {
         return get_target() == v.get_target() && get_consolidation() == v.get_consolidation() &&
                get_with_value() == v.get_with_value();
     }
+    bool operator!=(const GetOptions& v) const { return !operator==(v); }
 };
 
 struct PutOptions : public Copyable<::z_put_options_t> {
@@ -220,6 +248,21 @@ struct PutOptions : public Copyable<::z_put_options_t> {
         encoding = e;
         return *this;
     };
+    CongestionControl get_congestion_control() const { return congestion_control; }
+    PutOptions& set_congestion_control(CongestionControl v) {
+        congestion_control = v;
+        return *this;
+    };
+    Priority get_priority() const { return priority; }
+    PutOptions& set_priority(Priority v) {
+        priority = v;
+        return *this;
+    }
+    bool operator==(const PutOptions& v) const {
+        return get_priority() == v.get_priority() && get_congestion_control() == v.get_congestion_control() &&
+               get_encoding() == v.get_encoding();
+    }
+    bool operator!=(const PutOptions& v) const { return !operator==(v); }
 };
 
 struct DeleteOptions : public Copyable<::z_delete_options_t> {
@@ -235,22 +278,27 @@ struct DeleteOptions : public Copyable<::z_delete_options_t> {
         priority = v;
         return *this;
     }
+    bool operator==(const DeleteOptions& v) const {
+        return get_priority() == v.get_priority() && get_congestion_control() == v.get_congestion_control();
+    }
+    bool operator!=(const DeleteOptions& v) const { return !operator==(v); }
 };
 
 struct QueryReplyOptions : public Copyable<::z_query_reply_options_t> {
     using Copyable::Copyable;
     QueryReplyOptions() : Copyable(::z_query_reply_options_default()) {}
+    const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
     QueryReplyOptions& set_encoding(Encoding e) {
         encoding = e;
         return *this;
     };
+    bool operator==(const QueryReplyOptions& v) const { return get_encoding() == v.get_encoding(); }
+    bool operator!=(const QueryReplyOptions& v) const { return !operator==(v); }
 };
 
 class Query : public Copyable<::z_query_t> {
    public:
     using Copyable::Copyable;
-    Query() = delete;
-    Query(::z_query_t query) : Copyable(query) {}
     KeyExprView get_keyexpr() const { return KeyExprView(::z_query_keyexpr(this)); }
     BytesView get_parameters() const { return BytesView(::z_query_parameters(this)); }
 
@@ -284,24 +332,32 @@ struct QueryableOptions : public Copyable<::z_queryable_options_t> {
         complete = v;
         return *this;
     }
+    bool operator==(const QueryableOptions& v) const { return get_complete() == v.get_complete(); }
+    bool operator!=(const QueryableOptions& v) const { return !operator==(v); }
 };
 
 struct SubscriberOptions : public Copyable<::z_subscriber_options_t> {
     using Copyable::Copyable;
+    SubscriberOptions() : Copyable(::z_subscriber_options_default()) {}
     Reliability get_reliability() const { return reliability; }
-    SubscriberOptions& set_reliability(Reliability& v) {
+    SubscriberOptions& set_reliability(Reliability v) {
         reliability = v;
         return *this;
     }
+    bool operator==(const SubscriberOptions& v) const { return get_reliability() == v.get_reliability(); }
+    bool operator!=(const SubscriberOptions& v) const { return !operator==(v); }
 };
 
 struct PullSubscriberOptions : public Copyable<::z_pull_subscriber_options_t> {
     using Copyable::Copyable;
+    PullSubscriberOptions() : Copyable(::z_pull_subscriber_options_default()) {}
     Reliability get_reliability() const { return reliability; }
-    PullSubscriberOptions& set_reliability(Reliability& v) {
+    PullSubscriberOptions& set_reliability(Reliability v) {
         reliability = v;
         return *this;
     }
+    bool operator==(const PullSubscriberOptions& v) const { return get_reliability() == v.get_reliability(); }
+    bool operator!=(const PullSubscriberOptions& v) const { return !operator==(v); }
 };
 
 struct PublisherOptions : public Copyable<::z_publisher_options_t> {
@@ -317,6 +373,10 @@ struct PublisherOptions : public Copyable<::z_publisher_options_t> {
         priority = v;
         return *this;
     }
+    bool operator==(const PublisherOptions& v) const {
+        return get_priority() == v.get_priority() && get_congestion_control() == v.get_congestion_control();
+    }
+    bool operator!=(const PublisherOptions& v) const { return !operator==(v); }
 };
 
 struct PublisherPutOptions : public Copyable<::z_publisher_put_options_t> {
@@ -327,11 +387,15 @@ struct PublisherPutOptions : public Copyable<::z_publisher_put_options_t> {
         encoding = e;
         return *this;
     };
+    bool operator==(const PublisherPutOptions& v) const { return get_encoding() == v.get_encoding(); }
+    bool operator!=(const PublisherPutOptions& v) const { return !operator==(v); }
 };
 
 struct PublisherDeleteOptions : public Copyable<::z_publisher_delete_options_t> {
     using Copyable::Copyable;
     PublisherDeleteOptions() : Copyable(::z_publisher_delete_options_default()) {}
+    bool operator==(const PublisherOptions& v) const { return true; }
+    bool operator!=(const PublisherOptions& v) const { return !operator==(v); }
 };
 
 }  // namespace zenoh
