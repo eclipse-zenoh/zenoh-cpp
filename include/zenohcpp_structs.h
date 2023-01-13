@@ -175,9 +175,22 @@ struct Sample : public Copyable<::z_sample_t> {
 
 struct Value : public Copyable<::z_value_t> {
     using Copyable::Copyable;
-    Value(const char* v) : Copyable({.payload = BytesView(v), .encoding = Encoding()}) {}
+    Value(const BytesView& payload, const Encoding& encoding) : Copyable({.payload = payload, .encoding = encoding}) {}
+    Value(const BytesView& payload) : Value(payload, Encoding()) {}
+    Value(const char* payload) : Value(payload, Encoding()) {}
+
     const BytesView& get_payload() const { return static_cast<const BytesView&>(payload); }
+    Value& set_payload(const BytesView& _payload) {
+        payload = _payload;
+        return *this;
+    }
+
     const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
+    Value& set_encoding(const Encoding& _encoding) {
+        encoding = _encoding;
+        return *this;
+    }
+
     std::string_view as_string_view() const { return get_payload().as_string_view(); }
     bool operator==(const Value& v) const {
         return get_payload() == v.get_payload() && get_encoding() == v.get_encoding();

@@ -39,6 +39,17 @@ void encoding() {
                     // guarantee that such strinngs are correctly processed everywhere in zehon-c
 }
 
+void value() {
+    const char* foobar = "foobar";
+    Value foo("foo");
+    Value bar(std::string_view(foobar + 3), Encoding(EncodingPrefix::Z_ENCODING_PREFIX_APP_JSON));
+    assert(foo != bar);
+    foo.set_encoding(EncodingPrefix::Z_ENCODING_PREFIX_APP_JSON).set_payload("bar");
+    assert(foo == bar);
+    assert(bar.get_encoding() == Encoding(EncodingPrefix::Z_ENCODING_PREFIX_APP_JSON));
+    assert(bar.get_payload() == "bar");
+}
+
 void get_options() {
     GetOptions opts;
     opts.set_consolidation(QueryConsolidation())
@@ -57,6 +68,7 @@ void get_options() {
 }
 
 int main(int argc, char** argv) {
-    get_options();
     encoding();
+    value();
+    get_options();
 };
