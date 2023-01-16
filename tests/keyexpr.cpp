@@ -167,6 +167,17 @@ void intersects() {
     assert(err != 0);
 }
 
+void undeclare() {
+    Config config;
+    auto session = std::get<Session>(open(std::move(config)));
+    auto keyexpr = session.declare_keyexpr("foo/bar");
+    assert(keyexpr.check());
+    ErrNo err;
+    assert(session.undeclare_keyexpr(std::move(keyexpr), err));
+    assert(err == 0);
+    assert(!keyexpr.check());
+}
+
 int main(int argc, char** argv) {
     key_expr_view();
     key_expr();
@@ -175,4 +186,5 @@ int main(int argc, char** argv) {
     equals();
     includes();
     intersects();
+    undeclare();
 };

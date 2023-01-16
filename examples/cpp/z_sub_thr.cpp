@@ -72,7 +72,7 @@ int _main(int argc, char **argv) {
     printf("Opening session...\n");
     auto session = std::get<Session>(open(std::move(config)));
 
-    KeyExpr keyexpr("test/thr");
+    KeyExpr keyexpr = session.declare_keyexpr("test/thr");
 
     Stats stats;
     auto subscriber = std::get<Subscriber>(session.declare_subscriber(keyexpr, stats));
@@ -82,6 +82,8 @@ int _main(int argc, char **argv) {
     }
     subscriber.drop();
     stats.print();
+
+    session.undeclare_keyexpr(std::move(keyexpr));
 
     return 0;
 }
