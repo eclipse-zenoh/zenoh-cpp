@@ -136,6 +136,7 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     using Copyable::Copyable;
     KeyExprView(nullptr_t) : Copyable(::z_keyexpr(nullptr)) {}  // allow to create uninitialized KeyExprView
     KeyExprView(const char* name) : Copyable(::z_keyexpr(name)) {}
+    KeyExprView(const std::string_view& name) : Copyable(::zc_keyexpr_from_slice(name.data(), name.length())) {}
     KeyExprView(KeyExprUnchecked unchecked) : Copyable(::z_keyexpr_unchecked(unchecked.name)) {}
     bool check() const { return ::z_keyexpr_is_initialized(this); }
     BytesView as_bytes() const { return BytesView{::z_keyexpr_as_bytes(*this)}; }
