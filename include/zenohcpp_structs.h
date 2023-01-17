@@ -45,6 +45,9 @@ inline const char* as_cstr(WhatAmI whatami) {
                                         : nullptr;
 }
 
+// Initialize logger and set environment variable
+// RUST_LOG=debug or RUST_LOG=info or RUST_LOG=warn or RUST_LOG=error
+// to show diagnostic output
 void init_logger() { ::zc_init_logger(); }
 
 struct StrArrayView : public Copyable<::z_str_array_t> {
