@@ -128,8 +128,7 @@ inline bool keyexpr_is_canon(const std::string_view& s) {
 }
 
 struct KeyExprUnchecked {
-    explicit KeyExprUnchecked(const char* _name) : name(_name) { assert(keyexpr_is_canon(name)); }
-    const char* name;
+    explicit KeyExprUnchecked() {}
 };
 
 struct KeyExprView : public Copyable<::z_keyexpr_t> {
@@ -137,7 +136,13 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     KeyExprView(nullptr_t) : Copyable(::z_keyexpr(nullptr)) {}  // allow to create uninitialized KeyExprView
     KeyExprView(const char* name) : Copyable(::z_keyexpr(name)) {}
     KeyExprView(const std::string_view& name) : Copyable(::zc_keyexpr_from_slice(name.data(), name.length())) {}
-    KeyExprView(KeyExprUnchecked unchecked) : Copyable(::z_keyexpr_unchecked(unchecked.name)) {}
+    KeyExprView(const char* name, KeyExprUnchecked) : Copyable(::z_keyexpr_unchecked(name)) {
+        assert(keyexpr_is_canon(name));
+    }
+    KeyExprView(const std::string_view& name, KeyExprUnchecked)
+        : Copyable(::zc_keyexpr_from_slice_unchecked(name.data(), name.length())) {
+        assert(keyexpr_is_canon(name));
+    }
     bool check() const { return ::z_keyexpr_is_initialized(this); }
     BytesView as_bytes() const { return BytesView{::z_keyexpr_as_bytes(*this)}; }
     std::string_view as_string_view() const { return as_bytes().as_string_view(); }

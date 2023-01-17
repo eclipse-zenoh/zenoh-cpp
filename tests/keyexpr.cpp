@@ -31,16 +31,21 @@ void key_expr_view() {
     assert(foo.as_bytes() == "FOO");
     assert(foo.as_string_view() == "FOO");
 
-    KeyExprView unchecked(KeyExprUnchecked("*//*"));
+    std::string_view sfoo("FOOBAR", 3);
+    KeyExprView svfoo(sfoo);
+    assert(svfoo.check());
+    assert(svfoo == "FOO");
+    assert(svfoo.as_bytes() == "FOO");
+    assert(svfoo.as_string_view() == "FOO");
+
+    KeyExprView unchecked("*//*", KeyExprUnchecked());
     assert(unchecked.check());
     assert(!keyexpr_is_canon(unchecked.as_string_view()));
 
-    std::string_view sfoo("FOOBAR", 3);
-    KeyExprView kfoo(sfoo);
-    assert(kfoo.check());
-    assert(kfoo == "FOO");
-    assert(kfoo.as_bytes() == "FOO");
-    assert(kfoo.as_string_view() == "FOO");
+    std::string_view sunchecked("*//*", 4);
+    KeyExprView svunchecked(sunchecked, KeyExprUnchecked());
+    assert(svunchecked.check());
+    assert(!keyexpr_is_canon(svunchecked.as_string_view()));
 }
 
 void key_expr() {
