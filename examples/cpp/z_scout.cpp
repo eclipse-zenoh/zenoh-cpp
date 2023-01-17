@@ -28,7 +28,7 @@
 
 using namespace zenoh;
 
-void printlocators(const StrArray &locs) {
+void printlocators(const StrArrayView &locs) {
     std::cout << "[";
     for (unsigned int i = 0; i < locs.get_len(); i++) {
         std::cout << "\"" << locs[i] << "\"";
