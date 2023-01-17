@@ -195,6 +195,7 @@ struct Timestamp : Copyable<::z_timestamp_t> {
     // TODO: add utility methods to interpret time as mils, seconds, minutes, etc
     uint64_t get_time() const { return time; }
     const BytesView& get_id() const { return static_cast<const BytesView&>(id); }
+    bool check() const { return ::z_timestamp_check(*this); }
 };
 
 struct Sample : public Copyable<::z_sample_t> {
