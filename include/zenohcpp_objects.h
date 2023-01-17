@@ -44,28 +44,6 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
 KeyExpr KeyExprView::concat(const std::string_view& s) const { return ::z_keyexpr_concat(*this, s.data(), s.length()); }
 KeyExpr KeyExprView::join(const KeyExprView& v) const { return ::z_keyexpr_join(*this, v); }
 
-bool keyexpr_canonize(std::string& s, ErrNo& error) {
-    uintptr_t len = s.length();
-    error = ::z_keyexpr_canonize(&s[0], &len);
-    s.resize(len);
-    return error == 0;
-}
-
-bool keyexpr_canonize(std::string& s) {
-    ErrNo error;
-    return keyexpr_canonize(s, error);
-}
-
-bool keyexpr_is_canon(const std::string_view& s, ErrNo& error) {
-    error = ::z_keyexpr_is_canon(s.begin(), s.length());
-    return error == 0;
-}
-
-bool keyexpr_is_canon(const std::string_view& s) {
-    ErrNo error;
-    return keyexpr_is_canon(s, error);
-}
-
 class ScoutingConfig;
 
 class Config : public Owned<::z_owned_config_t> {
@@ -197,6 +175,18 @@ class Session : public Owned<::z_owned_session_t> {
 
     friend std::variant<Session, ErrorMessage> open(Config&& config);
 
+    KeyExpr declare_keyexpr(const KeyExprView& keyexpr) {
+        return KeyExpr(::z_declare_keyexpr(::z_session_loan(&_0), keyexpr));
+    }
+
+    bool undeclare_keyexpr(KeyExpr&& keyexpr, ErrNo& error) {
+        return undeclare_keyexpr_impl(std::move(keyexpr), error);
+    }
+
+    bool undeclare_keyexpr(KeyExpr&& keyexpr) {
+        ErrNo error;
+        return undeclare_keyexpr_impl(std::move(keyexpr), error);
+    }
     bool get(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, const GetOptions& options,
              ErrNo& error) {
         return get_impl(keyexpr, parameters, std::move(callback), &options, error);
@@ -295,6 +285,11 @@ class Session : public Owned<::z_owned_session_t> {
     }
 
    private:
+    bool undeclare_keyexpr_impl(KeyExpr&& keyexpr, ErrNo& error) {
+        error = ::z_undeclare_keyexpr(::z_session_loan(&_0), &(static_cast<::z_owned_keyexpr_t&>(keyexpr)));
+        return error == 0;
+    }
+
     bool get_impl(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, const GetOptions* options,
                   ErrNo& error) {
         auto c = callback.take();

@@ -30,6 +30,22 @@ void key_expr_view() {
     assert(foo == "FOO");
     assert(foo.as_bytes() == "FOO");
     assert(foo.as_string_view() == "FOO");
+
+    std::string_view sfoo("FOOBAR", 3);
+    KeyExprView svfoo(sfoo);
+    assert(svfoo.check());
+    assert(svfoo == "FOO");
+    assert(svfoo.as_bytes() == "FOO");
+    assert(svfoo.as_string_view() == "FOO");
+
+    KeyExprView unchecked("*//*", KeyExprUnchecked());
+    assert(unchecked.check());
+    assert(!keyexpr_is_canon(unchecked.as_string_view()));
+
+    std::string_view sunchecked("*//*", 4);
+    KeyExprView svunchecked(sunchecked, KeyExprUnchecked());
+    assert(svunchecked.check());
+    assert(!keyexpr_is_canon(svunchecked.as_string_view()));
 }
 
 void key_expr() {
@@ -163,6 +179,17 @@ void intersects() {
     assert(err != 0);
 }
 
+void undeclare() {
+    Config config;
+    auto session = std::get<Session>(open(std::move(config)));
+    auto keyexpr = session.declare_keyexpr("foo/bar");
+    assert(keyexpr.check());
+    ErrNo err;
+    assert(session.undeclare_keyexpr(std::move(keyexpr), err));
+    assert(err == 0);
+    assert(!keyexpr.check());
+}
+
 int main(int argc, char** argv) {
     key_expr_view();
     key_expr();
@@ -171,4 +198,5 @@ int main(int argc, char** argv) {
     equals();
     includes();
     intersects();
+    undeclare();
 };

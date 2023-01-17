@@ -18,6 +18,7 @@
 #include <string>
 #include <string_view>
 
+#include "assert.h"
 #include "string.h"
 #include "zenoh.h"
 #include "zenohcpp_base.h"
@@ -32,6 +33,8 @@ typedef ::z_congestion_control_t CongestionControl;
 typedef ::z_priority_t Priority;
 typedef ::z_consolidation_mode_t ConsolidationMode;
 typedef ::z_query_target_t QueryTarget;
+
+inline QueryTarget query_target_default() { return ::z_query_target_default(); }
 
 enum class WhatAmI { Unknown = 0, Router = 1, Peer = 1 << 1, Client = 1 << 2 };
 
@@ -63,6 +66,7 @@ struct BytesView : public Copyable<::z_bytes_t> {
     bool operator==(const BytesView& v) const { return as_string_view() == v.as_string_view(); }
     bool operator!=(const BytesView& v) const { return !operator==(v); }
     size_t get_len() const { return len; }
+    bool check() const { return ::z_bytes_check(this); }
 };
 
 struct Id : public Copyable<::z_id_t> {
@@ -101,10 +105,44 @@ inline bool _split_ret_to_bool_and_err(int8_t ret, ErrNo& error) {
     }
 }
 
+inline bool keyexpr_canonize(std::string& s, ErrNo& error) {
+    uintptr_t len = s.length();
+    error = ::z_keyexpr_canonize(&s[0], &len);
+    s.resize(len);
+    return error == 0;
+}
+
+inline bool keyexpr_canonize(std::string& s) {
+    ErrNo error;
+    return keyexpr_canonize(s, error);
+}
+
+inline bool keyexpr_is_canon(const std::string_view& s, ErrNo& error) {
+    error = ::z_keyexpr_is_canon(s.begin(), s.length());
+    return error == 0;
+}
+
+inline bool keyexpr_is_canon(const std::string_view& s) {
+    ErrNo error;
+    return keyexpr_is_canon(s, error);
+}
+
+struct KeyExprUnchecked {
+    explicit KeyExprUnchecked() {}
+};
+
 struct KeyExprView : public Copyable<::z_keyexpr_t> {
     using Copyable::Copyable;
     KeyExprView(nullptr_t) : Copyable(::z_keyexpr(nullptr)) {}  // allow to create uninitialized KeyExprView
     KeyExprView(const char* name) : Copyable(::z_keyexpr(name)) {}
+    KeyExprView(const std::string_view& name) : Copyable(::zc_keyexpr_from_slice(name.data(), name.length())) {}
+    KeyExprView(const char* name, KeyExprUnchecked) : Copyable(::z_keyexpr_unchecked(name)) {
+        assert(keyexpr_is_canon(name));
+    }
+    KeyExprView(const std::string_view& name, KeyExprUnchecked)
+        : Copyable(::zc_keyexpr_from_slice_unchecked(name.data(), name.length())) {
+        assert(keyexpr_is_canon(name));
+    }
     bool check() const { return ::z_keyexpr_is_initialized(this); }
     BytesView as_bytes() const { return BytesView{::z_keyexpr_as_bytes(*this)}; }
     std::string_view as_string_view() const { return as_bytes().as_string_view(); }
@@ -163,6 +201,7 @@ struct Timestamp : Copyable<::z_timestamp_t> {
     // TODO: add utility methods to interpret time as mils, seconds, minutes, etc
     uint64_t get_time() const { return time; }
     const BytesView& get_id() const { return static_cast<const BytesView&>(id); }
+    bool check() const { return ::z_timestamp_check(*this); }
 };
 
 struct Sample : public Copyable<::z_sample_t> {
@@ -301,6 +340,7 @@ class Query : public Copyable<::z_query_t> {
     using Copyable::Copyable;
     KeyExprView get_keyexpr() const { return KeyExprView(::z_query_keyexpr(this)); }
     BytesView get_parameters() const { return BytesView(::z_query_parameters(this)); }
+    Value get_value() const { return Value(::z_query_value(this)); }
 
     bool reply(KeyExprView key, const BytesView& payload, const QueryReplyOptions& options, ErrNo& error) const {
         return reply_impl(key, payload, &options, error);
