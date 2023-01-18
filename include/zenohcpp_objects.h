@@ -84,6 +84,24 @@ class Config : public Owned<::z_owned_config_t> {
 
 Config config_peer() { return Config(::z_config_peer()); }
 
+std::variant<Config, ErrorMessage> config_from_file(const char* path) {
+    Config config(::zc_config_from_file(path));
+    if (config.check()) {
+        return std::move(config);
+    } else {
+        return "Failed to create config from file";
+    }
+}
+
+std::variant<Config, ErrorMessage> config_from_str(const char* s) {
+    Config config(::zc_config_from_str(s));
+    if (config.check()) {
+        return std::move(config);
+    } else {
+        return "Failed to create config from string";
+    }
+}
+
 std::variant<Config, ErrorMessage> config_client(const StrArrayView& peers) {
     Config config(::z_config_client(peers.val, peers.len));
     if (config.check()) {

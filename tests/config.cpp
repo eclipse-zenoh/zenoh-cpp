@@ -43,9 +43,25 @@ void test_config_to_string()
     assert(sv.find("{\"id\":\"") == 0);
 }
 
+void test_config_from_file()
+{
+    auto config = config_from_file("BAD FILE");
+    assert(std::get_if<Config>(&config) == nullptr);
+    assert(std::get_if<ErrorMessage>(&config) != nullptr);
+}
+
+void test_config_from_str()
+{
+    auto config = config_from_str("BAD STR");
+    assert(std::get_if<Config>(&config) == nullptr);
+    assert(std::get_if<ErrorMessage>(&config) != nullptr);
+}
+
 int main(int argc, char** argv) {
     init_logger();
     test_config_client();
     test_config_peer();
     test_config_to_string();
+    test_config_from_file();
+    test_config_from_str();
 };
