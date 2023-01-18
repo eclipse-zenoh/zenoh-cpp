@@ -19,7 +19,7 @@ using namespace zenoh;
 #undef NDEBUG
 #include <assert.h>
 
-void config_client() {
+void test_config_client() {
     std::vector<const char*> peers = {"tcp/192.168.0.1", "tcp/10.0.0.1"};
     auto config = config_client(peers);
     assert(std::get_if<Config>(&config) != nullptr);
@@ -28,7 +28,14 @@ void config_client() {
     assert(std::get_if<Config>(&config1) != nullptr);
 }
 
+void test_config_peer() {
+    auto config = config_peer();
+    assert(config.check());
+    assert(config.get("mode") == "\"peer\"");
+}
+
 int main(int argc, char** argv) {
     init_logger();
-    config_client();
+    test_config_client();
+    test_config_peer();
 };
