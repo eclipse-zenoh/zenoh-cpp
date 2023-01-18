@@ -36,12 +36,8 @@ class Str {
     ~Str() { ::zc_free((void*)str); }
     operator const char*() const { return str; }
     const char* c_str() const { return str; }
-    bool operator==(const std::string_view& s) const {
-        return s==str;
-    }
-    bool operator==(const char* s) const {
-        return std::string_view(s)==str;
-    }
+    bool operator==(const std::string_view& s) const { return s == str; }
+    bool operator==(const char* s) const { return std::string_view(s) == str; }
 
    private:
     friend class Config;
@@ -78,7 +74,8 @@ class Config : public Owned<::z_owned_config_t> {
    public:
     using Owned::Owned;
     Config() : Owned(::z_config_default()) {}
-    Str get(const char* key) { return Str(::zc_config_get(::z_config_loan(&_0), key)); }
+    Str get(const char* key) const { return Str(::zc_config_get(::z_config_loan(&_0), key)); }
+    Str to_string() const { return Str(::zc_config_to_string(::z_config_loan(&_0))); }
     bool insert_json(const char* key, const char* value) {
         return ::zc_config_insert_json(::z_config_loan(&_0), key, value) == 0;
     }

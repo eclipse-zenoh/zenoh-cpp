@@ -34,8 +34,18 @@ void test_config_peer() {
     assert(config.get("mode") == "\"peer\"");
 }
 
+void test_config_to_string()
+{
+    Config config;
+    auto s = config.to_string();
+    std::string_view sv(s);
+    assert(sv.length() > 0);
+    assert(sv.find("{\"id\":\"") == 0);
+}
+
 int main(int argc, char** argv) {
     init_logger();
     test_config_client();
     test_config_peer();
+    test_config_to_string();
 };
