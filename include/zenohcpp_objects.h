@@ -50,11 +50,28 @@ class Config : public Owned<::z_owned_config_t> {
    public:
     using Owned::Owned;
     Config() : Owned(::z_config_default()) {}
+
+    friend std::variant<Config, ErrorMessage> config_client(const StrArrayView& peers);
+
     bool insert_json(const char* key, const char* value) {
         return ::zc_config_insert_json(::z_config_loan(&_0), key, value) == 0;
     }
     ScoutingConfig create_scouting_config();
 };
+
+std::variant<Config, ErrorMessage> config_client(const StrArrayView& peers) {
+    Config config(::z_config_client(peers.val, peers.len));
+    if (config.check()) {
+        return std::move(config);
+    } else {
+        return "Failed to create config from list of peers";
+    }
+}
+
+std::variant<Config, ErrorMessage> config_client(const std::initializer_list<const char*>& peers) {
+    std::vector<const char*> v(peers);
+    return config_client(v);
+}
 
 class ScoutingConfig : public Owned<::z_owned_scouting_config_t> {
    public:

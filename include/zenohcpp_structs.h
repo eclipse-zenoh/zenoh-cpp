@@ -17,6 +17,7 @@
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "assert.h"
 #include "string.h"
@@ -45,8 +46,16 @@ inline const char* as_cstr(WhatAmI whatami) {
                                         : nullptr;
 }
 
-struct StrArray : public Copyable<::z_str_array_t> {
+// Initialize logger and set environment variable
+// RUST_LOG=debug or RUST_LOG=info or RUST_LOG=warn or RUST_LOG=error
+// to show diagnostic output
+void init_logger() { ::zc_init_logger(); }
+
+struct StrArrayView : public Copyable<::z_str_array_t> {
     using Copyable::Copyable;
+    StrArrayView() : Copyable({.val = nullptr, .len = 0}) {}
+    StrArrayView(const std::vector<const char*>& v) : Copyable({.val = &v[0], .len = v.size()}) {}
+    StrArrayView(const char* const* v, size_t len) : Copyable({.val = v, .len = len}) {}
     const char* operator[](size_t pos) const { return val[pos]; }
     size_t get_len() const { return len; }
 };
@@ -90,7 +99,7 @@ struct HelloView : public Copyable<::z_hello_t> {
                : whatami == Z_CLIENT ? WhatAmI::Client
                                      : WhatAmI::Unknown;
     }
-    const StrArray& get_locators() const { return static_cast<const StrArray&>(locators); }
+    const StrArrayView& get_locators() const { return static_cast<const StrArrayView&>(locators); }
 };
 
 class KeyExpr;
