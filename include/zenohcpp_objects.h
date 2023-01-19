@@ -23,7 +23,7 @@
 namespace zenoh {
 
 // Convenient representation of owned strings returned from zenoh-c
-// which are supposed to be freed with zc_free
+// which are supposed to be freed by user
 class Str {
    public:
     Str() = delete;
@@ -33,7 +33,7 @@ class Str {
         str = v.str;
         v.str = nullptr;
     }
-    ~Str() { ::zc_free((void*)str); }
+    ~Str() { free((void*)str); }
     operator const char*() const { return str; }
     const char* c_str() const { return str; }
     bool operator==(const std::string_view& s) const { return s == str; }
