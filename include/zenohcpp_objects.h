@@ -22,6 +22,30 @@
 
 namespace zenoh {
 
+// Convenient representation of owned strings returned from zenoh-c
+// which are supposed to be freed by user
+class Str {
+   public:
+    Str() = delete;
+    Str& operator=(const Str& v) = delete;
+    Str(const Str& v) = delete;
+    Str(Str&& v) {
+        str = v.str;
+        v.str = nullptr;
+    }
+    ~Str() { free((void*)str); }
+    operator const char*() const { return str; }
+    const char* c_str() const { return str; }
+    bool operator==(const std::string_view& s) const { return s == str; }
+    bool operator==(const char* s) const { return std::string_view(s) == str; }
+
+   private:
+    friend class Config;
+    friend class Keyexpr;
+    Str(const char* s) : str(s) {}
+    const char* str;
+};
+
 class KeyExpr : public Owned<::z_owned_keyexpr_t> {
    public:
     using Owned::Owned;
@@ -50,14 +74,33 @@ class Config : public Owned<::z_owned_config_t> {
    public:
     using Owned::Owned;
     Config() : Owned(::z_config_default()) {}
-
-    friend std::variant<Config, ErrorMessage> config_client(const StrArrayView& peers);
-
+    Str get(const char* key) const { return Str(::zc_config_get(::z_config_loan(&_0), key)); }
+    Str to_string() const { return Str(::zc_config_to_string(::z_config_loan(&_0))); }
     bool insert_json(const char* key, const char* value) {
         return ::zc_config_insert_json(::z_config_loan(&_0), key, value) == 0;
     }
     ScoutingConfig create_scouting_config();
 };
+
+Config config_peer() { return Config(::z_config_peer()); }
+
+std::variant<Config, ErrorMessage> config_from_file(const char* path) {
+    Config config(::zc_config_from_file(path));
+    if (config.check()) {
+        return std::move(config);
+    } else {
+        return "Failed to create config from file";
+    }
+}
+
+std::variant<Config, ErrorMessage> config_from_str(const char* s) {
+    Config config(::zc_config_from_str(s));
+    if (config.check()) {
+        return std::move(config);
+    } else {
+        return "Failed to create config from string";
+    }
+}
 
 std::variant<Config, ErrorMessage> config_client(const StrArrayView& peers) {
     Config config(::z_config_client(peers.val, peers.len));
