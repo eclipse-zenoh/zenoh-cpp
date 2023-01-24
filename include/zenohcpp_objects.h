@@ -24,26 +24,13 @@ namespace zenoh {
 
 // Convenient representation of owned strings returned from zenoh-c
 // which are supposed to be freed by user
-class Str {
+class Str : public Owned<::z_owned_str_t> {
    public:
-    Str() = delete;
-    Str& operator=(const Str& v) = delete;
-    Str(const Str& v) = delete;
-    Str(Str&& v) {
-        str = v.str;
-        v.str = nullptr;
-    }
-    ~Str() { free((void*)str); }
-    operator const char*() const { return str; }
-    const char* c_str() const { return str; }
-    bool operator==(const std::string_view& s) const { return s == str; }
-    bool operator==(const char* s) const { return std::string_view(s) == str; }
-
-   private:
-    friend class Config;
-    friend class Keyexpr;
-    Str(const char* s) : str(s) {}
-    const char* str;
+    using Owned::Owned;
+    operator const char*() const { return ::z_loan(_0); }
+    const char* c_str() const { return ::z_loan(_0); }
+    bool operator==(const std::string_view& s) const { return s == c_str(); }
+    bool operator==(const char* s) const { return std::string_view(s) == c_str(); }
 };
 
 class KeyExpr : public Owned<::z_owned_keyexpr_t> {
