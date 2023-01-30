@@ -135,9 +135,9 @@ class Subscriber : public Owned<::z_owned_subscriber_t> {
 class PullSubscriber : public Owned<::z_owned_pull_subscriber_t> {
    public:
     using Owned::Owned;
-    bool pull() { return z_subscriber_pull(::z_loan(_0)) == 0; }
+    bool pull() { return ::z_subscriber_pull(::z_loan(_0)) == 0; }
     bool pull(ErrNo& error) {
-        error = z_subscriber_pull(::z_loan(_0));
+        error = ::z_subscriber_pull(::z_loan(_0));
         return error == 0;
     }
 };
