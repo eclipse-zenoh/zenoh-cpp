@@ -44,10 +44,14 @@ message(STATUS "build type: ${CMAKE_BUILD_TYPE}")
 # but in fact cmake fails without it when zenohc is present both in CMAKE_INSTALL_PREFIX and in /usr/local.
 # Consider is it still necessary after next bumping up cmake version
 #
-find_package(zenohc ${CMAKE_PROJECT_VERSION} PATHS ${CMAKE_INSTALL_PREFIX} NO_DEFAULT_PATH QUIET)
-if(NOT TARGET zenohc::lib)
-	find_package(zenohc ${CMAKE_PROJECT_VERSION} QUIET)
-endif()
+function(find_package_dev_first package_name expect_target)
+	find_package(${package_name} ${CMAKE_PROJECT_VERSION} PATHS ${CMAKE_INSTALL_PREFIX} NO_DEFAULT_PATH QUIET)
+	if(NOT TARGET ${expect_target})
+		find_package(${package_name} ${CMAKE_PROJECT_VERSION} QUIET)
+	endif()
+endfunction()
+
+find_package_dev_first(zenohc zenohc::lib)
 
 add_library(zenohcpp INTERFACE)
 add_dependencies(zenohcpp zenohc::lib)

@@ -94,10 +94,10 @@ struct HelloView : public Copyable<::z_hello_t> {
 
     const Id& get_id() const { return static_cast<const Id&>(pid); }
     WhatAmI get_whatami() const {
-        return whatami == Z_ROUTER   ? WhatAmI::Router
-               : whatami == Z_PEER   ? WhatAmI::Peer
-               : whatami == Z_CLIENT ? WhatAmI::Client
-                                     : WhatAmI::Unknown;
+        return whatami == ::Z_ROUTER   ? WhatAmI::Router
+               : whatami == ::Z_PEER   ? WhatAmI::Peer
+               : whatami == ::Z_CLIENT ? WhatAmI::Client
+                                       : WhatAmI::Unknown;
     }
     const StrArrayView& get_locators() const { return static_cast<const StrArrayView&>(locators); }
 };
