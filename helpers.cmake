@@ -1,3 +1,5 @@
+include(FetchContent)
+include(CMakeParseArguments)
 
 #
 # Show VARIABLE = value on configuration stage
@@ -19,18 +21,18 @@ endfunction()
 # add_subdirectory. Sets variable to emplty value if no cmake project in the
 # specified directory
 #
-function(declare_cash_var_for_subproject_path var default_path docstring)
+function(declare_subproject_path_cache_var var default_path docstring)
     file(GLOB cmakelists ${default_path}/CMakeLists.txt)
     if(cmakelists STREQUAL "")
         set(default_path "")
     endif()
-    declare_cache_var(${var} ${subproject_path} STRING ${docstring})
+    declare_cache_var(${var} ${default_path} STRING ${docstring})
 endfunction()
 
 #
 # Create target 'debug' and add function 'debug_print' which prints VARIABLE = value
 # when target 'debug' is built. Useful to debug generated expressions.
-#
+#`
 macro(declare_target_debug debug)
     add_custom_target(${debug})
     function(debug_print var)
@@ -71,42 +73,77 @@ macro(set_default_build_type config_type)
 endmacro()
 
 #
+# Unset variable if it have empty string value
+#
+macro(unset_if_empty vars)
+    foreach(var ${vars})
+        if(${var} STREQUAL "")
+            unset(${var})
+        endif()
+    endforeach()
+endmacro()
+
+# 
 # Try to include CMake project for specified target
-# with add_subdirectory(project_path) and then find_package(package)
-# Skips the step if corresponding parameter is empty
-#
-# Usage:
-# include_target(target project_path package git_url)
-#
+# with add_subdirectory(project_path), then with find_package(project_name) and then with FetchContent(git_url)
+# Skips the step if corresponding parameter is not set or have empty value
+# 
+# include_project(<project_name> TARGET <target> 
+#  [PATH project_path] 
+#  [FIND_PACKAGE] 
+#  [GIT_URL git_url [GIT_TAG git_tag]]
+# )
+# 
 # Example:
-# include_target(zenohc::lib ..\zenoh_c zenohc)
+# include_project(zenohc TARGET zenohc::lib PATH "${CMAKE_CURRENT_SOURCE_DIR}..\zenoh_c" FIND_PACKAGE)
 #
-# function(include_target target project_path package_name git_url)
-#     if(NOT(${project_path} STREQUAL ""))
-#         add_subdirectory(${project_path})
-#         if(NOT TARGET ${target})
-#             message(FATAL_ERROR "Project at '${project_path}' should define target ${target}")
-#         endif()
-#     endif()
+# Functionality is similar to FetchContent with 'FIND_PACKAGE_ARGS' argument, but this argument was added
+# in CMake 3.24 only
+#
+function(include_project project_name)
+    cmake_parse_arguments(PARSE_ARGV 1 "ARG" "FIND_PACKAGE" "TARGET;PATH;GIT_URL;GIT_TAG" "")
+    unset_if_empty(ARG_PATH ARG_TARGET ARG_GIT_URL)
+    if(NOT DEFINED ARG_TARGET)
+        message(FATAL_ERROR "Non-empty TARGET parameter is required")
+    endif()
 
-#     # Give priority to install directory when looking for zenoh-c
-#     # Useful for development when older zenohc version may be installed in system
-#     #
-#     # TODO: "if( NOT TARGET" below should be not necessary 
-#     # (see https://cmake.org/cmake/help/latest/command/find_package.html, search for "override the order")
-#     # but in fact cmake fails without it when zenohc is present both in CMAKE_INSTALL_PREFIX and in /usr/local.
-#     # Consider is it still necessary after next bumping up cmake version
-# 	find_package(${package_name} ${CMAKE_PROJECT_VERSION} PATHS ${CMAKE_INSTALL_PREFIX} NO_DEFAULT_PATH QUIET)
-# 	if(NOT TARGET ${target})
-# 		find_package(${package_name} ${CMAKE_PROJECT_VERSION} QUIET)
-# 	endif()
-# 	if(NOT TARGET ${target})
-#         if(NOT (${git_url} STREQUAL ""))
-#             message(FATAL_ERROR "Package '${package_name}' not found")
-#         endif()
-# 	endif()
+    if(DEFINED ARG_PATH)
+        add_subdirectory(${ARG_PATH} ${project_name})
+        if(NOT TARGET ${ARG_TARGET})
+            message(FATAL_ERROR "Project at '${ARG_PATH}' should define target ${ARG_TARGET}")
+        endif()
+    endif()
 
-#     if(NOT (${git_url} STREQUAL ""))
-#         FetchContent
-#     endif()
-# endfunction()
+    if(DEFINED FIND_PACKAGE)
+        # Give priority to install directory
+        # Useful for development when older version of the project version may be installed in system
+        #
+        # TODO: "if( NOT TARGET" below should be not necessary 
+        # (see https://cmake.org/cmake/help/latest/command/find_package.html, search for "override the order")
+        # but in fact cmake fails without it when zenohc is present both in CMAKE_INSTALL_PREFIX and in /usr/local.
+        # Consider is it still necessary after next bumping up cmake version
+        find_package(${project_name} PATHS ${CMAKE_INSTALL_PREFIX} NO_DEFAULT_PATH QUIET)
+        if(NOT TARGET ${ARG_TARGET})
+            find_package(${project_name} QUIET)
+        endif()
+        if(NOT TARGET ${ARG_TARGET})
+            if(NOT ARG_GIT_URL)
+                message(FATAL_ERROR "Package '${ARG_PACKAGE}' not found")
+            endif()
+        endif()
+    endif()
+
+    if(DEFINED ARG_GIT_URL)
+        if(DEFINED ARG_GIT_TAG)
+            FetchContent_Declare(${project_name}
+                GIT_REPOSITORY ${ARG_GIT_URL}
+                GIT_TAG ${ARG_GIT_TAG}
+            )
+        else()
+            FetchContent_Declare(${project_name}
+                GIT_REPOSITORY ${ARG_GIT_URL}
+            )
+        endif()
+        FetchContent_MakeAvailable(${project_name})
+    endif()
+endfunction()
