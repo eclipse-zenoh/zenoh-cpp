@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.16)
-include(ExternalProject)
 project(
 	zenohcpp
 	VERSION 0.7.0.1
@@ -7,55 +6,26 @@ project(
 	HOMEPAGE_URL "https://github.com/ZettaScaleLabs/zenoh-cpp"
 	LANGUAGES C CXX
 )
+include(FetchContent)
 
-#
-# Setting variables depending on build type and destination platform
-#
-if(NOT CMAKE_BUILD_TYPE)
-	set(default_build_type "RelWithDebInfo")
-	message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
-	set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
-		STRING "Choose the type of build." FORCE)
+include(helpers.cmake)
+declare_target_debug(debug)
+set_default_build_type(Release)
 
-	# Set the possible values of build type for cmake-gui
-	set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-		"Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+# declare_cache_var(FETCHCONTENT_SOURCE_DIR_ZENOHC "${CMAKE_CURRENT_SOURCE_DIR}/../zenoh-c" STRING "zenoh-c project source")
+FetchContent_Declare(zenohc
+	# GIT_REPOSITORY git@github.com:eclipse-zenoh/zenoh-c.git
+	FIND_PACKAGE_ARGS
+)
+FetchContent_MakeAvailable(zenohc)
+
+if(NOT TARGET ${target})
+	message(FATAL_ERROR "Project at '${project_path}' should define target ${target}")
 endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/debug")
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/release")
-elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/release")
-elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
-	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/release")
-else()
-	message(FATAL_ERROR "Unknown CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
-endif()
-message(STATUS "build type: ${CMAKE_BUILD_TYPE}")
-
-#
-# Give priority to install directory when looking for zenoh-c
-# Useful for development when older zenohc version may be installed in system
-#
-# TODO: "if( NOT TARGET" below should be not necessary 
-# (see https://cmake.org/cmake/help/latest/command/find_package.html, search for "override the order")
-# but in fact cmake fails without it when zenohc is present both in CMAKE_INSTALL_PREFIX and in /usr/local.
-# Consider is it still necessary after next bumping up cmake version
-#
-function(find_package_dev_first package_name expect_target)
-	find_package(${package_name} ${CMAKE_PROJECT_VERSION} PATHS ${CMAKE_INSTALL_PREFIX} NO_DEFAULT_PATH QUIET)
-	if(NOT TARGET ${expect_target})
-		find_package(${package_name} ${CMAKE_PROJECT_VERSION} QUIET)
-	endif()
-endfunction()
-
-find_package_dev_first(zenohc zenohc::lib)
 
 add_library(zenohcpp INTERFACE)
 add_dependencies(zenohcpp zenohc::lib)
-target_include_directories(zenohcpp INTERFACE "${CMAKE_SOURCE_DIR}/include")
+target_include_directories(zenohcpp INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 function(add_libraries target)
 	target_link_libraries(${target} PUBLIC zenohc::lib)
@@ -68,7 +38,6 @@ function(add_libraries target)
 	elseif(WIN32)
 		target_link_libraries(${target} PUBLIC ws2_32 crypt32 secur32 bcrypt ncrypt userenv ntdll iphlpapi runtimeobject)
 	endif()
-
 endfunction()
 
 function(add_example file suffix is_cpp)
@@ -84,7 +53,7 @@ function(add_example file suffix is_cpp)
 		set_property(TARGET ${target} PROPERTY LANGUAGE C)
 		set_property(TARGET ${target} PROPERTY C_STANDARD 11)
 	endif()
-	set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples")
+	set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/examples")
 	add_libraries(${target})
 endfunction()
 
@@ -103,7 +72,7 @@ function(add_test_instance file)
 	target_link_libraries(${target} PUBLIC zenohcpp)
 	set_property(TARGET ${target} PROPERTY LANGUAGE CXX)
 	set_property(TARGET ${target} PROPERTY CXX_STANDARD 17)
-	set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+	set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tests")
 	add_libraries(${target})
 	add_test(NAME "test_${filename}" COMMAND ${target})
 endfunction()
@@ -137,7 +106,7 @@ endif()
 message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 include(GNUInstallDirs)
 set(CMAKE_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}/zenohcpp")
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/zenohcpp.pc.in" "${CMAKE_CURRENT_SOURCE_DIR}/zenohcpp.pc" @ONLY)
 if(APPLE OR UNIX)
 	install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc" DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" OPTIONAL)
