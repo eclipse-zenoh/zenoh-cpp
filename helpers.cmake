@@ -1,5 +1,21 @@
+include_guard()
 include(FetchContent)
 include(CMakeParseArguments)
+
+#
+# Set variable ${is_root} to true if project is not included into other project
+# Set variable ${is_ide} to ture if project is root and supposedly loaded to ide
+#
+function(check_project_usage is_root is_ide)
+    set(${is_root} FALSE PARENT_SCOPE)
+    set(${is_ide} FALSE PARENT_SCOPE)
+    if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+        set(${is_root} TRUE PARENT_SCOPE)
+        if(CMAKE_CURRENT_BINARY_DIR STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/build")
+            set(${is_ide} TRUE PARENT_SCOPE)
+        endif()
+    endif()
+endfunction()
 
 #
 # Show VARIABLE = value on configuration stage
@@ -30,15 +46,15 @@ function(declare_subproject_path_cache_var var default_path docstring)
 endfunction()
 
 #
-# Create target 'debug' and add function 'debug_print' which prints VARIABLE = value
-# when target 'debug' is built. Useful to debug generated expressions.
+# Create target named '${PROJECT_NAME}_debug' and add function 'debug_print' which prints VARIABLE = value
+# when this target is built. Useful to debug generated expressions.
 #`
-macro(declare_target_debug debug)
-    add_custom_target(${debug})
+macro(declare_target_projectname_debug)
+    add_custom_target(${PROJECT_NAME}_debug)
     function(debug_print var)
         add_custom_command(
             COMMAND ${CMAKE_COMMAND} -E echo ${var} = ${${var}}
-            TARGET ${debug}
+            TARGET ${PROJECT_NAME}_debug
         )
     endfunction()
 endmacro()
@@ -73,7 +89,7 @@ macro(set_default_build_type config_type)
 endmacro()
 
 #
-# Unset variable if it have empty string value
+# Unset variables if they have empty string value
 #
 macro(unset_if_empty vars)
     foreach(var ${vars})
@@ -108,13 +124,16 @@ function(include_project project_name)
     endif()
 
     if(DEFINED ARG_PATH)
+        message(STATUS "include project '${project_name} from directory '${ARG_PATH}'")
+        list(APPEND CMAKE_MESSAGE_INDENT "  ")
         add_subdirectory(${ARG_PATH} ${project_name})
+        list(POP_BACK CMAKE_MESSAGE_INDENT)
         if(NOT TARGET ${ARG_TARGET})
             message(FATAL_ERROR "Project at '${ARG_PATH}' should define target ${ARG_TARGET}")
         endif()
     endif()
 
-    if(DEFINED FIND_PACKAGE)
+    if(DEFINED ARG_FIND_PACKAGE)
         # Give priority to install directory
         # Useful for development when older version of the project version may be installed in system
         #
@@ -126,14 +145,25 @@ function(include_project project_name)
         if(NOT TARGET ${ARG_TARGET})
             find_package(${project_name} QUIET)
         endif()
-        if(NOT TARGET ${ARG_TARGET})
-            if(NOT ARG_GIT_URL)
-                message(FATAL_ERROR "Package '${ARG_PACKAGE}' not found")
+        if(TARGET ${ARG_TARGET})
+            message(STATUS "included project '${project_name}' as package from path ${${project_name}_CONFIG}")
+            return()
+        else()
+            if(NOT DEFINED ARG_GIT_URL)
+                message(FATAL_ERROR "Package '${project_name}' not found")
             endif()
         endif()
+        # fallback to GIT_URL
     endif()
 
     if(DEFINED ARG_GIT_URL)
+        if(DEFINED ARG_GIT_TAG)
+            set(git_url "${ARG_GIT_URL}#{ARG_GIT_TAG}")
+        else()
+            set(git_url ${ARG_GIT_URL})
+        endif()
+        message(STATUS "including project '${project_name} from git '${git_url}'")
+        list(APPEND CMAKE_MESSAGE_INDENT "  ")
         if(DEFINED ARG_GIT_TAG)
             FetchContent_Declare(${project_name}
                 GIT_REPOSITORY ${ARG_GIT_URL}
@@ -145,5 +175,14 @@ function(include_project project_name)
             )
         endif()
         FetchContent_MakeAvailable(${project_name})
+        list(POP_BACK CMAKE_MESSAGE_INDENT)
+
+        if(NOT TARGET ${ARG_TARGET})
+            message(FATAL_ERROR "Project at ${git_url} should define target ${ARG_TARGET}")
+        endif()
+        return()
     endif()
+ 
+    message(FATAL_ERROR "No source for project '${project_name}' specified")
+
 endfunction()

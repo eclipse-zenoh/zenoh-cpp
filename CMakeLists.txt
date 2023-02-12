@@ -10,7 +10,7 @@ include(helpers.cmake)
 
 declare_subproject_path_cache_var(
 	ZENOHCPP_SOURCE_DIR_ZENOHC "${CMAKE_CURRENT_SOURCE_DIR}/../zenoh-c" STRING "zenoh-c project source directory")
-declare_target_debug(debug)
+declare_target_projectname_debug()
 set_default_build_type(Release)
 
 include_project(zenohc 
