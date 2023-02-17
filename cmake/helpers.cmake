@@ -1,28 +1,28 @@
-include_guard()
-include(FetchContent)
-include(CMakeParseArguments)
+#
+# Copyright (c) 2023 ZettaScale Technology
+#
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+#
+# Contributors:
+#   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
+#
 
 #
-# Set variable ${is_root} to true if project is not included into other project
-# Set variable ${is_ide} to ture if project is root and supposedly loaded to ide
+# DO NOT add include_guard() to this file
+# It have to be reincluded multiple times on each 'include_project' call
 #
-function(check_project_usage is_root is_ide)
-    set(${is_root} FALSE PARENT_SCOPE)
-    set(${is_ide} FALSE PARENT_SCOPE)
-    if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-        set(${is_root} TRUE PARENT_SCOPE)
-        if(CMAKE_CURRENT_BINARY_DIR STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/build")
-            set(${is_ide} TRUE PARENT_SCOPE)
-        endif()
-    endif()
-endfunction()
 
 #
 # Show VARIABLE = value on configuration stage
 #
-function(status_print var)
+macro(status_print var)
 	message(STATUS "${var} = ${${var}}")
-endfunction()
+endmacro()
 
 #
 # Declare cache variable and print VARIABLE = value on configuration stage
@@ -33,31 +33,31 @@ function(declare_cache_var var default_value type docstring)
 endfunction()
 
 #
-# Declare cache variable with path to other CMake project to be included with
-# add_subdirectory. Sets variable to emplty value if no cmake project in the
-# specified directory
+# Declare cache variable which is set to TRUE if project is supposedly
+# loaded as root project into vscode
 #
-function(declare_subproject_path_cache_var var default_path docstring)
-    file(GLOB cmakelists ${default_path}/CMakeLists.txt)
-    if(cmakelists STREQUAL "")
-        set(default_path "")
+function(declare_cache_var_true_if_vscode var docstring)
+    if(CMAKE_CURRENT_BINARY_DIR STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/build")
+        set(in_vscode TRUE)
+    else()
+        set(in_vscode FALSE)
     endif()
-    declare_cache_var(${var} ${default_path} STRING ${docstring})
+    declare_cache_var(${var} ${in_vscode} BOOL ${docstring})
 endfunction()
 
 #
-# Create target named '${PROJECT_NAME}_debug' and add function 'debug_print' which prints VARIABLE = value
+# Create target named 'debug_print' which prints VARIABLE = value
 # when this target is built. Useful to debug generated expressions.
 #`
-macro(declare_target_projectname_debug)
-    add_custom_target(${PROJECT_NAME}_debug)
-    function(debug_print var)
-        add_custom_command(
-            COMMAND ${CMAKE_COMMAND} -E echo ${var} = ${${var}}
-            TARGET ${PROJECT_NAME}_debug
-        )
-    endfunction()
-endmacro()
+function(debug_print var)
+    if(NOT TARGET debug_print)
+        add_custom_target(debug_print GLOBAL)
+    endif()
+    add_custom_command(
+        COMMAND ${CMAKE_COMMAND} -E echo ${var} = ${${var}}
+        TARGET debug_print
+    )
+endfunction()
 
 #
 # Select default build config with support of multi config generators
@@ -89,6 +89,47 @@ macro(set_default_build_type config_type)
 endmacro()
 
 #
+# Add default set of libraries depending on platform
+#
+function(add_platfrom_libraries target)
+	if(APPLE)
+		find_library(FFoundation Foundation)
+		find_library(FSecurity Security)
+		target_link_libraries(${target} PUBLIC ${FFoundation} ${FSecurity})
+	elseif(UNIX)
+		target_link_libraries(${target} PUBLIC rt pthread m dl)
+	elseif(WIN32)
+		target_link_libraries(${target} PUBLIC ws2_32 crypt32 secur32 bcrypt ncrypt userenv ntdll iphlpapi runtimeobject)
+	endif()
+
+endfunction()
+
+#
+# Copy necessary dlls to target runtime directory
+#
+function(copy_dlls target)
+	if(WIN32)
+		add_custom_command(TARGET ${target} POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:${target}> $<TARGET_FILE_DIR:${target}>
+			COMMAND_EXPAND_LISTS
+		)
+	endif()   
+endfunction()
+
+# 
+# get property value avoiding CMake behavior - setting variable to <VAR>-NOTFOUND for undefined property
+#
+function(get_target_property_if_set var target property)
+    get_property(is_set TARGET ${target} PROPERTY ${property} SET)
+    if (NOT is_set)
+		unset(${var} PARENT_SCOPE)
+		return()
+	endif()
+	get_property(value TARGET ${target} PROPERTY ${property})
+	set(${var} ${value} PARENT_SCOPE)
+endfunction()
+
+#
 # Unset variables if they have empty string value
 #
 macro(unset_if_empty vars)
@@ -99,41 +140,65 @@ macro(unset_if_empty vars)
     endforeach()
 endmacro()
 
-# 
-# Try to include CMake project for specified target
-# with add_subdirectory(project_path), then with find_package(project_name) and then with FetchContent(git_url)
-# Skips the step if corresponding parameter is not set or have empty value
-# 
+#
+# Usage:
+#
 # include_project(<project_name> TARGET <target> 
-#  [PATH project_path] 
-#  [FIND_PACKAGE] 
-#  [GIT_URL git_url [GIT_TAG git_tag]]
+#  < PATH <project_path>] [QUIET] |
+#    PACKAGE <package_name>] [QUIET] | 
+#    GIT_URL <git_url> [GIT_TAG <git_tag>] >
 # )
-# 
-# Example:
-# include_project(zenohc TARGET zenohc::lib PATH "${CMAKE_CURRENT_SOURCE_DIR}..\zenoh_c" FIND_PACKAGE)
 #
-# Functionality is similar to FetchContent with 'FIND_PACKAGE_ARGS' argument, but this argument was added
-# in CMake 3.24 only
+# includes CMake project with one of the following ways:
+#   add_subdirectory(project_path) or
+#   find_package(package_name) or
+#   FetchContent(git_url)
 #
-function(include_project project_name)
-    cmake_parse_arguments(PARSE_ARGV 1 "ARG" "FIND_PACKAGE" "TARGET;PATH;GIT_URL;GIT_TAG" "")
-    unset_if_empty(ARG_PATH ARG_TARGET ARG_GIT_URL)
+# If target <target> is already defined, does nothing. If parameter QUIET is passed, does nothing
+# in case of failure to incude project from requested source. This allows to try to load project
+# from first available source, like this:
+#
+# include_project(zenohc TARGET zenohc::lib PATH ..\zenoh_c QUIET)
+# include_project(zenohc TARGET zenohc::lib PACKAGE zenohc QUIET)
+# include_project(zenohc TARGET zenohc::lib GIT_URL https://github.com/eclipse-zenoh/zenoh-c)
+#
+# QUIET parameter not supported for GIT_URL due to lack of support of such mode in FetchContent
+#
+function(include_project)
+    __include_project(${ARGN})
+    # recover functions which may be replaced by included project
+    include(${CMAKE_CURRENT_FUNCTION_LIST_FILE})
+endfunction()
+
+function(__include_project project_name)
+    include(FetchContent)
+    include(CMakeParseArguments)
+    cmake_parse_arguments(PARSE_ARGV 1 "ARG" "QUIET" "TARGET;PATH;PACKAGE;GIT_URL;GIT_TAG" "")
+    unset_if_empty(ARG_PATH ARG_TARGET ARG_PACKAGE ARG_GIT_URL)
     if(NOT DEFINED ARG_TARGET)
         message(FATAL_ERROR "Non-empty TARGET parameter is required")
     endif()
-
-    if(DEFINED ARG_PATH)
-        message(STATUS "include project '${project_name} from directory '${ARG_PATH}'")
-        list(APPEND CMAKE_MESSAGE_INDENT "  ")
-        add_subdirectory(${ARG_PATH} ${project_name})
-        list(POP_BACK CMAKE_MESSAGE_INDENT)
-        if(NOT TARGET ${ARG_TARGET})
-            message(FATAL_ERROR "Project at '${ARG_PATH}' should define target ${ARG_TARGET}")
-        endif()
+    if(TARGET ${ARG_TARGET})
+        return()
     endif()
 
-    if(DEFINED ARG_FIND_PACKAGE)
+    if(DEFINED ARG_PATH)
+        file(GLOB cmakelists ${ARG_PATH}/CMakeLists.txt)
+        if(NOT(cmakelists STREQUAL ""))
+            message(STATUS "include project '${project_name} from directory '${ARG_PATH}'")
+            list(APPEND CMAKE_MESSAGE_INDENT "  ")
+            add_subdirectory(${ARG_PATH} ${project_name})
+            list(POP_BACK CMAKE_MESSAGE_INDENT)
+            if(TARGET ${ARG_TARGET} OR DEFINED ARG_QUIET)
+                return()
+            endif()
+            message(FATAL_ERROR "Project at '${ARG_PATH}' should define target ${ARG_TARGET}")
+        elseif(DEFINED ARG_QUIET)
+            return()
+        else()
+            message(FATAL_ERROR "no CMakeLists.txt file in '${ARG_PATH}'")
+        endif()
+    elseif(DEFINED ARG_PACKAGE)
         # Give priority to install directory
         # Useful for development when older version of the project version may be installed in system
         #
@@ -141,28 +206,30 @@ function(include_project project_name)
         # (see https://cmake.org/cmake/help/latest/command/find_package.html, search for "override the order")
         # but in fact cmake fails without it when zenohc is present both in CMAKE_INSTALL_PREFIX and in /usr/local.
         # Consider is it still necessary after next bumping up cmake version
-        find_package(${project_name} PATHS ${CMAKE_INSTALL_PREFIX} NO_DEFAULT_PATH QUIET)
+        find_package(${ARG_PACKAGE} PATHS ${CMAKE_INSTALL_PREFIX} NO_DEFAULT_PATH QUIET)
         if(NOT TARGET ${ARG_TARGET})
-            find_package(${project_name} QUIET)
+            find_package(${ARG_PACKAGE} QUIET)
         endif()
+        set(package_path ${${ARG_PACKAGE}_CONFIG})
         if(TARGET ${ARG_TARGET})
-            message(STATUS "included project '${project_name}' as package from path ${${project_name}_CONFIG}")
+            message(STATUS "included project '${project_name}' from package '${ARG_PACKAGE}' on path '${package_path}'")
             return()
-        else()
-            if(NOT DEFINED ARG_GIT_URL)
-                message(FATAL_ERROR "Package '${project_name}' not found")
-            endif()
         endif()
-        # fallback to GIT_URL
-    endif()
-
-    if(DEFINED ARG_GIT_URL)
+        if(DEFINED ARG_QUIET)
+            return()
+        endif()
+         if("${package_path}" STREQUAL "")
+            message(FATAL_ERROR "Package '${ARG_PACKAGE}' not found")
+        else()
+            message(FATAL_ERROR "Package '${ARG_PACKAGE}' on path '${package_path}' doesn't define target '${ARG_TARGET}")
+        endif()
+    elseif(DEFINED ARG_GIT_URL)
         if(DEFINED ARG_GIT_TAG)
             set(git_url "${ARG_GIT_URL}#{ARG_GIT_TAG}")
         else()
             set(git_url ${ARG_GIT_URL})
         endif()
-        message(STATUS "including project '${project_name} from git '${git_url}'")
+        message(STATUS "including project '${project_name}' from git '${git_url}'")
         list(APPEND CMAKE_MESSAGE_INDENT "  ")
         if(DEFINED ARG_GIT_TAG)
             FetchContent_Declare(${project_name}
@@ -176,13 +243,11 @@ function(include_project project_name)
         endif()
         FetchContent_MakeAvailable(${project_name})
         list(POP_BACK CMAKE_MESSAGE_INDENT)
-
-        if(NOT TARGET ${ARG_TARGET})
-            message(FATAL_ERROR "Project at ${git_url} should define target ${ARG_TARGET}")
+        if(TARGET ${ARG_TARGET})
+            return()
         endif()
-        return()
+        message(FATAL_ERROR "Project at ${git_url} should define target ${ARG_TARGET}")
+    else()
+        message(FATAL_ERROR "No source for project '${project_name}' specified")
     endif()
- 
-    message(FATAL_ERROR "No source for project '${project_name}' specified")
-
 endfunction()

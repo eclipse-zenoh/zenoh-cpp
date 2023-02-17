@@ -6,19 +6,14 @@ project(
 	HOMEPAGE_URL "https://github.com/ZettaScaleLabs/zenoh-cpp"
 	LANGUAGES C CXX
 )
-include(helpers.cmake)
+include(cmake/helpers.cmake)
 
-declare_subproject_path_cache_var(
-	ZENOHCPP_SOURCE_DIR_ZENOHC "${CMAKE_CURRENT_SOURCE_DIR}/../zenoh-c" STRING "zenoh-c project source directory")
-declare_target_projectname_debug()
+declare_cache_var(ZENOHCPP_SOURCE_DIR_ZENOHC "../zenoh-c" STRING "zenoh-c project source directory")
 set_default_build_type(Release)
 
-include_project(zenohc 
-	TARGET zenohc::lib
-	PATH ${ZENOHCPP_SOURCE_DIR_ZENOHC}
-	FIND_PACKAGE
-	GIT_URL git@github.com:milyin/zenoh-c.git
-)
+include_project(zenohc TARGET zenohc::lib PATH ${ZENOHCPP_SOURCE_DIR_ZENOHC}a QUIET)
+include_project(zenohc TARGET zenohc::lib PACKAGE zenohca QUIET)
+include_project(zenohc TARGET zenohc::lib GIT_URL https://github.com/eclipse-zenoh/zenoh-c)
 
 # add_library(zenohcpp INTERFACE)
 # add_dependencies(zenohcpp zenohc::lib)
