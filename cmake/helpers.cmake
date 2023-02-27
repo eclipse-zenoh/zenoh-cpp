@@ -14,7 +14,8 @@
 
 #
 # DO NOT add include_guard() to this file
-# It have to be reincluded multiple times on each 'include_project' call
+# It have to be reincluded multiple times on each 'include_project' call to restore
+# functions and macros definitions
 #
 
 #
@@ -183,22 +184,24 @@ function(__include_project project_name)
     endif()
 
     if(DEFINED ARG_PATH)
+        message(STATUS "trying to include project '${project_name} from directory '${ARG_PATH}'")
         file(GLOB cmakelists ${ARG_PATH}/CMakeLists.txt)
         if(NOT(cmakelists STREQUAL ""))
-            message(STATUS "include project '${project_name} from directory '${ARG_PATH}'")
+            message(STATUS "found cmake project in directory, including it")
             list(APPEND CMAKE_MESSAGE_INDENT "  ")
             add_subdirectory(${ARG_PATH} ${project_name})
             list(POP_BACK CMAKE_MESSAGE_INDENT)
-            if(TARGET ${ARG_TARGET} OR DEFINED ARG_QUIET)
+            if(TARGET ${ARG_TARGET} OR ARG_QUIET)
                 return()
             endif()
             message(FATAL_ERROR "Project at '${ARG_PATH}' should define target ${ARG_TARGET}")
-        elseif(DEFINED ARG_QUIET)
+        elseif(ARG_QUIET)
             return()
         else()
             message(FATAL_ERROR "no CMakeLists.txt file in '${ARG_PATH}'")
         endif()
     elseif(DEFINED ARG_PACKAGE)
+        message(STATUS "trying to include project '${project_name}' from package '${ARG_PACKAGE}'")
         # Give priority to install directory
         # Useful for development when older version of the project version may be installed in system
         #
@@ -212,10 +215,10 @@ function(__include_project project_name)
         endif()
         set(package_path ${${ARG_PACKAGE}_CONFIG})
         if(TARGET ${ARG_TARGET})
-            message(STATUS "included project '${project_name}' from package '${ARG_PACKAGE}' on path '${package_path}'")
+            message(STATUS "found the package on path '${package_path}'")
             return()
         endif()
-        if(DEFINED ARG_QUIET)
+        if(ARG_QUIET)
             return()
         endif()
          if("${package_path}" STREQUAL "")
@@ -229,7 +232,7 @@ function(__include_project project_name)
         else()
             set(git_url ${ARG_GIT_URL})
         endif()
-        message(STATUS "including project '${project_name}' from git '${git_url}'")
+        message(STATUS "trying to include project '${project_name}' from git '${git_url}'")
         list(APPEND CMAKE_MESSAGE_INDENT "  ")
         if(DEFINED ARG_GIT_TAG)
             FetchContent_Declare(${project_name}
