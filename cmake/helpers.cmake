@@ -61,6 +61,33 @@ function(debug_print var)
 endfunction()
 
 #
+# Add default set of libraries depending on platform
+#
+function(add_platfrom_libraries target)
+	if(APPLE)
+		find_library(FFoundation Foundation)
+		find_library(FSecurity Security)
+		target_link_libraries(${target} PUBLIC ${FFoundation} ${FSecurity})
+	elseif(UNIX)
+		target_link_libraries(${target} PUBLIC rt pthread m dl)
+	elseif(WIN32)
+		target_link_libraries(${target} PUBLIC ws2_32 crypt32 secur32 bcrypt ncrypt userenv ntdll iphlpapi runtimeobject)
+	endif()
+endfunction()
+
+#
+# Copy necessary dlls to target runtime directory
+#
+function(copy_dlls target)
+	if(WIN32)
+		add_custom_command(TARGET ${target} POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:${target}> $<TARGET_FILE_DIR:${target}>
+			COMMAND_EXPAND_LISTS
+		)
+	endif()   
+endfunction()
+
+#
 # Select default build config with support of multi config generators
 #
 macro(set_default_build_type config_type)
@@ -252,5 +279,25 @@ function(__include_project project_name)
         message(FATAL_ERROR "Project at ${git_url} should define target ${ARG_TARGET}")
     else()
         message(FATAL_ERROR "No source for project '${project_name}' specified")
+    endif()
+endfunction()
+
+#
+# Configure set of cache variables and includes requested project accordingly to these variables
+#
+function(configure_include_project var_prefix project target path package git_url)
+    declare_cache_var(${var_prefix}_SOURCE_TYPE "" STRING "${project} source type. Can be PATH, PACKAGE or GIT_URL. If empty, tries all these variants in order")
+    declare_cache_var(${var_prefix}_SOURCE "" STRING "${project} source: filesystem path, package name or git url. If empty, uses the default value from corresponding variable")
+    declare_cache_var(${var_prefix}_PATH ${path} STRING "PATH to ${project} source directory")
+    declare_cache_var(${var_prefix}_PACKAGE ${package} STRING "name of ${project} PACKAGE")
+    declare_cache_var(${var_prefix}_GIT_URL ${git_url} STRING "GIT_URL of ${project} repository")
+    if(${var_prefix}_SOURCE_TYPE STREQUAL "")
+        include_project(${project} TARGET ${target} PATH ${${var_prefix}_PATH} QUIET)
+        include_project(${project} TARGET ${target} PACKAGE ${${var_prefix}_PACKAGE} QUIET)
+        include_project(${project} TARGET ${target} GIT_URL ${${var_prefix}_GIT_URL})
+    elseif(${var_prefix}_SOURCE STREQUAL "")
+        include_project(${project} TARGET ${target} ${${var_prefix}_SOURCE_TYPE} ${ZENOHCPP_ZENOHC_${ZENOHCPP_ZENOHC_SOURCE_TYPE}})
+    else()
+        include_project(${project} TARGET ${target} ${${var_prefix}_SOURCE_TYPE} ${ZENOHCPP_ZENOHC_SOURCE})
     endif()
 endfunction()
