@@ -25,58 +25,37 @@ C++ bindings are still so the Zenoh team will highly appreciate any help in test
 
 > :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in mantaining compatibility between the various git repositories in the Zenoh project.
 
-The zenoh C++ API is a set of C++ header files wrapping the [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) (and [zenoh-pico(https://github.com/eclipse-zenoh/zenoh-pico)] in nearest future) library. 
 The zenoh C++ API is a set of C++ header files wrapping the [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) (and [zenoh-pico] in nearest future) library. 
-So to install and use zenoh-cpp, [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) should be installed in the system. 
+So to use zenoh-cpp, [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) should be available to your project.
+
+To install [zenoh-cpp] do the following steps:
+
+1. Clone the sources
+
+   ```bash
+   git clone https://github.com/eclipse-zenoh/zenoh-cpp.git
+   ```
+
+2. Do install. Notice, that the [zenoh-c] is not required for installation, but it's necessary for building tests and examples. So instead of the main project which depends on [zenoh-c], it's faster to directly use `install` subproject.
+
+   Use option `CMAKE_INSTALL_PREFIX` for specifying installation location. Without this parameter installation is performed to default system location `/usr/local` which requires root privileges.
+
+    ```bash
+    mkdir build && cd build
+    cmake ../zenoh-cpp/install -DCMAKE_INSTALL_PREFIX=~/.local
+    cmake --install .
+    ```
 
 [zenoh-c]: https://github.com/eclipse-zenoh/zenoh-c
 [zenoh-cpp]: https://github.com/eclipse-zenoh/zenoh-cpp
 [zenoh-pico]: https://github.com/eclipse-zenoh/zenoh-pico
 [zenohcpp.h]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohcpp.h 
 
-The steps to install [zenoh-cpp]:
-
-1. Make sure that [rust](https://www.rust-lang.org) is available on your platform:
-    
-* Ubuntu
-    ```bash
-    sudo apt-get install rustc
-    ```
-
-* MacOS
-    ```bash
-    brew install rust
-    ```
-
-2. Install [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) library. If you don't want to use root privileges and install it into system `/usr/local` directory 
-add [CMAKE_INSTALL_PREFIX](https://cmake.org/cmake/help/v3.0/variable/CMAKE_INSTALL_PREFIX.html) parameter to `cmake` arguments.
-
-    ```sh
-    git clone https://github.com/eclipse-zenoh/zenoh-c.git &&
-    cd zenoh-c && mkdir -p build && cd build &&
-    cmake .. -DCMAKE_INSTALL_PREFIX=/home/username/local &&
-    cmake --build . --target install
-    ```
-
-3. Install [zenoh-cpp]. Use the same `CMAKE_INSTALL_PREFIX` parameter as for [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c).  The key point is that this
-parameter is not only install destination path, but is also included into `CMAKE_SYSTEM_PREFIX_PATH`. So the CMAKE's 
-[find_package](https://cmake.org/cmake/help/latest/command/find_package.html) command is able to find [zenoh-c].
-The path must be absolute, without environment variables and home directory shortcut `~`, otherwise cmake may not be able to
-find it. 
-
-    ```sh
-    git clone https://github.com/eclipse-zenoh/zenoh-cpp.git &&
-    cd zenoh-cpp && mkdir -p build && cd build &&
-    cmake .. -DCMAKE_INSTALL_PREFIX=/home/username/local &&
-    cmake --build . --target install
-    ```
-
 ## Building and running tests
 
 ```bash
-cd /path/to/zenoh-cpp
 mkdir -p build && cd build 
-cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake ../zenoh-cpp
 cmake --build . --target tests
 ctest
 ```
@@ -84,41 +63,46 @@ ctest
 ## Building the Examples
 
 ```bash
-cd /path/to/zenoh-cpp
 mkdir -p build && cd build 
-cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake ../zenoh-cpp
 cmake --build . --target examples
 ```
 
-You may alternatively use other CMAKE_BUILD_TYPE configurations, such as `Debug` or `RelWithDebInfo` if you wish to keep the debug symbols.
+You may also directly build the `examples` project, which includes `zenoh-cpp` as subproject in this case.
+
+```bash
+mkdir -p build && cd build 
+cmake ../zenoh-cpp/examples
+cmake --build .
+```
 
 ## Running the Examples
 
 ### Basic Pub/Sub Example
 ```bash
-./target/release/examples/z_sub_cpp
+./z_sub_cpp
 ```
 
 ```bash
-./target/release/examples/z_pub_cpp
+./z_pub_cpp
 ```
 
 ### Queryable and Query Example
 ```bash
-./target/release/examples/z_queryable_cpp
+./z_queryable_cpp
 ```
 
 ```bash
-./target/release/examples/z_get_cpp
+./z_get_cpp
 ```
 
 ### Throughput Examples
 ```bash
-./target/release/examples/z_sub_thgr_cpp
+./z_sub_thgr_cpp
 ```
 
 ```bash
-./target/release/examples/z_pub_thgr_cpp
+./z_pub_thgr_cpp
 ```
 
 ## Library usage and API Conventions

@@ -16,7 +16,6 @@
 #include <iostream>
 #include <variant>
 
-#include "zenoh.h"
 #include "zenohcpp_base.h"
 #include "zenohcpp_structs.h"
 

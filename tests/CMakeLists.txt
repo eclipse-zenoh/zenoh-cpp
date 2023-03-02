@@ -1,0 +1,21 @@
+message(STATUS "zenoh-cpp tests")
+
+add_custom_target(tests)
+
+function(add_test_instance file)
+	get_filename_component(filename ${file} NAME_WE)
+	set(target ${filename})
+	add_executable(${target} EXCLUDE_FROM_ALL ${file})
+	add_dependencies(tests ${target})
+	target_link_libraries(${target} PUBLIC zenohcpp)
+	target_link_libraries(${target} PUBLIC zenohc::lib)
+	set_property(TARGET ${target} PROPERTY LANGUAGE CXX)
+	set_property(TARGET ${target} PROPERTY CXX_STANDARD 17)
+	add_platform_libraries(${target})
+	add_test(NAME "test_${filename}" COMMAND ${target})
+endfunction()
+
+file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+foreach(file ${files})
+    add_test_instance(${file})
+endforeach()

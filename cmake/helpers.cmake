@@ -283,21 +283,43 @@ function(__include_project project_name)
 endfunction()
 
 #
-# Configure set of cache variables and includes requested project accordingly to these variables
+# Configure set of cache variables
+# Include external project accordingly to these variables
 #
-function(configure_include_project var_prefix project target path package git_url)
-    declare_cache_var(${var_prefix}_SOURCE_TYPE "" STRING "${project} source type. Can be PATH, PACKAGE or GIT_URL. If empty, tries all these variants in order")
-    declare_cache_var(${var_prefix}_SOURCE "" STRING "${project} source: filesystem path, package name or git url. If empty, uses the default value from corresponding variable")
-    declare_cache_var(${var_prefix}_PATH ${path} STRING "PATH to ${project} source directory")
-    declare_cache_var(${var_prefix}_PACKAGE ${package} STRING "name of ${project} PACKAGE")
-    declare_cache_var(${var_prefix}_GIT_URL ${git_url} STRING "GIT_URL of ${project} repository")
-    if(${var_prefix}_SOURCE_TYPE STREQUAL "")
+# Example: 
+#
+# configure_include_project(ZENOHC zenohc zenohc::lib ".." zenohc "https://github.com/eclipse-zenoh/zenoh-c" "")
+#
+# This command defines cache variables
+#
+# ZENOHC_SOURCE = ""
+# ZENOHC_PATH = ".."
+# ZENOHC_PACKAGE = "zenohc"
+# ZENOHC_GIT_URL = "https://github.com/eclipse-zenoh/zenoh-c"
+# ZENOHC_GIT_TAG = ""
+# 
+# Then it tries to include the project with name 'zenohc' from first available source in order (PATH,PACKAGE,GIT_URL). 
+# Project should define target `zenohc::lib`, otherwise cmake configuration step fails with error.
+#
+# If ZENOHC_SOURCE is set by user to value PATH, PACKAGE or GIT_URL, then the project is included from this source only.
+#
+# For example:
+#
+# cmake ../zenoh-c/examples -DZENOHC_SOURCE=GIT_URL -DZENOHC_GIT_URL=https://github.com/username/zenoh-c 
+#
+# makes 'examples' project to compile with zenoh-c from username's zenoh-c git repository
+#
+function(configure_include_project var_prefix project target path package git_url git_tag)
+    declare_cache_var(${var_prefix}_SOURCE "" STRING "Explicit ${project} source type. Can be PATH, PACKAGE or GIT_URL. If empty, tries all these variants in order")
+    declare_cache_var(${var_prefix}_PATH "${path}" STRING "PATH to ${project} source directory")
+    declare_cache_var(${var_prefix}_PACKAGE "${package}" STRING "name of ${project} PACKAGE")
+    declare_cache_var(${var_prefix}_GIT_URL "${git_url}" STRING "GIT_URL of ${project} repository")
+    declare_cache_var(${var_prefix}_GIT_TAG "${git_tag}" STRING "GIT_TAG of ${project} repository")
+    if(${var_prefix}_SOURCE STREQUAL "")
         include_project(${project} TARGET ${target} PATH ${${var_prefix}_PATH} QUIET)
         include_project(${project} TARGET ${target} PACKAGE ${${var_prefix}_PACKAGE} QUIET)
-        include_project(${project} TARGET ${target} GIT_URL ${${var_prefix}_GIT_URL})
-    elseif(${var_prefix}_SOURCE STREQUAL "")
-        include_project(${project} TARGET ${target} ${${var_prefix}_SOURCE_TYPE} ${ZENOHCPP_ZENOHC_${ZENOHCPP_ZENOHC_SOURCE_TYPE}})
+        include_project(${project} TARGET ${target} GIT_URL ${${var_prefix}_GIT_URL} GIT_TAG ${${var_prefix}_GIT_TAG})
     else()
-        include_project(${project} TARGET ${target} ${${var_prefix}_SOURCE_TYPE} ${ZENOHCPP_ZENOHC_SOURCE})
+        include_project(${project} TARGET ${target} ${${var_prefix}_SOURCE} ${${var_prefix}_${${var_prefix}_SOURCE}} GIT_TAG ${${var_prefix}_GIT_TAG})
     endif()
 endfunction()
