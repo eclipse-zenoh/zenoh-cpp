@@ -13,6 +13,14 @@
 
 #pragma once
 
+#if defined(ZENOHCPP_ZENOHC)
+#include "zenoh.h"
+#elif defined(ZENOHCPP_ZENOHPICO)
+#include "zenoh-pico.h"
+#else
+#error ZENOHCPP_ZENOHC or ZENOHCPP_ZENOHPICO should be defined to select base C zenoh library
+#endif
+
 #include "zenohcpp/zenohcpp_base.h"
 #include "zenohcpp/zenohcpp_channel.h"
 #include "zenohcpp/zenohcpp_objects.h"

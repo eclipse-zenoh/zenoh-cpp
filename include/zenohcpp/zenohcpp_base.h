@@ -19,8 +19,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "zenoh.h"
-
 namespace zenoh {
 
 //

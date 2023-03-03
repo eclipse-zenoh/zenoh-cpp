@@ -21,7 +21,6 @@
 
 #include "assert.h"
 #include "string.h"
-#include "zenoh.h"
 #include "zenohcpp_base.h"
 
 namespace zenoh {
