@@ -63,7 +63,7 @@ endfunction()
 #
 # Add default set of libraries depending on platform
 #
-function(add_platfrom_libraries target)
+function(add_platform_libraries target)
 	if(APPLE)
 		find_library(FFoundation Foundation)
 		find_library(FSecurity Security)
