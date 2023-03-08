@@ -23,18 +23,33 @@ using namespace zenoh;
 
 void str_array_view() {
     StrArrayView sv1;
+    assert(sv1.get_len() == 0);
 
     std::vector<const char*> sv2 = {"foo", "bar", "buzz"};
     StrArrayView v2(sv2);
+    assert(v2.get_len() == 3);
+    assert(std::string("foo") == v2[0]);
+    assert(std::string("bar") == v2[1]);
+    assert(std::string("buzz") == v2[2]);
 
     const char* sv3[] = {"foo", "bar", "buzz"};
     StrArrayView v3(sv3, 3);
+    assert(v3.get_len() == 3);
+    assert(std::string("foo") == v3[0]);
+    assert(std::string("bar") == v3[1]);
+    assert(std::string("buzz") == v3[2]);
 
     char foo[] = "foo";
     char bar[] = "bar";
     char buzz[] = "buzz";
     char* sv4[] = {foo, bar, buzz};
     StrArrayView v4(sv4, 3);
+    assert(v4.get_len() == 3);
+    assert(std::string("foo") == v4[0]);
+    assert(std::string("bar") == v4[1]);
+    assert(std::string("buzz") == v4[2]);
 }
+
+void bytes_view() {}
 
 int main(int argc, char** argv) { str_array_view(); };

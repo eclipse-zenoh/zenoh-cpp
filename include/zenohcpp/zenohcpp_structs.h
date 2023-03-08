@@ -55,15 +55,16 @@ void init_logger() {
 }
 
 template <typename Z_STR_ARRAY_T>
-struct _StrArrayView : Copyable<Z_STR_ARRAY_T> {
+class _StrArrayView : Copyable<Z_STR_ARRAY_T> {
    public:
     typedef decltype(Z_STR_ARRAY_T::val) VALTYPE;
     using Copyable<Z_STR_ARRAY_T>::Copyable;
     _StrArrayView() : Copyable<Z_STR_ARRAY_T>({.val = nullptr, .len = 0}) {}
     _StrArrayView(const std::vector<const char*>& v)
-        : Copyable<Z_STR_ARRAY_T>({.val = (VALTYPE)&v[0], .len = v.size()}) {}
-    _StrArrayView(const char** v, size_t len) : Copyable<Z_STR_ARRAY_T>({.val = (VALTYPE)v, .len = len}) {}
-    _StrArrayView(const char* const* v, size_t len) : Copyable<Z_STR_ARRAY_T>({.val = (VALTYPE)v, .len = len}) {}
+        : Copyable<Z_STR_ARRAY_T>({.val = const_cast<VALTYPE>(&v[0]), .len = v.size()}) {}
+    _StrArrayView(const char** v, size_t len) : Copyable<Z_STR_ARRAY_T>({.val = const_cast<VALTYPE>(v), .len = len}) {}
+    _StrArrayView(const char* const* v, size_t len)
+        : Copyable<Z_STR_ARRAY_T>({.val = const_cast<VALTYPE>(v), .len = len}) {}
     const char* operator[](size_t pos) const { return Copyable<Z_STR_ARRAY_T>::val[pos]; }
     size_t get_len() const { return Copyable<Z_STR_ARRAY_T>::len; }
 };
@@ -71,6 +72,7 @@ struct _StrArrayView : Copyable<Z_STR_ARRAY_T> {
 struct StrArrayView : public _StrArrayView<::z_str_array_t> {
     using _StrArrayView<::z_str_array_t>::_StrArrayView;
 };
+
 /*
 struct BytesView : public Copyable<::z_bytes_t> {
     using Copyable::Copyable;
