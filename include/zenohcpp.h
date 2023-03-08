@@ -21,7 +21,7 @@
 #error ZENOHCPP_ZENOHC or ZENOHCPP_ZENOHPICO should be defined to select base C zenoh library
 #endif
 
-#include "zenohcpp/zenohcpp_base.h"
-#include "zenohcpp/zenohcpp_channel.h"
-#include "zenohcpp/zenohcpp_objects.h"
+// #include "zenohcpp/zenohcpp_base.h"
+// #include "zenohcpp/zenohcpp_channel.h"
+// #include "zenohcpp/zenohcpp_objects.h"
 #include "zenohcpp/zenohcpp_structs.h"

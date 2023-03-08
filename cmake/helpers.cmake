@@ -88,15 +88,6 @@ function(copy_dlls target)
 endfunction()
 
 #
-# Add platform-dependent preprocessor definitons
-#
-function(add_platform_target_compile_definitions target platform)
-    if(${platform})
-        target_compile_definitions(${target} ${ARGN})
-    endif()
-endfunction()
-
-#
 # Select default build config with support of multi config generators
 #
 macro(set_default_build_type config_type)

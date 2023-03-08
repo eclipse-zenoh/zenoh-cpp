@@ -19,37 +19,37 @@
 using namespace zenoh;
 
 int _main(int argc, char **argv) {
-    const char *keyexpr = "demo/example/zenoh-cpp-put";
+    /*    const char *keyexpr = "demo/example/zenoh-cpp-put";
 
-    if (argc > 1) keyexpr = argv[1];
+        if (argc > 1) keyexpr = argv[1];
 
-    Config config;
-    if (argc > 3) {
-        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[3])) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[3], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-            exit(-1);
+        Config config;
+        if (argc > 3) {
+            if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[3])) {
+                printf(
+                    "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
+                    "JSON-serialized list of strings\n",
+                    argv[3], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
+                exit(-1);
+            }
         }
-    }
 
-    printf("Opening session...\n");
-    auto session = std::get<Session>(open(std::move(config)));
+        printf("Opening session...\n");
+        auto session = std::get<Session>(open(std::move(config)));
 
-    printf("Deleting resources matching '%s'...\n", keyexpr);
-    ErrNo error;
-    if (!session.delete_resource(keyexpr, error)) {
-        std::cout << "Delete failed with error " << error << std::endl;
-    }
-
+        printf("Deleting resources matching '%s'...\n", keyexpr);
+        ErrNo error;
+        if (!session.delete_resource(keyexpr, error)) {
+            std::cout << "Delete failed with error " << error << std::endl;
+        }
+    */
     return 0;
 }
 
 int main(int argc, char **argv) {
-    try {
-        _main(argc, argv);
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
-    }
+    /*    try {
+            _main(argc, argv);
+        } catch (ErrorMessage e) {
+            std::cout << "Received an error :" << e.as_string_view() << "\n";
+        }*/
 }

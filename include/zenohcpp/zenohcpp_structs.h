@@ -48,17 +48,30 @@ inline const char* as_cstr(WhatAmI whatami) {
 // Initialize logger and set environment variable
 // RUST_LOG=debug or RUST_LOG=info or RUST_LOG=warn or RUST_LOG=error
 // to show diagnostic output
-void init_logger() { ::zc_init_logger(); }
+void init_logger() {
+#ifdef ZENOHCPP_ZENOHC
+    ::zc_init_logger();
+#endif
+}
 
-struct StrArrayView : public Copyable<::z_str_array_t> {
-    using Copyable::Copyable;
-    StrArrayView() : Copyable({.val = nullptr, .len = 0}) {}
-    StrArrayView(const std::vector<const char*>& v) : Copyable({.val = &v[0], .len = v.size()}) {}
-    StrArrayView(const char* const* v, size_t len) : Copyable({.val = v, .len = len}) {}
-    const char* operator[](size_t pos) const { return val[pos]; }
-    size_t get_len() const { return len; }
+template <typename Z_STR_ARRAY_T>
+struct _StrArrayView : Copyable<Z_STR_ARRAY_T> {
+   public:
+    typedef decltype(Z_STR_ARRAY_T::val) VALTYPE;
+    using Copyable<Z_STR_ARRAY_T>::Copyable;
+    _StrArrayView() : Copyable<Z_STR_ARRAY_T>({.val = nullptr, .len = 0}) {}
+    _StrArrayView(const std::vector<const char*>& v)
+        : Copyable<Z_STR_ARRAY_T>({.val = (VALTYPE)&v[0], .len = v.size()}) {}
+    _StrArrayView(const char** v, size_t len) : Copyable<Z_STR_ARRAY_T>({.val = (VALTYPE)v, .len = len}) {}
+    _StrArrayView(const char* const* v, size_t len) : Copyable<Z_STR_ARRAY_T>({.val = (VALTYPE)v, .len = len}) {}
+    const char* operator[](size_t pos) const { return Copyable<Z_STR_ARRAY_T>::val[pos]; }
+    size_t get_len() const { return Copyable<Z_STR_ARRAY_T>::len; }
 };
 
+struct StrArrayView : public _StrArrayView<::z_str_array_t> {
+    using _StrArrayView<::z_str_array_t>::_StrArrayView;
+};
+/*
 struct BytesView : public Copyable<::z_bytes_t> {
     using Copyable::Copyable;
     BytesView(void* s, size_t _len) : Copyable({.start = reinterpret_cast<const uint8_t*>(s), .len = _len}) {}
@@ -445,5 +458,6 @@ struct PublisherDeleteOptions : public Copyable<::z_publisher_delete_options_t> 
     bool operator==(const PublisherOptions& v) const { return true; }
     bool operator!=(const PublisherOptions& v) const { return !operator==(v); }
 };
+*/
 
 }  // namespace zenoh
