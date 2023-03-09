@@ -20,9 +20,11 @@
 #include "zenohcxx/includes.hxx"
 
 namespace zenohpico {
+namespace z = zenohpico;  // to disambiguate names for code analyzers
+
 // #include "zenohcpp/zenohcpp_base.h"
 // #include "zenohcpp/zenohcpp_channel.h"
 // #include "zenohcpp/zenohcpp_objects.h"
 #include "zenohcxx/base.hxx"
 #include "zenohcxx/structs.hxx"
-}
+}  // namespace zenohpico

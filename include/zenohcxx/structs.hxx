@@ -24,11 +24,11 @@ inline QueryTarget query_target_default() { return ::z_query_target_default(); }
 
 enum class WhatAmI { Router = 1, Peer = 1 << 1, Client = 1 << 2 };
 
-inline const char* as_cstr(WhatAmI whatami) {
-    return whatami == WhatAmI::Router   ? "Router"
-           : whatami == WhatAmI::Peer   ? "Peer"
-           : whatami == WhatAmI::Client ? "Client"
-                                        : nullptr;
+inline const char* as_cstr(z::WhatAmI whatami) {
+    return whatami == z::WhatAmI::Router   ? "Router"
+           : whatami == z::WhatAmI::Peer   ? "Peer"
+           : whatami == z::WhatAmI::Client ? "Client"
+                                           : nullptr;
 }
 
 // Initialize logger and set environment variable
@@ -54,7 +54,7 @@ struct _StrArrayView : Copyable<Z_STR_ARRAY_T> {
     size_t get_len() const { return Copyable<Z_STR_ARRAY_T>::len; }
 };
 
-struct StrArrayView : _StrArrayView<::z_str_array_t> {
+struct StrArrayView : z::_StrArrayView<::z_str_array_t> {
     using _StrArrayView<::z_str_array_t>::_StrArrayView;
 };
 
@@ -90,14 +90,12 @@ class BytesView : Copyable<::z_bytes_t> {
     }
 };
 
-/*
-
 struct Id : public Copyable<::z_id_t> {
     using Copyable::Copyable;
     bool is_some() const { return id[0] != 0; }
 };
 
-std::ostream& operator<<(std::ostream& os, const Id& id) {
+std::ostream& operator<<(std::ostream& os, const z::Id& id) {
     for (size_t i = 0; id.id[i] != 0 && i < 16; i++)
         os << std::hex << std::setfill('0') << std::setw(2) << (int)id.id[i];
     return os;
@@ -106,12 +104,18 @@ std::ostream& operator<<(std::ostream& os, const Id& id) {
 struct HelloView : public Copyable<::z_hello_t> {
     using Copyable::Copyable;
 
+#if defined(__ZENOHCXX_ZENOHC)
     const Id& get_id() const { return static_cast<const Id&>(pid); }
-    WhatAmI get_whatami() const { return static_cast<WhatAmI>(whatami); }
-    const StrArrayView& get_locators() const { return static_cast<const StrArrayView&>(locators); }
+#elif defined(__ZENOHCXX_ZENOHPICO)
+    const z::Id& get_id() const {
+        assert(zid.len == sizeof(Id));  // TODO: is this invariant that Id is always 16 bytes?
+        return reinterpret_cast<const z::Id&>(*zid.start);
+    }
+#endif
+    z::WhatAmI get_whatami() const { return static_cast<z::WhatAmI>(whatami); }
+    const z::StrArrayView& get_locators() const { return static_cast<const z::StrArrayView&>(locators); }
 };
 
-/*
 class KeyExpr;
 
 inline bool _split_ret_to_bool_and_err(int8_t ret, ErrNo& error) {
@@ -133,7 +137,7 @@ inline bool keyexpr_canonize(std::string& s, ErrNo& error) {
 
 inline bool keyexpr_canonize(std::string& s) {
     ErrNo error;
-    return keyexpr_canonize(s, error);
+    return z::keyexpr_canonize(s, error);
 }
 
 inline bool keyexpr_is_canon(const std::string_view& s, ErrNo& error) {
@@ -143,12 +147,14 @@ inline bool keyexpr_is_canon(const std::string_view& s, ErrNo& error) {
 
 inline bool keyexpr_is_canon(const std::string_view& s) {
     ErrNo error;
-    return keyexpr_is_canon(s, error);
+    return z::keyexpr_is_canon(s, error);
 }
 
 struct KeyExprUnchecked {
     explicit KeyExprUnchecked() {}
 };
+
+/*
 
 struct KeyExprView : public Copyable<::z_keyexpr_t> {
     using Copyable::Copyable;
