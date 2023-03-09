@@ -50,6 +50,43 @@ void str_array_view() {
     assert(std::string("buzz") == v4[2]);
 }
 
-void bytes_view() {}
+void bytes_view() {
+    const char* sfoobar = "foobar";
+    std::string sbuzz("buzz");
+    std::string_view vsbuzz(sbuzz);
+    std::vector<uint64_t> vnums = {0xBADCAFE, 0xC01DF00D, 0xDEADBEEF};
 
-int main(int argc, char** argv) { str_array_view(); };
+    BytesView foobar(sfoobar);
+    BytesView foo(sfoobar, 3);
+    BytesView nul(nullptr);
+    BytesView nul_s((const char*)nullptr);
+    BytesView buzz(sbuzz);
+    BytesView vbuzz(vsbuzz);
+    BytesView nums(vnums);
+
+    assert(foobar.check());
+    assert(foo.check());
+    assert(!nul.check());
+    assert(!nul_s.check());
+    assert(buzz.check());
+    assert(vbuzz.check());
+    assert(nums.check());
+
+    assert(foobar.get_len() == 6);
+    assert(foo.get_len() == 3);
+    assert(nul.get_len() == 0);
+    assert(nul_s.get_len() == 0);
+    assert(buzz.get_len() == 4);
+    assert(vbuzz.get_len() == 4);
+    assert(nums.get_len() == 24);
+
+    assert(foobar.as_string_view() == "foobar");
+    assert(foo.as_string_view() == "foo");
+    assert(buzz.as_string_view() == "buzz");
+    assert(vbuzz.as_string_view() == "buzz");
+}
+
+int main(int argc, char** argv) {
+    str_array_view();
+    bytes_view();
+};

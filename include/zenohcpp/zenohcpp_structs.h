@@ -73,11 +73,12 @@ struct StrArrayView : public _StrArrayView<::z_str_array_t> {
     using _StrArrayView<::z_str_array_t>::_StrArrayView;
 };
 
-/*
-struct BytesView : public Copyable<::z_bytes_t> {
+class BytesView : Copyable<::z_bytes_t> {
+   public:
     using Copyable::Copyable;
-    BytesView(void* s, size_t _len) : Copyable({.start = reinterpret_cast<const uint8_t*>(s), .len = _len}) {}
-    BytesView(const char* s) : Copyable({.start = reinterpret_cast<const uint8_t*>(s), .len = strlen(s)}) {}
+    BytesView(nullptr_t) : Copyable(init(nullptr, 0)) {}
+    BytesView(const void* s, size_t _len) : Copyable(init(reinterpret_cast<const uint8_t*>(s), _len)) {}
+    BytesView(const char* s) : Copyable({.start = reinterpret_cast<const uint8_t*>(s), .len = s ? strlen(s) : 0}) {}
     template <typename T>
     BytesView(const std::vector<T>& v)
         : Copyable({.start = reinterpret_cast<const uint8_t*>(&v[0]), .len = v.size() * sizeof(T)}) {}
@@ -89,9 +90,22 @@ struct BytesView : public Copyable<::z_bytes_t> {
     bool operator==(const BytesView& v) const { return as_string_view() == v.as_string_view(); }
     bool operator!=(const BytesView& v) const { return !operator==(v); }
     size_t get_len() const { return len; }
-    bool check() const { return ::z_bytes_check(this); }
+    bool check() const { return start != nullptr; }
+
+   private:
+    ::z_bytes_t init(const uint8_t* start, size_t len) {
+        ::z_bytes_t ret = {.start = start,
+                           .len = len
+#ifdef ZENOHCPP_ZENOHPICO
+                           ,
+                           ._is_alloc = false
+#endif
+        };
+        return ret;
+    }
 };
 
+/*
 struct Id : public Copyable<::z_id_t> {
     using Copyable::Copyable;
     bool is_some() const { return id[0] != 0; }
