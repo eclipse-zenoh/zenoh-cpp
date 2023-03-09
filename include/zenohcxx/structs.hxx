@@ -11,20 +11,6 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-#pragma once
-
-#include <iomanip>
-#include <iostream>
-#include <string>
-#include <string_view>
-#include <vector>
-
-#include "assert.h"
-#include "string.h"
-#include "zenohcpp_base.h"
-
-namespace zenoh {
-
 typedef int8_t ErrNo;
 typedef ::z_sample_kind_t SampleKind;
 typedef ::z_encoding_prefix_t EncodingPrefix;
@@ -36,7 +22,7 @@ typedef ::z_query_target_t QueryTarget;
 
 inline QueryTarget query_target_default() { return ::z_query_target_default(); }
 
-enum class WhatAmI { Unknown = 0, Router = 1, Peer = 1 << 1, Client = 1 << 2 };
+enum class WhatAmI { Router = 1, Peer = 1 << 1, Client = 1 << 2 };
 
 inline const char* as_cstr(WhatAmI whatami) {
     return whatami == WhatAmI::Router   ? "Router"
@@ -49,14 +35,13 @@ inline const char* as_cstr(WhatAmI whatami) {
 // RUST_LOG=debug or RUST_LOG=info or RUST_LOG=warn or RUST_LOG=error
 // to show diagnostic output
 void init_logger() {
-#ifdef ZENOHCPP_ZENOHC
+#ifdef __ZENOHCXX_ZENOHC
     ::zc_init_logger();
 #endif
 }
 
 template <typename Z_STR_ARRAY_T>
-class _StrArrayView : Copyable<Z_STR_ARRAY_T> {
-   public:
+struct _StrArrayView : Copyable<Z_STR_ARRAY_T> {
     typedef decltype(Z_STR_ARRAY_T::val) VALTYPE;
     using Copyable<Z_STR_ARRAY_T>::Copyable;
     _StrArrayView() : Copyable<Z_STR_ARRAY_T>({.val = nullptr, .len = 0}) {}
@@ -69,7 +54,7 @@ class _StrArrayView : Copyable<Z_STR_ARRAY_T> {
     size_t get_len() const { return Copyable<Z_STR_ARRAY_T>::len; }
 };
 
-struct StrArrayView : public _StrArrayView<::z_str_array_t> {
+struct StrArrayView : _StrArrayView<::z_str_array_t> {
     using _StrArrayView<::z_str_array_t>::_StrArrayView;
 };
 
@@ -96,7 +81,7 @@ class BytesView : Copyable<::z_bytes_t> {
     ::z_bytes_t init(const uint8_t* start, size_t len) {
         ::z_bytes_t ret = {.start = start,
                            .len = len
-#ifdef ZENOHCPP_ZENOHPICO
+#ifdef __ZENOHCXX_ZENOHPICO
                            ,
                            ._is_alloc = false
 #endif
@@ -106,6 +91,7 @@ class BytesView : Copyable<::z_bytes_t> {
 };
 
 /*
+
 struct Id : public Copyable<::z_id_t> {
     using Copyable::Copyable;
     bool is_some() const { return id[0] != 0; }
@@ -121,15 +107,11 @@ struct HelloView : public Copyable<::z_hello_t> {
     using Copyable::Copyable;
 
     const Id& get_id() const { return static_cast<const Id&>(pid); }
-    WhatAmI get_whatami() const {
-        return whatami == ::Z_ROUTER   ? WhatAmI::Router
-               : whatami == ::Z_PEER   ? WhatAmI::Peer
-               : whatami == ::Z_CLIENT ? WhatAmI::Client
-                                       : WhatAmI::Unknown;
-    }
+    WhatAmI get_whatami() const { return static_cast<WhatAmI>(whatami); }
     const StrArrayView& get_locators() const { return static_cast<const StrArrayView&>(locators); }
 };
 
+/*
 class KeyExpr;
 
 inline bool _split_ret_to_bool_and_err(int8_t ret, ErrNo& error) {
@@ -475,5 +457,3 @@ struct PublisherDeleteOptions : public Copyable<::z_publisher_delete_options_t> 
     bool operator!=(const PublisherOptions& v) const { return !operator==(v); }
 };
 */
-
-}  // namespace zenoh

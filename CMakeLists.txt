@@ -1,57 +1,70 @@
 cmake_minimum_required(VERSION 3.20)
 project(
-	zenohcpp
+	zenohcxx
 	VERSION 0.7.0.1
 	DESCRIPTION "C++ bindings for Zenoh"
 	HOMEPAGE_URL "https://github.com/ZettaScaleLabs/zenoh-cpp"
 	LANGUAGES C CXX
 )
 
-# zenohcpp without dependencies
-add_library(zenohcpp INTERFACE)
-target_include_directories(zenohcpp INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-
-# zenohcpp for zenohc dynamic
-add_library(zenohcpp_zenohc_lib INTERFACE)
-target_compile_definitions(zenohcpp_zenohc_lib INTERFACE ZENOHCPP_ZENOHC)
-target_include_directories(zenohcpp_zenohc_lib INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-add_dependencies(zenohcpp_zenohc_lib zenohc::lib)
-target_link_libraries(zenohcpp_zenohc_lib INTERFACE zenohc::lib)
-add_library(zenohcpp::zenohc::lib ALIAS zenohcpp_zenohc_lib)
-
-# zenohcpp for zenohc static
-add_library(zenohcpp_zenohc_static INTERFACE)
-target_compile_definitions(zenohcpp_zenohc_static INTERFACE ZENOHCPP_ZENOHC)
-target_include_directories(zenohcpp_zenohc_static INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-add_dependencies(zenohcpp_zenohc_static zenohc::static)
-target_link_libraries(zenohcpp_zenohc_static INTERFACE zenohc::static)
-add_library(zenohcpp::zenohc::static ALIAS zenohcpp_zenohc_static)
-
-# zenohcpp for zenohpico
-add_library(zenohcpp_zenohpico INTERFACE)
-target_compile_definitions(zenohcpp_zenohpico INTERFACE ZENOHCPP_ZENOHPICO)
-if(WIN32)
-	target_compile_definitions(zenohcpp_zenohpico INTERFACE ZENOH_WINDOWS)
-elseif(APPLE)
-	target_compile_definitions(zenohcpp_zenohpico INTERFACE ZENOH_MACOS)
-elseif(UNIX)
-	target_compile_definitions(zenohcpp_zenohpico INTERFACE ZENOH_LINUX)
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+	include(cmake/helpers.cmake)
+	enable_testing()
+	set_default_build_type(Release)
+	configure_include_project(ZENOHCXX_ZENOHPICO zenohpico zenohpico "../zenoh-pico" zenohpico "https://github.com/eclipse-zenoh/zenoh-pico" "")
+	configure_include_project(ZENOHCXX_ZENOHC zenohc zenohc::lib "../zenoh-c" zenohc "https://github.com/eclipse-zenoh/zenoh-c" "")
 endif()
-target_include_directories(zenohcpp_zenohpico INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-add_dependencies(zenohcpp_zenohpico zenohpico)
-target_link_libraries(zenohcpp_zenohpico INTERFACE zenohpico)
-add_library(zenohcpp::zenohpico ALIAS zenohcpp_zenohpico)
+
+# zenohcxx without dependencies
+add_library(zenohcxx INTERFACE)
+target_include_directories(zenohcxx INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
+# zenohcxx for zenohpico
+if(TARGET zenohpico)
+	message(STATUS "defined lib target zenohcxx::zenohpico for zenohpico")
+	add_library(zenohcxx_zenohpico INTERFACE)
+	target_compile_definitions(zenohcxx_zenohpico INTERFACE ZENOHCXX_ZENOHPICO)
+	if(WIN32)
+		target_compile_definitions(zenohcxx_zenohpico INTERFACE ZENOH_WINDOWS)
+	elseif(APPLE)
+		target_compile_definitions(zenohcxx_zenohpico INTERFACE ZENOH_MACOS)
+	elseif(UNIX)
+		target_compile_definitions(zenohcxx_zenohpico INTERFACE ZENOH_LINUX)
+	endif()
+	target_include_directories(zenohcxx_zenohpico INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+	add_dependencies(zenohcxx_zenohpico zenohpico)
+	target_link_libraries(zenohcxx_zenohpico INTERFACE zenohpico)
+	add_library(zenohcxx::zenohpico ALIAS zenohcxx_zenohpico)
+endif()
+
+
+# zenohcxx for zenohc dynamic
+if(TARGET zenohc::lib)
+	message(STATUS "defined lib target zenohcxx::zenohc::lib for zenohc::lib")
+	add_library(zenohcxx_zenohc_lib INTERFACE)
+	target_compile_definitions(zenohcxx_zenohc_lib INTERFACE ZENOHCXX_ZENOHC)
+	target_include_directories(zenohcxx_zenohc_lib INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+	add_dependencies(zenohcxx_zenohc_lib zenohc::lib)
+	target_link_libraries(zenohcxx_zenohc_lib INTERFACE zenohc::lib)
+	add_library(zenohcxx::zenohc::lib ALIAS zenohcxx_zenohc_lib)
+endif()
+
+# zenohcxx for zenohc static
+if(TARGET zenohc::static)
+	message(STATUS "defined lib target zenohcxx::zenohc::static for zenohc::static")
+	add_library(zenohcxx_zenohc_static INTERFACE)
+	target_compile_definitions(zenohcxx_zenohc_static INTERFACE ZENOHCXX_ZENOHC)
+	target_include_directories(zenohcxx_zenohc_static INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+	add_dependencies(zenohcxx_zenohc_static zenohc::static)
+	target_link_libraries(zenohcxx_zenohc_static INTERFACE zenohc::static)
+	add_library(zenohcxx::zenohc::static ALIAS zenohcxx_zenohc_static)
+endif()
 
 #
 # Components included only if project is the root project
 #
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-	enable_testing()
-	include(cmake/helpers.cmake)
-	set_default_build_type(Release)
-	configure_include_project(ZENOHCPP_ZENOHC zenohc zenohc::lib "../zenoh-c" zenohc "https://github.com/eclipse-zenoh/zenoh-c" "")
-	configure_include_project(ZENOHCPP_ZENOHPICO zenohpico zenohpico "../zenoh-pico" zenohpico "https://github.com/eclipse-zenoh/zenoh-pico" "")
 	# add_subdirectory(install)
 	add_subdirectory(tests)
-	add_subdirectory(examples)
+	# add_subdirectory(examples)
 endif()

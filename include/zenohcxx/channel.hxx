@@ -11,14 +11,6 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-#pragma once
-
-#include "zenohcpp_base.h"
-#include "zenohcpp_objects.h"
-#include "zenohcpp_structs.h"
-
-namespace zenoh {
-
 class ClosureReplyChannelSend : public ClosureReply {
    public:
     using ClosureReply::ClosureReply;
@@ -38,5 +30,3 @@ std::pair<ClosureReplyChannelSend, ClosureReplyChannelRecv> reply_non_blocking_f
     auto channel = ::zc_reply_non_blocking_fifo_new(bound);
     return {std::move(channel.send), std::move(channel.recv)};
 }
-
-}  // namespace zenoh

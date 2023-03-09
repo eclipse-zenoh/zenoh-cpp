@@ -11,16 +11,6 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-#pragma once
-
-#include <functional>
-#include <iostream>
-#include <optional>
-#include <type_traits>
-#include <utility>
-
-namespace zenoh {
-
 //
 // Base type for C++ wrappers of Zenoh copyable structures, like GetOptions, PutOptions, etc.
 //
@@ -234,5 +224,3 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
         return {context, call, drop};
     };
 };
-
-}  // namespace zenoh

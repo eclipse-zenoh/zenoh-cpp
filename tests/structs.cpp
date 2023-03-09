@@ -14,9 +14,13 @@
 
 #include <vector>
 
-#include "zenohcpp.h"
+#include "zenoh.hxx"
 
-using namespace zenoh;
+#if defined(ZENOHCXX_ZENOHPICO)
+using namespace zenohpico;
+#elif defined(ZENOHCXX_ZENOHC)
+using namespace zenohc;
+#endif
 
 #undef NDEBUG
 #include <assert.h>

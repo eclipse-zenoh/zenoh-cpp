@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2022 ZettaScale Technology
+// Copyright (c) 2023 ZettaScale Technology
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -13,15 +13,16 @@
 
 #pragma once
 
-#if defined(ZENOHCPP_ZENOHC)
-#include "zenoh.h"
-#elif defined(ZENOHCPP_ZENOHPICO)
-#include "zenoh-pico.h"
-#else
-#error ZENOHCPP_ZENOHC or ZENOHCPP_ZENOHPICO should be defined to select base C zenoh library
-#endif
+#define __ZENOHCXX_ZENOHPICO
+#undef __ZENOHCXX_ZENOHC
 
+#include "zenoh-pico.h"
+#include "zenohcxx/includes.hxx"
+
+namespace zenohpico {
 // #include "zenohcpp/zenohcpp_base.h"
 // #include "zenohcpp/zenohcpp_channel.h"
 // #include "zenohcpp/zenohcpp_objects.h"
-#include "zenohcpp/zenohcpp_structs.h"
+#include "zenohcxx/base.hxx"
+#include "zenohcxx/structs.hxx"
+}
