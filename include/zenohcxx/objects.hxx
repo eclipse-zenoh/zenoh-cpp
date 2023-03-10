@@ -11,15 +11,8 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-#pragma once
-
-#include <iostream>
-#include <variant>
-
-#include "zenohcpp_base.h"
-#include "zenohcpp_structs.h"
-
-namespace zenoh {
+// DO NOT ADD #pragma once
+// This file can be included twice, for zenoh-c and for zenoh-pico
 
 // Convenient representation of owned strings returned from zenoh-c
 // which are supposed to be freed by user
@@ -31,6 +24,8 @@ class Str : public Owned<::z_owned_str_t> {
     bool operator==(const std::string_view& s) const { return s == c_str(); }
     bool operator==(const char* s) const { return std::string_view(s) == c_str(); }
 };
+
+/*
 
 class KeyExpr : public Owned<::z_owned_keyexpr_t> {
    public:
@@ -411,4 +406,4 @@ std::variant<Session, ErrorMessage> open(Config&& config) {
     }
 };
 
-}  // namespace zenoh
+*/

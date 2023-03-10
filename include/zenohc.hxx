@@ -21,10 +21,10 @@
 
 namespace zenohc {
 namespace z = zenohc;  // to disambiguate names for code analyzers
-
-// #include "zenohcpp/zenohcpp_base.h"
-// #include "zenohcpp/zenohcpp_channel.h"
-// #include "zenohcpp/zenohcpp_objects.h"
+// clang-format off
+// include order is important
 #include "zenohcxx/base.hxx"
+#include "zenohcxx/objects.hxx"
 #include "zenohcxx/structs.hxx"
-}
+// clang-format on
+}  // namespace zenohc

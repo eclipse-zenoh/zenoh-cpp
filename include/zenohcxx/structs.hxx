@@ -78,7 +78,7 @@ class BytesView : public Copyable<::z_bytes_t> {
     bool operator==(const BytesView& v) const { return as_string_view() == v.as_string_view(); }
     bool operator!=(const BytesView& v) const { return !operator==(v); }
     size_t get_len() const { return len; }
-    bool check() const { return start != nullptr; }
+    bool check() const { return ::z_bytes_check(this); }
 
    private:
     ::z_bytes_t init(const uint8_t* start, size_t len) {
