@@ -11,6 +11,9 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
+// DO NOT ADD #pragma once
+// This file can be included twice, for zenoh-c and for zenoh-pico
+
 typedef int8_t ErrNo;
 typedef ::z_sample_kind_t SampleKind;
 typedef ::z_encoding_prefix_t EncodingPrefix;
@@ -154,20 +157,20 @@ struct KeyExprUnchecked {
     explicit KeyExprUnchecked() {}
 };
 
-/*
-
 struct KeyExprView : public Copyable<::z_keyexpr_t> {
     using Copyable::Copyable;
     KeyExprView(nullptr_t) : Copyable(::z_keyexpr(nullptr)) {}  // allow to create uninitialized KeyExprView
     KeyExprView(const char* name) : Copyable(::z_keyexpr(name)) {}
+#ifdef __ZENOHCXX_ZENOHC
     KeyExprView(const std::string_view& name) : Copyable(::zc_keyexpr_from_slice(name.data(), name.length())) {}
-    KeyExprView(const char* name, KeyExprUnchecked) : Copyable(::z_keyexpr_unchecked(name)) {
+    KeyExprView(const char* name, KeyExprUnchecked) : Copyable(::z_keyexpr_unchecked(name)) {  // TODO: why it's z_...
         assert(keyexpr_is_canon(name));
     }
     KeyExprView(const std::string_view& name, KeyExprUnchecked)
         : Copyable(::zc_keyexpr_from_slice_unchecked(name.data(), name.length())) {
         assert(keyexpr_is_canon(name));
     }
+#endif
     bool check() const { return ::z_keyexpr_is_initialized(this); }
     BytesView as_bytes() const { return BytesView{::z_keyexpr_as_bytes(*this)}; }
     std::string_view as_string_view() const { return as_bytes().as_string_view(); }
@@ -198,6 +201,8 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
         return includes(v, error);
     }
 };
+
+/*
 
 struct Encoding : public Copyable<::z_encoding_t> {
     using Copyable::Copyable;

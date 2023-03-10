@@ -27,3 +27,6 @@ endfunction()
 
 add_test_instance(structs.cpp zenohc zenohcxx::zenohc::lib)
 add_test_instance(structs.cpp zenohpico zenohcxx::zenohpico)
+
+# add_test_instance(keyexpr.cpp zenohc zenohcxx::zenohc::lib)
+# add_test_instance(keyexpr.cpp zenohpico zenohcxx::zenohpico)
