@@ -61,7 +61,7 @@ struct StrArrayView : z::_StrArrayView<::z_str_array_t> {
     using _StrArrayView<::z_str_array_t>::_StrArrayView;
 };
 
-class BytesView : Copyable<::z_bytes_t> {
+class BytesView : public Copyable<::z_bytes_t> {
    public:
     using Copyable::Copyable;
     BytesView(nullptr_t) : Copyable(init(nullptr, 0)) {}
@@ -202,8 +202,6 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     }
 };
 
-/*
-
 struct Encoding : public Copyable<::z_encoding_t> {
     using Copyable::Copyable;
     Encoding() : Copyable(::z_encoding_default()) {}
@@ -233,6 +231,8 @@ struct Timestamp : Copyable<::z_timestamp_t> {
     const BytesView& get_id() const { return static_cast<const BytesView&>(id); }
     bool check() const { return ::z_timestamp_check(*this); }
 };
+
+/*
 
 struct Sample : public Copyable<::z_sample_t> {
     using Copyable::Copyable;
