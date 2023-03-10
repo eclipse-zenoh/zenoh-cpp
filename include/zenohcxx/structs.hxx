@@ -232,8 +232,6 @@ struct Timestamp : Copyable<::z_timestamp_t> {
     bool check() const { return ::z_timestamp_check(*this); }
 };
 
-/*
-
 struct Sample : public Copyable<::z_sample_t> {
     using Copyable::Copyable;
     const KeyExprView& get_keyexpr() const { return static_cast<const KeyExprView&>(keyexpr); }
@@ -467,4 +465,3 @@ struct PublisherDeleteOptions : public Copyable<::z_publisher_delete_options_t> 
     bool operator==(const PublisherOptions& v) const { return true; }
     bool operator!=(const PublisherOptions& v) const { return !operator==(v); }
 };
-*/
