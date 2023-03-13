@@ -35,8 +35,10 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     BytesView as_bytes() const { return as_keyexpr_view().as_bytes(); }
     std::string_view as_string_view() const { return as_keyexpr_view().as_string_view(); }
     bool operator==(const std::string_view& v) { return as_string_view() == v; }
+#ifdef __ZENOHCXX_ZENOHC
     KeyExpr concat(const std::string_view& s) const { return as_keyexpr_view().concat(s); }
     KeyExpr join(const KeyExprView& v) const { return as_keyexpr_view().join(v); }
+#endif
     bool equals(const KeyExprView& v) const { return as_keyexpr_view().equals(v); }
     bool includes(const KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().includes(v, error); }
     bool includes(const KeyExprView& v) const { return as_keyexpr_view().includes(v); }

@@ -22,7 +22,7 @@ endfunction()
 # file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 set(files 
 	structs.cpp
-	# keyexpr.cpp
+	keyexpr.cpp
 )
 list(TRANSFORM files PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/")
 

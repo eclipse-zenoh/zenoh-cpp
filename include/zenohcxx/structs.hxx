@@ -161,11 +161,11 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     using Copyable::Copyable;
     KeyExprView(nullptr_t) : Copyable(::z_keyexpr(nullptr)) {}  // allow to create uninitialized KeyExprView
     KeyExprView(const char* name) : Copyable(::z_keyexpr(name)) {}
-#ifdef __ZENOHCXX_ZENOHC
-    KeyExprView(const std::string_view& name) : Copyable(::zc_keyexpr_from_slice(name.data(), name.length())) {}
-    KeyExprView(const char* name, KeyExprUnchecked) : Copyable(::z_keyexpr_unchecked(name)) {  // TODO: why it's z_...
+    KeyExprView(const char* name, KeyExprUnchecked) : Copyable(::z_keyexpr_unchecked(name)) {
         assert(keyexpr_is_canon(name));
     }
+#ifdef __ZENOHCXX_ZENOHC
+    KeyExprView(const std::string_view& name) : Copyable(::zc_keyexpr_from_slice(name.data(), name.length())) {}
     KeyExprView(const std::string_view& name, KeyExprUnchecked)
         : Copyable(::zc_keyexpr_from_slice_unchecked(name.data(), name.length())) {
         assert(keyexpr_is_canon(name));
@@ -181,10 +181,12 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     bool operator!=(const std::string_view& v) const { return !operator==(v); }
     bool equals(const KeyExprView& v) const { return ::z_keyexpr_equals(*this, v) == 1; }
 
+#ifdef __ZENOHCXX_ZENOHC
     // operator += purposedly not defined to not provoke ambiguity between concat (which
     // mechanically connects strings) and join (which works with path elements)
     KeyExpr concat(const std::string_view& s) const;
     KeyExpr join(const KeyExprView& v) const;
+#endif
 
     bool includes(const KeyExprView& v, ErrNo& error) const {
         return _split_ret_to_bool_and_err(::z_keyexpr_includes(*this, v), error);

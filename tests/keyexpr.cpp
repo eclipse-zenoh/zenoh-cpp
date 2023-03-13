@@ -35,6 +35,7 @@ void key_expr_view() {
     assert(foo.as_bytes() == "FOO");
     assert(foo.as_string_view() == "FOO");
 
+#ifdef ZENOHCXX_ZENOHC
     std::string_view sfoo("FOOBAR", 3);
     KeyExprView svfoo(sfoo);
     assert(svfoo.check());
@@ -50,6 +51,7 @@ void key_expr_view() {
     KeyExprView svunchecked(sunchecked, KeyExprUnchecked());
     assert(svunchecked.check());
     assert(!keyexpr_is_canon(svunchecked.as_string_view()));
+#endif
 }
 
 void key_expr() {
@@ -87,6 +89,7 @@ void canonize() {
 }
 
 void concat() {
+#ifdef ZENOHCXX_ZENOHC
     KeyExprView foov("FOO");
     auto foobar = foov.concat("BAR");
     assert(foobar == "FOOBAR");
@@ -94,9 +97,11 @@ void concat() {
     KeyExpr foo("FOO");
     auto foobar1 = foo.concat("BAR");
     assert(foobar1 == "FOOBAR");
+#endif
 }
 
 void join() {
+#ifdef ZENOHCXX_ZENOHC
     KeyExprView foov("FOO");
     auto foobar = foov.concat("BAR");
     assert(foobar == "FOO/BAR");
@@ -104,6 +109,7 @@ void join() {
     KeyExpr foo("FOO");
     auto foobar1 = foo.concat("BAR");
     assert(foobar1 == "FOO/BAR");
+#endif
 }
 
 void equals() {
