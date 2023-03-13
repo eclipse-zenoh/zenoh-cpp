@@ -44,10 +44,10 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     bool intersects(const KeyExprView& v) const { return as_keyexpr_view().intersects(v); }
 };
 
-/*
-
+#ifdef __ZENOHCXX_ZENOHC
 KeyExpr KeyExprView::concat(const std::string_view& s) const { return ::z_keyexpr_concat(*this, s.data(), s.length()); }
 KeyExpr KeyExprView::join(const KeyExprView& v) const { return ::z_keyexpr_join(*this, v); }
+#endif
 
 class ScoutingConfig;
 
@@ -55,14 +55,20 @@ class Config : public Owned<::z_owned_config_t> {
    public:
     using Owned::Owned;
     Config() : Owned(::z_config_default()) {}
+#ifdef __ZENOHCXX_ZENOHC
     Str get(const char* key) const { return Str(::zc_config_get(::z_config_loan(&_0), key)); }
     Str to_string() const { return Str(::zc_config_to_string(::z_config_loan(&_0))); }
     bool insert_json(const char* key, const char* value) {
         return ::zc_config_insert_json(::z_config_loan(&_0), key, value) == 0;
     }
+#endif
+#ifdef __ZENOHCXX_ZENOHPICO
+    const char* get(uint8_t key) const { return ::zp_config_get(::z_config_loan(&_0), key); }
+#endif
     ScoutingConfig create_scouting_config();
 };
 
+#ifdef __ZENOHCXX_ZENOHC
 Config config_peer() { return Config(::z_config_peer()); }
 
 std::variant<Config, ErrorMessage> config_from_file(const char* path) {
@@ -96,6 +102,7 @@ std::variant<Config, ErrorMessage> config_client(const std::initializer_list<con
     std::vector<const char*> v(peers);
     return config_client(v);
 }
+#endif
 
 class ScoutingConfig : public Owned<::z_owned_scouting_config_t> {
    public:
@@ -107,6 +114,8 @@ class ScoutingConfig : public Owned<::z_owned_scouting_config_t> {
 inline ScoutingConfig Config::create_scouting_config() {
     return ScoutingConfig(::z_scouting_config_from(::z_loan(_0)));
 }
+
+/*
 
 class Reply : public Owned<::z_owned_reply_t> {
    public:
