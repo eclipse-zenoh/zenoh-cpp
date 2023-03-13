@@ -25,8 +25,6 @@ class Str : public Owned<::z_owned_str_t> {
     bool operator==(const char* s) const { return std::string_view(s) == c_str(); }
 };
 
-/*
-
 class KeyExpr : public Owned<::z_owned_keyexpr_t> {
    public:
     using Owned::Owned;
@@ -45,6 +43,8 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     bool intersects(const KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().intersects(v, error); }
     bool intersects(const KeyExprView& v) const { return as_keyexpr_view().intersects(v); }
 };
+
+/*
 
 KeyExpr KeyExprView::concat(const std::string_view& s) const { return ::z_keyexpr_concat(*this, s.data(), s.length()); }
 KeyExpr KeyExprView::join(const KeyExprView& v) const { return ::z_keyexpr_join(*this, v); }
