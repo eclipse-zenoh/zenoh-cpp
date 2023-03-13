@@ -11,6 +11,11 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
+// Do not add #pragma once
+// This file can be included twice, for zenoh-c and for zenoh-pico
+
+#ifdef __ZENOHCXX_ZENOHC
+
 class ClosureReplyChannelSend : public ClosureReply {
    public:
     using ClosureReply::ClosureReply;
@@ -30,3 +35,5 @@ std::pair<ClosureReplyChannelSend, ClosureReplyChannelRecv> reply_non_blocking_f
     auto channel = ::zc_reply_non_blocking_fifo_new(bound);
     return {std::move(channel.send), std::move(channel.recv)};
 }
+
+#endif

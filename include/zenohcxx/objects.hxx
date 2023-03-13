@@ -11,7 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-// DO NOT ADD #pragma once
+// Do not add #pragma once
 // This file can be included twice, for zenoh-c and for zenoh-pico
 
 // Convenient representation of owned strings returned from zenoh-c

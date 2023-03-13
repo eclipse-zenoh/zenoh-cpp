@@ -20,13 +20,13 @@ function(add_test_instance file mode lib)
 endfunction()
 
 # file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
-# foreach(file ${files})
-#     add_test_instance(${file} zenohc zenohcpp::zenohc::lib)
-#     add_test_instance(${file} zenohpico zenohpico)
-# endforeach()
+set(files 
+	structs.cpp
+	# keyexpr.cpp
+)
+list(TRANSFORM files PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/")
 
-add_test_instance(structs.cpp zenohc zenohcxx::zenohc::lib)
-add_test_instance(structs.cpp zenohpico zenohcxx::zenohpico)
-
-# add_test_instance(keyexpr.cpp zenohc zenohcxx::zenohc::lib)
-# add_test_instance(keyexpr.cpp zenohpico zenohcxx::zenohpico)
+foreach(file ${files})
+    add_test_instance(${file} zenohc zenohcxx::zenohc::lib)
+    add_test_instance(${file} zenohpico zenohcxx::zenohpico)
+endforeach()

@@ -26,5 +26,6 @@ namespace z = zenohc;  // to disambiguate names for code analyzers
 #include "zenohcxx/base.hxx"
 #include "zenohcxx/structs.hxx"
 #include "zenohcxx/objects.hxx"
+#include "zenohcxx/channel.hxx"
 // clang-format on
 }  // namespace zenohc
