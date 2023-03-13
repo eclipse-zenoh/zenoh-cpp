@@ -115,8 +115,6 @@ inline ScoutingConfig Config::create_scouting_config() {
     return ScoutingConfig(::z_scouting_config_from(::z_loan(_0)));
 }
 
-/*
-
 class Reply : public Owned<::z_owned_reply_t> {
    public:
     using Owned::Owned;
@@ -414,5 +412,3 @@ std::variant<Session, ErrorMessage> open(Config&& config) {
         return "Unable to open session";
     }
 };
-
-*/
