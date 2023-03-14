@@ -11,8 +11,8 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-// Do not add #pragma once
-// This file can be included twice, for zenoh-c and for zenoh-pico
+// Do not add '#pragma once' and '#include` statements here
+// as this file is included multiple times into different namespaces
 
 typedef int8_t ErrNo;
 typedef ::z_sample_kind_t SampleKind;

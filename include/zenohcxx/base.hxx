@@ -11,6 +11,9 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
+// Do not add '#pragma once' and '#include` statements here
+// as this file is included multiple times into different namespaces
+
 //
 // Base type for C++ wrappers of Zenoh copyable structures, like GetOptions, PutOptions, etc.
 //

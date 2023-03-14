@@ -23,6 +23,7 @@ endfunction()
 set(files 
 	structs.cpp
 	keyexpr.cpp
+	# closures_func.cpp
 )
 list(TRANSFORM files PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/")
 

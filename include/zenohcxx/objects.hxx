@@ -11,8 +11,8 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-// Do not add #pragma once
-// This file can be included twice, for zenoh-c and for zenoh-pico
+// Do not add '#pragma once' and '#include` statements here
+// as this file is included multiple times into different namespaces
 
 // Convenient representation of owned strings returned from zenoh-c
 // which are supposed to be freed by user
