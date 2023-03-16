@@ -127,7 +127,7 @@ inline bool _split_ret_to_bool_and_err(int8_t ret, ErrNo& error) {
         return false;
     } else {
         error = 0;
-        return ret == 1;
+        return ret == 0;
     }
 }
 
@@ -179,7 +179,6 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     // equality or z_keyexpr_equals would be used by operator==
     bool operator==(const std::string_view& v) const { return as_string_view() == v; }
     bool operator!=(const std::string_view& v) const { return !operator==(v); }
-    bool equals(const KeyExprView& v) const { return ::z_keyexpr_equals(*this, v) == 1; }
 
 #ifdef __ZENOHCXX_ZENOHC
     // operator += purposedly not defined to not provoke ambiguity between concat (which
@@ -188,6 +187,13 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     KeyExpr join(const KeyExprView& v) const;
 #endif
 
+    bool equals(const KeyExprView& v, ErrNo& error) const {
+        return _split_ret_to_bool_and_err(::z_keyexpr_equals(*this, v), error);
+    }
+    bool equals(const KeyExprView& v) const {
+        ErrNo error;
+        return equals(v, error);
+    }
     bool includes(const KeyExprView& v, ErrNo& error) const {
         return _split_ret_to_bool_and_err(::z_keyexpr_includes(*this, v), error);
     }

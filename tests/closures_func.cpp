@@ -11,8 +11,6 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-#include <assert.h>
-
 #include "zenoh.hxx"
 
 #if defined(ZENOHCXX_ZENOHPICO)

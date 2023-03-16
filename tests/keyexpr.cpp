@@ -82,7 +82,10 @@ void canonize() {
     assert(err != 0);
 
     std::string foo(non_canon);
+    std::cout << foo << std::endl;
     res = keyexpr_canonize(foo, err);
+    std::cout << foo << std::endl;
+
     assert(foo == canon);
     assert(err == 0);
     assert(res);
@@ -113,20 +116,47 @@ void join() {
 }
 
 void equals() {
+    KeyExprView nul(nullptr);
+    ErrNo err;
+
     KeyExpr foo("FOO");
     KeyExprView foov("FOO");
     KeyExpr bar("BAR");
     KeyExprView barv("BAR");
 
     assert(foo.equals(foo));
+    assert(foo.equals(foo, err));
+    assert(err == 0);
     assert(foo.equals(foov));
+    assert(foo.equals(foov, err));
+    assert(err == 0);
     assert(foov.equals(foo));
+    assert(foov.equals(foo, err));
+    assert(err == 0);
     assert(foov.equals(foov));
+    assert(foov.equals(foov, err));
+    assert(err == 0);
 
     assert(!foo.equals(bar));
+    assert(!foo.equals(bar, err));
+    assert(err == 0);
     assert(!foo.equals(barv));
+    assert(!foo.equals(barv, err));
+    assert(err == 0);
     assert(!foov.equals(bar));
+    assert(!foov.equals(bar, err));
+    assert(err == 0);
     assert(!foov.equals(barv));
+    assert(!foov.equals(barv, err));
+    assert(err == 0);
+
+    assert(!foo.equals(nul));
+    assert(!foo.equals(nul, err));
+    assert(err < 0);
+
+    assert(!foov.equals(nul));
+    assert(!foov.equals(nul, err));
+    assert(err < 0);
 }
 
 void includes() {
@@ -143,7 +173,7 @@ void includes() {
     assert(err == 0);
     assert(!foostarv.includes(nul));
     assert(!foostarv.includes(nul, err));
-    assert(err != 0);
+    assert(err < 0);
 
     KeyExpr foostar("FOO/*");
     KeyExpr foobar("FOO/BAR");
@@ -155,7 +185,7 @@ void includes() {
     assert(err == 0);
     assert(!foostar.includes(nul));
     assert(!foostar.includes(nul, err));
-    assert(err != 0);
+    assert(err < 0);
 }
 
 void intersects() {
@@ -189,15 +219,23 @@ void intersects() {
     assert(err != 0);
 }
 
+#include <variant>
+
 void undeclare() {
     Config config;
-    auto session = std::get<Session>(open(std::move(config)));
-    auto keyexpr = session.declare_keyexpr("foo/bar");
-    assert(keyexpr.check());
-    ErrNo err;
-    assert(session.undeclare_keyexpr(std::move(keyexpr), err));
-    assert(err == 0);
-    assert(!keyexpr.check());
+    auto session = open(std::move(config));
+    if (auto psession = std::get_if<Session>(&session)) {
+        auto keyexpr = psession->declare_keyexpr("foo/bar");
+        assert(keyexpr.check());
+        ErrNo err;
+        assert(psession->undeclare_keyexpr(std::move(keyexpr), err));
+        assert(err == 0);
+        assert(!keyexpr.check());
+    } else {
+        auto error = std::get<ErrorMessage>(session);
+        std::cout << "Error: " << error.as_string_view() << std::endl;
+        assert(false);
+    }
 }
 
 int main(int argc, char** argv) {
