@@ -232,9 +232,12 @@ void undeclare() {
         assert(err == 0);
         assert(!keyexpr.check());
     } else {
+// zenohpico is unable to open session without zenoh router started
+#ifdef ZENOHCXX_ZENOHC
         auto error = std::get<ErrorMessage>(session);
         std::cout << "Error: " << error.as_string_view() << std::endl;
         assert(false);
+#endif
     }
 }
 
