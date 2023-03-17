@@ -15,6 +15,10 @@
 // as this file is included multiple times into different namespaces
 
 //
+// This file contains template base classes implememting common functionality
+//
+
+//
 // Base type for C++ wrappers of Zenoh copyable structures, like GetOptions, PutOptions, etc.
 //
 template <typename ZC_COPYABLE_TYPE>

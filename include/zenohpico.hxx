@@ -24,6 +24,7 @@ namespace z = zenohpico;  // to disambiguate names for code analyzers
 // clang-format off
 // include order is important
 #include "zenohcxx/base.hxx"
+#include "zenohcxx/api.hxx"
 #include "zenohcxx/structs.hxx"
 #include "zenohcxx/objects.hxx"
 #include "zenohcxx/channel.hxx"

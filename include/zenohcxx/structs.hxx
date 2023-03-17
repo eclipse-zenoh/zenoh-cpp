@@ -14,84 +14,31 @@
 // Do not add '#pragma once' and '#include` statements here
 // as this file is included multiple times into different namespaces
 
-typedef int8_t ErrNo;
-typedef ::z_sample_kind_t SampleKind;
-typedef ::z_encoding_prefix_t EncodingPrefix;
-typedef ::z_reliability_t Reliability;
-typedef ::z_congestion_control_t CongestionControl;
-typedef ::z_priority_t Priority;
-typedef ::z_consolidation_mode_t ConsolidationMode;
-typedef ::z_query_target_t QueryTarget;
-
 inline QueryTarget query_target_default() { return ::z_query_target_default(); }
 
-enum class WhatAmI { Router = 1, Peer = 1 << 1, Client = 1 << 2 };
-
 inline const char* as_cstr(z::WhatAmI whatami) {
-    return whatami == z::WhatAmI::Router   ? "Router"
-           : whatami == z::WhatAmI::Peer   ? "Peer"
-           : whatami == z::WhatAmI::Client ? "Client"
-                                           : nullptr;
+    return whatami == z::WhatAmI::Z_WHATAMI_ROUTER   ? "Router"
+           : whatami == z::WhatAmI::Z_WHATAMI_PEER   ? "Peer"
+           : whatami == z::WhatAmI::Z_WHATAMI_CLIENT ? "Client"
+                                                     : nullptr;
 }
 
-// Initialize logger and set environment variable
-// RUST_LOG=debug or RUST_LOG=info or RUST_LOG=warn or RUST_LOG=error
-// to show diagnostic output
 void init_logger() {
 #ifdef __ZENOHCXX_ZENOHC
     ::zc_init_logger();
 #endif
 }
 
-template <typename Z_STR_ARRAY_T>
-struct _StrArrayView : Copyable<Z_STR_ARRAY_T> {
-    typedef decltype(Z_STR_ARRAY_T::val) VALTYPE;
-    using Copyable<Z_STR_ARRAY_T>::Copyable;
-    _StrArrayView() : Copyable<Z_STR_ARRAY_T>({.val = nullptr, .len = 0}) {}
-    _StrArrayView(const std::vector<const char*>& v)
-        : Copyable<Z_STR_ARRAY_T>({.val = const_cast<VALTYPE>(&v[0]), .len = v.size()}) {}
-    _StrArrayView(const char** v, size_t len) : Copyable<Z_STR_ARRAY_T>({.val = const_cast<VALTYPE>(v), .len = len}) {}
-    _StrArrayView(const char* const* v, size_t len)
-        : Copyable<Z_STR_ARRAY_T>({.val = const_cast<VALTYPE>(v), .len = len}) {}
-    const char* operator[](size_t pos) const { return Copyable<Z_STR_ARRAY_T>::val[pos]; }
-    size_t get_len() const { return Copyable<Z_STR_ARRAY_T>::len; }
-};
-
-struct StrArrayView : z::_StrArrayView<::z_str_array_t> {
-    using _StrArrayView<::z_str_array_t>::_StrArrayView;
-};
-
-class BytesView : public Copyable<::z_bytes_t> {
-   public:
-    using Copyable::Copyable;
-    BytesView(nullptr_t) : Copyable(init(nullptr, 0)) {}
-    BytesView(const void* s, size_t _len) : Copyable(init(reinterpret_cast<const uint8_t*>(s), _len)) {}
-    BytesView(const char* s) : Copyable({.start = reinterpret_cast<const uint8_t*>(s), .len = s ? strlen(s) : 0}) {}
-    template <typename T>
-    BytesView(const std::vector<T>& v)
-        : Copyable({.start = reinterpret_cast<const uint8_t*>(&v[0]), .len = v.size() * sizeof(T)}) {}
-    BytesView(const std::string_view& s)
-        : Copyable({.start = reinterpret_cast<const uint8_t*>(s.data()), .len = s.length()}) {}
-    BytesView(const std::string& s)
-        : Copyable({.start = reinterpret_cast<const uint8_t*>(s.data()), .len = s.length()}) {}
-    std::string_view as_string_view() const { return std::string_view(reinterpret_cast<const char*>(start), len); }
-    bool operator==(const BytesView& v) const { return as_string_view() == v.as_string_view(); }
-    bool operator!=(const BytesView& v) const { return !operator==(v); }
-    size_t get_len() const { return len; }
-    bool check() const { return ::z_bytes_check(this); }
-
-   private:
-    ::z_bytes_t init(const uint8_t* start, size_t len) {
-        ::z_bytes_t ret = {.start = start,
-                           .len = len
+inline ::z_bytes_t BytesView::init(const uint8_t* start, size_t len) {
+    ::z_bytes_t ret = {.start = start,
+                       .len = len
 #ifdef __ZENOHCXX_ZENOHPICO
-                           ,
-                           ._is_alloc = false
+                       ,
+                       ._is_alloc = false
 #endif
-        };
-        return ret;
-    }
-};
+    };
+    return ret;
+}
 
 struct Id : public Copyable<::z_id_t> {
     using Copyable::Copyable;
