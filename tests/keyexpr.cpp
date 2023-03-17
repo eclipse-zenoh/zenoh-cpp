@@ -82,10 +82,7 @@ void canonize() {
     assert(err != 0);
 
     std::string foo(non_canon);
-    std::cout << foo << std::endl;
     res = keyexpr_canonize(foo, err);
-    std::cout << foo << std::endl;
-
     assert(foo == canon);
     assert(err == 0);
     assert(res);
@@ -232,10 +229,10 @@ void undeclare() {
         assert(err == 0);
         assert(!keyexpr.check());
     } else {
+        auto error = std::get<ErrorMessage>(session);
+        std::cerr << "Error: " << error.as_string_view() << std::endl;
 // zenohpico is unable to open session without zenoh router started
 #ifdef ZENOHCXX_ZENOHC
-        auto error = std::get<ErrorMessage>(session);
-        std::cout << "Error: " << error.as_string_view() << std::endl;
         assert(false);
 #endif
     }
