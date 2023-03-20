@@ -649,16 +649,6 @@ std::variant<Config, ErrorMessage> config_client(const std::initializer_list<con
 #endif
 
 //
-// Zenoh scouting config
-//
-class ScoutingConfig : public Owned<::z_owned_scouting_config_t> {
-   public:
-    using Owned::Owned;
-    ScoutingConfig() : Owned(::z_scouting_config_default()) {}
-    ScoutingConfig(Config& config) : Owned(std::move(ScoutingConfig(config))) {}
-};
-
-//
 // An owned reply to get operation
 //
 class Reply : public Owned<::z_owned_reply_t> {
@@ -722,3 +712,117 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     bool put_impl(const BytesView& payload, const PublisherPutOptions* options, ErrNo& error);
     bool delete_impl(const PublisherDeleteOptions* options, ErrNo& error);
 };
+
+//
+// A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with scout operation
+//
+class Hello : public Owned<::z_owned_hello_t> {
+   public:
+    using Owned::Owned;
+    operator HelloView() const { return HelloView(::z_hello_loan(&_0)); }
+};
+
+//
+//  Represents the reply closure.
+//
+typedef ClosureMoveParam<::z_owned_closure_reply_t, ::z_owned_reply_t, Reply> ClosureReply;
+
+//
+//  Represents the query closure.
+//
+typedef ClosureConstPtrParam<::z_owned_closure_query_t, ::z_query_t, Query> ClosureQuery;
+
+//
+//  Represents the sample closure.
+//
+typedef ClosureConstPtrParam<::z_owned_closure_sample_t, ::z_sample_t, Sample> ClosureSample;
+
+//
+//  Represents the zenoh ID closure.
+//
+typedef ClosureConstPtrParam<::z_owned_closure_zid_t, ::z_id_t, Id> ClosureZid;
+
+//
+// Represents the scouting closure
+//
+typedef ClosureMoveParam<::z_owned_closure_hello_t, ::z_owned_hello_t, Hello> ClosureHello;
+
+//
+// Zenoh scouting config and function
+//
+class ScoutingConfig : public Owned<::z_owned_scouting_config_t> {
+   public:
+    using Owned::Owned;
+    ScoutingConfig() : Owned(::z_scouting_config_default()) {}
+    ScoutingConfig(Config& config) : Owned(std::move(ScoutingConfig(config))) {}
+};
+
+bool scout(ScoutingConfig&& config, ClosureHello&& callback, ErrNo& error);
+bool scout(ScoutingConfig&& config, ClosureHello&& callback);
+
+//
+// Zenoh session
+//
+class Session : public Owned<::z_owned_session_t> {
+   public:
+    using Owned::Owned;
+
+    Id info_zid() const { return ::z_info_zid(::z_session_loan(&_0)); }
+
+    friend std::variant<Session, ErrorMessage> open(Config&& config);
+
+    KeyExpr declare_keyexpr(const KeyExprView& keyexpr);
+    bool undeclare_keyexpr(KeyExpr&& keyexpr, ErrNo& error);
+    bool undeclare_keyexpr(KeyExpr&& keyexpr);
+    bool get(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, const GetOptions& options,
+             ErrNo& error);
+    bool get(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, const GetOptions& options);
+    bool get(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, ErrNo& error);
+    bool get(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback);
+    bool put(KeyExprView keyexpr, const BytesView& payload, const PutOptions& options, ErrNo& error);
+    bool put(KeyExprView keyexpr, const BytesView& payload, const PutOptions& options);
+    bool put(KeyExprView keyexpr, const BytesView& payload, ErrNo& error);
+    bool put(KeyExprView keyexpr, const BytesView& payload);
+    bool delete_resource(KeyExprView keyexpr, const DeleteOptions& options, ErrNo& error);
+    bool delete_resource(KeyExprView keyexpr, const DeleteOptions& options);
+    bool delete_resource(KeyExprView keyexpr, ErrNo& error);
+    bool delete_resource(KeyExprView keyexpr);
+    std::variant<Queryable, ErrorMessage> declare_queryable(KeyExprView keyexpr, ClosureQuery&& callback,
+                                                            const QueryableOptions& options);
+    std::variant<Queryable, ErrorMessage> declare_queryable(KeyExprView keyexpr, ClosureQuery&& callback);
+    std::variant<Subscriber, ErrorMessage> declare_subscriber(KeyExprView keyexpr, ClosureSample&& callback,
+                                                              const SubscriberOptions& options);
+    std::variant<Subscriber, ErrorMessage> declare_subscriber(KeyExprView keyexpr, ClosureSample&& callback);
+    std::variant<PullSubscriber, ErrorMessage> declare_pull_subscriber(KeyExprView keyexpr, ClosureSample&& callback,
+                                                                       const PullSubscriberOptions& options);
+    std::variant<PullSubscriber, ErrorMessage> declare_pull_subscriber(KeyExprView keyexpr, ClosureSample&& callback);
+    std::variant<Publisher, ErrorMessage> declare_publisher(KeyExprView keyexpr, const PublisherOptions& options);
+    std::variant<Publisher, ErrorMessage> declare_publisher(KeyExprView keyexpr);
+    bool info_routers_zid(ClosureZid&& callback, ErrNo& error);
+    bool info_routers_zid(ClosureZid&& callback);
+    bool info_peers_zid(ClosureZid&& callback, ErrNo& error);
+    bool info_peers_zid(ClosureZid&& callback);
+
+   private:
+    Session(Config&& v) : Owned(_z_open(std::move(v))) {}
+    bool undeclare_keyexpr_impl(KeyExpr&& keyexpr, ErrNo& error);
+    bool get_impl(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, const GetOptions* options,
+                  ErrNo& error);
+    bool put_impl(KeyExprView keyexpr, const BytesView& payload, const PutOptions* options, ErrNo& error);
+    bool delete_impl(KeyExprView keyexpr, const DeleteOptions* options, ErrNo& error);
+    std::variant<Queryable, ErrorMessage> declare_queryable_impl(KeyExprView keyexpr, ClosureQuery&& callback,
+                                                                 const QueryableOptions* options);
+    std::variant<Subscriber, ErrorMessage> declare_subscriber_impl(KeyExprView keyexpr, ClosureSample&& callback,
+                                                                   const SubscriberOptions* options);
+    std::variant<PullSubscriber, ErrorMessage> declare_pull_subscriber_impl(KeyExprView keyexpr,
+                                                                            ClosureSample&& callback,
+                                                                            const PullSubscriberOptions* options);
+    std::variant<Publisher, ErrorMessage> declare_publisher_impl(KeyExprView keyexpr, const PublisherOptions* options);
+
+    static ::z_owned_session_t _z_open(Config&& v);
+};
+
+//
+// Open zenoh session
+//
+std::variant<Session, ErrorMessage> open(Config&& config);
