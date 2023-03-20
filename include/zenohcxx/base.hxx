@@ -11,11 +11,26 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-// Do not add '#pragma once' and '#include` statements here
-// as this file is included multiple times into different namespaces
+#pragma once
+
+#include <functional>
+#include <iomanip>
+#include <iostream>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "assert.h"
+#include "string.h"
+
+namespace zenohcxx {
 
 //
-// This file contains template base classes implememting common functionality
+// Template base classes implememting common functionality
 //
 
 //
@@ -231,3 +246,5 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
         return {context, call, drop};
     };
 };
+
+}  // namespace zenohcxx

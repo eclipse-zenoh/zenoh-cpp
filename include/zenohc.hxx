@@ -17,16 +17,14 @@
 #define __ZENOHCXX_ZENOHC
 
 #include "zenoh.h"
-#include "zenohcxx/includes.hxx"
+#include "zenohcxx/base.hxx"
 
 namespace zenohc {
+using namespace zenohcxx;
 namespace z = zenohc;  // to disambiguate names for code analyzers
 // clang-format off
 // include order is important
-#include "zenohcxx/base.hxx"
 #include "zenohcxx/api.hxx"
-#include "zenohcxx/structs.hxx"
-#include "zenohcxx/objects.hxx"
-#include "zenohcxx/channel.hxx"
+#include "zenohcxx/impl.hxx"
 // clang-format on
 }  // namespace zenohc

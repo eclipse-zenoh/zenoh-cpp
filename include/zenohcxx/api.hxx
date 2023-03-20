@@ -141,6 +141,8 @@ typedef ::z_whatami_t WhatAmI;
 enum WhatAmI { Z_WHATAMI_ROUTER = 1, Z_WHATAMI_PEER = 1 << 1, Z_WHATAMI_CLIENT = 1 << 2 };
 #endif
 
+inline const char* as_cstr(z::WhatAmI whatami);
+
 //
 // Constructs a default QueryTarget
 //
@@ -826,3 +828,46 @@ class Session : public Owned<::z_owned_session_t> {
 // Open zenoh session
 //
 std::variant<Session, ErrorMessage> open(Config&& config);
+
+#ifdef __ZENOHCXX_ZENOHC
+
+class ClosureReplyChannelSend : public ClosureReply {
+   public:
+    using ClosureReply::ClosureReply;
+};
+
+class ClosureReplyChannelRecv : public ClosureMoveParam<::z_owned_reply_channel_closure_t, ::z_owned_reply_t, Reply> {
+   public:
+    using ClosureMoveParam::ClosureMoveParam;
+};
+
+//
+// Creates a new blocking fifo channel, returned as a pair of closures.
+//
+// The `send` end should be passed as callback to a `z_get` call.
+//
+// The `recv` end is a synchronous closure to be called from user code. It will block until either a Reply is available,
+// which it will then return; or until the `send` closure is dropped and all replies have been consumed,
+// at which point it will return an invalidated Reply and so will further calls.
+//
+
+std::pair<ClosureReplyChannelSend, ClosureReplyChannelRecv> reply_fifo_new(uintptr_t bound) {
+    auto channel = ::zc_reply_fifo_new(bound);
+    return {std::move(channel.send), std::move(channel.recv)};
+}
+
+//
+// Creates a new non-blocking fifo channel, returned as a pair of closures.
+//
+// The `send` end should be passed as callback to a `z_get` call.
+//
+// The `recv` end is a synchronous closure to be called from user code. It will block until either a Reply is available,
+// which it will then return; or until the `send` closure is dropped and all replies have been consumed,
+// at which point it will return an invalidated Reply and so will further calls.
+//
+std::pair<ClosureReplyChannelSend, ClosureReplyChannelRecv> reply_non_blocking_fifo_new(uintptr_t bound) {
+    auto channel = ::zc_reply_non_blocking_fifo_new(bound);
+    return {std::move(channel.send), std::move(channel.recv)};
+}
+
+#endif
