@@ -146,7 +146,7 @@ inline const char* as_cstr(z::WhatAmI whatami);
 //
 // Constructs a default QueryTarget
 //
-inline QueryTarget query_target_default();
+inline z::QueryTarget query_target_default();
 
 // Initializes logger.
 // For zenohc set environment variable RUST_LOG=debug or RUST_LOG=info or RUST_LOG=warn or RUST_LOG=error
@@ -238,18 +238,18 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     using Copyable::Copyable;
     KeyExprView(nullptr_t) : Copyable(::z_keyexpr(nullptr)) {}  // allow to create uninitialized KeyExprView
     KeyExprView(const char* name) : Copyable(::z_keyexpr(name)) {}
-    KeyExprView(const char* name, KeyExprUnchecked) : Copyable(::z_keyexpr_unchecked(name)) {
+    KeyExprView(const char* name, z::KeyExprUnchecked) : Copyable(::z_keyexpr_unchecked(name)) {
         assert(keyexpr_is_canon(name));
     }
 #ifdef __ZENOHCXX_ZENOHC
     KeyExprView(const std::string_view& name) : Copyable(::zc_keyexpr_from_slice(name.data(), name.length())) {}
-    KeyExprView(const std::string_view& name, KeyExprUnchecked)
+    KeyExprView(const std::string_view& name, z::KeyExprUnchecked)
         : Copyable(::zc_keyexpr_from_slice_unchecked(name.data(), name.length())) {
         assert(keyexpr_is_canon(name));
     }
 #endif
     bool check() const { return ::z_keyexpr_is_initialized(this); }
-    BytesView as_bytes() const { return BytesView{::z_keyexpr_as_bytes(*this)}; }
+    z::BytesView as_bytes() const { return z::BytesView{::z_keyexpr_as_bytes(*this)}; }
     std::string_view as_string_view() const { return as_bytes().as_string_view(); }
 
     // operator == between keyexprs purposedly not defided to avoid ambiguity: it's not obvious is string
@@ -260,8 +260,8 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
 #ifdef __ZENOHCXX_ZENOHC
     // operator += purposedly not defined to not provoke ambiguity between concat (which
     // mechanically connects strings) and join (which works with path elements)
-    KeyExpr concat(const std::string_view& s) const;
-    KeyExpr join(const KeyExprView& v) const;
+    z::KeyExpr concat(const std::string_view& s) const;
+    z::KeyExpr join(const KeyExprView& v) const;
 #endif
     bool equals(const KeyExprView& v, ErrNo& error) const;
     bool equals(const KeyExprView& v) const;
@@ -287,12 +287,12 @@ struct Encoding : public Copyable<::z_encoding_t> {
         prefix = _prefix;
         return *this;
     }
-    Encoding& set_suffix(const BytesView& _suffix) {
+    Encoding& set_suffix(const z::BytesView& _suffix) {
         suffix = _suffix;
         return *this;
     }
     EncodingPrefix get_prefix() const { return prefix; }
-    const BytesView& get_suffix() const { return static_cast<const BytesView&>(suffix); }
+    const z::BytesView& get_suffix() const { return static_cast<const z::BytesView&>(suffix); }
     bool operator==(const Encoding& v) const {
         return get_prefix() == v.get_prefix() && get_suffix() == v.get_suffix();
     }
@@ -306,7 +306,7 @@ struct Timestamp : Copyable<::z_timestamp_t> {
     using Copyable::Copyable;
     // TODO: add utility methods to interpret time as mils, seconds, minutes, etc
     uint64_t get_time() const { return time; }
-    const BytesView& get_id() const { return static_cast<const BytesView&>(id); }
+    const z::BytesView& get_id() const { return static_cast<const z::BytesView&>(id); }
     bool check() const { return ::z_timestamp_check(*this); }
 };
 
@@ -317,9 +317,9 @@ struct Timestamp : Copyable<::z_timestamp_t> {
 //
 struct Sample : public Copyable<::z_sample_t> {
     using Copyable::Copyable;
-    const KeyExprView& get_keyexpr() const { return static_cast<const KeyExprView&>(keyexpr); }
-    const BytesView& get_payload() const { return static_cast<const BytesView&>(payload); }
-    const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
+    const z::KeyExprView& get_keyexpr() const { return static_cast<const z::KeyExprView&>(keyexpr); }
+    const z::BytesView& get_payload() const { return static_cast<const z::BytesView&>(payload); }
+    const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
     SampleKind get_kind() const { return kind; }
 };
 
@@ -328,18 +328,19 @@ struct Sample : public Copyable<::z_sample_t> {
 //
 struct Value : public Copyable<::z_value_t> {
     using Copyable::Copyable;
-    Value(const BytesView& payload, const Encoding& encoding) : Copyable({.payload = payload, .encoding = encoding}) {}
-    Value(const BytesView& payload) : Value(payload, Encoding()) {}
-    Value(const char* payload) : Value(payload, Encoding()) {}
+    Value(const z::BytesView& payload, const z::Encoding& encoding)
+        : Copyable({.payload = payload, .encoding = encoding}) {}
+    Value(const z::BytesView& payload) : Value(payload, z::Encoding()) {}
+    Value(const char* payload) : Value(payload, z::Encoding()) {}
 
-    const BytesView& get_payload() const { return static_cast<const BytesView&>(payload); }
-    Value& set_payload(const BytesView& _payload) {
+    const z::BytesView& get_payload() const { return static_cast<const z::BytesView&>(payload); }
+    Value& set_payload(const z::BytesView& _payload) {
         payload = _payload;
         return *this;
     }
 
-    const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
-    Value& set_encoding(const Encoding& _encoding) {
+    const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
+    Value& set_encoding(const z::Encoding& _encoding) {
         encoding = _encoding;
         return *this;
     }
@@ -354,7 +355,7 @@ struct Value : public Copyable<::z_value_t> {
 //
 // Error message returned by some functions
 //
-typedef Value ErrorMessage;
+typedef z::Value ErrorMessage;
 
 //
 // Represents the replies consolidation to apply on replies of get operation
@@ -382,19 +383,19 @@ struct GetOptions : public Copyable<::z_get_options_t> {
         target = v;
         return *this;
     }
-    GetOptions& set_consolidation(QueryConsolidation v) {
+    GetOptions& set_consolidation(z::QueryConsolidation v) {
         consolidation = v;
         return *this;
     }
-    GetOptions& set_with_value(Value v) {
+    GetOptions& set_with_value(z::Value v) {
         with_value = v;
         return *this;
     }
     QueryTarget get_target() const { return target; }
-    const QueryConsolidation& get_consolidation() const {
-        return static_cast<const QueryConsolidation&>(consolidation);
+    const z::QueryConsolidation& get_consolidation() const {
+        return static_cast<const z::QueryConsolidation&>(consolidation);
     }
-    const Value& get_with_value() const { return static_cast<const Value&>(with_value); }
+    const z::Value& get_with_value() const { return static_cast<const z::Value&>(with_value); }
     bool operator==(const GetOptions& v) const {
         return get_target() == v.get_target() && get_consolidation() == v.get_consolidation() &&
                get_with_value() == v.get_with_value();
@@ -408,8 +409,8 @@ struct GetOptions : public Copyable<::z_get_options_t> {
 struct PutOptions : public Copyable<::z_put_options_t> {
     using Copyable::Copyable;
     PutOptions() : Copyable(::z_put_options_default()) {}
-    const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
-    PutOptions& set_encoding(Encoding e) {
+    const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
+    PutOptions& set_encoding(z::Encoding e) {
         encoding = e;
         return *this;
     };
@@ -458,8 +459,8 @@ struct DeleteOptions : public Copyable<::z_delete_options_t> {
 struct QueryReplyOptions : public Copyable<::z_query_reply_options_t> {
     using Copyable::Copyable;
     QueryReplyOptions() : Copyable(::z_query_reply_options_default()) {}
-    const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
-    QueryReplyOptions& set_encoding(Encoding e) {
+    const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
+    QueryReplyOptions& set_encoding(z::Encoding e) {
         encoding = e;
         return *this;
     };
@@ -473,17 +474,19 @@ struct QueryReplyOptions : public Copyable<::z_query_reply_options_t> {
 class Query : public Copyable<::z_query_t> {
    public:
     using Copyable::Copyable;
-    KeyExprView get_keyexpr() const { return KeyExprView(::z_query_keyexpr(this)); }
-    BytesView get_parameters() const { return BytesView(::z_query_parameters(this)); }
-    Value get_value() const { return Value(::z_query_value(this)); }
+    z::KeyExprView get_keyexpr() const { return z::KeyExprView(::z_query_keyexpr(this)); }
+    z::BytesView get_parameters() const { return z::BytesView(::z_query_parameters(this)); }
+    z::Value get_value() const { return z::Value(::z_query_value(this)); }
 
-    bool reply(KeyExprView key, const BytesView& payload, const QueryReplyOptions& options, ErrNo& error) const;
-    bool reply(KeyExprView key, const BytesView& payload, const QueryReplyOptions& options) const;
-    bool reply(KeyExprView key, const BytesView& payload, ErrNo& error) const;
-    bool reply(KeyExprView key, const BytesView& payload) const;
+    bool reply(z::KeyExprView key, const z::BytesView& payload, const z::QueryReplyOptions& options,
+               ErrNo& error) const;
+    bool reply(z::KeyExprView key, const z::BytesView& payload, const z::QueryReplyOptions& options) const;
+    bool reply(z::KeyExprView key, const z::BytesView& payload, ErrNo& error) const;
+    bool reply(z::KeyExprView key, const z::BytesView& payload) const;
 
    private:
-    bool reply_impl(KeyExprView key, const BytesView& payload, const QueryReplyOptions* options, ErrNo& error) const;
+    bool reply_impl(z::KeyExprView key, const z::BytesView& payload, const z::QueryReplyOptions* options,
+                    ErrNo& error) const;
 };
 
 //
@@ -559,8 +562,8 @@ struct PublisherOptions : public Copyable<::z_publisher_options_t> {
 struct PublisherPutOptions : public Copyable<::z_publisher_put_options_t> {
     using Copyable::Copyable;
     PublisherPutOptions() : Copyable(::z_publisher_put_options_default()) {}
-    const Encoding& get_encoding() const { return static_cast<const Encoding&>(encoding); }
-    PublisherPutOptions& set_encoding(Encoding e) {
+    const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
+    PublisherPutOptions& set_encoding(z::Encoding e) {
         encoding = e;
         return *this;
     };
@@ -574,8 +577,8 @@ struct PublisherPutOptions : public Copyable<::z_publisher_put_options_t> {
 struct PublisherDeleteOptions : public Copyable<::z_publisher_delete_options_t> {
     using Copyable::Copyable;
     PublisherDeleteOptions() : Copyable(::z_publisher_delete_options_default()) {}
-    bool operator==(const PublisherOptions& v) const { return true; }
-    bool operator!=(const PublisherOptions& v) const { return !operator==(v); }
+    bool operator==(const z::PublisherOptions& v) const { return true; }
+    bool operator!=(const z::PublisherOptions& v) const { return !operator==(v); }
 };
 
 //
@@ -598,26 +601,28 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     using Owned::Owned;
     explicit KeyExpr(nullptr_t) : Owned(nullptr) {}
     explicit KeyExpr(const char* name) : Owned(::z_keyexpr_new(name)) {}
-    KeyExprView as_keyexpr_view() const { return KeyExprView(::z_keyexpr_loan(&_0)); }
-    operator KeyExprView() const { return as_keyexpr_view(); }
-    BytesView as_bytes() const { return as_keyexpr_view().as_bytes(); }
+    z::KeyExprView as_keyexpr_view() const { return z::KeyExprView(::z_keyexpr_loan(&_0)); }
+    operator z::KeyExprView() const { return as_keyexpr_view(); }
+    z::BytesView as_bytes() const { return as_keyexpr_view().as_bytes(); }
     std::string_view as_string_view() const { return as_keyexpr_view().as_string_view(); }
     bool operator==(const std::string_view& v) { return as_string_view() == v; }
 #ifdef __ZENOHCXX_ZENOHC
-    KeyExpr concat(const std::string_view& s) const { return as_keyexpr_view().concat(s); }
-    KeyExpr join(const KeyExprView& v) const { return as_keyexpr_view().join(v); }
+    z::KeyExpr concat(const std::string_view& s) const { return as_keyexpr_view().concat(s); }
+    z::KeyExpr join(const z::KeyExprView& v) const { return as_keyexpr_view().join(v); }
 #endif
-    bool equals(const KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().equals(v, error); }
-    bool equals(const KeyExprView& v) const { return as_keyexpr_view().equals(v); }
-    bool includes(const KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().includes(v, error); }
-    bool includes(const KeyExprView& v) const { return as_keyexpr_view().includes(v); }
-    bool intersects(const KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().intersects(v, error); }
-    bool intersects(const KeyExprView& v) const { return as_keyexpr_view().intersects(v); }
+    bool equals(const z::KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().equals(v, error); }
+    bool equals(const z::KeyExprView& v) const { return as_keyexpr_view().equals(v); }
+    bool includes(const z::KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().includes(v, error); }
+    bool includes(const z::KeyExprView& v) const { return as_keyexpr_view().includes(v); }
+    bool intersects(const z::KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().intersects(v, error); }
+    bool intersects(const z::KeyExprView& v) const { return as_keyexpr_view().intersects(v); }
 };
 
 #ifdef __ZENOHCXX_ZENOHC
-KeyExpr KeyExprView::concat(const std::string_view& s) const { return ::z_keyexpr_concat(*this, s.data(), s.length()); }
-KeyExpr KeyExprView::join(const KeyExprView& v) const { return ::z_keyexpr_join(*this, v); }
+z::KeyExpr z::KeyExprView::concat(const std::string_view& s) const {
+    return ::z_keyexpr_concat(*this, s.data(), s.length());
+}
+z::KeyExpr z::KeyExprView::join(const z::KeyExprView& v) const { return ::z_keyexpr_join(*this, v); }
 #endif
 
 class ScoutingConfig;
@@ -630,8 +635,8 @@ class Config : public Owned<::z_owned_config_t> {
     using Owned::Owned;
     Config() : Owned(::z_config_default()) {}
 #ifdef __ZENOHCXX_ZENOHC
-    Str get(const char* key) const { return Str(::zc_config_get(::z_config_loan(&_0), key)); }
-    Str to_string() const { return Str(::zc_config_to_string(::z_config_loan(&_0))); }
+    z::Str get(const char* key) const { return z::Str(::zc_config_get(::z_config_loan(&_0), key)); }
+    z::Str to_string() const { return z::Str(::zc_config_to_string(::z_config_loan(&_0))); }
     bool insert_json(const char* key, const char* value) {
         return ::zc_config_insert_json(::z_config_loan(&_0), key, value) == 0;
     }
@@ -639,15 +644,15 @@ class Config : public Owned<::z_owned_config_t> {
 #ifdef __ZENOHCXX_ZENOHPICO
     const char* get(uint8_t key) const { return ::zp_config_get(::z_config_loan(&_0), key); }
 #endif
-    ScoutingConfig create_scouting_config();
+    z::ScoutingConfig create_scouting_config();
 };
 
 #ifdef __ZENOHCXX_ZENOHC
-inline Config config_peer() { return Config(::z_config_peer()); }
-std::variant<Config, ErrorMessage> config_from_file(const char* path);
-std::variant<Config, ErrorMessage> config_from_str(const char* s);
-std::variant<Config, ErrorMessage> config_client(const StrArrayView& peers);
-std::variant<Config, ErrorMessage> config_client(const std::initializer_list<const char*>& peers);
+inline z::Config config_peer() { return z::Config(::z_config_peer()); }
+std::variant<z::Config, ErrorMessage> config_from_file(const char* path);
+std::variant<z::Config, ErrorMessage> config_from_str(const char* s);
+std::variant<z::Config, ErrorMessage> config_client(const z::StrArrayView& peers);
+std::variant<z::Config, ErrorMessage> config_client(const std::initializer_list<const char*>& peers);
 #endif
 
 //
@@ -657,11 +662,11 @@ class Reply : public Owned<::z_owned_reply_t> {
    public:
     using Owned::Owned;
     bool is_ok() const { return ::z_reply_is_ok(&_0); }
-    std::variant<Sample, ErrorMessage> get() const {
+    std::variant<z::Sample, ErrorMessage> get() const {
         if (is_ok()) {
-            return Sample{::z_reply_ok(&_0)};
+            return z::Sample{::z_reply_ok(&_0)};
         } else {
-            return ErrorMessage{::z_reply_err(&_0)};
+            return z::ErrorMessage{::z_reply_err(&_0)};
         }
     }
 };
@@ -701,18 +706,18 @@ class Queryable : public Owned<::z_owned_queryable_t> {
 class Publisher : public Owned<::z_owned_publisher_t> {
    public:
     using Owned::Owned;
-    bool put(const BytesView& payload, const PublisherPutOptions& options, ErrNo& error);
-    bool put(const BytesView& payload, ErrNo& error);
-    bool put(const BytesView& payload, const PublisherPutOptions& options);
-    bool put(const BytesView& payload);
-    bool delete_resource(const PublisherDeleteOptions& options, ErrNo& error);
+    bool put(const z::BytesView& payload, const z::PublisherPutOptions& options, ErrNo& error);
+    bool put(const z::BytesView& payload, ErrNo& error);
+    bool put(const z::BytesView& payload, const z::PublisherPutOptions& options);
+    bool put(const z::BytesView& payload);
+    bool delete_resource(const z::PublisherDeleteOptions& options, ErrNo& error);
     bool delete_resource(ErrNo& error);
-    bool delete_resource(const PublisherDeleteOptions& options);
+    bool delete_resource(const z::PublisherDeleteOptions& options);
     bool delete_resource();
 
    private:
-    bool put_impl(const BytesView& payload, const PublisherPutOptions* options, ErrNo& error);
-    bool delete_impl(const PublisherDeleteOptions* options, ErrNo& error);
+    bool put_impl(const z::BytesView& payload, const z::PublisherPutOptions* options, ErrNo& error);
+    bool delete_impl(const z::PublisherDeleteOptions* options, ErrNo& error);
 };
 
 //
@@ -721,33 +726,33 @@ class Publisher : public Owned<::z_owned_publisher_t> {
 class Hello : public Owned<::z_owned_hello_t> {
    public:
     using Owned::Owned;
-    operator HelloView() const { return HelloView(::z_hello_loan(&_0)); }
+    operator z::HelloView() const { return z::HelloView(::z_hello_loan(&_0)); }
 };
 
 //
 //  Represents the reply closure.
 //
-typedef ClosureMoveParam<::z_owned_closure_reply_t, ::z_owned_reply_t, Reply> ClosureReply;
+typedef ClosureMoveParam<::z_owned_closure_reply_t, ::z_owned_reply_t, z::Reply> ClosureReply;
 
 //
 //  Represents the query closure.
 //
-typedef ClosureConstPtrParam<::z_owned_closure_query_t, ::z_query_t, Query> ClosureQuery;
+typedef ClosureConstPtrParam<::z_owned_closure_query_t, ::z_query_t, z::Query> ClosureQuery;
 
 //
 //  Represents the sample closure.
 //
-typedef ClosureConstPtrParam<::z_owned_closure_sample_t, ::z_sample_t, Sample> ClosureSample;
+typedef ClosureConstPtrParam<::z_owned_closure_sample_t, ::z_sample_t, z::Sample> ClosureSample;
 
 //
 //  Represents the zenoh ID closure.
 //
-typedef ClosureConstPtrParam<::z_owned_closure_zid_t, ::z_id_t, Id> ClosureZid;
+typedef ClosureConstPtrParam<::z_owned_closure_zid_t, ::z_id_t, z::Id> ClosureZid;
 
 //
 // Represents the scouting closure
 //
-typedef ClosureMoveParam<::z_owned_closure_hello_t, ::z_owned_hello_t, Hello> ClosureHello;
+typedef ClosureMoveParam<::z_owned_closure_hello_t, ::z_owned_hello_t, z::Hello> ClosureHello;
 
 //
 // Zenoh scouting config and function
@@ -756,78 +761,82 @@ class ScoutingConfig : public Owned<::z_owned_scouting_config_t> {
    public:
     using Owned::Owned;
     ScoutingConfig() : Owned(::z_scouting_config_default()) {}
-    ScoutingConfig(Config& config) : Owned(std::move(ScoutingConfig(config))) {}
+    ScoutingConfig(z::Config& config) : Owned(std::move(ScoutingConfig(config))) {}
 };
 
-bool scout(ScoutingConfig&& config, ClosureHello&& callback, ErrNo& error);
-bool scout(ScoutingConfig&& config, ClosureHello&& callback);
+bool scout(z::ScoutingConfig&& config, z::ClosureHello&& callback, ErrNo& error);
+bool scout(z::ScoutingConfig&& config, z::ClosureHello&& callback);
 
 //
 // Zenoh session
 //
+
+class Session;
+std::variant<z::Session, z::ErrorMessage> open(z::Config&& config);
+
 class Session : public Owned<::z_owned_session_t> {
    public:
     using Owned::Owned;
 
-    Id info_zid() const { return ::z_info_zid(::z_session_loan(&_0)); }
+    z::Id info_zid() const { return ::z_info_zid(::z_session_loan(&_0)); }
 
-    friend std::variant<Session, ErrorMessage> open(Config&& config);
+    friend std::variant<z::Session, z::ErrorMessage> z::open(z::Config&& config);
 
-    KeyExpr declare_keyexpr(const KeyExprView& keyexpr);
-    bool undeclare_keyexpr(KeyExpr&& keyexpr, ErrNo& error);
-    bool undeclare_keyexpr(KeyExpr&& keyexpr);
-    bool get(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, const GetOptions& options,
+    z::KeyExpr declare_keyexpr(const z::KeyExprView& keyexpr);
+    bool undeclare_keyexpr(z::KeyExpr&& keyexpr, ErrNo& error);
+    bool undeclare_keyexpr(z::KeyExpr&& keyexpr);
+    bool get(z::KeyExprView keyexpr, const char* parameters, z::ClosureReply&& callback, const z::GetOptions& options,
              ErrNo& error);
-    bool get(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, const GetOptions& options);
-    bool get(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, ErrNo& error);
-    bool get(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback);
-    bool put(KeyExprView keyexpr, const BytesView& payload, const PutOptions& options, ErrNo& error);
-    bool put(KeyExprView keyexpr, const BytesView& payload, const PutOptions& options);
-    bool put(KeyExprView keyexpr, const BytesView& payload, ErrNo& error);
-    bool put(KeyExprView keyexpr, const BytesView& payload);
-    bool delete_resource(KeyExprView keyexpr, const DeleteOptions& options, ErrNo& error);
-    bool delete_resource(KeyExprView keyexpr, const DeleteOptions& options);
-    bool delete_resource(KeyExprView keyexpr, ErrNo& error);
-    bool delete_resource(KeyExprView keyexpr);
-    std::variant<Queryable, ErrorMessage> declare_queryable(KeyExprView keyexpr, ClosureQuery&& callback,
-                                                            const QueryableOptions& options);
-    std::variant<Queryable, ErrorMessage> declare_queryable(KeyExprView keyexpr, ClosureQuery&& callback);
-    std::variant<Subscriber, ErrorMessage> declare_subscriber(KeyExprView keyexpr, ClosureSample&& callback,
-                                                              const SubscriberOptions& options);
-    std::variant<Subscriber, ErrorMessage> declare_subscriber(KeyExprView keyexpr, ClosureSample&& callback);
-    std::variant<PullSubscriber, ErrorMessage> declare_pull_subscriber(KeyExprView keyexpr, ClosureSample&& callback,
-                                                                       const PullSubscriberOptions& options);
-    std::variant<PullSubscriber, ErrorMessage> declare_pull_subscriber(KeyExprView keyexpr, ClosureSample&& callback);
-    std::variant<Publisher, ErrorMessage> declare_publisher(KeyExprView keyexpr, const PublisherOptions& options);
-    std::variant<Publisher, ErrorMessage> declare_publisher(KeyExprView keyexpr);
-    bool info_routers_zid(ClosureZid&& callback, ErrNo& error);
-    bool info_routers_zid(ClosureZid&& callback);
-    bool info_peers_zid(ClosureZid&& callback, ErrNo& error);
-    bool info_peers_zid(ClosureZid&& callback);
+    bool get(z::KeyExprView keyexpr, const char* parameters, z::ClosureReply&& callback, const z::GetOptions& options);
+    bool get(z::KeyExprView keyexpr, const char* parameters, z::ClosureReply&& callback, ErrNo& error);
+    bool get(z::KeyExprView keyexpr, const char* parameters, z::ClosureReply&& callback);
+    bool put(z::KeyExprView keyexpr, const z::BytesView& payload, const z::PutOptions& options, ErrNo& error);
+    bool put(z::KeyExprView keyexpr, const z::BytesView& payload, const z::PutOptions& options);
+    bool put(z::KeyExprView keyexpr, const z::BytesView& payload, ErrNo& error);
+    bool put(z::KeyExprView keyexpr, const z::BytesView& payload);
+    bool delete_resource(z::KeyExprView keyexpr, const z::DeleteOptions& options, ErrNo& error);
+    bool delete_resource(z::KeyExprView keyexpr, const z::DeleteOptions& options);
+    bool delete_resource(z::KeyExprView keyexpr, ErrNo& error);
+    bool delete_resource(z::KeyExprView keyexpr);
+    std::variant<z::Queryable, ErrorMessage> declare_queryable(z::KeyExprView keyexpr, z::ClosureQuery&& callback,
+                                                               const z::QueryableOptions& options);
+    std::variant<z::Queryable, ErrorMessage> declare_queryable(z::KeyExprView keyexpr, z::ClosureQuery&& callback);
+    std::variant<z::Subscriber, ErrorMessage> declare_subscriber(z::KeyExprView keyexpr, z::ClosureSample&& callback,
+                                                                 const z::SubscriberOptions& options);
+    std::variant<z::Subscriber, ErrorMessage> declare_subscriber(z::KeyExprView keyexpr, z::ClosureSample&& callback);
+    std::variant<z::PullSubscriber, ErrorMessage> declare_pull_subscriber(z::KeyExprView keyexpr,
+                                                                          z::ClosureSample&& callback,
+                                                                          const z::PullSubscriberOptions& options);
+    std::variant<z::PullSubscriber, ErrorMessage> declare_pull_subscriber(z::KeyExprView keyexpr,
+                                                                          z::ClosureSample&& callback);
+    std::variant<z::Publisher, ErrorMessage> declare_publisher(z::KeyExprView keyexpr,
+                                                               const z::PublisherOptions& options);
+    std::variant<z::Publisher, ErrorMessage> declare_publisher(z::KeyExprView keyexpr);
+    bool info_routers_zid(z::ClosureZid&& callback, ErrNo& error);
+    bool info_routers_zid(z::ClosureZid&& callback);
+    bool info_peers_zid(z::ClosureZid&& callback, ErrNo& error);
+    bool info_peers_zid(z::ClosureZid&& callback);
 
    private:
-    Session(Config&& v) : Owned(_z_open(std::move(v))) {}
-    bool undeclare_keyexpr_impl(KeyExpr&& keyexpr, ErrNo& error);
-    bool get_impl(KeyExprView keyexpr, const char* parameters, ClosureReply&& callback, const GetOptions* options,
-                  ErrNo& error);
-    bool put_impl(KeyExprView keyexpr, const BytesView& payload, const PutOptions* options, ErrNo& error);
-    bool delete_impl(KeyExprView keyexpr, const DeleteOptions* options, ErrNo& error);
-    std::variant<Queryable, ErrorMessage> declare_queryable_impl(KeyExprView keyexpr, ClosureQuery&& callback,
-                                                                 const QueryableOptions* options);
-    std::variant<Subscriber, ErrorMessage> declare_subscriber_impl(KeyExprView keyexpr, ClosureSample&& callback,
-                                                                   const SubscriberOptions* options);
-    std::variant<PullSubscriber, ErrorMessage> declare_pull_subscriber_impl(KeyExprView keyexpr,
-                                                                            ClosureSample&& callback,
-                                                                            const PullSubscriberOptions* options);
-    std::variant<Publisher, ErrorMessage> declare_publisher_impl(KeyExprView keyexpr, const PublisherOptions* options);
+    Session(z::Config&& v) : Owned(_z_open(std::move(v))) {}
+    bool undeclare_keyexpr_impl(z::KeyExpr&& keyexpr, ErrNo& error);
+    bool get_impl(z::KeyExprView keyexpr, const char* parameters, z::ClosureReply&& callback,
+                  const z::GetOptions* options, ErrNo& error);
+    bool put_impl(z::KeyExprView keyexpr, const z::BytesView& payload, const z::PutOptions* options, ErrNo& error);
+    bool delete_impl(z::KeyExprView keyexpr, const z::DeleteOptions* options, ErrNo& error);
+    std::variant<z::Queryable, ErrorMessage> declare_queryable_impl(z::KeyExprView keyexpr, z::ClosureQuery&& callback,
+                                                                    const z::QueryableOptions* options);
+    std::variant<z::Subscriber, ErrorMessage> declare_subscriber_impl(z::KeyExprView keyexpr,
+                                                                      z::ClosureSample&& callback,
+                                                                      const z::SubscriberOptions* options);
+    std::variant<z::PullSubscriber, ErrorMessage> declare_pull_subscriber_impl(z::KeyExprView keyexpr,
+                                                                               z::ClosureSample&& callback,
+                                                                               const z::PullSubscriberOptions* options);
+    std::variant<z::Publisher, ErrorMessage> declare_publisher_impl(z::KeyExprView keyexpr,
+                                                                    const z::PublisherOptions* options);
 
-    static ::z_owned_session_t _z_open(Config&& v);
+    static ::z_owned_session_t _z_open(z::Config&& v);
 };
-
-//
-// Open zenoh session
-//
-std::variant<Session, ErrorMessage> open(Config&& config);
 
 #ifdef __ZENOHCXX_ZENOHC
 
@@ -836,7 +845,8 @@ class ClosureReplyChannelSend : public ClosureReply {
     using ClosureReply::ClosureReply;
 };
 
-class ClosureReplyChannelRecv : public ClosureMoveParam<::z_owned_reply_channel_closure_t, ::z_owned_reply_t, Reply> {
+class ClosureReplyChannelRecv
+    : public ClosureMoveParam<::z_owned_reply_channel_closure_t, ::z_owned_reply_t, z::Reply> {
    public:
     using ClosureMoveParam::ClosureMoveParam;
 };
@@ -851,7 +861,7 @@ class ClosureReplyChannelRecv : public ClosureMoveParam<::z_owned_reply_channel_
 // at which point it will return an invalidated Reply and so will further calls.
 //
 
-std::pair<ClosureReplyChannelSend, ClosureReplyChannelRecv> reply_fifo_new(uintptr_t bound) {
+std::pair<z::ClosureReplyChannelSend, z::ClosureReplyChannelRecv> reply_fifo_new(uintptr_t bound) {
     auto channel = ::zc_reply_fifo_new(bound);
     return {std::move(channel.send), std::move(channel.recv)};
 }
@@ -865,7 +875,7 @@ std::pair<ClosureReplyChannelSend, ClosureReplyChannelRecv> reply_fifo_new(uintp
 // which it will then return; or until the `send` closure is dropped and all replies have been consumed,
 // at which point it will return an invalidated Reply and so will further calls.
 //
-std::pair<ClosureReplyChannelSend, ClosureReplyChannelRecv> reply_non_blocking_fifo_new(uintptr_t bound) {
+std::pair<z::ClosureReplyChannelSend, z::ClosureReplyChannelRecv> reply_non_blocking_fifo_new(uintptr_t bound) {
     auto channel = ::zc_reply_non_blocking_fifo_new(bound);
     return {std::move(channel.send), std::move(channel.recv)};
 }
