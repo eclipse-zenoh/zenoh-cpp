@@ -517,7 +517,7 @@ struct SubscriberOptions : public Copyable<::z_subscriber_options_t> {
 //
 // Options to be passed when declaring a pull subscriber
 //
-sstruct PullSubscriberOptions : public Copyable<::z_pull_subscriber_options_t> {
+struct PullSubscriberOptions : public Copyable<::z_pull_subscriber_options_t> {
     using Copyable::Copyable;
     PullSubscriberOptions() : Copyable(::z_pull_subscriber_options_default()) {}
     Reliability get_reliability() const { return reliability; }
@@ -532,7 +532,7 @@ sstruct PullSubscriberOptions : public Copyable<::z_pull_subscriber_options_t> {
 //
 // Options to be passed when declaring a publisher
 //
-sstruct PublisherOptions : public Copyable<::z_publisher_options_t> {
+struct PublisherOptions : public Copyable<::z_publisher_options_t> {
     using Copyable::Copyable;
     PublisherOptions() : Copyable(::z_publisher_options_default()) {}
     CongestionControl get_congestion_control() const { return congestion_control; }
@@ -569,9 +569,156 @@ struct PublisherPutOptions : public Copyable<::z_publisher_put_options_t> {
 //
 // Options to be passed to delete operation of a publisher
 //
-sstruct PublisherDeleteOptions : public Copyable<::z_publisher_delete_options_t> {
+struct PublisherDeleteOptions : public Copyable<::z_publisher_delete_options_t> {
     using Copyable::Copyable;
     PublisherDeleteOptions() : Copyable(::z_publisher_delete_options_default()) {}
     bool operator==(const PublisherOptions& v) const { return true; }
     bool operator!=(const PublisherOptions& v) const { return !operator==(v); }
+};
+
+//
+// Owned string returned from zenoh
+//
+class Str : public Owned<::z_owned_str_t> {
+   public:
+    using Owned::Owned;
+    operator const char*() const { return ::z_loan(_0); }
+    const char* c_str() const { return ::z_loan(_0); }
+    bool operator==(const std::string_view& s) const { return s == c_str(); }
+    bool operator==(const char* s) const { return std::string_view(s) == c_str(); }
+};
+
+//
+// Owned key expression
+//
+class KeyExpr : public Owned<::z_owned_keyexpr_t> {
+   public:
+    using Owned::Owned;
+    explicit KeyExpr(nullptr_t) : Owned(nullptr) {}
+    explicit KeyExpr(const char* name) : Owned(::z_keyexpr_new(name)) {}
+    KeyExprView as_keyexpr_view() const { return KeyExprView(::z_keyexpr_loan(&_0)); }
+    operator KeyExprView() const { return as_keyexpr_view(); }
+    BytesView as_bytes() const { return as_keyexpr_view().as_bytes(); }
+    std::string_view as_string_view() const { return as_keyexpr_view().as_string_view(); }
+    bool operator==(const std::string_view& v) { return as_string_view() == v; }
+#ifdef __ZENOHCXX_ZENOHC
+    KeyExpr concat(const std::string_view& s) const { return as_keyexpr_view().concat(s); }
+    KeyExpr join(const KeyExprView& v) const { return as_keyexpr_view().join(v); }
+#endif
+    bool equals(const KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().equals(v, error); }
+    bool equals(const KeyExprView& v) const { return as_keyexpr_view().equals(v); }
+    bool includes(const KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().includes(v, error); }
+    bool includes(const KeyExprView& v) const { return as_keyexpr_view().includes(v); }
+    bool intersects(const KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().intersects(v, error); }
+    bool intersects(const KeyExprView& v) const { return as_keyexpr_view().intersects(v); }
+};
+
+#ifdef __ZENOHCXX_ZENOHC
+KeyExpr KeyExprView::concat(const std::string_view& s) const { return ::z_keyexpr_concat(*this, s.data(), s.length()); }
+KeyExpr KeyExprView::join(const KeyExprView& v) const { return ::z_keyexpr_join(*this, v); }
+#endif
+
+class ScoutingConfig;
+
+//
+// Zenoh config
+//
+class Config : public Owned<::z_owned_config_t> {
+   public:
+    using Owned::Owned;
+    Config() : Owned(::z_config_default()) {}
+#ifdef __ZENOHCXX_ZENOHC
+    Str get(const char* key) const { return Str(::zc_config_get(::z_config_loan(&_0), key)); }
+    Str to_string() const { return Str(::zc_config_to_string(::z_config_loan(&_0))); }
+    bool insert_json(const char* key, const char* value) {
+        return ::zc_config_insert_json(::z_config_loan(&_0), key, value) == 0;
+    }
+#endif
+#ifdef __ZENOHCXX_ZENOHPICO
+    const char* get(uint8_t key) const { return ::zp_config_get(::z_config_loan(&_0), key); }
+#endif
+    ScoutingConfig create_scouting_config();
+};
+
+#ifdef __ZENOHCXX_ZENOHC
+inline Config config_peer() { return Config(::z_config_peer()); }
+std::variant<Config, ErrorMessage> config_from_file(const char* path);
+std::variant<Config, ErrorMessage> config_from_str(const char* s);
+std::variant<Config, ErrorMessage> config_client(const StrArrayView& peers);
+std::variant<Config, ErrorMessage> config_client(const std::initializer_list<const char*>& peers);
+#endif
+
+//
+// Zenoh scouting config
+//
+class ScoutingConfig : public Owned<::z_owned_scouting_config_t> {
+   public:
+    using Owned::Owned;
+    ScoutingConfig() : Owned(::z_scouting_config_default()) {}
+    ScoutingConfig(Config& config) : Owned(std::move(ScoutingConfig(config))) {}
+};
+
+//
+// An owned reply to get operation
+//
+class Reply : public Owned<::z_owned_reply_t> {
+   public:
+    using Owned::Owned;
+    bool is_ok() const { return ::z_reply_is_ok(&_0); }
+    std::variant<Sample, ErrorMessage> get() const {
+        if (is_ok()) {
+            return Sample{::z_reply_ok(&_0)};
+        } else {
+            return ErrorMessage{::z_reply_err(&_0)};
+        }
+    }
+};
+
+//
+// An owned zenoh subscriber. Destroying subscriber cancels the subscription
+//
+class Subscriber : public Owned<::z_owned_subscriber_t> {
+   public:
+    using Owned::Owned;
+};
+
+//
+// An owned zenoh pull subscriber. Destroying the subscriber cancels the subscription.
+//
+class PullSubscriber : public Owned<::z_owned_pull_subscriber_t> {
+   public:
+    using Owned::Owned;
+    bool pull() { return ::z_subscriber_pull(::z_loan(_0)) == 0; }
+    bool pull(ErrNo& error) {
+        error = ::z_subscriber_pull(::z_loan(_0));
+        return error == 0;
+    }
+};
+
+//
+// An owned zenoh queryable
+//
+class Queryable : public Owned<::z_owned_queryable_t> {
+   public:
+    using Owned::Owned;
+};
+
+//
+// An owned zenoh publisher
+//
+class Publisher : public Owned<::z_owned_publisher_t> {
+   public:
+    using Owned::Owned;
+    bool put(const BytesView& payload, const PublisherPutOptions& options, ErrNo& error);
+    bool put(const BytesView& payload, ErrNo& error);
+    bool put(const BytesView& payload, const PublisherPutOptions& options);
+    bool put(const BytesView& payload);
+    bool delete_resource(const PublisherDeleteOptions& options, ErrNo& error);
+    bool delete_resource(ErrNo& error);
+    bool delete_resource(const PublisherDeleteOptions& options);
+    bool delete_resource();
+
+   private:
+    bool put_impl(const BytesView& payload, const PublisherPutOptions* options, ErrNo& error);
+    bool delete_impl(const PublisherDeleteOptions* options, ErrNo& error);
 };

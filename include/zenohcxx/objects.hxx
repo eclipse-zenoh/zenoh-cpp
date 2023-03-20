@@ -14,67 +14,9 @@
 // Do not add '#pragma once' and '#include` statements here
 // as this file is included multiple times into different namespaces
 
-// Convenient representation of owned strings returned from zenoh-c
-// which are supposed to be freed by user
-class Str : public Owned<::z_owned_str_t> {
-   public:
-    using Owned::Owned;
-    operator const char*() const { return ::z_loan(_0); }
-    const char* c_str() const { return ::z_loan(_0); }
-    bool operator==(const std::string_view& s) const { return s == c_str(); }
-    bool operator==(const char* s) const { return std::string_view(s) == c_str(); }
-};
-
-class KeyExpr : public Owned<::z_owned_keyexpr_t> {
-   public:
-    using Owned::Owned;
-    explicit KeyExpr(nullptr_t) : Owned(nullptr) {}
-    explicit KeyExpr(const char* name) : Owned(::z_keyexpr_new(name)) {}
-    KeyExprView as_keyexpr_view() const { return KeyExprView(::z_keyexpr_loan(&_0)); }
-    operator KeyExprView() const { return as_keyexpr_view(); }
-    BytesView as_bytes() const { return as_keyexpr_view().as_bytes(); }
-    std::string_view as_string_view() const { return as_keyexpr_view().as_string_view(); }
-    bool operator==(const std::string_view& v) { return as_string_view() == v; }
 #ifdef __ZENOHCXX_ZENOHC
-    KeyExpr concat(const std::string_view& s) const { return as_keyexpr_view().concat(s); }
-    KeyExpr join(const KeyExprView& v) const { return as_keyexpr_view().join(v); }
-#endif
-    bool equals(const KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().equals(v, error); }
-    bool equals(const KeyExprView& v) const { return as_keyexpr_view().equals(v); }
-    bool includes(const KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().includes(v, error); }
-    bool includes(const KeyExprView& v) const { return as_keyexpr_view().includes(v); }
-    bool intersects(const KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().intersects(v, error); }
-    bool intersects(const KeyExprView& v) const { return as_keyexpr_view().intersects(v); }
-};
 
-#ifdef __ZENOHCXX_ZENOHC
-KeyExpr KeyExprView::concat(const std::string_view& s) const { return ::z_keyexpr_concat(*this, s.data(), s.length()); }
-KeyExpr KeyExprView::join(const KeyExprView& v) const { return ::z_keyexpr_join(*this, v); }
-#endif
-
-class ScoutingConfig;
-
-class Config : public Owned<::z_owned_config_t> {
-   public:
-    using Owned::Owned;
-    Config() : Owned(::z_config_default()) {}
-#ifdef __ZENOHCXX_ZENOHC
-    Str get(const char* key) const { return Str(::zc_config_get(::z_config_loan(&_0), key)); }
-    Str to_string() const { return Str(::zc_config_to_string(::z_config_loan(&_0))); }
-    bool insert_json(const char* key, const char* value) {
-        return ::zc_config_insert_json(::z_config_loan(&_0), key, value) == 0;
-    }
-#endif
-#ifdef __ZENOHCXX_ZENOHPICO
-    const char* get(uint8_t key) const { return ::zp_config_get(::z_config_loan(&_0), key); }
-#endif
-    ScoutingConfig create_scouting_config();
-};
-
-#ifdef __ZENOHCXX_ZENOHC
-Config config_peer() { return Config(::z_config_peer()); }
-
-std::variant<Config, ErrorMessage> config_from_file(const char* path) {
+inline std::variant<Config, ErrorMessage> config_from_file(const char* path) {
     Config config(::zc_config_from_file(path));
     if (config.check()) {
         return std::move(config);
@@ -83,7 +25,7 @@ std::variant<Config, ErrorMessage> config_from_file(const char* path) {
     }
 }
 
-std::variant<Config, ErrorMessage> config_from_str(const char* s) {
+inline std::variant<Config, ErrorMessage> config_from_str(const char* s) {
     Config config(::zc_config_from_str(s));
     if (config.check()) {
         return std::move(config);
@@ -92,7 +34,7 @@ std::variant<Config, ErrorMessage> config_from_str(const char* s) {
     }
 }
 
-std::variant<Config, ErrorMessage> config_client(const StrArrayView& peers) {
+inline std::variant<Config, ErrorMessage> config_client(const StrArrayView& peers) {
     Config config(::z_config_client(peers.val, peers.len));
     if (config.check()) {
         return std::move(config);
@@ -101,94 +43,51 @@ std::variant<Config, ErrorMessage> config_client(const StrArrayView& peers) {
     }
 }
 
-std::variant<Config, ErrorMessage> config_client(const std::initializer_list<const char*>& peers) {
+inline std::variant<Config, ErrorMessage> config_client(const std::initializer_list<const char*>& peers) {
     std::vector<const char*> v(peers);
     return config_client(v);
 }
 #endif
 
-class ScoutingConfig : public Owned<::z_owned_scouting_config_t> {
-   public:
-    using Owned::Owned;
-    ScoutingConfig() : Owned(::z_scouting_config_default()) {}
-    ScoutingConfig(Config& config) : Owned(std::move(ScoutingConfig(config))) {}
-};
-
 inline ScoutingConfig Config::create_scouting_config() {
     return ScoutingConfig(::z_scouting_config_from(::z_loan(_0)));
 }
 
-class Reply : public Owned<::z_owned_reply_t> {
-   public:
-    using Owned::Owned;
-    bool is_ok() const { return ::z_reply_is_ok(&_0); }
-    std::variant<Sample, ErrorMessage> get() const {
-        if (is_ok()) {
-            return Sample{::z_reply_ok(&_0)};
-        } else {
-            return ErrorMessage{::z_reply_err(&_0)};
-        }
-    }
-};
+inline bool Publisher::put(const BytesView& payload, const PublisherPutOptions& options, ErrNo& error) {
+    return put_impl(payload, &options, error);
+}
+inline bool Publisher::put(const BytesView& payload, ErrNo& error) { return put_impl(payload, nullptr, error); }
+inline bool Publisher::put(const BytesView& payload, const PublisherPutOptions& options) {
+    ErrNo error;
+    return put_impl(payload, &options, error);
+}
+inline bool Publisher::put(const BytesView& payload) {
+    ErrNo error;
+    return put_impl(payload, nullptr, error);
+}
 
-class Subscriber : public Owned<::z_owned_subscriber_t> {
-   public:
-    using Owned::Owned;
-};
+inline bool Publisher::delete_resource(const PublisherDeleteOptions& options, ErrNo& error) {
+    return delete_impl(&options, error);
+}
+inline bool Publisher::delete_resource(ErrNo& error) { return delete_impl(nullptr, error); }
+inline bool Publisher::delete_resource(const PublisherDeleteOptions& options) {
+    ErrNo error;
+    return delete_impl(&options, error);
+}
+inline bool Publisher::delete_resource() {
+    ErrNo error;
+    return delete_impl(nullptr, error);
+}
 
-class PullSubscriber : public Owned<::z_owned_pull_subscriber_t> {
-   public:
-    using Owned::Owned;
-    bool pull() { return ::z_subscriber_pull(::z_loan(_0)) == 0; }
-    bool pull(ErrNo& error) {
-        error = ::z_subscriber_pull(::z_loan(_0));
-        return error == 0;
-    }
-};
+inline bool Publisher::put_impl(const BytesView& payload, const PublisherPutOptions* options, ErrNo& error) {
+    error = ::z_publisher_put(::z_loan(_0), payload.start, payload.len, options);
+    return error == 0;
+}
 
-class Queryable : public Owned<::z_owned_queryable_t> {
-   public:
-    using Owned::Owned;
-};
-
-class Publisher : public Owned<::z_owned_publisher_t> {
-   public:
-    using Owned::Owned;
-    bool put(const BytesView& payload, const PublisherPutOptions& options, ErrNo& error) {
-        return put_impl(payload, &options, error);
-    }
-    bool put(const BytesView& payload, ErrNo& error) { return put_impl(payload, nullptr, error); }
-    bool put(const BytesView& payload, const PublisherPutOptions& options) {
-        ErrNo error;
-        return put_impl(payload, &options, error);
-    }
-    bool put(const BytesView& payload) {
-        ErrNo error;
-        return put_impl(payload, nullptr, error);
-    }
-
-    bool delete_resource(const PublisherDeleteOptions& options, ErrNo& error) { return delete_impl(&options, error); }
-    bool delete_resource(ErrNo& error) { return delete_impl(nullptr, error); }
-    bool delete_resource(const PublisherDeleteOptions& options) {
-        ErrNo error;
-        return delete_impl(&options, error);
-    }
-    bool delete_resource() {
-        ErrNo error;
-        return delete_impl(nullptr, error);
-    }
-
-   private:
-    bool put_impl(const BytesView& payload, const PublisherPutOptions* options, ErrNo& error) {
-        error = ::z_publisher_put(::z_loan(_0), payload.start, payload.len, options);
-        return error == 0;
-    }
-
-    bool delete_impl(const PublisherDeleteOptions* options, ErrNo& error) {
-        error = ::z_publisher_delete(::z_loan(_0), options);
-        return error == 0;
-    }
-};
+inline bool Publisher::delete_impl(const PublisherDeleteOptions* options, ErrNo& error) {
+    error = ::z_publisher_delete(::z_loan(_0), options);
+    return error == 0;
+}
 
 class Hello : public Owned<::z_owned_hello_t> {
    public:
