@@ -23,7 +23,7 @@ inline const char* as_cstr(z::WhatAmI whatami) {
                                                      : nullptr;
 }
 
-void init_logger() {
+inline void init_logger() {
 #ifdef __ZENOHCXX_ZENOHC
     ::zc_init_logger();
 #endif
@@ -40,33 +40,21 @@ inline ::z_bytes_t BytesView::init(const uint8_t* start, size_t len) {
     return ret;
 }
 
-struct Id : public Copyable<::z_id_t> {
-    using Copyable::Copyable;
-    bool is_some() const { return id[0] != 0; }
-};
-
-std::ostream& operator<<(std::ostream& os, const z::Id& id) {
+inline std::ostream& operator<<(std::ostream& os, const z::Id& id) {
     for (size_t i = 0; id.id[i] != 0 && i < 16; i++)
         os << std::hex << std::setfill('0') << std::setw(2) << (int)id.id[i];
     return os;
 }
 
-struct HelloView : public Copyable<::z_hello_t> {
-    using Copyable::Copyable;
-
-#if defined(__ZENOHCXX_ZENOHC)
-    const Id& get_id() const { return static_cast<const Id&>(pid); }
-#elif defined(__ZENOHCXX_ZENOHPICO)
-    const z::Id& get_id() const {
-        assert(zid.len == sizeof(Id));  // TODO: is this invariant that Id is always 16 bytes?
-        return reinterpret_cast<const z::Id&>(*zid.start);
-    }
+inline const Id& HelloView::get_id() const {
+#ifdef __ZENOHCXX_ZENOHC
+    return static_cast<const z::Id&>(pid);
 #endif
-    z::WhatAmI get_whatami() const { return static_cast<z::WhatAmI>(whatami); }
-    const z::StrArrayView& get_locators() const { return static_cast<const z::StrArrayView&>(locators); }
-};
-
-class KeyExpr;
+#ifdef __ZENOHCXX_ZENOHPICO
+    assert(zid.len == sizeof(Id));  // TODO: is this invariant that Id is always 16 bytes?
+    return reinterpret_cast<const z::Id&>(*zid.start);
+#endif
+}
 
 inline bool _split_ret_to_bool_and_err(int8_t ret, ErrNo& error) {
     if (ret < 0) {
@@ -76,6 +64,28 @@ inline bool _split_ret_to_bool_and_err(int8_t ret, ErrNo& error) {
         error = 0;
         return ret == 0;
     }
+}
+
+inline bool KeyExprView::equals(const KeyExprView& v, ErrNo& error) const {
+    return _split_ret_to_bool_and_err(::z_keyexpr_equals(*this, v), error);
+}
+inline bool KeyExprView::equals(const KeyExprView& v) const {
+    ErrNo error;
+    return equals(v, error);
+}
+inline bool KeyExprView::includes(const KeyExprView& v, ErrNo& error) const {
+    return _split_ret_to_bool_and_err(::z_keyexpr_includes(*this, v), error);
+}
+inline bool KeyExprView::includes(const KeyExprView& v) const {
+    ErrNo error;
+    return includes(v, error);
+}
+inline bool KeyExprView::intersects(const KeyExprView& v, ErrNo& error) const {
+    return _split_ret_to_bool_and_err(::z_keyexpr_intersects(*this, v), error);
+}
+inline bool KeyExprView::intersects(const KeyExprView& v) const {
+    ErrNo error;
+    return includes(v, error);
 }
 
 inline bool keyexpr_canonize(std::string& s, ErrNo& error) {
@@ -99,63 +109,6 @@ inline bool keyexpr_is_canon(const std::string_view& s) {
     ErrNo error;
     return z::keyexpr_is_canon(s, error);
 }
-
-struct KeyExprUnchecked {
-    explicit KeyExprUnchecked() {}
-};
-
-struct KeyExprView : public Copyable<::z_keyexpr_t> {
-    using Copyable::Copyable;
-    KeyExprView(nullptr_t) : Copyable(::z_keyexpr(nullptr)) {}  // allow to create uninitialized KeyExprView
-    KeyExprView(const char* name) : Copyable(::z_keyexpr(name)) {}
-    KeyExprView(const char* name, KeyExprUnchecked) : Copyable(::z_keyexpr_unchecked(name)) {
-        assert(keyexpr_is_canon(name));
-    }
-#ifdef __ZENOHCXX_ZENOHC
-    KeyExprView(const std::string_view& name) : Copyable(::zc_keyexpr_from_slice(name.data(), name.length())) {}
-    KeyExprView(const std::string_view& name, KeyExprUnchecked)
-        : Copyable(::zc_keyexpr_from_slice_unchecked(name.data(), name.length())) {
-        assert(keyexpr_is_canon(name));
-    }
-#endif
-    bool check() const { return ::z_keyexpr_is_initialized(this); }
-    BytesView as_bytes() const { return BytesView{::z_keyexpr_as_bytes(*this)}; }
-    std::string_view as_string_view() const { return as_bytes().as_string_view(); }
-
-    // operator == between keyexprs purposedly not defided to avoid ambiguity: it's not obvious is string
-    // equality or z_keyexpr_equals would be used by operator==
-    bool operator==(const std::string_view& v) const { return as_string_view() == v; }
-    bool operator!=(const std::string_view& v) const { return !operator==(v); }
-
-#ifdef __ZENOHCXX_ZENOHC
-    // operator += purposedly not defined to not provoke ambiguity between concat (which
-    // mechanically connects strings) and join (which works with path elements)
-    KeyExpr concat(const std::string_view& s) const;
-    KeyExpr join(const KeyExprView& v) const;
-#endif
-
-    bool equals(const KeyExprView& v, ErrNo& error) const {
-        return _split_ret_to_bool_and_err(::z_keyexpr_equals(*this, v), error);
-    }
-    bool equals(const KeyExprView& v) const {
-        ErrNo error;
-        return equals(v, error);
-    }
-    bool includes(const KeyExprView& v, ErrNo& error) const {
-        return _split_ret_to_bool_and_err(::z_keyexpr_includes(*this, v), error);
-    }
-    bool includes(const KeyExprView& v) const {
-        ErrNo error;
-        return includes(v, error);
-    }
-    bool intersects(const KeyExprView& v, ErrNo& error) const {
-        return _split_ret_to_bool_and_err(::z_keyexpr_intersects(*this, v), error);
-    }
-    bool intersects(const KeyExprView& v) const {
-        ErrNo error;
-        return includes(v, error);
-    }
-};
 
 struct Encoding : public Copyable<::z_encoding_t> {
     using Copyable::Copyable;

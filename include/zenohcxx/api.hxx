@@ -11,12 +11,20 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-// Do not add '#pragma once' and '#include` statements here
-// as this file is included multiple times into different namespaces
-
 //
 // This file contains structures and classes API without implementations
 //
+
+// Do not add '#pragma once' and '#include` statements here
+// as this file is included multiple times into different namespaces
+
+// Validate that __ZENOHCXX_ZENOHPICO and __ZENOHCXX_ZENOHC are mutually exclusive
+#if defined(__ZENOHCXX_ZENOHPICO) and defined(__ZENOHCXX_ZENOHC)
+#error("Internal include configuration error: both __ZENOHCXX_ZENOHC and __ZENOHCXX_ZENOHPICO are defined")
+#endif
+#if not defined(__ZENOHCXX_ZENOHPICO) and not defined(__ZENOHCXX_ZENOHC)
+#error("Internal include configuration error: either __ZENOHCXX_ZENOHC or __ZENOHCXX_ZENOHPICO should be defined")
+#endif
 
 //
 // Error code value returned as negative value from zenohc/zenohpico functions
@@ -189,4 +197,74 @@ class BytesView : public Copyable<::z_bytes_t> {
 
    private:
     ::z_bytes_t init(const uint8_t* start, size_t len);
+};
+
+//
+//  Represents a Zenoh ID.
+//  In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
+//
+struct Id : public Copyable<::z_id_t> {
+    using Copyable::Copyable;
+    bool is_some() const { return id[0] != 0; }
+};
+std::ostream& operator<<(std::ostream& os, const z::Id& id);
+
+//
+// Represents the non-owned read-only view to a `hello` message returned by a zenoh entity as a reply to a `scout`
+// message.
+//
+struct HelloView : public Copyable<::z_hello_t> {
+    using Copyable::Copyable;
+    const z::Id& get_id() const;
+    z::WhatAmI get_whatami() const { return static_cast<z::WhatAmI>(whatami); }
+    const z::StrArrayView& get_locators() const { return static_cast<const z::StrArrayView&>(locators); }
+};
+
+class KeyExpr;
+
+//
+// Empty type used to distinguish checked and unchecked construncting of KeyExprView
+//
+struct KeyExprUnchecked {
+    explicit KeyExprUnchecked() {}
+};
+
+//
+// Represents the non-owned read-only view to a key expression in Zenoh.
+//
+struct KeyExprView : public Copyable<::z_keyexpr_t> {
+    using Copyable::Copyable;
+    KeyExprView(nullptr_t) : Copyable(::z_keyexpr(nullptr)) {}  // allow to create uninitialized KeyExprView
+    KeyExprView(const char* name) : Copyable(::z_keyexpr(name)) {}
+    KeyExprView(const char* name, KeyExprUnchecked) : Copyable(::z_keyexpr_unchecked(name)) {
+        assert(keyexpr_is_canon(name));
+    }
+#ifdef __ZENOHCXX_ZENOHC
+    KeyExprView(const std::string_view& name) : Copyable(::zc_keyexpr_from_slice(name.data(), name.length())) {}
+    KeyExprView(const std::string_view& name, KeyExprUnchecked)
+        : Copyable(::zc_keyexpr_from_slice_unchecked(name.data(), name.length())) {
+        assert(keyexpr_is_canon(name));
+    }
+#endif
+    bool check() const { return ::z_keyexpr_is_initialized(this); }
+    BytesView as_bytes() const { return BytesView{::z_keyexpr_as_bytes(*this)}; }
+    std::string_view as_string_view() const { return as_bytes().as_string_view(); }
+
+    // operator == between keyexprs purposedly not defided to avoid ambiguity: it's not obvious is string
+    // equality or z_keyexpr_equals would be used by operator==
+    bool operator==(const std::string_view& v) const { return as_string_view() == v; }
+    bool operator!=(const std::string_view& v) const { return !operator==(v); }
+
+#ifdef __ZENOHCXX_ZENOHC
+    // operator += purposedly not defined to not provoke ambiguity between concat (which
+    // mechanically connects strings) and join (which works with path elements)
+    KeyExpr concat(const std::string_view& s) const;
+    KeyExpr join(const KeyExprView& v) const;
+#endif
+    bool equals(const KeyExprView& v, ErrNo& error) const;
+    bool equals(const KeyExprView& v) const;
+    bool includes(const KeyExprView& v, ErrNo& error) const;
+    bool includes(const KeyExprView& v) const;
+    bool intersects(const KeyExprView& v, ErrNo& error) const;
+    bool intersects(const KeyExprView& v) const;
 };
