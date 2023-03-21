@@ -12,9 +12,9 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-#include "zenohcpp.h"
+#include "zenohc.hxx"
 
-using namespace zenoh;
+using namespace zenohc;
 
 #undef NDEBUG
 #include <assert.h>
@@ -34,8 +34,7 @@ void test_config_peer() {
     assert(config.get("mode") == "\"peer\"");
 }
 
-void test_config_to_string()
-{
+void test_config_to_string() {
     Config config;
     auto s = config.to_string();
     std::string_view sv(s);
@@ -43,15 +42,13 @@ void test_config_to_string()
     assert(sv.find("{\"id\":\"") == 0);
 }
 
-void test_config_from_file()
-{
+void test_config_from_file() {
     auto config = config_from_file("BAD FILE");
     assert(std::get_if<Config>(&config) == nullptr);
     assert(std::get_if<ErrorMessage>(&config) != nullptr);
 }
 
-void test_config_from_str()
-{
+void test_config_from_str() {
     auto config = config_from_str("BAD STR");
     assert(std::get_if<Config>(&config) == nullptr);
     assert(std::get_if<ErrorMessage>(&config) != nullptr);

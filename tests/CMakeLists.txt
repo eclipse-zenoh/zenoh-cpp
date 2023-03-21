@@ -19,18 +19,19 @@ function(add_test_instance file mode lib)
 	add_test(NAME "test_${target}" COMMAND ${target})
 endfunction()
 
-# file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
-set(files 
-	structs.cpp
-	keyexpr.cpp
-	options.cpp
-	closures_func.cpp
-	closures_obj_ptr_param.cpp
-	closures_obj_ref_param.cpp
-)
-list(TRANSFORM files PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/")
-
+file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/universal/*.cxx")
 foreach(file ${files})
     add_test_instance(${file} zenohc zenohcxx::zenohc::lib)
     add_test_instance(${file} zenohpico zenohcxx::zenohpico)
 endforeach()
+
+file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/zenohc/*.cxx")
+foreach(file ${files})
+    add_test_instance(${file} zenohc zenohcxx::zenohc::lib)
+endforeach()
+
+file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/zenohpico/*.cxx")
+foreach(file ${files})
+    add_test_instance(${file} zenohpico zenohcxx::zenohpico)
+endforeach()
+
