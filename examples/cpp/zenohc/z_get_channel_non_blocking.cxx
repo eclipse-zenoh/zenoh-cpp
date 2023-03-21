@@ -16,10 +16,15 @@
 
 #include <condition_variable>
 #include <iostream>
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#include <windows.h>
+#define sleep(x) Sleep(x * 1000)
+#else
+#include <unistd.h>
+#endif
 
-#include "zenohcpp.h"
-
-using namespace zenoh;
+#include "zenohc.hxx"
+using namespace zenohc;
 
 int _main(int argc, char **argv) {
     const char *expr = "demo/example/**";
@@ -49,15 +54,21 @@ int _main(int argc, char **argv) {
     GetOptions opts;
     opts.set_target(Z_QUERY_TARGET_ALL);
 
-    auto [send, recv] = reply_fifo_new(16);
+    auto [send, recv] = reply_non_blocking_fifo_new(16);
     session.get(keyexpr, "", std::move(send), opts);
 
     Reply reply(nullptr);
-    for (recv(reply); reply.check(); recv(reply)) {
+    for (bool call_success = recv(reply); !call_success || reply.check(); call_success = recv(reply)) {
+        if (!call_success) {
+            std::cout << ".";
+            usleep(100);
+            continue;
+        }
         auto sample = std::get<Sample>(reply.get());
-        std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
-                  << sample.get_payload().as_string_view() << "')\n";
+        std::cout << "\nReceived ('" << sample.get_keyexpr().as_string_view() << "' : '"
+                  << sample.get_payload().as_string_view() << "')";
     }
+    std::cout << std::endl;
 
     return 0;
 }

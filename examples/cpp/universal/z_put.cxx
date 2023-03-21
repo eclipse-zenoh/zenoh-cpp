@@ -14,22 +14,28 @@
 #include <iostream>
 
 #include "stdio.h"
-#include "zenohcpp.h"
+#include "zenoh.hxx"
 
-using namespace zenoh;
+#if defined(ZENOHCXX_ZENOHPICO)
+using namespace zenohpico;
+#elif defined(ZENOHCXX_ZENOHC)
+using namespace zenohc;
+#endif
 
 int _main(int argc, char **argv) {
-    const char *keyexpr = "demo/example/zenoh-cpp-pub";
+    const char *keyexpr = "demo/example/zenoh-cpp-put";
+    const char *value = "Put from CPP!";
 
     if (argc > 1) keyexpr = argv[1];
+    if (argc > 2) value = argv[2];
 
     Config config;
-    if (argc > 2) {
-        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[2])) {
+    if (argc > 3) {
+        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[3])) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
-                argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
+                argv[3], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
             exit(-1);
         }
     }
@@ -37,11 +43,13 @@ int _main(int argc, char **argv) {
     printf("Opening session...\n");
     auto session = std::get<Session>(open(std::move(config)));
 
-    printf("Declaring Publisher on '%s'...\n", keyexpr);
-    auto pub = std::get<Publisher>(session.declare_publisher(keyexpr));
+    printf("Putting Data ('%s': '%s')...\n", keyexpr, value);
+    PutOptions options;
+    options.set_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN);
 
-    printf("Deleting...");
-    pub.delete_resource();
+    if (!session.put(keyexpr, value, options)) {
+        printf("Put failed...\n");
+    }
 
     return 0;
 }

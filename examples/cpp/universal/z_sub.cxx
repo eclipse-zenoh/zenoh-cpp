@@ -10,37 +10,48 @@
 //
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
-
+//
 #include <stdio.h>
-#include <string.h>
-
-#include <iostream>
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 #include <windows.h>
 #define sleep(x) Sleep(x * 1000)
 #else
 #include <unistd.h>
 #endif
+#include <iostream>
 
-#include "zenohcpp.h"
+#include "zenoh.hxx"
 
-using namespace zenoh;
+#if defined(ZENOHCXX_ZENOHPICO)
+using namespace zenohpico;
+#elif defined(ZENOHCXX_ZENOHC)
+using namespace zenohc;
+#endif
 
-const char *expr = "demo/example/zenoh-cpp-queryable";
-const char *value = "Queryable from CPP!";
+const char *kind_to_str(z_sample_kind_t kind);
+
+void data_handler(const Sample *sample) {
+    if (sample) {
+        std::cout << ">> [Subscriber] Received " << kind_to_str(sample->get_kind()) << " ('"
+                  << sample->get_keyexpr().as_string_view() << "' : '" << sample->get_payload().as_string_view()
+                  << "')\n";
+    }
+}
 
 int _main(int argc, char **argv) {
+    const char *expr = "demo/example/**";
     if (argc > 1) {
         expr = argv[1];
     }
+    KeyExprView keyexpr(expr);
 
     Config config;
     if (argc > 2) {
-        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[2])) {
+        if (!config.insert_json(Z_CONFIG_LISTEN_KEY, argv[2])) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
-                argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
+                argv[2], Z_CONFIG_LISTEN_KEY, Z_CONFIG_LISTEN_KEY);
             exit(-1);
         }
     }
@@ -48,28 +59,8 @@ int _main(int argc, char **argv) {
     printf("Opening session...\n");
     auto session = std::get<Session>(open(std::move(config)));
 
-    KeyExprView keyexpr(expr);
-    if (!keyexpr.check()) {
-        printf("%s is not a valid key expression", expr);
-        exit(-1);
-    }
-
-    printf("Declaring Queryable on '%s'...\n", expr);
-
-    auto queryable = std::get<Queryable>(session.declare_queryable(keyexpr, [](const Query *query) {
-        if (query) {
-            auto keystr = query->get_keyexpr();
-            auto pred = query->get_parameters();
-            auto query_value = query->get_value();
-            std::cout << ">> [Queryable ] Received Query '" << keystr.as_string_view() << "?" << pred.as_string_view()
-                      << "' value = '" << query_value.as_string_view() << "'\n";
-            QueryReplyOptions options;
-            options.set_encoding(Encoding(Z_ENCODING_PREFIX_TEXT_PLAIN));
-            query->reply(expr, value, options);
-        } else {
-            std::cout << "Destroying queryable\n";
-        }
-    }));
+    printf("Declaring Subscriber on '%s'...\n", expr);
+    auto subscriber = std::get<Subscriber>(session.declare_subscriber(keyexpr, data_handler));
 
     printf("Enter 'q' to quit...\n");
     char c = 0;
@@ -81,6 +72,17 @@ int _main(int argc, char **argv) {
     }
 
     return 0;
+}
+
+const char *kind_to_str(z_sample_kind_t kind) {
+    switch (kind) {
+        case Z_SAMPLE_KIND_PUT:
+            return "PUT";
+        case Z_SAMPLE_KIND_DELETE:
+            return "DELETE";
+        default:
+            return "UNKNOWN";
+    }
 }
 
 int main(int argc, char **argv) {

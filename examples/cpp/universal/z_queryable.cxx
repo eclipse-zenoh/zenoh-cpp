@@ -14,7 +14,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <condition_variable>
 #include <iostream>
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 #include <windows.h>
@@ -23,20 +22,22 @@
 #include <unistd.h>
 #endif
 
-#include "zenohcpp.h"
+#include "zenoh.hxx"
 
-using namespace zenoh;
+#if defined(ZENOHCXX_ZENOHPICO)
+using namespace zenohpico;
+#elif defined(ZENOHCXX_ZENOHC)
+using namespace zenohc;
+#endif
+
+const char *expr = "demo/example/zenoh-cpp-queryable";
+const char *value = "Queryable from CPP!";
 
 int _main(int argc, char **argv) {
-    const char *expr = "demo/example/**";
     if (argc > 1) {
         expr = argv[1];
     }
-    KeyExprView keyexpr(expr);
-    if (!keyexpr.check()) {
-        printf("%s is not a valid key expression", expr);
-        exit(-1);
-    }
+
     Config config;
     if (argc > 2) {
         if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[2])) {
@@ -51,25 +52,37 @@ int _main(int argc, char **argv) {
     printf("Opening session...\n");
     auto session = std::get<Session>(open(std::move(config)));
 
-    std::cout << "Sending Query '" << expr << "'...\n";
-    GetOptions opts;
-    opts.set_target(Z_QUERY_TARGET_ALL);
-
-    auto [send, recv] = reply_non_blocking_fifo_new(16);
-    session.get(keyexpr, "", std::move(send), opts);
-
-    Reply reply(nullptr);
-    for (bool call_success = recv(reply); !call_success || reply.check(); call_success = recv(reply)) {
-        if (!call_success) {
-            std::cout << ".";
-            usleep(100);
-            continue;
-        }
-        auto sample = std::get<Sample>(reply.get());
-        std::cout << "\nReceived ('" << sample.get_keyexpr().as_string_view() << "' : '"
-                  << sample.get_payload().as_string_view() << "')";
+    KeyExprView keyexpr(expr);
+    if (!keyexpr.check()) {
+        printf("%s is not a valid key expression", expr);
+        exit(-1);
     }
-    std::cout << std::endl;
+
+    printf("Declaring Queryable on '%s'...\n", expr);
+
+    auto queryable = std::get<Queryable>(session.declare_queryable(keyexpr, [](const Query *query) {
+        if (query) {
+            auto keystr = query->get_keyexpr();
+            auto pred = query->get_parameters();
+            auto query_value = query->get_value();
+            std::cout << ">> [Queryable ] Received Query '" << keystr.as_string_view() << "?" << pred.as_string_view()
+                      << "' value = '" << query_value.as_string_view() << "'\n";
+            QueryReplyOptions options;
+            options.set_encoding(Encoding(Z_ENCODING_PREFIX_TEXT_PLAIN));
+            query->reply(expr, value, options);
+        } else {
+            std::cout << "Destroying queryable\n";
+        }
+    }));
+
+    printf("Enter 'q' to quit...\n");
+    char c = 0;
+    while (c != 'q') {
+        c = getchar();
+        if (c == -1) {
+            sleep(1);
+        }
+    }
 
     return 0;
 }

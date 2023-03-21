@@ -10,26 +10,37 @@
 //
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
+//
 #include <stdio.h>
+#include <string.h>
 
-#include <iostream>
+#include <vector>
 
-#include "zenohcpp.h"
+#include "zenoh.hxx"
 
-using namespace zenoh;
+#if defined(ZENOHCXX_ZENOHPICO)
+using namespace zenohpico;
+#elif defined(ZENOHCXX_ZENOHC)
+using namespace zenohc;
+#endif
 
-void print_zid(const Id* id) {
-    if (id) std::cout << id << std::endl;
-}
+int _main(int argc, char **argv) {
+    if (argc < 2) {
+        printf("USAGE:\n\tz_pub_thr <payload-size> [<zenoh-locator>]\n\n");
+        exit(-1);
+    }
 
-int _main(int argc, char** argv) {
+    const char *keyexpr = "test/thr";
+    size_t len = atoi(argv[1]);
+    std::vector<char> payload(len, 1);
+
     Config config;
-    if (argc > 1) {
-        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[3])) {
+    if (argc > 2) {
+        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[2])) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
-                argv[1], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
+                argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
             exit(-1);
         }
     }
@@ -37,21 +48,18 @@ int _main(int argc, char** argv) {
     printf("Opening session...\n");
     auto session = std::get<Session>(open(std::move(config)));
 
-    auto self_id = session.info_zid();
-    printf("own id: ");
-    print_zid(&self_id);
+    PublisherOptions options;
+    options.set_congestion_control(Z_CONGESTION_CONTROL_BLOCK);
 
-    printf("routers ids:\n");
-    session.info_routers_zid(print_zid);
+    printf("Declaring Publisher on '%s'...\n", keyexpr);
+    auto pub = std::get<Publisher>(session.declare_publisher(keyexpr, options));
 
-    printf("peers ids:\n");
-    session.info_peers_zid(print_zid);
-    return 0;
+    while (1) pub.put(payload);
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
     try {
-        return _main(argc, argv);
+        _main(argc, argv);
     } catch (ErrorMessage e) {
         std::cout << "Received an error :" << e.as_string_view() << "\n";
     }

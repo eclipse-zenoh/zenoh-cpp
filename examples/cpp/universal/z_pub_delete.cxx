@@ -11,24 +11,21 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-#include <stdio.h>
-#include <string.h>
+#include <iostream>
 
-#include <vector>
+#include "stdio.h"
+#include "zenoh.hxx"
 
-#include "zenohcpp.h"
-
-using namespace zenoh;
+#if defined(ZENOHCXX_ZENOHPICO)
+using namespace zenohpico;
+#elif defined(ZENOHCXX_ZENOHC)
+using namespace zenohc;
+#endif
 
 int _main(int argc, char **argv) {
-    if (argc < 2) {
-        printf("USAGE:\n\tz_pub_thr <payload-size> [<zenoh-locator>]\n\n");
-        exit(-1);
-    }
+    const char *keyexpr = "demo/example/zenoh-cpp-pub";
 
-    const char *keyexpr = "test/thr";
-    size_t len = atoi(argv[1]);
-    std::vector<char> payload(len, 1);
+    if (argc > 1) keyexpr = argv[1];
 
     Config config;
     if (argc > 2) {
@@ -44,13 +41,13 @@ int _main(int argc, char **argv) {
     printf("Opening session...\n");
     auto session = std::get<Session>(open(std::move(config)));
 
-    PublisherOptions options;
-    options.set_congestion_control(Z_CONGESTION_CONTROL_BLOCK);
-
     printf("Declaring Publisher on '%s'...\n", keyexpr);
-    auto pub = std::get<Publisher>(session.declare_publisher(keyexpr, options));
+    auto pub = std::get<Publisher>(session.declare_publisher(keyexpr));
 
-    while (1) pub.put(payload);
+    printf("Deleting...");
+    pub.delete_resource();
+
+    return 0;
 }
 
 int main(int argc, char **argv) {

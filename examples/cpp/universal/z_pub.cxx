@@ -11,16 +11,31 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
+#include <stdio.h>
+#include <string.h>
+
 #include <iostream>
+#include <limits>
+#include <sstream>
 
-#include "stdio.h"
-#include "zenohcpp.h"
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#include <windows.h>
+#define sleep(x) Sleep(x * 1000)
+#else
+#include <unistd.h>
+#endif
 
-using namespace zenoh;
+#include "zenoh.hxx"
+
+#if defined(ZENOHCXX_ZENOHPICO)
+using namespace zenohpico;
+#elif defined(ZENOHCXX_ZENOHC)
+using namespace zenohc;
+#endif
 
 int _main(int argc, char **argv) {
-    const char *keyexpr = "demo/example/zenoh-cpp-put";
-    const char *value = "Put from CPP!";
+    const char *keyexpr = "demo/example/zenoh-cpp-pub";
+    const char *value = "Pub from CPP!";
 
     if (argc > 1) keyexpr = argv[1];
     if (argc > 2) value = argv[2];
@@ -39,14 +54,19 @@ int _main(int argc, char **argv) {
     printf("Opening session...\n");
     auto session = std::get<Session>(open(std::move(config)));
 
-    printf("Putting Data ('%s': '%s')...\n", keyexpr, value);
-    PutOptions options;
+    printf("Declaring Publisher on '%s'...\n", keyexpr);
+    auto pub = std::get<Publisher>(session.declare_publisher(keyexpr));
+
+    PublisherPutOptions options;
     options.set_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN);
-
-    if (!session.put(keyexpr, value, options)) {
-        printf("Put failed...\n");
+    for (int idx = 0; std::numeric_limits<int>::max(); ++idx) {
+        sleep(1);
+        std::ostringstream ss;
+        ss << "[" << idx << "] " << value;
+        auto s = ss.str();  // in C++20 use .view() instead
+        std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
+        pub.put(s);
     }
-
     return 0;
 }
 

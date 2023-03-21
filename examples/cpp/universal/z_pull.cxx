@@ -20,11 +20,15 @@
 #endif
 #include <iostream>
 
-#include "zenohcpp.h"
+#include "zenoh.hxx"
 
-using namespace zenoh;
+#if defined(ZENOHCXX_ZENOHPICO)
+using namespace zenohpico;
+#elif defined(ZENOHCXX_ZENOHC)
+using namespace zenohc;
+#endif
 
-const char *kind_to_str(z_sample_kind_t kind);
+const char *kind_to_str(SampleKind kind);
 
 void data_handler(const Sample *sample) {
     if (sample) {
@@ -55,22 +59,26 @@ int _main(int argc, char **argv) {
     printf("Opening session...\n");
     auto session = std::get<Session>(open(std::move(config)));
 
-    printf("Declaring Subscriber on '%s'...\n", expr);
-    auto subscriber = std::get<Subscriber>(session.declare_subscriber(keyexpr, data_handler));
+    auto callback = ClosureSample(data_handler);
 
-    printf("Enter 'q' to quit...\n");
+    printf("Declaring Subscriber on '%s'...\n", expr);
+    auto subscriber = std::get<PullSubscriber>(session.declare_pull_subscriber(keyexpr, std::move(callback)));
+
+    printf("Press <enter> to pull data...\n");
     char c = 0;
     while (c != 'q') {
         c = getchar();
         if (c == -1) {
             sleep(1);
+        } else {
+            subscriber.pull();
         }
     }
 
     return 0;
 }
 
-const char *kind_to_str(z_sample_kind_t kind) {
+const char *kind_to_str(SampleKind kind) {
     switch (kind) {
         case Z_SAMPLE_KIND_PUT:
             return "PUT";

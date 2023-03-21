@@ -8,7 +8,7 @@ add_dependencies(tests tests_zenohpico)
 
 function(add_test_instance file mode lib)
 	get_filename_component(filename ${file} NAME_WE)
-	set(target ${mode}_${filename})
+	set(target ${filename}_${mode})
 	add_executable(${target} EXCLUDE_FROM_ALL ${file})
 	add_dependencies(tests_${mode} ${target})
 	add_dependencies(${target} ${lib})
