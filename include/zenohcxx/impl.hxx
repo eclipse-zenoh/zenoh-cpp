@@ -417,3 +417,17 @@ inline std::variant<z::Session, z::ErrorMessage> open(z::Config&& config) {
         return "Unable to open session";
     }
 };
+
+#ifdef __ZENOHCXX_ZENOHPICO
+
+inline bool z::Config::insert(uint8_t key, const char* value) {
+    ErrNo error;
+    return insert(key, std::move(value), error);
+}
+
+inline bool z::Config::insert(uint8_t key, const char* value, ErrNo& error) {
+    error = ::zp_config_insert(::z_config_loan(&_0), key, ::z_string_make(value));
+    return error == 0;
+}
+
+#endif

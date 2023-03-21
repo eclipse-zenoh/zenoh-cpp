@@ -643,6 +643,8 @@ class Config : public Owned<::z_owned_config_t> {
 #endif
 #ifdef __ZENOHCXX_ZENOHPICO
     const char* get(uint8_t key) const { return ::zp_config_get(::z_config_loan(&_0), key); }
+    bool insert(uint8_t key, const char* value);
+    bool insert(uint8_t key, const char* value, ErrNo& error);
 #endif
     z::ScoutingConfig create_scouting_config();
 };
