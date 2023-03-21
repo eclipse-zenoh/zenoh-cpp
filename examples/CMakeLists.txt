@@ -45,8 +45,8 @@ add_examples("${CMAKE_CURRENT_SOURCE_DIR}/c/*.c" c zenohc::lib FALSE)
 add_examples("${CMAKE_CURRENT_SOURCE_DIR}/c/*.c" cpp_c zenohc::lib FALSE)
 
 # C++ examples compiled with C++ compiler with zenohc library only
-add_examples("${CMAKE_CURRENT_SOURCE_DIR}/cpp/zenohc/*.cpp" cpp_zenohc zenohcxx::zenohc::lib TRUE)
+add_examples("${CMAKE_CURRENT_SOURCE_DIR}/cpp/zenohc/*.cxx" cpp_zenohc zenohcxx::zenohc::lib TRUE)
 
 # C++ examples compiled with C++ compiler with both zenohc and zenohpico libraries
-add_examples("${CMAKE_CURRENT_SOURCE_DIR}/cpp/universal/*.cpp" cpp_zenohc zenohcxx::zenohc::lib TRUE)
+add_examples("${CMAKE_CURRENT_SOURCE_DIR}/cpp/universal/*.cxx" cpp_zenohc zenohcxx::zenohc::lib TRUE)
 # add_examples("${CMAKE_CURRENT_SOURCE_DIR}/cpp/universal/*.cpp" cpp_zenohpico zenohcxx::zenohpico TRUE)
