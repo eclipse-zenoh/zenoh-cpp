@@ -46,6 +46,7 @@ int _main(int argc, char **argv) {
     KeyExprView keyexpr(expr);
 
     Config config;
+#ifdef ZENOHCXX_ZENOHC
     if (argc > 2) {
         if (!config.insert_json(Z_CONFIG_LISTEN_KEY, argv[2])) {
             printf(
@@ -55,6 +56,7 @@ int _main(int argc, char **argv) {
             exit(-1);
         }
     }
+#endif
 
     printf("Opening session...\n");
     auto session = std::get<Session>(open(std::move(config)));

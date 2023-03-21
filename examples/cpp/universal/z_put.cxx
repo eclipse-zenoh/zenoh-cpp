@@ -30,6 +30,7 @@ int _main(int argc, char **argv) {
     if (argc > 2) value = argv[2];
 
     Config config;
+#ifdef ZENOHCXX_ZENOHC
     if (argc > 3) {
         if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[3])) {
             printf(
@@ -39,6 +40,7 @@ int _main(int argc, char **argv) {
             exit(-1);
         }
     }
+#endif
 
     printf("Opening session...\n");
     auto session = std::get<Session>(open(std::move(config)));

@@ -49,4 +49,4 @@ add_examples("${CMAKE_CURRENT_SOURCE_DIR}/cpp/zenohc/*.cxx" cpp_zenohc zenohcxx:
 
 # C++ examples compiled with C++ compiler with both zenohc and zenohpico libraries
 add_examples("${CMAKE_CURRENT_SOURCE_DIR}/cpp/universal/*.cxx" cpp_zenohc zenohcxx::zenohc::lib TRUE)
-# add_examples("${CMAKE_CURRENT_SOURCE_DIR}/cpp/universal/*.cpp" cpp_zenohpico zenohcxx::zenohpico TRUE)
+add_examples("${CMAKE_CURRENT_SOURCE_DIR}/cpp/universal/*.cxx" cpp_zenohpico zenohcxx::zenohpico TRUE)

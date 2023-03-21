@@ -59,6 +59,7 @@ void printhello(const HelloView &hello) {
 
 int _main(int argc, char **argv) {
     Config config;
+#ifdef ZENOHCXX_ZENOHC
     if (argc > 1) {
         if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[1])) {
             printf(
@@ -68,6 +69,7 @@ int _main(int argc, char **argv) {
             exit(-1);
         }
     }
+#endif
 
     int count = 0;
     std::mutex m;
