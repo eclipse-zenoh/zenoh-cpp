@@ -774,7 +774,7 @@ bool scout(z::ScoutingConfig&& config, z::ClosureHello&& callback);
 //
 
 class Session;
-std::variant<z::Session, z::ErrorMessage> open(z::Config&& config);
+std::variant<z::Session, z::ErrorMessage> open(z::Config&& config, bool start_background_tasks = true);
 
 class Session : public Owned<::z_owned_session_t> {
    public:
@@ -782,7 +782,7 @@ class Session : public Owned<::z_owned_session_t> {
 
     z::Id info_zid() const { return ::z_info_zid(::z_session_loan(&_0)); }
 
-    friend std::variant<z::Session, z::ErrorMessage> z::open(z::Config&& config);
+    friend std::variant<z::Session, z::ErrorMessage> z::open(z::Config&& config, bool start_background_tasks);
 
     z::KeyExpr declare_keyexpr(const z::KeyExprView& keyexpr);
     bool undeclare_keyexpr(z::KeyExpr&& keyexpr, ErrNo& error);

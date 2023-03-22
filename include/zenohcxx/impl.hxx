@@ -407,13 +407,22 @@ inline ::z_owned_session_t z::Session::_z_open(z::Config&& v) {
     return ::z_open(z_move(config));
 }
 
-inline std::variant<z::Session, z::ErrorMessage> open(z::Config&& config) {
+inline std::variant<z::Session, z::ErrorMessage> open(z::Config&& config, bool start_background_tasks) {
     z::Session session(std::move(config));
-    if (session.check()) {
-        return std::move(session);
-    } else {
+    if (!session.check()) {
         return "Unable to open session";
     }
+#ifdef __ZENOHCXX_ZENOHPICO
+    if (start_background_tasks) {
+        if (!session.start_read_task()) {
+            return "Unable to start read task";
+        }
+        if (!session.start_lease_task()) {
+            return "Unable to start lease task";
+        }
+    }
+#endif
+    return std::move(session);
 };
 
 #ifdef __ZENOHCXX_ZENOHPICO
