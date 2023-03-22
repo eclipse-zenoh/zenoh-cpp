@@ -57,7 +57,7 @@ inline const z::Id& z::HelloView::get_id() const {
 }
 
 inline bool _split_ret_to_bool_and_err(int8_t ret, ErrNo& error) {
-    if (ret < 0) {
+    if (ret < -1) {
         error = ret;
         return false;
     } else {
