@@ -819,6 +819,27 @@ class Session : public Owned<::z_owned_session_t> {
     bool info_peers_zid(z::ClosureZid&& callback, ErrNo& error);
     bool info_peers_zid(z::ClosureZid&& callback);
 
+#ifdef __ZENOHCXX_ZENOHPICO
+    bool start_read_task();
+    bool start_read_task(ErrNo& error);
+    bool stop_read_task();
+    bool stop_read_task(ErrNo& error);
+
+    bool start_lease_task();
+    bool start_lease_task(ErrNo& error);
+    bool stop_lease_task();
+    bool stop_lease_task(ErrNo& error);
+
+    bool read();
+    bool read(ErrNo& error);
+
+    bool send_keep_alive();
+    bool send_keep_alive(ErrNo& error);
+
+    bool send_join();
+    bool send_join(ErrNo& error);
+#endif
+
    private:
     Session(z::Config&& v) : Owned(_z_open(std::move(v))) {}
     bool undeclare_keyexpr_impl(z::KeyExpr&& keyexpr, ErrNo& error);

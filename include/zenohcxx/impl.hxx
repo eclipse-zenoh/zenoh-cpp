@@ -429,3 +429,62 @@ inline bool z::Config::insert(uint8_t key, const char* value, ErrNo& error) {
 }
 
 #endif
+
+#ifdef __ZENOHCXX_ZENOHPICO
+inline bool Session::start_read_task() {
+    ErrNo error;
+    return start_read_task(error);
+}
+inline bool Session::start_read_task(ErrNo& error) {
+    error = ::zp_start_read_task(::z_session_loan(&_0), nullptr);
+    return error == 0;
+}
+inline bool Session::stop_read_task() {
+    ErrNo error;
+    return stop_read_task(error);
+}
+inline bool Session::stop_read_task(ErrNo& error) {
+    error = ::zp_stop_read_task(::z_session_loan(&_0));
+    return error == 0;
+}
+inline bool Session::start_lease_task() {
+    ErrNo error;
+    return start_lease_task(error);
+}
+inline bool Session::start_lease_task(ErrNo& error) {
+    error = ::zp_start_lease_task(::z_session_loan(&_0), nullptr);
+    return error == 0;
+}
+inline bool Session::stop_lease_task() {
+    ErrNo error;
+    return stop_lease_task(error);
+}
+inline bool Session::stop_lease_task(ErrNo& error) {
+    error = ::zp_stop_lease_task(::z_session_loan(&_0));
+    return error == 0;
+}
+inline bool Session::read() {
+    ErrNo error;
+    return read(error);
+}
+inline bool Session::read(ErrNo& error) {
+    error = ::zp_read(::z_session_loan(&_0), nullptr);
+    return error == 0;
+}
+inline bool Session::send_keep_alive() {
+    ErrNo error;
+    return send_keep_alive(error);
+}
+inline bool Session::send_keep_alive(ErrNo& error) {
+    error = ::zp_send_keep_alive(::z_session_loan(&_0), nullptr);
+    return error == 0;
+}
+inline bool Session::send_join() {
+    ErrNo error;
+    return send_join(error);
+}
+inline bool Session::send_join(ErrNo& error) {
+    error = ::zp_send_join(::z_session_loan(&_0), nullptr);
+    return error == 0;
+}
+#endif
