@@ -148,11 +148,11 @@ inline const char* as_cstr(z::WhatAmI whatami);
 //
 inline z::QueryTarget query_target_default();
 
-// Initializes logger.
-// For zenohc set environment variable RUST_LOG=debug or RUST_LOG=info or RUST_LOG=warn or RUST_LOG=error
-// to show diagnostic output.
-// Does nothing for zenoh-pico at this moment
+#ifdef __ZENOHCXX_ZENOHC
+// Initializes logger for zenohc
+// User may set environment variable RUST_LOG to values debug|info|warn|error to show diagnostic output.
 void init_logger();
+#endif
 
 //
 // StrArrayView represents non-owned read only array of char*
