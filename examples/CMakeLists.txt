@@ -39,20 +39,19 @@ function(add_examples glob mode lib is_cpp)
 	endforeach()
 endfunction()
 
-# C examples compiled with C compiler and zenohc
+# zenohc examples compiled with C compiler
 add_examples("${CMAKE_CURRENT_SOURCE_DIR}/c/zenohc/*.c" zenohc_c zenohc::lib FALSE)
-# C examples compiled with C++ compiler and zenohc
+# zenohc examples compiled with C++ compiler
 add_examples("${CMAKE_CURRENT_SOURCE_DIR}/c/zenohc/*.c" zenohc_c_cxx zenohc::lib FALSE)
 
-# C examples compiled with C compiler and zenohc
+# zenohpico examples compiled with C compiler
 add_examples("${CMAKE_CURRENT_SOURCE_DIR}/c/zenohpico/*.c" zenohpico_c zenohcxx::zenohpico FALSE)
-# C examples compiled with C++ compiler and zenohc
+# zenohpico examples compiled with C++ compiler
 add_examples("${CMAKE_CURRENT_SOURCE_DIR}/c/zenohpico/*.c" zenohpico_c_cxx zenohpico FALSE)
 
-
-# C++ examples compiled with C++ compiler with zenohc library
+# zenohcpp examples compiled with C++ compiler with zenohc
 add_examples("${CMAKE_CURRENT_SOURCE_DIR}/cpp/zenohc/*.cxx" cpp_zenohc zenohcxx::zenohc::lib TRUE)
 add_examples("${CMAKE_CURRENT_SOURCE_DIR}/cpp/universal/*.cxx" cpp_zenohc zenohcxx::zenohc::lib TRUE)
 
-# C++ examples compiled with C++ compiler with zenohpico library
+# zenohcpp examples compiled with C++ compiler with zenohpico
 add_examples("${CMAKE_CURRENT_SOURCE_DIR}/cpp/universal/*.cxx" cpp_zenohpico zenohcxx::zenohpico TRUE)
