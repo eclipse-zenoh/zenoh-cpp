@@ -232,6 +232,14 @@ struct KeyExprUnchecked {
 };
 
 //
+// Keyexpr-related string functions
+//
+inline bool keyexpr_canonize(std::string& s, ErrNo& error);
+inline bool keyexpr_canonize(std::string& s);
+inline bool keyexpr_is_canon(const std::string_view& s, ErrNo& error);
+inline bool keyexpr_is_canon(const std::string_view& s);
+
+//
 // Represents the non-owned read-only view to a key expression in Zenoh.
 //
 struct KeyExprView : public Copyable<::z_keyexpr_t> {
