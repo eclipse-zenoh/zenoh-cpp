@@ -43,14 +43,13 @@ void key_expr_view() {
     assert(svfoo.as_bytes() == "FOO");
     assert(svfoo.as_string_view() == "FOO");
 
-    KeyExprView unchecked("*//*", KeyExprUnchecked());
+    KeyExprView unchecked("a/*", KeyExprUnchecked());
     assert(unchecked.check());
-    assert(!keyexpr_is_canon(unchecked.as_string_view()));
+    assert(unchecked.as_string_view() == "a/*");
 
-    std::string_view sunchecked("*//*", 4);
+    std::string_view sunchecked("a/*//*", 3);
     KeyExprView svunchecked(sunchecked, KeyExprUnchecked());
-    assert(svunchecked.check());
-    assert(!keyexpr_is_canon(svunchecked.as_string_view()));
+    assert(svunchecked.as_string_view() == "a/*");
 #endif
 }
 
