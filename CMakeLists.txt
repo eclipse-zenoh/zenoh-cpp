@@ -22,14 +22,6 @@ target_include_directories(zenohcxx INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/inclu
 # zenohcxx for zenohpico
 if(TARGET zenohpico)
 	message(STATUS "defined lib target zenohcxx::zenohpico for zenohpico")
-	if(WIN32)
-		target_compile_definitions(zenohpico INTERFACE ZENOH_WINDOWS)
-	elseif(APPLE)
-		target_compile_definitions(zenohpico INTERFACE ZENOH_MACOS)
-	elseif(UNIX)
-		target_compile_definitions(zenohpico INTERFACE ZENOH_LINUX)
-	endif()
-
 	add_library(zenohcxx_zenohpico INTERFACE)
 	target_compile_definitions(zenohcxx_zenohpico INTERFACE ZENOHCXX_ZENOHPICO)
 	target_include_directories(zenohcxx_zenohpico INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -37,7 +29,6 @@ if(TARGET zenohpico)
 	target_link_libraries(zenohcxx_zenohpico INTERFACE zenohpico)
 	add_library(zenohcxx::zenohpico ALIAS zenohcxx_zenohpico)
 endif()
-
 
 # zenohcxx for zenohc dynamic
 if(TARGET zenohc::lib)
