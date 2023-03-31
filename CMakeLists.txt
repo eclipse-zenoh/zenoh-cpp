@@ -15,6 +15,10 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 	configure_include_project(ZENOHCXX_ZENOHC zenohc zenohc::lib "../zenoh-c" zenohc "https://github.com/eclipse-zenoh/zenoh-c" "")
 endif()
 
+#
+# When changing code below change also corresponding code in install/PackageConfig.cmake.in
+# 
+
 # zenohcxx without dependencies
 add_library(zenohcxx INTERFACE)
 target_include_directories(zenohcxx INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -56,7 +60,7 @@ endif()
 # Components included only if project is the root project
 #
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-	# add_subdirectory(install)
+	add_subdirectory(install)
 	add_subdirectory(tests)
 	add_subdirectory(examples)
 endif()

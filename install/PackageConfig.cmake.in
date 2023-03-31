@@ -14,6 +14,37 @@
 
 @PACKAGE_INIT@
 
-add_library(__zenohcpp INTERFACE)
-add_library(zenohcpp ALIAS __zenohcpp)
-target_include_directories(__zenohcpp INTERFACE "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@")
+add_library(zenohcxx INTERFACE)
+target_include_directories(zenohcxx INTERFACE "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@")
+
+# zenohcxx for zenohpico
+if(TARGET zenohpico)
+	add_library(zenohcxx_zenohpico INTERFACE)
+	target_compile_definitions(zenohcxx_zenohpico INTERFACE ZENOHCXX_ZENOHPICO)
+    target_include_directories(zenohcxx_zenohpico INTERFACE "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@")
+	add_dependencies(zenohcxx_zenohpico zenohpico)
+	target_link_libraries(zenohcxx_zenohpico INTERFACE zenohpico)
+	add_library(zenohcxx::zenohpico ALIAS zenohcxx_zenohpico)
+endif()
+
+# zenohcxx for zenohc dynamic
+if(TARGET zenohc::lib)
+	message(STATUS "defined lib target zenohcxx::zenohc::lib for zenohc::lib")
+	add_library(zenohcxx_zenohc_lib INTERFACE)
+	target_compile_definitions(zenohcxx_zenohc_lib INTERFACE ZENOHCXX_ZENOHC)
+    target_include_directories(zenohcxx_zenohc_lib INTERFACE "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@")
+	add_dependencies(zenohcxx_zenohc_lib zenohc::lib)
+	target_link_libraries(zenohcxx_zenohc_lib INTERFACE zenohc::lib)
+	add_library(zenohcxx::zenohc::lib ALIAS zenohcxx_zenohc_lib)
+endif()
+
+# zenohcxx for zenohc static
+if(TARGET zenohc::static)
+	message(STATUS "defined lib target zenohcxx::zenohc::static for zenohc::static")
+	add_library(zenohcxx_zenohc_static INTERFACE)
+	target_compile_definitions(zenohcxx_zenohc_static INTERFACE ZENOHCXX_ZENOHC)
+    target_include_directories(zenohcxx_zenohc_static INTERFACE "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@")
+	add_dependencies(zenohcxx_zenohc_static zenohc::static)
+	target_link_libraries(zenohcxx_zenohc_static INTERFACE zenohc::static)
+	add_library(zenohcxx::zenohc::static ALIAS zenohcxx_zenohc_static)
+endif()
