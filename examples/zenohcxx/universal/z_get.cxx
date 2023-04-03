@@ -19,12 +19,7 @@
 #include <mutex>
 
 #include "zenoh.hxx"
-
-#if defined(ZENOHCXX_ZENOHPICO)
-using namespace zenohpico;
-#elif defined(ZENOHCXX_ZENOHC)
-using namespace zenohc;
-#endif
+using namespace zenoh;
 
 int _main(int argc, char **argv) {
     const char *expr = "demo/example/**";

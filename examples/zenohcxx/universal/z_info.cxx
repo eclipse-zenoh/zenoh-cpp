@@ -15,12 +15,7 @@
 #include <iostream>
 
 #include "zenoh.hxx"
-
-#if defined(ZENOHCXX_ZENOHPICO)
-using namespace zenohpico;
-#elif defined(ZENOHCXX_ZENOHC)
-using namespace zenohc;
-#endif
+using namespace zenoh;
 
 void print_zid(const Id* id) {
     if (id) std::cout << id << std::endl;

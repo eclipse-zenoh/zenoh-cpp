@@ -11,14 +11,8 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-
 #include "zenoh.hxx"
-
-#if defined(ZENOHCXX_ZENOHPICO)
-using namespace zenohpico;
-#elif defined(ZENOHCXX_ZENOHC)
-using namespace zenohc;
-#endif
+using namespace zenoh;
 
 #undef NDEBUG
 #include <assert.h>

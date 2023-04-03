@@ -9,7 +9,7 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     configure_include_project(ZENOHCXX zenohcxx zenohcxx ".." zenohcxx "https://github.com/eclipse-zenoh/zenoh-cpp" "")
     add_custom_target(examples ALL)
 else()
-    message(STATUS "zenoh-cpp examples")
+    message(STATUS "zenoh-cxx examples")
     add_custom_target(examples)
 endif()
 
@@ -41,18 +41,18 @@ function(add_examples glob mode lib is_cxx)
 endfunction()
 
 # zenohc examples compiled with C compiler
-add_examples("${CMAKE_CURRENT_SOURCE_DIR}/c/zenohc/*.c" zenohc_c zenohc::lib FALSE)
+add_examples("${CMAKE_CURRENT_SOURCE_DIR}/zenohc/*.c" zenohc_c zenohc::lib FALSE)
 # zenohc examples compiled with C++ compiler
-add_examples("${CMAKE_CURRENT_SOURCE_DIR}/c/zenohc/*.c" zenohc_cxx zenohc::lib FALSE)
+add_examples("${CMAKE_CURRENT_SOURCE_DIR}/zenohc/*.c" zenohc_cxx zenohc::lib TRUE)
 
 # zenohpico examples compiled with C compiler
-add_examples("${CMAKE_CURRENT_SOURCE_DIR}/c/zenohpico/*.c" zenohpico_c zenohcxx::zenohpico FALSE)
+add_examples("${CMAKE_CURRENT_SOURCE_DIR}/zenohpico/*.c" zenohpico_c zenohcxx::zenohpico FALSE)
 # zenohpico examples compiled with C++ compiler
-add_examples("${CMAKE_CURRENT_SOURCE_DIR}/c/zenohpico/*.c" zenohpico_cxx zenohpico FALSE)
+add_examples("${CMAKE_CURRENT_SOURCE_DIR}/zenohpico/*.c" zenohpico_cxx zenohpico TRUE)
 
-# zenohcpp examples compiled with C++ compiler with zenohc
-add_examples("${CMAKE_CURRENT_SOURCE_DIR}/cpp/zenohc/*.cxx" zenohcxx_zenohc zenohcxx::zenohc::lib TRUE)
-add_examples("${CMAKE_CURRENT_SOURCE_DIR}/cpp/universal/*.cxx" zenohcxx_zenohc zenohcxx::zenohc::lib TRUE)
+# zenohcxx examples compiled with C++ compiler with zenohc
+add_examples("${CMAKE_CURRENT_SOURCE_DIR}/zenohcxx/zenohc/*.cxx" zenohcxx_zenohc zenohcxx::zenohc::lib TRUE)
+add_examples("${CMAKE_CURRENT_SOURCE_DIR}/zenohcxx/universal/*.cxx" zenohcxx_zenohc zenohcxx::zenohc::lib TRUE)
 
-# zenohcpp examples compiled with C++ compiler with zenohpico
-add_examples("${CMAKE_CURRENT_SOURCE_DIR}/cpp/universal/*.cxx" zenohcxx_zenohpico zenohcxx::zenohpico TRUE)
+# zenohcxx examples compiled with C++ compiler with zenohpico
+add_examples("${CMAKE_CURRENT_SOURCE_DIR}/zenohcxx/universal/*.cxx" zenohcxx_zenohpico zenohcxx::zenohpico TRUE)

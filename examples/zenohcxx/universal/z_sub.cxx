@@ -21,12 +21,7 @@
 #include <iostream>
 
 #include "zenoh.hxx"
-
-#if defined(ZENOHCXX_ZENOHPICO)
-using namespace zenohpico;
-#elif defined(ZENOHCXX_ZENOHC)
-using namespace zenohc;
-#endif
+using namespace zenoh;
 
 const char *kind_to_str(z_sample_kind_t kind);
 

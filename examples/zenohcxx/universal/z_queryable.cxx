@@ -23,12 +23,7 @@
 #endif
 
 #include "zenoh.hxx"
-
-#if defined(ZENOHCXX_ZENOHPICO)
-using namespace zenohpico;
-#elif defined(ZENOHCXX_ZENOHC)
-using namespace zenohc;
-#endif
+using namespace zenoh;
 
 const char *expr = "demo/example/zenoh-cpp-queryable";
 const char *value = "Queryable from CPP!";

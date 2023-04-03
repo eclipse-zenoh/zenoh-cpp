@@ -25,12 +25,7 @@
 #endif
 
 #include "zenoh.hxx"
-
-#if defined(ZENOHCXX_ZENOHPICO)
-using namespace zenohpico;
-#elif defined(ZENOHCXX_ZENOHC)
-using namespace zenohc;
-#endif
+using namespace zenoh;
 
 void printlocators(const StrArrayView &locs) {
     std::cout << "[";

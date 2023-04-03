@@ -25,8 +25,7 @@ C++ bindings are still so the Zenoh team will highly appreciate any help in test
 
 > :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in mantaining compatibility between the various git repositories in the Zenoh project.
 
-The zenoh C++ API is a set of C++ header files wrapping the [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) (and [zenoh-pico] in nearest future) library. 
-So to use zenoh-cpp, [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) should be available to your project.
+The Zenoh C++ API is a set of C++ header files wrapping the [zenoh-c] and [zenoh-pico] in libraries.
 
 To install [zenoh-cpp] do the following steps:
 
@@ -36,7 +35,8 @@ To install [zenoh-cpp] do the following steps:
    git clone https://github.com/eclipse-zenoh/zenoh-cpp.git
    ```
 
-2. Do install. Notice, that the [zenoh-c] is not required for installation, but it's necessary for building tests and examples. So instead of the main project which depends on [zenoh-c], it's faster to directly use `install` subproject.
+2. Do install. 
+   Neither [zenoh-c] nor [zenoh-pico] are required for the installation, but both are neccessary for building tests and examples. So, instead of the main project, it's faster to do install from "install" subproject directly.
 
    Use option `CMAKE_INSTALL_PREFIX` for specifying installation location. Without this parameter installation is performed to default system location `/usr/local` which requires root privileges.
 
@@ -45,11 +45,6 @@ To install [zenoh-cpp] do the following steps:
     cmake ../zenoh-cpp/install -DCMAKE_INSTALL_PREFIX=~/.local
     cmake --install .
     ```
-
-[zenoh-c]: https://github.com/eclipse-zenoh/zenoh-c
-[zenoh-cpp]: https://github.com/eclipse-zenoh/zenoh-cpp
-[zenoh-pico]: https://github.com/eclipse-zenoh/zenoh-pico
-[zenohcpp.h]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohcpp.h 
 
 ## Building and running tests
 
@@ -62,21 +57,31 @@ ctest
 
 ## Building the Examples
 
+The examples are splitted into two directories: C and C++ ones. 
+
+C examples are used to check compilation of [zenoj-c] and [zenoh-pico] libraries with C++ compiler. They are located in `zenohc` and `zenohpico` subdirectories of `examples` directory. To build them inidvidually use target name postfixes `zenohc_c`, `zenohc_cxx`, `zenohpico_c`, `zenohpico_cxx` after example name. I.e. CMake target `z_get_zenohpico_cxx` builds example `examples/zenohpico/z_get.c` with C++ compiler.
+
+C++ examples demonstrates usage of Zenoh C++ libbrary. They are located in `examples/zenohcxx` directory. Subdirectory `universal` contains examples buildable with both [zenoh-c] and [zenohpico]. The `zenohc` subdirectory contains examples with zenoh-c specific functionality. The name postfix for targets of these examples is `zenohcxx_zenohc` and `zenohcxx_zenohpico`. I.e. target `z_get_zenohcxx_zenohpico` builds example `examples/zenohcxx/universal/z_get.cxx` with `zenohpico` library.
+
+The examples can be built in two ways. One is to select `examples` as a build target of the main project (assuming here that the current directory is side-by-side with zenoh-cpp directory):
+
 ```bash
-mkdir -p build && cd build 
-cmake ../zenoh-cpp
-cmake --build . --target examples
+$ cmake ../zenoh-cpp
+$ cmake --build . --target examples
 ```
 
-You may also directly build the `examples` project, which includes `zenoh-cpp` as subproject in this case.
+Second way is to directly build `examples` as a root project:
 
 ```bash
-mkdir -p build && cd build 
-cmake ../zenoh-cpp/examples
-cmake --build .
+$ cmake ../zenoh-c/examples
+$ cmake --build .
 ```
+
+You may also use `--target <example_name>` if you wish to only build a specific example (see target names convention above).
 
 ## Running the Examples
+
+Change current directory to build variant you want (`zenohcxx_zenohc` or `zenohcxx_zenohpico`)
 
 ### Basic Pub/Sub Example
 ```bash
@@ -107,11 +112,28 @@ cmake --build .
 
 ## Library usage and API Conventions
 
-To use the library include the [zenohcpp.h] header. Other header files are not guaranteed to keep their names in future.
+To use the library include the [zenoh.hxx] header and use namespace `zenoh`. Depening on CMake library target you project depends on (`zenohcxx::zenohpico`, `zenohcxx::zenohc::lib` or `zehohcxx::zenohc::static`) the correct namespace (`zenohpico` or `zenohc`) is aliased to `zenoh` namespace.
+
 ```C++
-#include "zenohcpp.h"
+#include "zenoh.hxx"
 using namespace zenoh;
 ```
+
+You can also use headers [zenohc.hxx] and [zenohpico.hxx] directly 
+
+```C++
+#include "zenohc.hxx"
+using namespace zenohc;
+```
+
+or 
+
+```C++
+#include "zenohpico.hxx"
+using namespace zenohpico;
+```
+
+The library API is not documented yet, but the [api.hxx] file contains commented class definitions and can be used for reference.
 
 There are three main kinds of wrapper classes / structures provided by [zenoh-cpp]. They are:
 
@@ -123,9 +145,7 @@ struct PutOptions : public Copyable<::z_put_options_t> {
 }
 ```
 
-These structures can be freely passed by value. They exacly matches corresponging [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) structures (`z_put_options_t` in this case)
-and adds some necessary constructors and methods. For example `PutOptions` default constructor calls the zenoh function
-`z_put_options_default()`.
+These structures can be freely passed by value. They exacly matches corresponging C-library structures (`z_put_options_t` in this case) and adds some necessary constructors and methods. For example `PutOptions` default constructor calls the zenohc/zenohpico function `z_put_options_default()`.
 
 There are some copyable structures with `View` postfix:
 
@@ -145,14 +165,23 @@ class Config : public Owned<::z_owned_config_t> {
 }
 ```
 
-Classes which protects corresponding [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) so-called `owned` structures from copying, allowing move semantic only. Corresponding utility functions like `z_check`, `z_null`, `z_drop` are integrated into the `Owned` base template.
+Classes which protects corresponding so-called `owned` structures from copying, allowing move semantic only. Corresponding utility functions like `z_check`, `z_null`, `z_drop` are integrated into the `Owned` base template.
 
 * Closures
 
-It's classes representing [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c) callback structures:
+It's classes representing callback structures:
 ```C++
 typedef ClosureMoveParam<::z_owned_closure_reply_t, ::z_owned_reply_t, Reply> ClosureReply;
 typedef ClosureConstPtrParam<::z_owned_closure_query_t, ::z_query_t, Query> ClosureQuery;
 ```
 
 They allows to wrap C++ invocable objects (fuctions, lambdas, classes with operator() overloaded) and pass them as callbacks to zenoh.
+
+
+[zenoh-c]: https://github.com/eclipse-zenoh/zenoh-c
+[zenoh-cpp]: https://github.com/eclipse-zenoh/zenoh-cpp
+[zenoh-pico]: https://github.com/eclipse-zenoh/zenoh-pico
+[zenoh.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenoh.hxx 
+[zenohc.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohc.hxx 
+[zenohpico.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohpico.hxx 
+[api.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohcxx/api.hxx 
