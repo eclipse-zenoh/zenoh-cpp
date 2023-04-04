@@ -25,7 +25,7 @@ C++ bindings are still so the Zenoh team will highly appreciate any help in test
 
 > :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in mantaining compatibility between the various git repositories in the Zenoh project.
 
-The Zenoh C++ API is a set of C++ header files wrapping the [zenoh-c] and [zenoh-pico] in libraries.
+The Zenoh C++ API is a set of C++ header files wrapping the [zenoh-c] and [zenohpico] in libraries.
 
 To install [zenoh-cpp] do the following steps:
 
@@ -36,7 +36,7 @@ To install [zenoh-cpp] do the following steps:
    ```
 
 2. Do install. 
-   Neither [zenoh-c] nor [zenoh-pico] are required for the installation, but both are neccessary for building tests and examples. So, instead of the main project, it's faster to do install from "install" subproject directly.
+   Neither [zenoh-c] nor [zenohpico] are required for the installation, but both are neccessary for building tests and examples. So, instead of the main project, it's faster to do install from "install" subproject directly.
 
    Use option `CMAKE_INSTALL_PREFIX` for specifying installation location. Without this parameter installation is performed to default system location `/usr/local` which requires root privileges.
 
@@ -59,7 +59,7 @@ ctest
 
 The examples are splitted into two directories: C and C++ ones. 
 
-C examples are used to check compilation of [zenoj-c] and [zenoh-pico] libraries with C++ compiler. They are located in `zenohc` and `zenohpico` subdirectories of `examples` directory. To build them inidvidually use target name postfixes `zenohc_c`, `zenohc_cxx`, `zenohpico_c`, `zenohpico_cxx` after example name. I.e. CMake target `z_get_zenohpico_cxx` builds example `examples/zenohpico/z_get.c` with C++ compiler.
+C examples are used to check compilation of [zenoh-c] and [zenohpico] libraries with C++ compiler. They are located in `zenohc` and `zenohpico` subdirectories of `examples` directory. To build them inidvidually use target name postfixes `zenohc_c`, `zenohc_cxx`, `zenohpico_c`, `zenohpico_cxx` after example name. I.e. CMake target `z_get_zenohpico_cxx` builds example `examples/zenohpico/z_get.c` with C++ compiler.
 
 C++ examples demonstrates usage of Zenoh C++ libbrary. They are located in `examples/zenohcxx` directory. Subdirectory `universal` contains examples buildable with both [zenoh-c] and [zenohpico]. The `zenohc` subdirectory contains examples with zenoh-c specific functionality. The name postfix for targets of these examples is `zenohcxx_zenohc` and `zenohcxx_zenohpico`. I.e. target `z_get_zenohcxx_zenohpico` builds example `examples/zenohcxx/universal/z_get.cxx` with `zenohpico` library.
 
@@ -112,7 +112,7 @@ Change current directory to build variant you want (`zenohcxx_zenohc` or `zenohc
 
 ## Library usage and API Conventions
 
-To use the library include the [zenoh.hxx] header and use namespace `zenoh`. Depening on CMake library target you project depends on (`zenohcxx::zenohpico`, `zenohcxx::zenohc::lib` or `zehohcxx::zenohc::static`) the correct namespace (`zenohpico` or `zenohc`) is aliased to `zenoh` namespace.
+To use the library include the [zenoh.hxx] header and use namespace `zenoh`. Depening on CMake library target the project depends on (`zenohcxx::zenohpico`, `zenohcxx::zenohc::lib` or `zehohcxx::zenohc::static`) the correct namespace (`zenohpico` or `zenohc`) is aliased to `zenoh` namespace.
 
 ```C++
 #include "zenoh.hxx"
@@ -180,7 +180,7 @@ They allows to wrap C++ invocable objects (fuctions, lambdas, classes with opera
 
 [zenoh-c]: https://github.com/eclipse-zenoh/zenoh-c
 [zenoh-cpp]: https://github.com/eclipse-zenoh/zenoh-cpp
-[zenoh-pico]: https://github.com/eclipse-zenoh/zenoh-pico
+[zenohpico]: https://github.com/eclipse-zenoh/zenoh-pico
 [zenoh.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenoh.hxx 
 [zenohc.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohc.hxx 
 [zenohpico.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohpico.hxx 
