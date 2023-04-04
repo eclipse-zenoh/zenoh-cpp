@@ -41,11 +41,11 @@ jobs:
           cmake ../examples -DCMAKE_BUILD_TYPE=Debug
           cmake --build . --config Debug
 
-      - name: make examples with zenoh-c as installed package
+      - name: make examples with zenoh-cpp as installed package
         shell: bash
         run: |
           mkdir -p build_examples_findproj && cd build_examples_findproj
-          cmake ../examples -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_FORCE_TYPE=PACKAGE
+          cmake ../examples -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../local -DZENOHCXX_SOURCE=PACKAGE
           cmake --build . --config Release
 
       - name: make tests
