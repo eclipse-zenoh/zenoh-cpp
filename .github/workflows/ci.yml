@@ -24,7 +24,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p build_install && cd build_install
-          cmake ../install -DCMAKE_INSTALL_PREFIX=../local
+          cmake ../install -DCMAKE_INSTALL_PREFIX=~/local
           cmake --install .
 
       - name: make examples
@@ -45,7 +45,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p build_examples_findproj && cd build_examples_findproj
-          cmake ../examples -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../local -DZENOHCXX_SOURCE=PACKAGE
+          cmake ../examples -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHCXX_SOURCE=PACKAGE
           cmake --build . --config Release
 
       - name: make tests
