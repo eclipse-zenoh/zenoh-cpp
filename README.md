@@ -16,7 +16,8 @@ Check the website [zenoh.io](http://zenoh.io) and the [roadmap](https://github.c
 
 # C++ API
 
-This repository provides a C++ binding based on the [Zenoh C API](https://github.com/eclipse-zenoh/zenoh-c).
+The Zenoh C++ API is a C++ bindings for [zenoh-c] and [zenohpico] libraries. The library is headers only.
+
 
 C++ bindings are still so the Zenoh team will highly appreciate any help in testing them on various platforms, system architecture, etc. and to report any issue you might encounter. This will help in greatly improving its maturity and robustness.
 
@@ -24,8 +25,6 @@ C++ bindings are still so the Zenoh team will highly appreciate any help in test
 ## How to build and install it 
 
 > :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in mantaining compatibility between the various git repositories in the Zenoh project.
-
-The Zenoh C++ API is a set of C++ header files wrapping the [zenoh-c] and [zenohpico] in libraries.
 
 To install [zenoh-cpp] do the following steps:
 
@@ -36,7 +35,7 @@ To install [zenoh-cpp] do the following steps:
    ```
 
 2. Do install. 
-   Neither [zenoh-c] nor [zenohpico] are required for the installation, but both are neccessary for building tests and examples. So, instead of the main project, it's faster to do install from "install" subproject directly.
+   Neither [zenoh-c] nor [zenohpico] are required for the installation, but both are neccessary for building tests and examples. So, instead of the main project, it's faster to do install from "install" subproject.
 
    Use option `CMAKE_INSTALL_PREFIX` for specifying installation location. Without this parameter installation is performed to default system location `/usr/local` which requires root privileges.
 
@@ -57,11 +56,11 @@ ctest
 
 ## Building the Examples
 
-The examples are splitted into two directories: C and C++ ones. 
+The examples are splitted into three directories: C examples in directories `zenohc` and `zenohpico` and C++ examples in directory `zenohcxx`. 
 
-C examples are used to check compilation of [zenoh-c] and [zenohpico] libraries with C++ compiler. They are located in `zenohc` and `zenohpico` subdirectories of `examples` directory. To build them inidvidually use target name postfixes `zenohc_c`, `zenohc_cxx`, `zenohpico_c`, `zenohpico_cxx` after example name. I.e. CMake target `z_get_zenohpico_cxx` builds example `examples/zenohpico/z_get.c` with C++ compiler.
+C examples are used to check compilation of [zenoh-c] and [zenohpico] libraries with C++ compiler. To build them inidvidually use target name postfixes `zenohc_c`, `zenohc_cxx`, `zenohpico_c`, `zenohpico_cxx` after example name. I.e. CMake target `z_get_zenohpico_cxx` builds example `examples/zenohpico/z_get.c` with C++ compiler.
 
-C++ examples demonstrates usage of Zenoh C++ libbrary. They are located in `examples/zenohcxx` directory. Subdirectory `universal` contains examples buildable with both [zenoh-c] and [zenohpico]. The `zenohc` subdirectory contains examples with zenoh-c specific functionality. The name postfix for targets of these examples is `zenohcxx_zenohc` and `zenohcxx_zenohpico`. I.e. target `z_get_zenohcxx_zenohpico` builds example `examples/zenohcxx/universal/z_get.cxx` with `zenohpico` library.
+C++ examples demonstrates usage of Zenoh C++ library. Subdirectory `universal` contains examples buildable with both [zenoh-c] and [zenohpico]. The `zenohc` subdirectory contains examples with zenoh-c specific functionality. The name postfix for CMake targets are `zenohcxx_zenohc` and `zenohcxx_zenohpico`. I.e. target `z_get_zenohcxx_zenohpico` builds example `examples/zenohcxx/universal/z_get.cxx` with `zenohpico` library.
 
 The examples can be built in two ways. One is to select `examples` as a build target of the main project (assuming here that the current directory is side-by-side with zenoh-cpp directory):
 
@@ -70,7 +69,7 @@ $ cmake ../zenoh-cpp
 $ cmake --build . --target examples
 ```
 
-Second way is to directly build `examples` as a root project:
+Second way is to build `examples` as a root project. This demonstrates the ways to add dependency from zenoh-cpp into customer project.
 
 ```bash
 $ cmake ../zenoh-c/examples
