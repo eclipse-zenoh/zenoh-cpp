@@ -162,12 +162,12 @@ template <typename Z_STR_ARRAY_T>
 struct _StrArrayView : Copyable<Z_STR_ARRAY_T> {
     typedef decltype(Z_STR_ARRAY_T::val) VALTYPE;
     using Copyable<Z_STR_ARRAY_T>::Copyable;
-    _StrArrayView() : Copyable<Z_STR_ARRAY_T>({.val = nullptr, .len = 0}) {}
+    _StrArrayView() : Copyable<Z_STR_ARRAY_T>({.len = 0, .val = nullptr}) {}
     _StrArrayView(const std::vector<const char*>& v)
-        : Copyable<Z_STR_ARRAY_T>({.val = const_cast<VALTYPE>(&v[0]), .len = v.size()}) {}
-    _StrArrayView(const char** v, size_t len) : Copyable<Z_STR_ARRAY_T>({.val = const_cast<VALTYPE>(v), .len = len}) {}
+        : Copyable<Z_STR_ARRAY_T>({.len = v.size(), .val = const_cast<VALTYPE>(&v[0])}) {}
+    _StrArrayView(const char** v, size_t len) : Copyable<Z_STR_ARRAY_T>({.len = len, .val = const_cast<VALTYPE>(v)}) {}
     _StrArrayView(const char* const* v, size_t len)
-        : Copyable<Z_STR_ARRAY_T>({.val = const_cast<VALTYPE>(v), .len = len}) {}
+        : Copyable<Z_STR_ARRAY_T>({.len = len, .val = const_cast<VALTYPE>(v)}) {}
     const char* operator[](size_t pos) const { return Copyable<Z_STR_ARRAY_T>::val[pos]; }
     size_t get_len() const { return Copyable<Z_STR_ARRAY_T>::len; }
 };
@@ -183,14 +183,14 @@ class BytesView : public Copyable<::z_bytes_t> {
     using Copyable::Copyable;
     BytesView(nullptr_t) : Copyable(init(nullptr, 0)) {}
     BytesView(const void* s, size_t _len) : Copyable(init(reinterpret_cast<const uint8_t*>(s), _len)) {}
-    BytesView(const char* s) : Copyable({.start = reinterpret_cast<const uint8_t*>(s), .len = s ? strlen(s) : 0}) {}
+    BytesView(const char* s) : Copyable({.len = s ? strlen(s) : 0, .start = reinterpret_cast<const uint8_t*>(s)}) {}
     template <typename T>
     BytesView(const std::vector<T>& v)
-        : Copyable({.start = reinterpret_cast<const uint8_t*>(&v[0]), .len = v.size() * sizeof(T)}) {}
+        : Copyable({.len = v.size() * sizeof(T), .start = reinterpret_cast<const uint8_t*>(&v[0])}) {}
     BytesView(const std::string_view& s)
-        : Copyable({.start = reinterpret_cast<const uint8_t*>(s.data()), .len = s.length()}) {}
+        : Copyable({.len = s.length(), .start = reinterpret_cast<const uint8_t*>(s.data())}) {}
     BytesView(const std::string& s)
-        : Copyable({.start = reinterpret_cast<const uint8_t*>(s.data()), .len = s.length()}) {}
+        : Copyable({.len = s.length(), .start = reinterpret_cast<const uint8_t*>(s.data())}) {}
     std::string_view as_string_view() const { return std::string_view(reinterpret_cast<const char*>(start), len); }
     bool operator==(const BytesView& v) const { return as_string_view() == v.as_string_view(); }
     bool operator!=(const BytesView& v) const { return !operator==(v); }
