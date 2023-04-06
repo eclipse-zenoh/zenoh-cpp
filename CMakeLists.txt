@@ -3,7 +3,7 @@ project(
 	zenohcxx
 	VERSION 0.7.0.1
 	DESCRIPTION "C++ bindings for Zenoh"
-	HOMEPAGE_URL "https://github.com/ZettaScaleLabs/zenoh-cpp"
+	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-cpp"
 	LANGUAGES C CXX
 )
 

@@ -30,7 +30,7 @@
 namespace zenohcxx {
 
 //
-// Template base classes implememting common functionality
+// Template base classes implementing common functionality
 //
 
 //

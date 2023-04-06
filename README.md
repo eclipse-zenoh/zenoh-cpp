@@ -72,7 +72,7 @@ $ cmake --build . --target examples
 Second way is to build `examples` as a root project. This demonstrates the ways to add dependency from zenoh-cpp into customer project.
 
 ```bash
-$ cmake ../zenoh-c/examples
+$ cmake ../zenoh-cpp/examples
 $ cmake --build .
 ```
 
@@ -109,30 +109,58 @@ Change current directory to the variant you want (`examples/zenohcxx_zenohc` or 
 ./z_pub_thgr_cpp
 ```
 
-## Library usage and API Conventions
+## Library usage
 
-To use the library include the [zenoh.hxx] header and use namespace `zenoh`. Depening on CMake library target used (`zenohcxx::zenohpico`, `zenohcxx::zenohc::lib` or `zehohcxx::zenohc::static`) the correct namespace (`zenohpico` or `zenohc`) is aliased to `zenoh` namespace.
+The zenoh-cpp is headers only library. If you use CMake, the simplest way to use it is
 
-```C++
-#include "zenoh.hxx"
-using namespace zenoh;
-```
+- include zenoh-cpp into your CMake project. This can be done with [add_subdirectory], [find_package] or [FetchContent] CMake commands.
+  ```
+  add_subdirectory(../zenoh-cpp)
+  ```
+  ```
+  find_package(zenohcxx)
+  ```
+  ```
+  FetchContent_Declare(zenohcxx GIT_REPOSITORY https://github.com/eclipse-zenoh/zenoh-cpp)
+  FetchContent_MakeAvailable(zenohcx)
+  ```
+   See also CMakeLists.txt in `examples` project which demonstrates all these variants in function `configure_include_project`.
 
-You can also use headers [zenohc.hxx] and [zenohpico.hxx] directly 
+- include [zenoh-c] or [zenohpico] into your CMake project in the same way
 
-```C++
-#include "zenohc.hxx"
-using namespace zenohc;
-```
+- add dependency on zenoh-cpp to your project:
+   ```
+   target_link_libraries(yourproject PUBLIC zenohcxx::zenohpico)
+   ```
+   ```
+   target_link_libraries(yourproject PUBLIC zenohcxx::zenohc::lib)
+   ```
+   ```
+   target_link_libraries(yourproject PUBLIC zenohcxx::zenohc::static)
+   ```
 
-or 
+- include the [zenoh.hxx] header and use namespace `zenoh`. Depending on preprocessor setting in library target the correct namespace (`zenohpico` or `zenohc`) is aliased to `zenoh` namespace. This allows to write code compatible with both libraries without changes.
+    ```C++
+    #include "zenoh.hxx"
+    using namespace zenoh;
+    ```
+    or use headers [zenohc.hxx] or [zenohpico.hxx] directly 
+    ```C++
+    #include "zenohc.hxx"
+    using namespace zenohc;
+    ```
+    ```C++
+    #include "zenohpico.hxx"
+    using namespace zenohpico;
+    ```
 
-```C++
-#include "zenohpico.hxx"
-using namespace zenohpico;
-```
+## Library API
+
+### Documentation
 
 The library API is not documented yet, but the [api.hxx] file contains commented class definitions and can be used for reference.
+
+### Conventions
 
 There are three main kinds of wrapper classes / structures provided by [zenoh-cpp]. They are:
 
@@ -184,3 +212,7 @@ They allows to wrap C++ invocable objects (fuctions, lambdas, classes with opera
 [zenohc.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohc.hxx 
 [zenohpico.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohpico.hxx 
 [api.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohcxx/api.hxx 
+[add_subdirectory]: https://cmake.org/cmake/help/latest/command/add_subdirectory.html
+[find_package]: https://cmake.org/cmake/help/latest/command/find_package.html
+[FetchContent]: https://cmake.org/cmake/help/latest/module/FetchContent.html
+
