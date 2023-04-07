@@ -29,18 +29,25 @@ int _main(int argc, char **argv) {
     size_t len = atoi(argv[1]);
     std::vector<char> payload(len, 1);
 
+    const char *locator = nullptr;
+    if (argc > 2) locator = argv[2];
+
     Config config;
+    if (locator) {
 #ifdef ZENOHCXX_ZENOHC
-    if (argc > 2) {
-        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[2])) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
+        auto locator_json_str_list = std::string("[\"") + locator + "\"]";
+        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str()))
+#elif ZENOHCXX_ZENOHPICO
+        if (!config.insert(Z_CONFIG_PEER_KEY, locator))
+#else
+#error "Unknown zenoh backend"
+#endif
+        {
+            std::cout << "Invalid locator: " << locator << std::endl;
+            std::cout << "Expected value in format: tcp/192.168.64.3:7447" << std::endl;
             exit(-1);
         }
     }
-#endif
 
     printf("Opening session...\n");
     auto session = std::get<Session>(open(std::move(config)));
