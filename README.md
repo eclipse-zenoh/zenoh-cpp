@@ -56,11 +56,7 @@ ctest
 
 ## Building the Examples
 
-The examples are splitted into three directories: C examples in directories `zenohc` and `zenohpico` and C++ examples in directory `zenohcxx`. 
-
-C examples are used to check compilation of [zenoh-c] and [zenohpico] libraries with C++ compiler. To build them inidvidually use target name postfixes `zenohc_c`, `zenohc_cxx`, `zenohpico_c`, `zenohpico_cxx` after example name. I.e. CMake target `z_get_zenohpico_cxx` builds example `examples/zenohpico/z_get.c` with C++ compiler and places result into `build/examples/zenohpico_cxx/z_get`
-
-C++ examples demonstrates usage of Zenoh C++ library. Subdirectory `universal` contains examples buildable with both [zenoh-c] and [zenohpico]. The `zenohc` subdirectory contains examples with zenoh-c specific functionality. The name postfix for CMake targets are `zenohcxx_zenohc` and `zenohcxx_zenohpico`. I.e. target `z_get_zenohcxx_zenohpico` builds example `examples/zenohcxx/universal/z_get.cxx` with `zenohpico` library into `build\examples\zenohcxx_zenohpico\z_get`.
+Examples are splitted into two subdirectories. Subdirectory `universal` contains examples buildable with both [zenoh-c] and [zenohpico]. The `zenohc` subdirectory contains examples with zenoh-c specific functionality. The name postfix for CMake targets are `zenohc` and `zenohpico`. I.e. target `z_get_zenohpico` builds example `examples/universal/z_get.cxx` with `zenohpico` library into `build\examples\zenohpico\z_get`.
 
 The examples can be built in two ways. One is to select `examples` as a build target of the main project (assuming here that the current directory is side-by-side with zenoh-cpp directory):
 
@@ -80,7 +76,7 @@ You may also use `--target <example_name>` if you wish to only build a specific 
 
 ## Running the Examples
 
-Change current directory to the variant you want (`examples/zenohcxx_zenohc` or `examples/zenohcxx_zenohpico` in the build directory)
+Change current directory to the variant you want (`examples/zenohc` or `examples/zenohpico` in the build directory)
 
 ### Basic Pub/Sub Example
 ```bash
