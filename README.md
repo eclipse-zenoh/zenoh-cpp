@@ -16,7 +16,7 @@ Check the website [zenoh.io](http://zenoh.io) and the [roadmap](https://github.c
 
 # C++ API
 
-The Zenoh C++ API is a C++ bindings for [zenoh-c] and [zenohpico] libraries. The library is headers only.
+The Zenoh C++ API is a C++ bindings for [zenoh-c] and [zenoh-pico] libraries. The library is headers only.
 
 
 C++ bindings are still so the Zenoh team will highly appreciate any help in testing them on various platforms, system architecture, etc. and to report any issue you might encounter. This will help in greatly improving its maturity and robustness.
@@ -35,7 +35,7 @@ To install [zenoh-cpp] do the following steps:
    ```
 
 2. Do install. 
-   Neither [zenoh-c] nor [zenohpico] are required for the installation, but both are neccessary for building tests and examples. So, instead of the main project, it's faster to do install from "install" subproject.
+   Neither [zenoh-c] nor [zenoh-pico] are required for the installation, but both are neccessary for building tests and examples. So, instead of the main project, it's faster to do install from "install" subproject.
 
    Use option `CMAKE_INSTALL_PREFIX` for specifying installation location. Without this parameter installation is performed to default system location `/usr/local` which requires root privileges.
 
@@ -56,7 +56,7 @@ ctest
 
 ## Building the Examples
 
-Examples are splitted into two subdirectories. Subdirectory `universal` contains examples buildable with both [zenoh-c] and [zenohpico]. The `zenohc` subdirectory contains examples with zenoh-c specific functionality. The name postfix for CMake targets are `zenohc` and `zenohpico`. I.e. target `z_get_zenohpico` builds example `examples/universal/z_get.cxx` with `zenohpico` library into `build\examples\zenohpico\z_get`.
+Examples are splitted into two subdirectories. Subdirectory `universal` contains examples buildable with both [zenoh-c] and [zenoh-pico]. The `zenohc` subdirectory contains examples with zenoh-c specific functionality. The name postfix for CMake targets are `zenohc` and `zenohpico`. I.e. target `z_get_zenohpico` builds example `examples/universal/z_get.cxx` with `zenohpico` library into `build\examples\zenohpico\z_get`.
 
 The examples can be built in two ways. One is to select `examples` as a build target of the main project (assuming here that the current directory is side-by-side with zenoh-cpp directory):
 
@@ -118,11 +118,11 @@ The zenoh-cpp is headers only library. If you use CMake, the simplest way to use
   ```
   ```
   FetchContent_Declare(zenohcxx GIT_REPOSITORY https://github.com/eclipse-zenoh/zenoh-cpp)
-  FetchContent_MakeAvailable(zenohcx)
+  FetchContent_MakeAvailable(zenohcxx)
   ```
    See also CMakeLists.txt in `examples` project which demonstrates all these variants in function `configure_include_project`.
 
-- include [zenoh-c] or [zenohpico] into your CMake project in the same way
+- include [zenoh-c] or [zenoh-pico] into your CMake project in the same way
 
 - add dependency on zenoh-cpp to your project:
    ```
@@ -203,7 +203,7 @@ They allows to wrap C++ invocable objects (fuctions, lambdas, classes with opera
 
 [zenoh-c]: https://github.com/eclipse-zenoh/zenoh-c
 [zenoh-cpp]: https://github.com/eclipse-zenoh/zenoh-cpp
-[zenohpico]: https://github.com/eclipse-zenoh/zenoh-pico
+[zenoh-pico]: https://github.com/eclipse-zenoh/zenoh-pico
 [zenoh.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenoh.hxx 
 [zenohc.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohc.hxx 
 [zenohpico.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohpico.hxx 

@@ -14,7 +14,7 @@
 
 #
 # DO NOT add include_guard() to this file
-# It have to be reincluded multiple times on each 'include_project' call to restore
+# It has to be reincluded multiple times on each 'include_project' call to restore
 # functions and macros definitions
 #
 
