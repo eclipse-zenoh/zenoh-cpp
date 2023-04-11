@@ -17,9 +17,17 @@
 #include "zenoh.hxx"
 using namespace zenoh;
 
+#ifdef ZENOHCXX_ZENOHC
+const char *default_value = "Put from C++ zenoh-c!";
+#elif ZENOHCXX_ZENOHPICO
+const char *default_value = "Put from C++ zenoh-pico!";
+#else
+#error "Unknown zenoh backend"
+#endif
+
 int _main(int argc, char **argv) {
     const char *keyexpr = "demo/example/zenoh-cpp-put";
-    const char *value = "Put from CPP!";
+    const char *value = default_value;
     const char *locator = nullptr;
 
     if (argc > 1) keyexpr = argv[1];
