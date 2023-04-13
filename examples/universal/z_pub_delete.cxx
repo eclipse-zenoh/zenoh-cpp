@@ -17,8 +17,16 @@
 #include "zenoh.hxx"
 using namespace zenoh;
 
+#ifdef ZENOHCXX_ZENOHC
+const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-c-pub";
+#elif ZENOHCXX_ZENOHPICO
+const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-pico-pub";
+#else
+#error "Unknown zenoh backend"
+#endif
+
 int _main(int argc, char **argv) {
-    const char *keyexpr = "demo/example/zenoh-cpp-pub";
+    const char *keyexpr = default_keyexpr;
     const char *locator = nullptr;
 
     if (argc > 1) keyexpr = argv[1];
