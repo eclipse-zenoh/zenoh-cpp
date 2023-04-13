@@ -25,10 +25,11 @@
 #include "zenoh.hxx"
 using namespace zenoh;
 
-const char *expr = "demo/example/zenoh-cpp-queryable";
 #ifdef ZENOHCXX_ZENOHC
+const char *expr = "demo/example/zenoh-cpp-zenoh-c-queryable";
 const char *value = "Queryable from C++ zenoh-c!";
 #elif ZENOHCXX_ZENOHPICO
+const char *expr = "demo/example/zenoh-cpp-zenoh-pico-queryable";
 const char *value = "Queryable from C++ zenoh-pico!";
 #else
 #error "Unknown zenoh backend"
