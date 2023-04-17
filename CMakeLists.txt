@@ -1,164 +1,66 @@
-cmake_minimum_required(VERSION 3.16)
-include(ExternalProject)
+cmake_minimum_required(VERSION 3.20)
 project(
-	zenohcpp
+	zenohcxx
 	VERSION 0.7.0.1
 	DESCRIPTION "C++ bindings for Zenoh"
-	HOMEPAGE_URL "https://github.com/ZettaScaleLabs/zenoh-cpp"
+	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-cpp"
 	LANGUAGES C CXX
 )
 
-#
-# Setting variables depending on build type and destination platform
-#
-if(NOT CMAKE_BUILD_TYPE)
-	set(default_build_type "RelWithDebInfo")
-	message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
-	set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
-		STRING "Choose the type of build." FORCE)
-
-	# Set the possible values of build type for cmake-gui
-	set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-		"Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/debug")
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/release")
-elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/release")
-elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
-	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/release")
-else()
-	message(FATAL_ERROR "Unknown CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
-endif()
-message(STATUS "build type: ${CMAKE_BUILD_TYPE}")
-
-#
-# Give priority to install directory when looking for zenoh-c
-# Useful for development when older zenohc version may be installed in system
-#
-# TODO: "if( NOT TARGET" below should be not necessary 
-# (see https://cmake.org/cmake/help/latest/command/find_package.html, search for "override the order")
-# but in fact cmake fails without it when zenohc is present both in CMAKE_INSTALL_PREFIX and in /usr/local.
-# Consider is it still necessary after next bumping up cmake version
-#
-function(find_package_dev_first package_name expect_target)
-	find_package(${package_name} ${CMAKE_PROJECT_VERSION} PATHS ${CMAKE_INSTALL_PREFIX} NO_DEFAULT_PATH QUIET)
-	if(NOT TARGET ${expect_target})
-		find_package(${package_name} ${CMAKE_PROJECT_VERSION} QUIET)
-	endif()
-endfunction()
-
-find_package_dev_first(zenohc zenohc::lib)
-
-add_library(zenohcpp INTERFACE)
-add_dependencies(zenohcpp zenohc::lib)
-target_include_directories(zenohcpp INTERFACE "${CMAKE_SOURCE_DIR}/include")
-
-function(add_libraries target)
-	target_link_libraries(${target} PUBLIC zenohc::lib)
-	if(APPLE)
-		find_library(FFoundation Foundation)
-		find_library(FSecurity Security)
-		target_link_libraries(${target} PUBLIC ${FFoundation} ${FSecurity})
-	elseif(UNIX)
-		target_link_libraries(${target} PUBLIC rt pthread m dl)
-	elseif(WIN32)
-		target_link_libraries(${target} PUBLIC ws2_32 crypt32 secur32 bcrypt ncrypt userenv ntdll iphlpapi runtimeobject)
-	endif()
-
-endfunction()
-
-function(add_example file suffix is_cpp)
-	get_filename_component(filename ${file} NAME_WE)
-	set(target ${filename}_${suffix})
-	add_executable(${target} EXCLUDE_FROM_ALL ${file})
-	add_dependencies(examples ${target})
-	if (${is_cpp})
-		target_link_libraries(${target} PUBLIC zenohcpp)
-		set_property(TARGET ${target} PROPERTY LANGUAGE CXX)
-		set_property(TARGET ${target} PROPERTY CXX_STANDARD 17)
-	else()
-		set_property(TARGET ${target} PROPERTY LANGUAGE C)
-		set_property(TARGET ${target} PROPERTY C_STANDARD 11)
-	endif()
-	set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples")
-	add_libraries(${target})
-endfunction()
-
-function(add_examples glob suffix is_cpp)
-	file(GLOB files ${glob})
-	foreach(file ${files})
-		add_example(${file} ${suffix} ${is_cpp})
-	endforeach()
-endfunction()
-
-function(add_test_instance file)
-	get_filename_component(filename ${file} NAME_WE)
-	set(target ${filename})
-	add_executable(${target} EXCLUDE_FROM_ALL ${file})
-	add_dependencies(tests ${target})
-	target_link_libraries(${target} PUBLIC zenohcpp)
-	set_property(TARGET ${target} PROPERTY LANGUAGE CXX)
-	set_property(TARGET ${target} PROPERTY CXX_STANDARD 17)
-	set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
-	add_libraries(${target})
-	add_test(NAME "test_${filename}" COMMAND ${target})
-endfunction()
-
-function(add_tests glob)
-	file(GLOB files ${glob})
-	foreach(file ${files})
-		add_test_instance(${file})
-	endforeach()
-endfunction()
-
-if(APPLE OR UNIX OR WIN32)
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+	include(cmake/helpers.cmake)
 	enable_testing()
-	add_custom_target(tests)
-	add_tests("${CMAKE_SOURCE_DIR}/tests/*.cpp")
-
-	add_custom_target(examples)
-	# C examples compiled with C compiler
-	add_examples("${CMAKE_SOURCE_DIR}/examples/c/*.c" "c" FALSE)
-	# C examples compiled with C++ compiler
-	add_examples("${CMAKE_SOURCE_DIR}/examples/c/*.c" "c_cpp" TRUE)
-	# C++ examples compiled with C++ compiler
-	add_examples("${CMAKE_SOURCE_DIR}/examples/cpp/*.cpp" "cpp" TRUE)
-else()
-	message(WARNING "You platform doesn't seem to support building the examples or tests.")
+	set_default_build_type(Release)
+	configure_include_project(ZENOHCXX_ZENOHPICO zenohpico zenohpico "../zenoh-pico" zenohpico "https://github.com/eclipse-zenoh/zenoh-pico" "")
+	configure_include_project(ZENOHCXX_ZENOHC zenohc zenohc::lib "../zenoh-c" zenohc "https://github.com/eclipse-zenoh/zenoh-c" "")
 endif()
 
 #
-# Configure installation
-#
-message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
-include(GNUInstallDirs)
-set(CMAKE_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}/zenohcpp")
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/zenohcpp.pc.in" "${CMAKE_CURRENT_SOURCE_DIR}/zenohcpp.pc" @ONLY)
-if(APPLE OR UNIX)
-	install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc" DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" OPTIONAL)
+# When changing code below change also corresponding code in install/PackageConfig.cmake.in
+# 
+
+# zenohcxx without dependencies
+add_library(zenohcxx INTERFACE)
+target_include_directories(zenohcxx INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
+# zenohcxx for zenohpico
+if(TARGET zenohpico)
+	message(STATUS "defined lib target zenohcxx::zenohpico for zenohpico")
+	add_library(zenohcxx_zenohpico INTERFACE)
+	target_compile_definitions(zenohcxx_zenohpico INTERFACE ZENOHCXX_ZENOHPICO)
+	target_include_directories(zenohcxx_zenohpico INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+	add_dependencies(zenohcxx_zenohpico zenohpico)
+	target_link_libraries(zenohcxx_zenohpico INTERFACE zenohpico)
+	add_library(zenohcxx::zenohpico ALIAS zenohcxx_zenohpico)
 endif()
-set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 
-# Generate <Package>Config.cmake
-include(CMakePackageConfigHelpers)
-configure_package_config_file(
-  "PackageConfig.cmake.in"
-  "${PROJECT_NAME}Config.cmake"
-  INSTALL_DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
+# zenohcxx for zenohc dynamic
+if(TARGET zenohc::lib)
+	message(STATUS "defined lib target zenohcxx::zenohc::lib for zenohc::lib")
+	add_library(zenohcxx_zenohc_lib INTERFACE)
+	target_compile_definitions(zenohcxx_zenohc_lib INTERFACE ZENOHCXX_ZENOHC)
+	target_include_directories(zenohcxx_zenohc_lib INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+	add_dependencies(zenohcxx_zenohc_lib zenohc::lib)
+	target_link_libraries(zenohcxx_zenohc_lib INTERFACE zenohc::lib)
+	add_library(zenohcxx::zenohc::lib ALIAS zenohcxx_zenohc_lib)
+endif()
 
-# Generate <Package>Version.cmake
-write_basic_package_version_file(
-  "${PROJECT_NAME}ConfigVersion.cmake"
-  VERSION ${PROJECT_VERSION}
-  COMPATIBILITY SameMajorVersion)
+# zenohcxx for zenohc static
+if(TARGET zenohc::static)
+	message(STATUS "defined lib target zenohcxx::zenohc::static for zenohc::static")
+	add_library(zenohcxx_zenohc_static INTERFACE)
+	target_compile_definitions(zenohcxx_zenohc_static INTERFACE ZENOHCXX_ZENOHC)
+	target_include_directories(zenohcxx_zenohc_static INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+	add_dependencies(zenohcxx_zenohc_static zenohc::static)
+	target_link_libraries(zenohcxx_zenohc_static INTERFACE zenohc::static)
+	add_library(zenohcxx::zenohc::static ALIAS zenohcxx_zenohc_static)
+endif()
 
-install(
-  FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-  DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
-  COMPONENT dev)
+#
+# Components included only if project is the root project
+#
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+	add_subdirectory(install)
+	add_subdirectory(tests)
+	add_subdirectory(examples)
+endif()

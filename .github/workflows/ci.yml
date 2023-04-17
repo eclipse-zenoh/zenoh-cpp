@@ -20,27 +20,33 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: build zenoh-c
+      - name: install zenoh-cpp
         shell: bash
         run: |
-          git clone https://github.com/eclipse-zenoh/zenoh-c.git
-          cd zenoh-c
-          mkdir -p build && cd build 
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../../install
-          cmake --build . --target install
-
-      - name: build zenoh-cpp
-        shell: bash
-        run: |
-          mkdir -p build && cd build 
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../install
-          cmake --build . --target install
+          mkdir -p build_install && cd build_install
+          cmake ../install -DCMAKE_INSTALL_PREFIX=~/local
+          cmake --install .
 
       - name: make examples
         shell: bash
         run: |
-          cd build
+          mkdir -p build && cd build
+          cmake ..
           cmake --build . --target examples
+
+      - name: make examples with zenoh-cpp as subbroject
+        shell: bash
+        run: |
+          mkdir -p build_examples_subproj && cd build_examples_subproj
+          cmake ../examples -DCMAKE_BUILD_TYPE=Debug
+          cmake --build . --config Debug
+
+      - name: make examples with zenoh-cpp as installed package
+        shell: bash
+        run: |
+          mkdir -p build_examples_findproj && cd build_examples_findproj
+          cmake ../examples -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHCXX_SOURCE=PACKAGE
+          cmake --build . --config Release
 
       - name: make tests
         shell: bash
