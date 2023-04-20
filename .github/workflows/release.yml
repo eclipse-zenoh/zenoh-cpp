@@ -1,0 +1,64 @@
+#
+# Copyright (c) 2022 ZettaScale Technology
+#
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+#
+# Contributors:
+#   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
+#
+name: Release
+
+on:
+  push: 
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  schedule:
+    - cron: "0 6 * * 1-5"
+
+jobs:
+  checks:
+    name: Code checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Environment setup
+        id: env
+        shell: bash
+        run: |
+          echo "GITHUB_REF=${GITHUB_REF}"
+          echo "GITHUB_SHA=${GITHUB_SHA:0:8}"
+          GIT_BRANCH=`[[ $GITHUB_REF =~ ^refs/heads/.* ]] && echo ${GITHUB_REF/refs\/heads\//} || true`
+          echo "GIT_BRANCH=${GIT_BRANCH}"
+          echo ::set-output name=GIT_BRANCH::"${GIT_BRANCH}"
+          GIT_TAG=`[[ $GITHUB_REF =~ ^refs/tags/.* ]] && echo ${GITHUB_REF/refs\/tags\//} || true`
+          echo "GIT_TAG=${GIT_TAG}"
+          echo ::set-output name=GIT_TAG::"${GIT_TAG}"
+
+          ZENOH_VERSION=$(sed -n 's/^ .*VERSION \([0-9][0-9]*\.[0-9][0-9]*\.[0.9][0-9]*\.[0-9][0-9]*\).*/\1/p' CMakeLists.txt | head -n1)
+          echo "ZENOH_VERSION=${ZENOH_VERSION}"
+          echo ::set-output name=ZENOH_VERSION::"${ZENOH_VERSION}"
+          if [ -n "${GIT_TAG}" ]; then
+            IS_RELEASE="true"
+            echo "IS_RELEASE=${IS_RELEASE}"
+            echo ::set-output name=IS_RELEASE::"${IS_RELEASE}"
+            PKG_VERSION=${ZENOH_VERSION}
+          elif [ -n "${GIT_BRANCH}" ]; then
+            PKG_VERSION=${GIT_BRANCH}-${GITHUB_SHA:0:8}
+          else
+            PKG_VERSION=${ZENOH_VERSION}-${GITHUB_SHA:0:8}
+          fi
+          echo "PKG_VERSION=${PKG_VERSION}"
+          echo ::set-output name=PKG_VERSION::"${PKG_VERSION}"
+    outputs:
+      GIT_BRANCH: ${{ steps.env.outputs.GIT_BRANCH }}
+      GIT_TAG: ${{ steps.env.outputs.GIT_TAG }}
+      IS_RELEASE: ${{ steps.env.outputs.IS_RELEASE }}
+      ZENOH_VERSION: ${{ steps.env.outputs.ZENOH_VERSION }}
+      PKG_VERSION: ${{ steps.env.outputs.PKG_VERSION }}
+
