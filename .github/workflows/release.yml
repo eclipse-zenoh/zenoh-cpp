@@ -22,8 +22,8 @@ on:
     - cron: "0 6 * * 1-5"
 
 jobs:
-  preparation:
-    name: preps
+  preps:
+    name: Preparation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
