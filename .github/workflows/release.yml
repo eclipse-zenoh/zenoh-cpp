@@ -14,12 +14,12 @@
 name: Release
 
 on:
-  push: 
-    branches: ["**"]
-  pull_request:
-    branches: ["**"]
+  release:
+    types: [published]
   schedule:
-    - cron: "0 6 * * 1-5"
+    - cron: "0 0 * * 1-5"
+  workflow_dispatch:
+
 
 jobs:
   preps:
