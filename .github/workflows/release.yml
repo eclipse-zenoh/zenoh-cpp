@@ -91,7 +91,7 @@ jobs:
       - name: "Upload packages"
         uses: actions/upload-artifact@master
         with:
-          name: ${{ matrix.target }}
+          name: Upload packages
           path: |
             ${{ steps.package.outputs.LIB_PKG_NAME }}
             ${{ steps.package.outputs.DEB_PKG_NAME }}
