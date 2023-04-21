@@ -23,7 +23,7 @@ on:
 
 jobs:
   preparation:
-    name: Preparation
+    name: preps
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -71,7 +71,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p build && cd build
-          cmake ..
+          cmake ../install
           cmake --build . --target package
         
 
