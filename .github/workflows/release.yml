@@ -84,6 +84,8 @@ jobs:
           echo "RPM_PKG_NAME=${RPM_PKG_NAME}" >> $GITHUB_OUTPUT
           echo "LIB_PKG_NAME=${LIB_PKG_NAME}" >> $GITHUB_OUTPUT
           cd build/packages
+          echo "Packaging ${LIB_PKG_NAME}:"
+          mv *.zip ${PWD}
           echo "Packaging ${DEB_PKG_NAME}:"
           zip ${DEB_PKG_NAME} *.deb
           echo "Packaging ${RPM_PKG_NAME}:"
