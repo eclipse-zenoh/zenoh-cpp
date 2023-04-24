@@ -77,7 +77,8 @@ jobs:
         id: package
         shell: bash
         run: |
-          LIB_PKG_NAME=${PWD}/zenoh-cpp-${{ needs.preps.outputs.PKG_VERSION }}.zip
+          ZIP_NAME=zenoh-cpp-${{ needs.preps.outputs.PKG_VERSION }}.zip
+          LIB_PKG_NAME=${PWD}/${ZIP_NAME}
           DEB_PKG_NAME=${PWD}/zenoh-cpp-${{ needs.preps.outputs.PKG_VERSION }}-deb-pkgs.zip
           RPM_PKG_NAME=${PWD}/zenoh-cpp-${{ needs.preps.outputs.PKG_VERSION }}-rpm-pkgs.zip
           echo "DEB_PKG_NAME=${DEB_PKG_NAME}" >> $GITHUB_OUTPUT
@@ -85,7 +86,7 @@ jobs:
           echo "LIB_PKG_NAME=${LIB_PKG_NAME}" >> $GITHUB_OUTPUT
           cd build/packages
           echo "Packaging ${LIB_PKG_NAME}:"
-          mv *.zip ${PWD}
+          mv ${ZIP_NAME} ${LIB_PKG_NAME}
           echo "Packaging ${DEB_PKG_NAME}:"
           zip ${DEB_PKG_NAME} *.deb
           echo "Packaging ${RPM_PKG_NAME}:"
