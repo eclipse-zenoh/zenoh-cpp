@@ -8,7 +8,7 @@ endif()
 #
 # Variants of using Zenoh libraries in CMake project:
 #
-# 1. Include from subdirectories (useful for development, clone correstponding repos manually):
+# 1. Include from subdirectories (useful for development, clone corresponding repos manually):
 #    add_subdirectory(../zenoh-pico)
 #    add_subdirectory(../zenoh-c)
 #    add_subdirectory(../zenoh-cpp)
