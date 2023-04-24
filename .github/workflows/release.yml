@@ -61,7 +61,7 @@ jobs:
       IS_RELEASE: ${{ steps.env.outputs.IS_RELEASE }}
       ZENOH_VERSION: ${{ steps.env.outputs.ZENOH_VERSION }}
       PKG_VERSION: ${{ steps.env.outputs.PKG_VERSION }}
-  linux-builds:
+  linux-build:
     name: Build packages for Linux
     needs: preps
     runs-on: ubuntu-latest
@@ -103,7 +103,7 @@ jobs:
   publication:
     name: Publish the release
     if: needs.preps.outputs.IS_RELEASE == 'true'
-    needs: [preps, macos-build, linux-builds]
+    needs: [preps, linux-build]
     runs-on: ubuntu-latest
     steps:
       - name: Download result of previous builds
