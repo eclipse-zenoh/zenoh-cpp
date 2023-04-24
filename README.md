@@ -107,7 +107,7 @@ Change current directory to the variant you want (`examples/zenohc` or `examples
 
 ## Library usage
 
-The zenoh-cpp is headers only library. If you use CMake, the simplest way to use it is
+Below are the steps to include [zenoh-cpp] into CMake project. See also [examples/simple](examples/simple) directory for short examples of CMakeLists.txt. 
 
 - include zenoh-cpp into your CMake project. This can be done with [add_subdirectory], [find_package] or [FetchContent] CMake commands.
   ```
@@ -117,11 +117,9 @@ The zenoh-cpp is headers only library. If you use CMake, the simplest way to use
   find_package(zenohcxx)
   ```
   ```
-  FetchContent_Declare(zenohcxx GIT_REPOSITORY https://github.com/eclipse-zenoh/zenoh-cpp)
+  FetchContent_Declare(zenohcxx GIT_REPOSITORY https://github.com/eclipse-zenoh/zenoh-cpp GIT_TAG main)
   FetchContent_MakeAvailable(zenohcxx)
   ```
-   See also CMakeLists.txt in `examples` project which demonstrates all these variants in function `configure_include_project`.
-
 - include [zenoh-c] or [zenoh-pico] into your CMake project in the same way
 
 - add dependency on zenoh-cpp to your project:
