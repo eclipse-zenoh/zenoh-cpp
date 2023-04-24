@@ -100,40 +100,40 @@ jobs:
             ${{ steps.package.outputs.DEB_PKG_NAME }}
             ${{ steps.package.outputs.RPM_PKG_NAME }}
 
-  # publication:
-  #   name: Publish the release
-  #   if: needs.preps.outputs.IS_RELEASE == 'true'
-  #   needs: [preps, macos-build, linux-builds]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Download result of previous builds
-  #       uses: actions/download-artifact@v2
-  #       with:
-  #         path: ARTIFACTS
-  #     - name: Publish as github release
-  #       uses: softprops/action-gh-release@v1
-  #       with:
-  #         files: ARTIFACTS/*/*.*
-  #     - name: Publish to download.eclipse.org/zenoh
-  #       env:
-  #         SSH_TARGET: genie.zenoh@projects-storage.eclipse.org
-  #         ECLIPSE_BASE_DIR: /home/data/httpd/download.eclipse.org/zenoh/zenoh-pico
-  #       shell: bash
-  #       run: |
-  #         echo "--- setup ssh-agent"
-  #         eval "$(ssh-agent -s)"
-  #         echo 'echo "${{ secrets.SSH_PASSPHRASE }}"' > ~/.ssh_askpass && chmod +x ~/.ssh_askpass
-  #         echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' | DISPLAY=NONE SSH_ASKPASS=~/.ssh_askpass ssh-add - > /dev/null 2>&1
-  #         rm -f ~/.ssh_askpass
-  #         echo "--- test ssh:"
-  #         ssh -o "StrictHostKeyChecking=no" ${SSH_TARGET} ls -al
-  #         echo "---- list artifacts to upload:"
-  #         ls -R ARTIFACTS || true
-  #         DOWNLOAD_DIR=${ECLIPSE_BASE_DIR}/${{ needs.preps.outputs.PKG_VERSION }}
-  #         echo "---- copy artifacts into ${DOWNLOAD_DIR}"
-  #         ssh -o "StrictHostKeyChecking=no" ${SSH_TARGET} mkdir -p ${DOWNLOAD_DIR}
-  #         cd ARTIFACTS
-  #         sha256sum */* > sha256sums.txt
-  #         scp -o "StrictHostKeyChecking=no" -r * ${SSH_TARGET}:${DOWNLOAD_DIR}/
-  #         echo "---- cleanup identity"
-  #         ssh-add -D
+  publication:
+    name: Publish the release
+    if: needs.preps.outputs.IS_RELEASE == 'true'
+    needs: [preps, macos-build, linux-builds]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download result of previous builds
+        uses: actions/download-artifact@v2
+        with:
+          path: ARTIFACTS
+      - name: Publish as github release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ARTIFACTS/*/*.*
+      - name: Publish to download.eclipse.org/zenoh
+        env:
+          SSH_TARGET: genie.zenoh@projects-storage.eclipse.org
+          ECLIPSE_BASE_DIR: /home/data/httpd/download.eclipse.org/zenoh/zenoh-cpp
+        shell: bash
+        run: |
+          echo "--- setup ssh-agent"
+          eval "$(ssh-agent -s)"
+          echo 'echo "${{ secrets.SSH_PASSPHRASE }}"' > ~/.ssh_askpass && chmod +x ~/.ssh_askpass
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' | DISPLAY=NONE SSH_ASKPASS=~/.ssh_askpass ssh-add - > /dev/null 2>&1
+          rm -f ~/.ssh_askpass
+          echo "--- test ssh:"
+          ssh -o "StrictHostKeyChecking=no" ${SSH_TARGET} ls -al
+          echo "---- list artifacts to upload:"
+          ls -R ARTIFACTS || true
+          DOWNLOAD_DIR=${ECLIPSE_BASE_DIR}/${{ needs.preps.outputs.PKG_VERSION }}
+          echo "---- copy artifacts into ${DOWNLOAD_DIR}"
+          ssh -o "StrictHostKeyChecking=no" ${SSH_TARGET} mkdir -p ${DOWNLOAD_DIR}
+          cd ARTIFACTS
+          sha256sum */* > sha256sums.txt
+          scp -o "StrictHostKeyChecking=no" -r * ${SSH_TARGET}:${DOWNLOAD_DIR}/
+          echo "---- cleanup identity"
+          ssh-add -D
