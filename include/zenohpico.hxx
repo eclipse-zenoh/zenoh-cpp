@@ -16,6 +16,8 @@
 #define __ZENOHCXX_ZENOHPICO
 #undef __ZENOHCXX_ZENOHC
 
+typedef bool _Bool;
+
 #include "zenoh-pico.h"
 #include "zenohcxx/base.hxx"
 
