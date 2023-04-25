@@ -14,3 +14,5 @@ FetchContent_MakeAvailable(cpp_wrapper)
 
 add_executable(zc_simple zc_simple.cxx)
 target_link_libraries(zc_simple PRIVATE zenohcxx::zenohc::lib)
+set_property(TARGET zc_simple PROPERTY LANGUAGE CXX)
+set_property(TARGET zc_simple PROPERTY CXX_STANDARD 17)

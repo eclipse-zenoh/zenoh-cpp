@@ -14,3 +14,5 @@ FetchContent_MakeAvailable(cpp_wrapper)
 
 add_executable(zp_auto zp_simple.cxx)
 target_link_libraries(zp_auto PRIVATE zenohcxx::zenohpico)
+set_property(TARGET zp_simple PROPERTY LANGUAGE CXX)
+set_property(TARGET zp_simple PROPERTY CXX_STANDARD 17)
