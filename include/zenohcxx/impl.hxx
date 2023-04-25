@@ -86,6 +86,13 @@ inline bool z::KeyExprView::intersects(const z::KeyExprView& v) const {
     return includes(v, error);
 }
 
+#ifdef __ZENOHCXX_ZENOHC
+inline z::KeyExpr z::KeyExprView::concat(const std::string_view& s) const {
+    return ::z_keyexpr_concat(*this, s.data(), s.length());
+}
+inline z::KeyExpr z::KeyExprView::join(const z::KeyExprView& v) const { return ::z_keyexpr_join(*this, v); }
+#endif
+
 inline bool keyexpr_canonize(std::string& s, ErrNo& error) {
     uintptr_t len = s.length();
     error = ::z_keyexpr_canonize(&s[0], &len);
