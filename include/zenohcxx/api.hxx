@@ -626,13 +626,6 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     bool intersects(const z::KeyExprView& v) const { return as_keyexpr_view().intersects(v); }
 };
 
-#ifdef __ZENOHCXX_ZENOHC
-z::KeyExpr z::KeyExprView::concat(const std::string_view& s) const {
-    return ::z_keyexpr_concat(*this, s.data(), s.length());
-}
-z::KeyExpr z::KeyExprView::join(const z::KeyExprView& v) const { return ::z_keyexpr_join(*this, v); }
-#endif
-
 class ScoutingConfig;
 
 //
