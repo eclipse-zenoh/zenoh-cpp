@@ -395,18 +395,18 @@ struct GetOptions : public Copyable<::z_get_options_t> {
         consolidation = v;
         return *this;
     }
-    GetOptions& set_with_value(z::Value v) {
-        with_value = v;
+    GetOptions& set_value(z::Value v) {
+        value = v;
         return *this;
     }
     QueryTarget get_target() const { return target; }
     const z::QueryConsolidation& get_consolidation() const {
         return static_cast<const z::QueryConsolidation&>(consolidation);
     }
-    const z::Value& get_with_value() const { return static_cast<const z::Value&>(with_value); }
+    const z::Value& get_value() const { return static_cast<const z::Value&>(value); }
     bool operator==(const GetOptions& v) const {
         return get_target() == v.get_target() && get_consolidation() == v.get_consolidation() &&
-               get_with_value() == v.get_with_value();
+               get_value() == v.get_value();
     }
     bool operator!=(const GetOptions& v) const { return !operator==(v); }
 };
