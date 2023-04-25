@@ -888,7 +888,7 @@ class ClosureReplyChannelRecv
 // at which point it will return an invalidated Reply and so will further calls.
 //
 
-std::pair<z::ClosureReplyChannelSend, z::ClosureReplyChannelRecv> reply_fifo_new(uintptr_t bound) {
+inline std::pair<z::ClosureReplyChannelSend, z::ClosureReplyChannelRecv> reply_fifo_new(uintptr_t bound) {
     auto channel = ::zc_reply_fifo_new(bound);
     return {std::move(channel.send), std::move(channel.recv)};
 }
@@ -902,7 +902,7 @@ std::pair<z::ClosureReplyChannelSend, z::ClosureReplyChannelRecv> reply_fifo_new
 // which it will then return; or until the `send` closure is dropped and all replies have been consumed,
 // at which point it will return an invalidated Reply and so will further calls.
 //
-std::pair<z::ClosureReplyChannelSend, z::ClosureReplyChannelRecv> reply_non_blocking_fifo_new(uintptr_t bound) {
+inline std::pair<z::ClosureReplyChannelSend, z::ClosureReplyChannelRecv> reply_non_blocking_fifo_new(uintptr_t bound) {
     auto channel = ::zc_reply_non_blocking_fifo_new(bound);
     return {std::move(channel.send), std::move(channel.recv)};
 }
