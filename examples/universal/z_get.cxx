@@ -59,7 +59,7 @@ int _main(int argc, char **argv) {
     std::cout << "Sending Query '" << expr << "'...\n";
     GetOptions opts;
     opts.set_target(Z_QUERY_TARGET_ALL);
-    opts.set_with_value(value);
+    opts.set_value(value);
 
     std::mutex m;
     std::condition_variable done_signal;
