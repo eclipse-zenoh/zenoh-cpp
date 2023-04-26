@@ -21,8 +21,22 @@
 #include "zenoh.hxx"
 using namespace zenoh;
 
-int main(int argc, char **argv) {
+class CustomerClass {
+   public:
+    CustomerClass(Config&& config) : session(std::get<Session>(open(std::move(config)))), pub(nullptr) {
+        Publisher t(std::get<Publisher>(session.declare_publisher("demo/example/simple")));
+        pub = std::move(t);
+    }
+
+    void put(std::string_view value) { pub.put(value); }
+
+   private:
+    Session session;
+    Publisher pub;
+};
+
+int main(int argc, char** argv) {
     Config config;
-    auto session = std::get<Session>(open(std::move(config)));
-    session.put("demo/example/simple", "Simple!");
+    CustomerClass customer(std::move(config));
+    customer.put("Simple!");
 }
