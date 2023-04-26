@@ -47,12 +47,22 @@ To install [zenoh-cpp] do the following steps:
 
 ## Building and running tests
 
+The [zenoh-cpp] is header-only C++ library that wraps [zenoh-c] and [zenoh-pico] libraries. To make tests and examples it tries to find `zenoh-c` and `zenoh-pico` libraries in the following places:
+
+1. Directories `zenoh-c` and `zenoh-pico` located on the same level as `zenoh-cpp` itself. **WARNING**: If you see building errors, make sure that you don't have obsolete `zenoh-c` or `zenoh-pico` directories nearby
+
+2. Libraries `zenoh-c` and `zenoh-pico` installed to system. **WARNING**: If you see building errors, make sure that no old version of libraries installed to `/usr/local/lib/cmake`
+
+3. Download [zenoh-c] and [zenoh-pico] from GitHub
+
 ```bash
 mkdir -p build && cd build 
 cmake ../zenoh-cpp
 cmake --build . --target tests
 ctest
 ```
+
+Notice that the output of `cmake ../zenoh-cpp` shows where the dependencies were found 
 
 ## Building the Examples
 
@@ -66,7 +76,7 @@ cmake ../zenoh-cpp
 cmake --build . --target examples
 ```
 
-Examples are built into `build/examples/zenohc` and `build/examples/zenohpico` directories. 
+Examples are placed into `build/examples/zenohc` and `build/examples/zenohpico` directories. 
 
 Second way is to build `examples` as a root project, which includes [zenoh-cpp] as subproject
 
@@ -76,7 +86,7 @@ cmake ../zenoh-cpp/examples
 cmake --build .
 ```
 
-Examples are built into `build/zenohc` and `build/zenohpico` directories. 
+Examples are placed into `build/zenohc` and `build/zenohpico` directories. 
 
 ## Running the examples
 
