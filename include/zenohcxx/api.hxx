@@ -781,8 +781,7 @@ class Session : public Owned<::z_owned_session_t> {
    public:
     using Owned::Owned;
 
-    ~Session();
-    Session(Session&& other) : Owned(std::move(other)) {}
+    // ~Session();
 
     z::Id info_zid() const { return ::z_info_zid(::z_session_loan(&_0)); }
 

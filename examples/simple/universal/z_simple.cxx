@@ -18,14 +18,24 @@
 // depending on ZENOHCXX_ZENOHPICO or ZENOHCXX_ZENOHC setting
 // and places it to the zenoh namespace
 //
+#include <iostream>
+
 #include "zenoh.hxx"
 using namespace zenoh;
 
 class CustomerClass {
    public:
-    CustomerClass(Config&& config) : session(std::get<Session>(open(std::move(config)))), pub(nullptr) {
-        Publisher t(std::get<Publisher>(session.declare_publisher("demo/example/simple")));
-        pub = std::move(t);
+    CustomerClass() : session(nullptr), pub(nullptr) {
+        Config config;
+        std::cout << "a\n";
+        Session s = std::get<Session>(open(std::move(config)));
+        std::cout << "b\n";
+        Publisher p = std::get<Publisher>(s.declare_publisher("demo/example/simple"));
+        std::cout << "c\n";
+        session = std::move(s);
+        std::cout << "d\n";
+        pub = std::move(p);
+        std::cout << "e\n";
     }
 
     void put(std::string_view value) { pub.put(value); }
@@ -36,7 +46,6 @@ class CustomerClass {
 };
 
 int main(int argc, char** argv) {
-    Config config;
-    CustomerClass customer(std::move(config));
+    CustomerClass customer;
     customer.put("Simple!");
 }

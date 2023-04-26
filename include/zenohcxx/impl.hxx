@@ -432,14 +432,14 @@ inline std::variant<z::Session, z::ErrorMessage> open(z::Config&& config, bool s
     return std::move(session);
 };
 
-inline z::Session::~Session() {
-#ifdef __ZENOHCXX_ZENOHPICO
-    if (check()) {
-        stop_read_task();
-        stop_lease_task();
-    }
-#endif
-}
+    // inline z::Session::~Session() {
+    // #ifdef __ZENOHCXX_ZENOHPICO
+    //     if (check()) {
+    //         stop_read_task();
+    //         stop_lease_task();
+    //     }
+    // #endif
+    // }
 
 #ifdef __ZENOHCXX_ZENOHPICO
 
