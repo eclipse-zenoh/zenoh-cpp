@@ -432,14 +432,24 @@ inline std::variant<z::Session, z::ErrorMessage> open(z::Config&& config, bool s
     return std::move(session);
 };
 
-    // inline z::Session::~Session() {
-    // #ifdef __ZENOHCXX_ZENOHPICO
-    //     if (check()) {
-    //         stop_read_task();
-    //         stop_lease_task();
-    //     }
-    // #endif
-    // }
+inline z::Session&& z::Session::operator=(Session&& other) {
+    if (this != &other) {
+        drop();
+        _0 = other._0;
+        ::z_null(other._0);
+    }
+    return std::move(*this);
+}
+
+inline void z::Session::drop() {
+#ifdef __ZENOHCXX_ZENOHPICO
+    if (check()) {
+        stop_read_task();
+        stop_lease_task();
+    }
+#endif
+    Owned::drop();
+}
 
 #ifdef __ZENOHCXX_ZENOHPICO
 

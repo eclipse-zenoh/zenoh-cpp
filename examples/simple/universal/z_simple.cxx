@@ -25,17 +25,19 @@ using namespace zenoh;
 
 class CustomerClass {
    public:
+    CustomerClass(CustomerClass&&) = delete;
+    CustomerClass(const CustomerClass&) = delete;
+    CustomerClass& operator=(const CustomerClass&) = delete;
+    CustomerClass& operator=(CustomerClass&&) = delete;
+
     CustomerClass() : session(nullptr), pub(nullptr) {
         Config config;
-        std::cout << "a\n";
         Session s = std::get<Session>(open(std::move(config)));
-        std::cout << "b\n";
-        Publisher p = std::get<Publisher>(s.declare_publisher("demo/example/simple"));
-        std::cout << "c\n";
         session = std::move(s);
-        std::cout << "d\n";
+        // Publisher holds a reference to the Session, so after creating the publisher the session should
+        // not be moved anymore (as well as the whole CustomerClass)
+        Publisher p = std::get<Publisher>(session.declare_publisher("demo/example/simple"));
         pub = std::move(p);
-        std::cout << "e\n";
     }
 
     void put(std::string_view value) { pub.put(value); }

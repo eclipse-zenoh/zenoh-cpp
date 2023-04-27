@@ -71,8 +71,11 @@ class Owned {
     Owned(Owned&& v) : Owned(std::move(v._0)) {}
     // Move assignment from other object
     Owned&& operator=(Owned&& v) {
-        this->_0 = v._0;
-        ::z_null(v._0);
+        if (this != &v) {
+            drop();
+            _0 = v._0;
+            ::z_null(v._0);
+        }
         return std::move(*this);
     }
     // Destructor drops owned value using z_drop from zenoh API
