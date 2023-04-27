@@ -53,13 +53,13 @@ void get_options() {
     opts.set_consolidation(QueryConsolidation())
         .set_consolidation(ConsolidationMode::Z_CONSOLIDATION_MODE_AUTO)
         .set_target(Z_QUERY_TARGET_ALL)
-        .set_with_value("TEST");
+        .set_value("TEST");
 
     GetOptions opts2 = opts;
     assert(opts2 == opts);
     assert(opts.get_consolidation() == QueryConsolidation(ConsolidationMode::Z_CONSOLIDATION_MODE_AUTO));
     assert(opts.get_target() == QueryTarget::Z_QUERY_TARGET_ALL);
-    assert(opts.get_with_value() == Value("TEST"));
+    assert(opts.get_value() == Value("TEST"));
 
     opts2.set_consolidation(Z_CONSOLIDATION_MODE_LATEST);
     assert(opts2 != opts);

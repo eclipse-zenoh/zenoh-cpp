@@ -23,10 +23,12 @@ using namespace zenoh;
 
 int _main(int argc, char **argv) {
     const char *expr = "demo/example/**";
+    const char *value = nullptr;
     const char *locator = nullptr;
 
     if (argc > 1) expr = argv[1];
-    if (argc > 2) locator = argv[2];
+    if (argc > 2) value = argv[2];
+    if (argc > 3) locator = argv[3];
 
     Config config;
     if (locator) {
@@ -57,6 +59,7 @@ int _main(int argc, char **argv) {
     std::cout << "Sending Query '" << expr << "'...\n";
     GetOptions opts;
     opts.set_target(Z_QUERY_TARGET_ALL);
+    opts.set_value(value);
 
     std::mutex m;
     std::condition_variable done_signal;

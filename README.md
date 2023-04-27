@@ -47,6 +47,14 @@ To install [zenoh-cpp] do the following steps:
 
 ## Building and running tests
 
+The [zenoh-cpp] is header-only C++ library that wraps [zenoh-c] and [zenoh-pico] libraries. To make tests and examples it tries to find `zenoh-c` and `zenoh-pico` libraries in the following places:
+
+1. Directories `zenoh-c` and `zenoh-pico` located on the same level as `zenoh-cpp` itself. **WARNING**: If you see building errors, make sure that you don't have obsolete `zenoh-c` or `zenoh-pico` directories nearby
+
+2. Libraries `zenoh-c` and `zenoh-pico` installed to system. **WARNING**: If you see building errors, make sure that no old version of libraries installed to `/usr/local/lib/cmake`
+
+3. Download [zenoh-c] and [zenoh-pico] from GitHub
+
 ```bash
 mkdir -p build && cd build 
 cmake ../zenoh-cpp
@@ -54,60 +62,82 @@ cmake --build . --target tests
 ctest
 ```
 
+Notice that the output of `cmake ../zenoh-cpp` shows where the dependencies were found 
+
 ## Building the Examples
 
-Examples are splitted into two subdirectories. Subdirectory `universal` contains examples buildable with both [zenoh-c] and [zenoh-pico]. The `zenohc` subdirectory contains examples with zenoh-c specific functionality. The name postfix for CMake targets are `zenohc` and `zenohpico`. I.e. target `z_get_zenohpico` builds example `examples/universal/z_get.cxx` with `zenohpico` library into `build\examples\zenohpico\z_get`.
+Examples are splitted into two subdirectories. Subdirectory `universal` contains [zenoh-cpp] examples buildable with both [zenoh-c] and [zenoh-pico] backends. The `zenohc` subdirectory contains examples with zenoh-c specific functionality.
 
-The examples can be built in two ways. One is to select `examples` as a build target of the main project (assuming here that the current directory is side-by-side with zenoh-cpp directory):
-
-```bash
-$ cmake ../zenoh-cpp
-$ cmake --build . --target examples
-```
-
-Second way is to build `examples` as a root project. This demonstrates the ways to add dependency from zenoh-cpp into customer project.
+The examples can be built in two ways. One is to select `examples` as a build target of the main project:
 
 ```bash
-$ cmake ../zenoh-cpp/examples
-$ cmake --build .
+mkdir -p build && cd build 
+cmake ../zenoh-cpp
+cmake --build . --target examples
 ```
 
-You may also use `--target <example_name>` if you wish to only build a specific example (see target names convention above).
+Examples are placed into `build/examples/zenohc` and `build/examples/zenohpico` directories. 
 
-## Running the Examples
+Second way is to build `examples` as a root project, which includes [zenoh-cpp] as subproject
+
+```bash
+mkdir -p build && cd build 
+cmake ../zenoh-cpp/examples
+cmake --build .
+```
+
+Examples are placed into `build/zenohc` and `build/zenohpico` directories. 
+
+## Running the examples
 
 Change current directory to the variant you want (`examples/zenohc` or `examples/zenohpico` in the build directory)
 
-### Basic Pub/Sub Example
+See example sources for command line arguments (key expression, value, router address).
+
+`zenohc` examples can work standalone, but for `zenohpico` examples the working zenoh router is required. So to run `zenohpico` examples download [zenoh] project and run the router ([Rust](rust-lang) should be installed):
 ```bash
-./z_sub_cpp
+git clone https://github.com/eclipse-zenoh/zenoh
+cd zenoh
+cargo run
+```
+
+### Basic Pub/Sub Example
+
+```bash
+./z_sub
 ```
 
 ```bash
-./z_pub_cpp
+./z_pub
 ```
+
+The `z_pub` should receive message sent by `z_sub`
 
 ### Queryable and Query Example
 ```bash
-./z_queryable_cpp
+./z_queryable
 ```
 
 ```bash
-./z_get_cpp
+./z_get
 ```
+
+The `z_get` should receive the data from `z_queryable`
 
 ### Throughput Examples
 ```bash
-./z_sub_thgr_cpp
+./z_sub_thr_cpp
 ```
 
 ```bash
-./z_pub_thgr_cpp
+./z_pub_thr_cpp 1024
 ```
+
+After 30-40 seconds delay the `z_sub_thr` will start to show the throughput measure results
 
 ## Library usage
 
-The zenoh-cpp is headers only library. If you use CMake, the simplest way to use it is
+Below are the steps to include [zenoh-cpp] into CMake project. See also [examples/simple](examples/simple) directory for short examples of CMakeLists.txt. 
 
 - include zenoh-cpp into your CMake project. This can be done with [add_subdirectory], [find_package] or [FetchContent] CMake commands.
   ```
@@ -117,11 +147,9 @@ The zenoh-cpp is headers only library. If you use CMake, the simplest way to use
   find_package(zenohcxx)
   ```
   ```
-  FetchContent_Declare(zenohcxx GIT_REPOSITORY https://github.com/eclipse-zenoh/zenoh-cpp)
+  FetchContent_Declare(zenohcxx GIT_REPOSITORY https://github.com/eclipse-zenoh/zenoh-cpp GIT_TAG main)
   FetchContent_MakeAvailable(zenohcxx)
   ```
-   See also CMakeLists.txt in `examples` project which demonstrates all these variants in function `configure_include_project`.
-
 - include [zenoh-c] or [zenoh-pico] into your CMake project in the same way
 
 - add dependency on zenoh-cpp to your project:
@@ -200,7 +228,8 @@ typedef ClosureConstPtrParam<::z_owned_closure_query_t, ::z_query_t, Query> Clos
 
 They allows to wrap C++ invocable objects (fuctions, lambdas, classes with operator() overloaded) and pass them as callbacks to zenoh.
 
-
+[rust-lang]: https://www.rust-lang.org
+[zenoh]: https://github.com/eclipse-zenoh/zenoh
 [zenoh-c]: https://github.com/eclipse-zenoh/zenoh-c
 [zenoh-cpp]: https://github.com/eclipse-zenoh/zenoh-cpp
 [zenoh-pico]: https://github.com/eclipse-zenoh/zenoh-pico
