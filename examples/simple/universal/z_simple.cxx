@@ -18,11 +18,36 @@
 // depending on ZENOHCXX_ZENOHPICO or ZENOHCXX_ZENOHC setting
 // and places it to the zenoh namespace
 //
+#include <iostream>
+
 #include "zenoh.hxx"
 using namespace zenoh;
 
-int main(int argc, char **argv) {
-    Config config;
-    auto session = std::get<Session>(open(std::move(config)));
-    session.put("demo/example/simple", "Simple!");
+class CustomerClass {
+   public:
+    CustomerClass(CustomerClass&&) = delete;
+    CustomerClass(const CustomerClass&) = delete;
+    CustomerClass& operator=(const CustomerClass&) = delete;
+    CustomerClass& operator=(CustomerClass&&) = delete;
+
+    CustomerClass() : session(nullptr), pub(nullptr) {
+        Config config;
+        Session s = std::get<Session>(open(std::move(config)));
+        session = std::move(s);
+        // Publisher holds a reference to the Session, so after creating the publisher the session should
+        // not be moved anymore (as well as the whole CustomerClass)
+        Publisher p = std::get<Publisher>(session.declare_publisher("demo/example/simple"));
+        pub = std::move(p);
+    }
+
+    void put(std::string_view value) { pub.put(value); }
+
+   private:
+    Session session;
+    Publisher pub;
+};
+
+int main(int argc, char** argv) {
+    CustomerClass customer;
+    customer.put("Simple!");
 }

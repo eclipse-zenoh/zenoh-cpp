@@ -49,7 +49,15 @@ struct Copyable : public ZC_COPYABLE_TYPE {
 template <typename ZC_OWNED_TYPE>
 class Owned {
    public:
+    // Default constructor is deleted by default, derived classes may override it to create default valid object.
+    // It's supposed that default constructor never creates null object, this should be done explicitly with constructor
+    // from nullptr
     Owned() = delete;
+    // Copying is not allowed, owned object have ownership of it's value
+    Owned& operator=(const Owned& v) = delete;
+    Owned(const Owned& v) = delete;
+    // Creating from pointer to value is allowed, ownership is taken and value is made null
+    // Also explicit creation of null owned object is allowed if nullptr is passed
     Owned(ZC_OWNED_TYPE* pv) {
         if (pv) {
             _0 = *pv;
@@ -57,23 +65,38 @@ class Owned {
         } else
             ::z_null(_0);
     }
-    Owned& operator=(const Owned& v) = delete;
-    Owned(const Owned& v) = delete;
+    // Move constructor from wrapped value
     Owned(ZC_OWNED_TYPE&& v) : _0(v) { ::z_null(v); }
+    // Move constructor from other object
     Owned(Owned&& v) : Owned(std::move(v._0)) {}
+    // Move assignment from other object
+    Owned&& operator=(Owned&& v) {
+        if (this != &v) {
+            drop();
+            _0 = v._0;
+            ::z_null(v._0);
+        }
+        return std::move(*this);
+    }
+    // Destructor drops owned value using z_drop from zenoh API
     ~Owned() { ::z_drop(&_0); }
+    // Explicit drop. Making value null is zenoh API job
     void drop() { ::z_drop(&_0); }
+    // Take zenoh structure and leave Owned object null
     ZC_OWNED_TYPE take() {
         auto r = _0;
         ::z_null(_0);
         return r;
     }
+    // Replace value with zenoh structure, dropping old value
     void put(ZC_OWNED_TYPE& v) {
         ::z_drop(&_0);
         _0 = v;
         ::z_null(v);
     }
+    // Get direct access to wrapped zenoh structure
     explicit operator ZC_OWNED_TYPE&() { return _0; }
+    // Check object validity uzing zenoh API
     bool check() const { return ::z_check(_0); }
 
    protected:
