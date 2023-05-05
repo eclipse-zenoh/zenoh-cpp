@@ -188,7 +188,7 @@ The library API is not documented yet, but the [api.hxx] file contains commented
 
 There are three main kinds of wrapper classes / structures provided by [zenoh-cpp]. They are:
 
-* Structs derived from `Copyable` template:
+#### Structs derived from `Copyable` template:
 
 ```C++
 struct PutOptions : public Copyable<::z_put_options_t> {
@@ -208,7 +208,7 @@ struct BytesView : public Copyable<::z_bytes_t> {
 
 Such structures contains pointers to some external data. So they should be cared with caution, as they becoming invalid when their data source is destroyed. The same carefulness is required when handling `std::string_view` from standard library for examlple.
 
-* Classes derived from `Owned` template
+#### Classes derived from `Owned` template
 
 ```C++
 class Config : public Owned<::z_owned_config_t> {
@@ -218,15 +218,64 @@ class Config : public Owned<::z_owned_config_t> {
 
 Classes which protects corresponding so-called `owned` structures from copying, allowing move semantic only. Corresponding utility functions like `z_check`, `z_null`, `z_drop` are integrated into the `Owned` base template.
 
-* Closures
+#### Closures
 
-It's classes representing callback structures:
+It's classes representing [zenoh-c] and [zenoh-pico] callback structures:
 ```C++
 typedef ClosureMoveParam<::z_owned_closure_reply_t, ::z_owned_reply_t, Reply> ClosureReply;
 typedef ClosureConstPtrParam<::z_owned_closure_query_t, ::z_query_t, Query> ClosureQuery;
 ```
 
 They allows to wrap C++ invocable objects (fuctions, lambdas, classes with operator() overloaded) and pass them as callbacks to zenoh.
+
+The `ClosureConstPtrParam` types accepts objects, invocable with `const Foo*` parameter. For example
+```C++
+session.declare_subscriber("foo/bar", [](const Sample *sample) { ... });
+```
+or
+```C++
+void on_query(const Query* query) { ... };
+...
+auto queryable = std::get<Queryable>(session.declare_queryable("foo/bar", on_query);
+```
+
+The `ClosureMoveParam` types accepts types, invocable with `Foo`, `Foo&` or `Foo&&`. Callback may take ownership of the reference parameter passed 
+or do nothing and leave to caller to drop it.
+```C++
+session.get("foo/bar", "", [](Reply reply) { ... });
+session.get("foo/bar", "", [](Reply& reply) { ... });
+session.get("foo/bar", "", [](Reply&& reply) { ... });
+```
+
+The `nullptr` or invalid value (`value.check() == false`) are passed to callback before the callback is dropped. 
+This may be changed in nearest future (see below).
+
+### Known API issues and restrictions:
+
+- Objects created by `Session` keeps reference to the stack instance of `Session` object. This means that C++ move semantics
+doesn't supported correctly. See the code below (which is copied with a few changes from [here](examples/simple/universal/z_simple.cxx)). 
+**This is planned to be fixed in next release, on [zenoh-c] or [zenoh] level**
+   ```C++
+   Config config;
+   Session s = std::get<Session>(open(std::move(config)));
+   Session s1 = std::move(s); // That's ok
+   Publisher p = std::get<Publisher>(s1.declare_publisher("demo/example/simple"));
+   Session s_moved = std::move(s1); // DON'T DO THAT, `p` holds `&s1` reference when zenoh-c is used
+   p.put("Value"); // CRASH!!! 
+   ```
+
+- There is a special meaning for `null` parameter of closures: drop notification. So the programmer is responsible to test parameter for
+validity on each call.  It doesn't follow the logic of original [zenoh] API and modern C++ practice, discouraging raw pointer usage. 
+So **in the next release the `const T*` closure prototype supposedly will be changed to `const T&`**.
+```C++
+session.declare_subscriber("foo/bar", [](const Sample *sample) {
+   if (sample) {
+      ... // process it
+   } else {
+      ... // cleanup
+   }
+});
+```
 
 [rust-lang]: https://www.rust-lang.org
 [zenoh]: https://github.com/eclipse-zenoh/zenoh
