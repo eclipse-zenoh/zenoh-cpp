@@ -252,7 +252,7 @@ This may be changed in nearest future (see below).
 
 ### Known API issues and restrictions:
 
-- Objects created by `Session` keeps reference to the stack instance of `Session` object. This means that C++ move semantics
+- Objects created by `Session` keeps reference to the stack instance of `Session` object ([zenoh-c#155]). This means that C++ move semantics
 doesn't supported correctly. See the code below (which is copied with a few changes from [here](examples/simple/universal/z_simple.cxx)). 
 **This is planned to be fixed in next release, on [zenoh-c] or [zenoh] level**
    ```C++
@@ -265,8 +265,7 @@ doesn't supported correctly. See the code below (which is copied with a few chan
    ```
 
 - There is a special meaning for `null` parameter of closures: drop notification. So the programmer is responsible to test parameter for
-validity on each call.  It doesn't follow the logic of original [zenoh] API and modern C++ practice, discouraging raw pointer usage. 
-So **in the next release the `const T*` closure prototype supposedly will be changed to `const T&`**.
+validity on each call.  It doesn't follow the logic of original [zenoh] API and modern C++ practice, discouraging raw pointer usage ([zenoh-cpp#40]). **In the next release the `const T*` closure prototype supposedly will be changed to `const T&`**.
 ```C++
 session.declare_subscriber("foo/bar", [](const Sample *sample) {
    if (sample) {
@@ -289,4 +288,5 @@ session.declare_subscriber("foo/bar", [](const Sample *sample) {
 [add_subdirectory]: https://cmake.org/cmake/help/latest/command/add_subdirectory.html
 [find_package]: https://cmake.org/cmake/help/latest/command/find_package.html
 [FetchContent]: https://cmake.org/cmake/help/latest/module/FetchContent.html
-
+[zenoh-c#155]: https://github.com/eclipse-zenoh/zenoh-c/issues/155
+[zenoh-cpp#40]:https://github.com/eclipse-zenoh/zenoh-cpp/issues/40 
