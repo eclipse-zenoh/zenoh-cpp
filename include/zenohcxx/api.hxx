@@ -329,7 +329,20 @@ struct Sample : public Copyable<::z_sample_t> {
     const z::BytesView& get_payload() const { return static_cast<const z::BytesView&>(payload); }
     const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
     SampleKind get_kind() const { return kind; }
+#ifdef __ZENOHCXX_ZENOHC
+    Payload zc_sample_rcinc() const { return ::zc_sample_rcinc(*this); }
+#endif
 };
+
+#ifdef __ZENOHCXX_ZENOHC
+
+class Payload : public Owned<::zc_owned_payload_t> {
+   public:
+    Payload(const Sample& sample) : Payload(::zc_sample_rcinc(&sample)) {}
+    Payload rcinc() const { return Payload(::zc_payload_rcinc(&_0)); }
+};
+
+#endif
 
 //
 // A zenoh value
