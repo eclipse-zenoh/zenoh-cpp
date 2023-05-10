@@ -42,14 +42,16 @@ int _main(int argc, char** argv) {
 		-s (optional, int, default=8): the size of the payload embedded in the ping and repeated by the pong\n\
 		-w (optional, int, default=1000): the warmup time in ms during which pings will be emitted but not measured\n\
 		-t (optional, int, default=100): the timeout for any individual ping, in ms.\n\
-		-c (optional, string): the path to a configuration file for the session. If this option isn't passed, the default configuration will be used.\n\
+		-c (optional, string, disabled when backed by pico): the path to a configuration file for the session. If this option isn't passed, the default configuration will be used.\n\
 		";
         return 1;
     }
     Config config;
+#ifdef ZENOHCXX_ZENOHC
     if (args.config_path) {
         config = std::get<Config>(config_from_file(args.config_path));
     }
+#endif
     std::cout << "Opening session...\n";
     auto session = std::get<Session>(open(std::move(config)));
 
