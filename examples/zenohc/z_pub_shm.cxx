@@ -81,10 +81,11 @@ int _main(int argc, char **argv) {
     options.set_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN);
     for (int idx = 0; idx < N; ++idx) {
         auto shmbuf = std::get<z::Shmbuf>(manager.alloc(256));
-        auto buf = shmbuf.ptr();
-        snprintf((char *)buf, 255, "[%4d] %s", idx, value);
+        auto buf = shmbuf.char_ptr();
+        snprintf(buf, 255, "[%4d] %s", idx, value);
+        shmbuf.set_length(strlen(buf));
         sleep(1);
-        std::cout << "Putting Data ('" << keyexpr << "': '" << buf << "')..." << std::endl;
+        std::cout << "Putting Data ('" << keyexpr << "': '" << shmbuf.as_string_view() << "')..." << std::endl;
         auto payload = shmbuf.into_payload();
         pub.put_owned(std::move(payload), options);
     }

@@ -350,8 +350,11 @@ class Shmbuf : public Owned<::zc_owned_shmbuf_t> {
     uintptr_t get_length() const { return ::zc_shmbuf_length(&_0); }
     void set_length(uintptr_t length) { ::zc_shmbuf_set_length(&_0, length); }
     z::Payload into_payload() { return z::Payload(std::move(::zc_shmbuf_into_payload(&_0))); }
-    const uint8_t* ptr() const { return ::zc_shmbuf_ptr(&_0); }
-    operator const uint8_t*() const { return ptr(); }
+    uint8_t* ptr() const { return ::zc_shmbuf_ptr(&_0); }
+    char* char_ptr() const { return reinterpret_cast<char*>(ptr()); }
+    std::string_view as_string_view() const {
+        return std::string_view(reinterpret_cast<const char*>(ptr()), get_length());
+    }
 };
 
 //
