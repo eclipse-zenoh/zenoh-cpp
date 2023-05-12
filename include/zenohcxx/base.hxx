@@ -96,6 +96,7 @@ class Owned {
     }
     // Get direct access to wrapped zenoh structure
     explicit operator ZC_OWNED_TYPE&() { return _0; }
+    explicit operator const ZC_OWNED_TYPE&() const { return _0; }
     // Check object validity uzing zenoh API
     bool check() const { return ::z_check(_0); }
 

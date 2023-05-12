@@ -352,7 +352,7 @@ class Shmbuf : public Owned<::zc_owned_shmbuf_t> {
 class ShmManager : public Owned<::zc_owned_shm_manager_t> {
    public:
     using Owned::Owned;
-    ShmManager(z::Session& session, const char* id, uintptr_t size);
+    ShmManager(const z::Session& session, const char* id, uintptr_t size);
 
     z::Shmbuf alloc(uintptr_t capacity) const { return z::Shmbuf(std::move(::zc_shm_alloc(&_0, capacity))); }
     uintptr_t defrag() const { return ::zc_shm_defrag(&_0); }

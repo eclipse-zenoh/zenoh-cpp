@@ -170,8 +170,8 @@ inline std::variant<z::Config, ErrorMessage> config_client(const std::initialize
     return z::config_client(v);
 }
 
-inline z::ShmManager::ShmManager(z::Session& session, const char* id, uintptr_t size)
-    : Owned(std::move(::zc_shm_manager_new(::z_loan(static_cast<::z_owned_session_t&>(session)), id, size))) {}
+inline z::ShmManager::ShmManager(const z::Session& session, const char* id, uintptr_t size)
+    : Owned(std::move(::zc_shm_manager_new(::z_loan(static_cast<const ::z_owned_session_t&>(session)), id, size))) {}
 
 #endif
 
