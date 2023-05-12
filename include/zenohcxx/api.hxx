@@ -26,6 +26,8 @@
 #error("Internal include configuration error: either __ZENOHCXX_ZENOHC or __ZENOHCXX_ZENOHPICO should be defined")
 #endif
 
+class Session;
+
 //
 // Error code value returned as negative value from zenohc/zenohpico functions
 //
@@ -338,6 +340,10 @@ class Payload : public Owned<::zc_owned_payload_t> {
 class Shmbuf : public Owned<::zc_owned_shmbuf_t> {
    public:
     using Owned::Owned;
+    uintptr_t get_capacity() const { return ::zc_shmbuf_capacity(&_0); }
+    uintptr_t get_length() const { return ::zc_shmbuf_length(&_0); }
+    void set_length(uintptr_t length) { ::zc_shmbuf_set_length(&_0, length); }
+    z::Payload into_payload() { return z::Payload(std::move(::zc_shmbuf_into_payload(&_0))); }
 };
 
 //
@@ -346,6 +352,8 @@ class Shmbuf : public Owned<::zc_owned_shmbuf_t> {
 class ShmManager : public Owned<::zc_owned_shm_manager_t> {
    public:
     using Owned::Owned;
+    ShmManager(z::Session& session, const char* id, uintptr_t size);
+
     z::Shmbuf alloc(uintptr_t capacity) const { return z::Shmbuf(std::move(::zc_shm_alloc(&_0, capacity))); }
     uintptr_t defrag() const { return ::zc_shm_defrag(&_0); }
     uintptr_t gc() const { return ::zc_shm_gc(&_0); }

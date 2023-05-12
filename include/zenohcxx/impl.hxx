@@ -169,6 +169,10 @@ inline std::variant<z::Config, ErrorMessage> config_client(const std::initialize
     std::vector<const char*> v(peers);
     return z::config_client(v);
 }
+
+inline z::ShmManager::ShmManager(z::Session& session, const char* id, uintptr_t size)
+    : Owned(std::move(::zc_shm_manager_new(::z_loan(static_cast<::z_owned_session_t&>(session)), id, size))) {}
+
 #endif
 
 inline z::ScoutingConfig z::Config::create_scouting_config() {
