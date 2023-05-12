@@ -27,6 +27,12 @@
 #endif
 
 class Session;
+class Value;
+
+//
+// Error message returned by some functions
+//
+typedef z::Value ErrorMessage;
 
 //
 // Error code value returned as negative value from zenohc/zenohpico functions
@@ -344,19 +350,30 @@ class Shmbuf : public Owned<::zc_owned_shmbuf_t> {
     uintptr_t get_length() const { return ::zc_shmbuf_length(&_0); }
     void set_length(uintptr_t length) { ::zc_shmbuf_set_length(&_0, length); }
     z::Payload into_payload() { return z::Payload(std::move(::zc_shmbuf_into_payload(&_0))); }
+    const uint8_t* ptr() const { return ::zc_shmbuf_ptr(&_0); }
+    operator const uint8_t*() const { return ptr(); }
 };
 
 //
 // Shared memory manager
 //
+
+class ShmManager;
+std::variant<z::ShmManager, z::ErrorMessage> shm_manager_new(const z::Session& session, const char* id, uintptr_t size);
+
 class ShmManager : public Owned<::zc_owned_shm_manager_t> {
    public:
     using Owned::Owned;
-    ShmManager(const z::Session& session, const char* id, uintptr_t size);
 
-    z::Shmbuf alloc(uintptr_t capacity) const { return z::Shmbuf(std::move(::zc_shm_alloc(&_0, capacity))); }
+    friend std::variant<z::ShmManager, z::ErrorMessage> z::shm_manager_new(const z::Session& session, const char* id,
+                                                                           uintptr_t size);
+
+    std::variant<z::Shmbuf, z::ErrorMessage> alloc(uintptr_t capacity) const;
     uintptr_t defrag() const { return ::zc_shm_defrag(&_0); }
     uintptr_t gc() const { return ::zc_shm_gc(&_0); }
+
+   private:
+    ShmManager(const z::Session& session, const char* id, uintptr_t size);
 };
 
 #endif
@@ -408,11 +425,6 @@ struct Value : public Copyable<::z_value_t> {
     }
     bool operator!=(const Value& v) const { return !operator==(v); }
 };
-
-//
-// Error message returned by some functions
-//
-typedef z::Value ErrorMessage;
 
 //
 // Represents the replies consolidation to apply on replies of get operation

@@ -173,6 +173,19 @@ inline std::variant<z::Config, ErrorMessage> config_client(const std::initialize
 inline z::ShmManager::ShmManager(const z::Session& session, const char* id, uintptr_t size)
     : Owned(std::move(::zc_shm_manager_new(::z_loan(static_cast<const ::z_owned_session_t&>(session)), id, size))) {}
 
+inline std::variant<z::ShmManager, z::ErrorMessage> shm_manager_new(const z::Session& session, const char* id,
+                                                                    uintptr_t size) {
+    z::ShmManager shm_manager(session, id, size);
+    if (!shm_manager.check()) return "Failed to create shm manager";
+    return std::move(shm_manager);
+}
+
+std::variant<z::Shmbuf, z::ErrorMessage> z::ShmManager::alloc(uintptr_t capacity) const {
+    auto shmbuf = z::Shmbuf(std::move(::zc_shm_alloc(&_0, capacity)));
+    if (!shmbuf.check()) return "Failed to allocate shared memor buffer";
+    return std::move(shmbuf);
+}
+
 #endif
 
 inline z::ScoutingConfig z::Config::create_scouting_config() {

@@ -72,41 +72,22 @@ int _main(int argc, char **argv) {
     std::ostringstream oss;
     oss << session.info_zid();
 
-    ShmManager manager(session, oss.str().c_str(), N * 256);
+    auto manager = std::get<ShmManager>(shm_manager_new(session, oss.str().c_str(), N * 256));
 
-    // zc_owned_shm_manager_t manager = zc_shm_manager_new(z_loan(s), idstr, N * 256);
-    // if (!z_check(s)) {
-    //     printf("Unable to open session!\n");
-    //     exit(-1);
-    // }
+    printf("Declaring Publisher on '%s'...\n", keyexpr);
+    auto pub = std::get<Publisher>(session.declare_publisher(keyexpr));
 
-    // printf("Declaring Publisher on '%s'...\n", keyexpr);
-    // z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(keyexpr), NULL);
-    // if (!z_check(pub)) {
-    //     printf("Unable to declare Publisher for key expression!\n");
-    //     exit(-1);
-    // }
-
-    // char buf[256];
-    // for (int idx = 0; idx < N; ++idx) {
-    //     zc_owned_shmbuf_t shmbuf = zc_shm_alloc(&manager, 256);
-    //     if (!z_check(shmbuf)) {
-    //         printf("Failed to allocate a SHM buffer\n");
-    //         exit(-1);
-    //     }
-    //     uint8_t *buf = zc_shmbuf_ptr(&shmbuf);
-    //     sleep(1);
-    //     sprintf((char *)buf, "[%4d] %s", idx, value);
-    //     printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
-    //     z_publisher_put_options_t options = z_publisher_put_options_default();
-    //     options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-    //     zc_owned_payload_t payload = zc_shmbuf_into_payload(z_move(shmbuf));
-    //     zc_publisher_put_owned(z_loan(pub), z_move(payload), &options);
-    // }
-
-    // z_undeclare_publisher(z_move(pub));
-
-    // z_close(z_move(s));
+    PublisherPutOptions options;
+    options.set_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN);
+    for (int idx = 0; idx < N; ++idx) {
+        auto shmbuf = std::get<z::Shmbuf>(manager.alloc(256));
+        auto buf = shmbuf.ptr();
+        snprintf((char *)buf, 255, "[%4d] %s", idx, value);
+        sleep(1);
+        std::cout << "Putting Data ('" << keyexpr << "': '" << buf << "')..." << std::endl;
+        auto payload = shmbuf.into_payload();
+        pub.put_owned(std::move(payload), options);
+    }
     return 0;
 }
 
