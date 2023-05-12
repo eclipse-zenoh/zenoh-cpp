@@ -16,13 +16,14 @@ Check the website [zenoh.io](http://zenoh.io) and the [roadmap](https://github.c
 
 # C++ API
 
-The Zenoh C++ API is a C++ bindings for [zenoh-c] and [zenoh-pico] libraries. The library is headers only.
+The Zenoh C++ API is a C++ bindings for [zenoh-c] and [zenoh-pico] libraries. The library is headers only,
+but building [zenoh-c] requires [Rust](rust-lang) installed. Please check [here](https://www.rust-lang.org/tools/install) to learn how to install it.
 
 
 C++ bindings are still so the Zenoh team will highly appreciate any help in testing them on various platforms, system architecture, etc. and to report any issue you might encounter. This will help in greatly improving its maturity and robustness.
 
 -------------------------------
-## How to build and install it 
+## How to build and install it
 
 > :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in mantaining compatibility between the various git repositories in the Zenoh project.
 
@@ -34,7 +35,7 @@ To install [zenoh-cpp] do the following steps:
    git clone https://github.com/eclipse-zenoh/zenoh-cpp.git
    ```
 
-2. Do install. 
+2. Do install.
    Neither [zenoh-c] nor [zenoh-pico] are required for the installation, but both are neccessary for building tests and examples. So, instead of the main project, it's faster to do install from "install" subproject.
 
    Use option `CMAKE_INSTALL_PREFIX` for specifying installation location. Without this parameter installation is performed to default system location `/usr/local` which requires root privileges.
@@ -56,13 +57,13 @@ The [zenoh-cpp] is header-only C++ library that wraps [zenoh-c] and [zenoh-pico]
 3. Download [zenoh-c] and [zenoh-pico] from GitHub
 
 ```bash
-mkdir -p build && cd build 
+mkdir -p build && cd build
 cmake ../zenoh-cpp
 cmake --build . --target tests
 ctest
 ```
 
-Notice that the output of `cmake ../zenoh-cpp` shows where the dependencies were found 
+Notice that the output of `cmake ../zenoh-cpp` shows where the dependencies were found
 
 ## Building the Examples
 
@@ -71,22 +72,22 @@ Examples are splitted into two subdirectories. Subdirectory `universal` contains
 The examples can be built in two ways. One is to select `examples` as a build target of the main project:
 
 ```bash
-mkdir -p build && cd build 
+mkdir -p build && cd build
 cmake ../zenoh-cpp
 cmake --build . --target examples
 ```
 
-Examples are placed into `build/examples/zenohc` and `build/examples/zenohpico` directories. 
+Examples are placed into `build/examples/zenohc` and `build/examples/zenohpico` directories.
 
 Second way is to build `examples` as a root project, which includes [zenoh-cpp] as subproject
 
 ```bash
-mkdir -p build && cd build 
+mkdir -p build && cd build
 cmake ../zenoh-cpp/examples
 cmake --build .
 ```
 
-Examples are placed into `build/zenohc` and `build/zenohpico` directories. 
+Examples are placed into `build/zenohc` and `build/zenohpico` directories.
 
 ## Running the examples
 
@@ -137,10 +138,10 @@ After 30-40 seconds delay the `z_sub_thr` will start to show the throughput meas
 
 ## Library usage
 
-Below are the steps to include [zenoh-cpp] into CMake project. See also [examples/simple](examples/simple) directory for short examples of CMakeLists.txt. 
+Below are the steps to include [zenoh-cpp] into CMake project. See also [examples/simple](examples/simple) directory for short examples of CMakeLists.txt.
 
 - include [zenoh-c] or [zenoh-pico] into your CMake project.
-  This is important as the library targets you need (`zenohcxx::zenohpico`, `zenohcxx::zenohc::lib` and `zenohcxx::zenohc::static)` 
+  This is important as the library targets you need (`zenohcxx::zenohpico`, `zenohcxx::zenohc::lib` and `zenohcxx::zenohc::static)`
   are defined only if their backend library
   targets (`zenohpico`, `zenohc::lib` and `zenohc::static` are defined)
 
@@ -171,7 +172,7 @@ Below are the steps to include [zenoh-cpp] into CMake project. See also [example
     #include "zenoh.hxx"
     using namespace zenoh;
     ```
-    or use headers [zenohc.hxx] or [zenohpico.hxx] directly 
+    or use headers [zenohc.hxx] or [zenohpico.hxx] directly
     ```C++
     #include "zenohc.hxx"
     using namespace zenohc;
@@ -242,7 +243,7 @@ void on_query(const Query* query) { ... };
 auto queryable = std::get<Queryable>(session.declare_queryable("foo/bar", on_query);
 ```
 
-The `ClosureMoveParam` types accepts types, invocable with `Foo`, `Foo&` or `Foo&&`. Callback may take ownership of the reference parameter passed 
+The `ClosureMoveParam` types accepts types, invocable with `Foo`, `Foo&` or `Foo&&`. Callback may take ownership of the reference parameter passed
 or do nothing and leave to caller to drop it.
 ```C++
 session.get("foo/bar", "", [](Reply reply) { ... });
@@ -250,13 +251,13 @@ session.get("foo/bar", "", [](Reply& reply) { ... });
 session.get("foo/bar", "", [](Reply&& reply) { ... });
 ```
 
-The `nullptr` or invalid value (`value.check() == false`) are passed to callback before the callback is dropped. 
+The `nullptr` or invalid value (`value.check() == false`) are passed to callback before the callback is dropped.
 This may be changed in nearest future (see below).
 
 ### Known API issues and restrictions:
 
 - Objects created by `Session` keeps reference to the stack instance of `Session` object. This means that C++ move semantics
-doesn't supported correctly. See the code below (which is copied with a few changes from [here](examples/simple/universal/z_simple.cxx)). 
+doesn't supported correctly. See the code below (which is copied with a few changes from [here](examples/simple/universal/z_simple.cxx)).
 **This is planned to be fixed in next release, on [zenoh-c] or [zenoh] level**
    ```C++
    Config config;
@@ -264,11 +265,11 @@ doesn't supported correctly. See the code below (which is copied with a few chan
    Session s1 = std::move(s); // That's ok
    Publisher p = std::get<Publisher>(s1.declare_publisher("demo/example/simple"));
    Session s_moved = std::move(s1); // DON'T DO THAT, `p` holds `&s1` reference when zenoh-c is used
-   p.put("Value"); // CRASH!!! 
+   p.put("Value"); // CRASH!!!
    ```
 
 - There is a special meaning for `null` parameter of closures: drop notification. So the programmer is responsible to test parameter for
-validity on each call.  It doesn't follow the logic of original [zenoh] API and modern C++ practice, discouraging raw pointer usage. 
+validity on each call.  It doesn't follow the logic of original [zenoh] API and modern C++ practice, discouraging raw pointer usage.
 So **in the next release the `const T*` closure prototype supposedly will be changed to `const T&`**.
 ```C++
 session.declare_subscriber("foo/bar", [](const Sample *sample) {
@@ -285,11 +286,10 @@ session.declare_subscriber("foo/bar", [](const Sample *sample) {
 [zenoh-c]: https://github.com/eclipse-zenoh/zenoh-c
 [zenoh-cpp]: https://github.com/eclipse-zenoh/zenoh-cpp
 [zenoh-pico]: https://github.com/eclipse-zenoh/zenoh-pico
-[zenoh.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenoh.hxx 
-[zenohc.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohc.hxx 
-[zenohpico.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohpico.hxx 
-[api.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohcxx/api.hxx 
+[zenoh.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenoh.hxx
+[zenohc.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohc.hxx
+[zenohpico.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohpico.hxx
+[api.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohcxx/api.hxx
 [add_subdirectory]: https://cmake.org/cmake/help/latest/command/add_subdirectory.html
 [find_package]: https://cmake.org/cmake/help/latest/command/find_package.html
 [FetchContent]: https://cmake.org/cmake/help/latest/module/FetchContent.html
-
