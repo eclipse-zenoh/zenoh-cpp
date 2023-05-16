@@ -861,6 +861,10 @@ class Session : public Owned<::z_owned_session_t> {
     void drop();
     ~Session() { drop(); }
 
+#ifdef __ZENOHCXX_ZENOHC
+    Session rcinc() { return Session(::zc_session_rcinc(::z_session_loan(&_0))); }
+#endif
+
     z::Id info_zid() const { return ::z_info_zid(::z_session_loan(&_0)); }
 
     friend std::variant<z::Session, z::ErrorMessage> z::open(z::Config&& config, bool start_background_tasks);
