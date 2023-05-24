@@ -37,3 +37,4 @@ target/*
 Testing/*
 
 zenohcpp.pc
+.cache
