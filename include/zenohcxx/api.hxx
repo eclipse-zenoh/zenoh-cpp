@@ -26,6 +26,14 @@
 #error("Internal include configuration error: either __ZENOHCXX_ZENOHC or __ZENOHCXX_ZENOHPICO should be defined")
 #endif
 
+class Session;
+class Value;
+
+//
+// Error message returned by some functions
+//
+typedef z::Value ErrorMessage;
+
 //
 // Error code value returned as negative value from zenohc/zenohpico functions
 //
@@ -318,6 +326,61 @@ struct Timestamp : Copyable<::z_timestamp_t> {
     bool check() const { return ::z_timestamp_check(*this); }
 };
 
+#ifdef __ZENOHCXX_ZENOHC
+//
+// Owned reference-counted payload object
+// Availabel only in zenoh-c where underlying buffer is reference-counted and it's possible to
+// take this buffer for further processing. It can be convenient if it's necessary to resend the
+// buffer to one or multiple receivers without copying it.
+//
+class Payload : public Owned<::zc_owned_payload_t> {
+   public:
+    using Owned::Owned;
+    Payload rcinc() const { return Payload(::zc_payload_rcinc(&_0)); }
+    const z::BytesView& get_payload() const { return static_cast<const z::BytesView&>(_0.payload); }
+};
+
+//
+// Memory buffer returned by shared memory manager
+//
+class Shmbuf : public Owned<::zc_owned_shmbuf_t> {
+   public:
+    using Owned::Owned;
+    uintptr_t get_capacity() const { return ::zc_shmbuf_capacity(&_0); }
+    uintptr_t get_length() const { return ::zc_shmbuf_length(&_0); }
+    void set_length(uintptr_t length) { ::zc_shmbuf_set_length(&_0, length); }
+    z::Payload into_payload() { return z::Payload(std::move(::zc_shmbuf_into_payload(&_0))); }
+    uint8_t* ptr() const { return ::zc_shmbuf_ptr(&_0); }
+    char* char_ptr() const { return reinterpret_cast<char*>(ptr()); }
+    std::string_view as_string_view() const {
+        return std::string_view(reinterpret_cast<const char*>(ptr()), get_length());
+    }
+};
+
+//
+// Shared memory manager
+//
+
+class ShmManager;
+std::variant<z::ShmManager, z::ErrorMessage> shm_manager_new(const z::Session& session, const char* id, uintptr_t size);
+
+class ShmManager : public Owned<::zc_owned_shm_manager_t> {
+   public:
+    using Owned::Owned;
+
+    friend std::variant<z::ShmManager, z::ErrorMessage> z::shm_manager_new(const z::Session& session, const char* id,
+                                                                           uintptr_t size);
+
+    std::variant<z::Shmbuf, z::ErrorMessage> alloc(uintptr_t capacity) const;
+    uintptr_t defrag() const { return ::zc_shm_defrag(&_0); }
+    uintptr_t gc() const { return ::zc_shm_gc(&_0); }
+
+   private:
+    ShmManager(const z::Session& session, const char* id, uintptr_t size);
+};
+
+#endif
+
 //
 // A data sample.
 //
@@ -329,6 +392,12 @@ struct Sample : public Copyable<::z_sample_t> {
     const z::BytesView& get_payload() const { return static_cast<const z::BytesView&>(payload); }
     const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
     SampleKind get_kind() const { return kind; }
+#ifdef __ZENOHCXX_ZENOHC
+    z::Payload sample_payload_rcinc() const {
+        auto p = ::zc_sample_payload_rcinc(static_cast<const ::z_sample_t*>(this));
+        return z::Payload(std::move(p));
+    }
+#endif
 };
 
 //
@@ -359,11 +428,6 @@ struct Value : public Copyable<::z_value_t> {
     }
     bool operator!=(const Value& v) const { return !operator==(v); }
 };
-
-//
-// Error message returned by some functions
-//
-typedef z::Value ErrorMessage;
 
 //
 // Represents the replies consolidation to apply on replies of get operation
@@ -718,9 +782,19 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     bool delete_resource(const z::PublisherDeleteOptions& options);
     bool delete_resource();
 
+#ifdef __ZENOHCXX_ZENOHC
+    bool put_owned(z::Payload&& payload, const z::PublisherPutOptions& options, ErrNo& error);
+    bool put_owned(z::Payload&& payload, ErrNo& error);
+    bool put_owned(z::Payload&& payload, const z::PublisherPutOptions& options);
+    bool put_owned(z::Payload&& payload);
+#endif
+
    private:
     bool put_impl(const z::BytesView& payload, const z::PublisherPutOptions* options, ErrNo& error);
     bool delete_impl(const z::PublisherDeleteOptions* options, ErrNo& error);
+#ifdef __ZENOHCXX_ZENOHC
+    bool put_owned_impl(z::Payload&& payload, const z::PublisherPutOptions* options, ErrNo& error);
+#endif
 };
 
 //
@@ -787,6 +861,10 @@ class Session : public Owned<::z_owned_session_t> {
     void drop();
     ~Session() { drop(); }
 
+#ifdef __ZENOHCXX_ZENOHC
+    Session rcinc() { return Session(::zc_session_rcinc(::z_session_loan(&_0))); }
+#endif
+
     z::Id info_zid() const { return ::z_info_zid(::z_session_loan(&_0)); }
 
     friend std::variant<z::Session, z::ErrorMessage> z::open(z::Config&& config, bool start_background_tasks);
@@ -807,6 +885,12 @@ class Session : public Owned<::z_owned_session_t> {
     bool delete_resource(z::KeyExprView keyexpr, const z::DeleteOptions& options);
     bool delete_resource(z::KeyExprView keyexpr, ErrNo& error);
     bool delete_resource(z::KeyExprView keyexpr);
+#ifdef __ZENOHCXX_ZENOHC
+    bool put_owned(z::KeyExprView keyexpr, z::Payload&& payload, const z::PutOptions& options, ErrNo& error);
+    bool put_owned(z::KeyExprView keyexpr, z::Payload&& payload, const z::PutOptions& options);
+    bool put_owned(z::KeyExprView keyexpr, z::Payload&& payload, ErrNo& error);
+    bool put_owned(z::KeyExprView keyexpr, z::Payload&& payload);
+#endif
     std::variant<z::Queryable, ErrorMessage> declare_queryable(z::KeyExprView keyexpr, z::ClosureQuery&& callback,
                                                                const z::QueryableOptions& options);
     std::variant<z::Queryable, ErrorMessage> declare_queryable(z::KeyExprView keyexpr, z::ClosureQuery&& callback);
@@ -854,6 +938,9 @@ class Session : public Owned<::z_owned_session_t> {
                   const z::GetOptions* options, ErrNo& error);
     bool put_impl(z::KeyExprView keyexpr, const z::BytesView& payload, const z::PutOptions* options, ErrNo& error);
     bool delete_impl(z::KeyExprView keyexpr, const z::DeleteOptions* options, ErrNo& error);
+#ifdef __ZENOHCXX_ZENOHC
+    bool put_owned_impl(z::KeyExprView keyexpr, z::Payload&& payload, const z::PutOptions* options, ErrNo& error);
+#endif
     std::variant<z::Queryable, ErrorMessage> declare_queryable_impl(z::KeyExprView keyexpr, z::ClosureQuery&& callback,
                                                                     const z::QueryableOptions* options);
     std::variant<z::Subscriber, ErrorMessage> declare_subscriber_impl(z::KeyExprView keyexpr,
