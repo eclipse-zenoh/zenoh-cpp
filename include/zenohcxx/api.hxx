@@ -322,7 +322,7 @@ struct Timestamp : Copyable<::z_timestamp_t> {
     using Copyable::Copyable;
     // TODO: add utility methods to interpret time as mils, seconds, minutes, etc
     uint64_t get_time() const { return time; }
-    const z::BytesView& get_id() const { return static_cast<const z::BytesView&>(id); }
+    z::Id get_id() const { return id; }
     bool check() const { return ::z_timestamp_check(*this); }
 };
 
