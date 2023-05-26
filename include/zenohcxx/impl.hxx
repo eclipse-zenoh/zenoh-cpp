@@ -169,6 +169,23 @@ inline std::variant<z::Config, ErrorMessage> config_client(const std::initialize
     std::vector<const char*> v(peers);
     return z::config_client(v);
 }
+
+inline z::ShmManager::ShmManager(const z::Session& session, const char* id, uintptr_t size)
+    : Owned(std::move(::zc_shm_manager_new(::z_loan(static_cast<const ::z_owned_session_t&>(session)), id, size))) {}
+
+inline std::variant<z::ShmManager, z::ErrorMessage> shm_manager_new(const z::Session& session, const char* id,
+                                                                    uintptr_t size) {
+    z::ShmManager shm_manager(session, id, size);
+    if (!shm_manager.check()) return "Failed to create shm manager";
+    return std::move(shm_manager);
+}
+
+std::variant<z::Shmbuf, z::ErrorMessage> z::ShmManager::alloc(uintptr_t capacity) const {
+    auto shmbuf = z::Shmbuf(std::move(::zc_shm_alloc(&_0, capacity)));
+    if (!shmbuf.check()) return "Failed to allocate shared memor buffer";
+    return std::move(shmbuf);
+}
+
 #endif
 
 inline z::ScoutingConfig z::Config::create_scouting_config() {
@@ -201,6 +218,28 @@ inline bool z::Publisher::delete_resource() {
     return delete_impl(nullptr, error);
 }
 
+#ifdef __ZENOHCXX_ZENOHC
+
+inline bool z::Publisher::put_owned(z::Payload&& payload, const z::PublisherPutOptions& options, ErrNo& error) {
+    return put_owned_impl(std::move(payload), &options, error);
+}
+
+inline bool z::Publisher::put_owned(z::Payload&& payload, ErrNo& error) {
+    return put_owned_impl(std::move(payload), nullptr, error);
+}
+
+inline bool z::Publisher::put_owned(z::Payload&& payload, const z::PublisherPutOptions& options) {
+    ErrNo error;
+    return put_owned_impl(std::move(payload), &options, error);
+}
+
+inline bool z::Publisher::put_owned(z::Payload&& payload) {
+    ErrNo error;
+    return put_owned_impl(std::move(payload), nullptr, error);
+}
+
+#endif
+
 inline bool z::Publisher::put_impl(const z::BytesView& payload, const PublisherPutOptions* options, ErrNo& error) {
     error = ::z_publisher_put(::z_loan(_0), payload.start, payload.len, options);
     return error == 0;
@@ -210,6 +249,15 @@ inline bool z::Publisher::delete_impl(const PublisherDeleteOptions* options, Err
     error = ::z_publisher_delete(::z_loan(_0), options);
     return error == 0;
 }
+
+#ifdef __ZENOHCXX_ZENOHC
+
+inline bool z::Publisher::put_owned_impl(z::Payload&& payload, const z::PublisherPutOptions* options, ErrNo& error) {
+    error = ::zc_publisher_put_owned(::z_loan(_0), &static_cast<::zc_owned_payload_t&>(payload), options);
+    return error == 0;
+}
+
+#endif
 
 inline bool scout(z::ScoutingConfig&& config, ClosureHello&& callback, ErrNo& error) {
     auto c = config.take();
@@ -284,6 +332,25 @@ inline bool z::Session::delete_resource(z::KeyExprView keyexpr) {
     PutOptions options;
     return delete_impl(keyexpr, nullptr, error);
 }
+
+#ifdef __ZENOHCXX_ZENOHC
+inline bool z::Session::put_owned(z::KeyExprView keyexpr, z::Payload&& payload, const PutOptions& options,
+                                  ErrNo& error) {
+    return put_owned_impl(keyexpr, std::move(payload), &options, error);
+}
+inline bool z::Session::put_owned(z::KeyExprView keyexpr, z::Payload&& payload, const PutOptions& options) {
+    ErrNo error;
+    return put_owned_impl(keyexpr, std::move(payload), &options, error);
+}
+inline bool z::Session::put_owned(z::KeyExprView keyexpr, z::Payload&& payload, ErrNo& error) {
+    return put_owned_impl(keyexpr, std::move(payload), nullptr, error);
+}
+inline bool z::Session::put_owned(z::KeyExprView keyexpr, z::Payload&& payload) {
+    ErrNo error;
+    PutOptions options;
+    return put_owned_impl(keyexpr, std::move(payload), nullptr, error);
+}
+#endif
 
 inline std::variant<z::Queryable, ErrorMessage> z::Session::declare_queryable(z::KeyExprView keyexpr,
                                                                               ClosureQuery&& callback,
@@ -364,6 +431,15 @@ inline bool z::Session::delete_impl(z::KeyExprView keyexpr, const DeleteOptions*
     error = ::z_delete(::z_session_loan(&_0), keyexpr, options);
     return error == 0;
 }
+
+#ifdef __ZENOHCXX_ZENOHC
+inline bool z::Session::put_owned_impl(z::KeyExprView keyexpr, z::Payload&& payload, const PutOptions* options,
+                                       ErrNo& error) {
+    error = ::zc_put_owned(::z_session_loan(&_0), keyexpr, &(static_cast<::zc_owned_payload_t&>(payload)), options);
+    return error == 0;
+}
+#endif
+
 inline std::variant<z::Queryable, ErrorMessage> z::Session::declare_queryable_impl(z::KeyExprView keyexpr,
                                                                                    ClosureQuery&& callback,
                                                                                    const QueryableOptions* options) {
