@@ -14,12 +14,12 @@
 
 changelog:
   categories:
+    - title: New features 🎉
+      labels:
+        - enhancement
     - title: Bug fixes 🐞
       labels:
         - bug
-    - title: New Features 🎉
-      labels:
-        - enhancement
-    - title: Other Changes
+    - title: Other changes
       labels:
         - "*"
