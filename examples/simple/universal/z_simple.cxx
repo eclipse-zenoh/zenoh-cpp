@@ -30,17 +30,17 @@ class CustomerClass {
     CustomerClass& operator=(const CustomerClass&) = delete;
     CustomerClass& operator=(CustomerClass&&) = delete;
 
-    CustomerClass() : session(nullptr), pub(nullptr) {
+    CustomerClass(const KeyExprView& keyexpr) : session(nullptr), pub(nullptr) {
         Config config;
         Session s = std::get<Session>(open(std::move(config)));
         session = std::move(s);
         // Publisher holds a reference to the Session, so after creating the publisher the session should
         // not be moved anymore (as well as the whole CustomerClass)
-        Publisher p = std::get<Publisher>(session.declare_publisher("demo/example/simple"));
+        Publisher p = std::get<Publisher>(session.declare_publisher(keyexpr));
         pub = std::move(p);
     }
 
-    void put(std::string_view value) { pub.put(value); }
+    void put(const BytesView& value) { pub.put(value); }
 
    private:
     Session session;
@@ -48,6 +48,8 @@ class CustomerClass {
 };
 
 int main(int argc, char** argv) {
-    CustomerClass customer;
-    customer.put("Simple!");
+    std::string keyexpr = "demo/example/simple";
+    std::string value = "Simple!";
+    CustomerClass customer(keyexpr);
+    customer.put(value);
 }

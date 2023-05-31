@@ -29,13 +29,20 @@ void key_expr_view() {
     assert(foo.as_bytes() == "FOO");
     assert(foo.as_string_view() == "FOO");
 
+    std::string sfoo("FOO");
+    KeyExprView ksfoo(sfoo);
+    assert(ksfoo.check());
+    assert(ksfoo == "FOO");
+    assert(ksfoo.as_bytes() == "FOO");
+    assert(ksfoo.as_string_view() == "FOO");
+
 #ifdef ZENOHCXX_ZENOHC
-    std::string_view sfoo("FOOBAR", 3);
-    KeyExprView svfoo(sfoo);
-    assert(svfoo.check());
-    assert(svfoo == "FOO");
-    assert(svfoo.as_bytes() == "FOO");
-    assert(svfoo.as_string_view() == "FOO");
+    std::string_view svfoo("FOOBAR", 3);
+    KeyExprView ksvfoo(svfoo);
+    assert(ksvfoo.check());
+    assert(ksvfoo == "FOO");
+    assert(ksvfoo.as_bytes() == "FOO");
+    assert(ksvfoo.as_string_view() == "FOO");
 
     KeyExprView unchecked("a/*", KeyExprUnchecked());
     assert(unchecked.check());
