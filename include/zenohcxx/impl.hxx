@@ -180,7 +180,7 @@ inline std::variant<z::ShmManager, z::ErrorMessage> shm_manager_new(const z::Ses
     return std::move(shm_manager);
 }
 
-std::variant<z::Shmbuf, z::ErrorMessage> z::ShmManager::alloc(uintptr_t capacity) const {
+inline std::variant<z::Shmbuf, z::ErrorMessage> z::ShmManager::alloc(uintptr_t capacity) const {
     auto shmbuf = z::Shmbuf(std::move(::zc_shm_alloc(&_0, capacity)));
     if (!shmbuf.check()) return "Failed to allocate shared memor buffer";
     return std::move(shmbuf);
