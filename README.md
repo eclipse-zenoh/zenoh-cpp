@@ -268,7 +268,7 @@ session.declare_subscriber("foo/bar", [](const Sample *sample) {
    }
 });
 ```
-The issue to follow the status of the issue: https://github.com/eclipse-zenoh/zenoh-cpp/issues/40
+The issue to follow the status of the problem: https://github.com/eclipse-zenoh/zenoh-cpp/issues/40
 
 
 [rust-lang]: https://www.rust-lang.org
