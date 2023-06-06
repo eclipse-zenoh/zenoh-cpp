@@ -256,18 +256,6 @@ This may be changed in nearest future (see below).
 
 ### Known API issues and restrictions:
 
-- Objects created by `Session` keeps reference to the stack instance of `Session` object. This means that C++ move semantics
-doesn't supported correctly. See the code below (which is copied with a few changes from [here](examples/simple/universal/z_simple.cxx)).
-**This is planned to be fixed in next release, on [zenoh-c] or [zenoh] level**
-   ```C++
-   Config config;
-   Session s = std::get<Session>(open(std::move(config)));
-   Session s1 = std::move(s); // That's ok
-   Publisher p = std::get<Publisher>(s1.declare_publisher("demo/example/simple"));
-   Session s_moved = std::move(s1); // DON'T DO THAT, `p` holds `&s1` reference when zenoh-c is used
-   p.put("Value"); // CRASH!!!
-   ```
-
 - There is a special meaning for `null` parameter of closures: drop notification. So the programmer is responsible to test parameter for
 validity on each call.  It doesn't follow the logic of original [zenoh] API and modern C++ practice, discouraging raw pointer usage.
 So **in the next release the `const T*` closure prototype supposedly will be changed to `const T&`**.
@@ -280,6 +268,8 @@ session.declare_subscriber("foo/bar", [](const Sample *sample) {
    }
 });
 ```
+The issue to follow the status of the issue: https://github.com/eclipse-zenoh/zenoh-cpp/issues/40
+
 
 [rust-lang]: https://www.rust-lang.org
 [zenoh]: https://github.com/eclipse-zenoh/zenoh
