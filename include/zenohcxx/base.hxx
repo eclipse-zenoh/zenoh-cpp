@@ -108,7 +108,7 @@ class Owned {
 // Base type for C++ wrappers for Zenoh closures which doesn't take ownership of passed value
 // It expects that
 // - ZCPP_PARAM type is derived from ZC_PARAM
-// - user's LAMBDA can be invoked with (const ZCPP_PARAM*)
+// - user's LAMBDA can be invoked with (const ZCPP_PARAM&)
 // - user's LAMBDA is called by zenoh with nullptr to notify that closure is being destructed
 //
 template <typename ZC_CLOSURE_TYPE, typename ZC_PARAM, typename ZCPP_PARAM,
@@ -129,12 +129,17 @@ class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
 
     // Template constructors
 
+    // TODO: allow also 'const T& obj'
+
+    // Called with reference to object with operator()(const ZCPP_PARAM&) defined
     template <typename T, typename std::enable_if_t<!std::is_function_v<T>, bool> = true>
     ClosureConstPtrParam(T& obj) : Owned<ZC_CLOSURE_TYPE>(wrap_ref(obj)) {}
 
+    // Called with pointer to function accepting const ZCPP_PARAM&
     template <typename T, typename std::enable_if_t<std::is_function_v<T>, bool> = true>
     ClosureConstPtrParam(T& func) : Owned<ZC_CLOSURE_TYPE>(wrap_func(func)) {}
 
+    // Called with rvalue reference to object with operator()(const ZCPP_PARAM&) defined
     template <typename T>
     ClosureConstPtrParam(T&& obj)
         : Owned<ZC_CLOSURE_TYPE>(wrap_forward(std::forward<std::remove_reference_t<T>>(obj))) {}
@@ -155,11 +160,11 @@ class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
         return {
             new CONTEXT_TYPE(func),
             [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
-                return static_cast<CONTEXT_TYPE*>(ctx)->operator()(static_cast<const ZCPP_PARAM*>(pvalue));
+                return static_cast<CONTEXT_TYPE*>(ctx)->operator()(*static_cast<const ZCPP_PARAM*>(pvalue));
             },
             [](void* ctx) {
-                    static_cast<CONTEXT_TYPE*>(ctx)->operator()(nullptr);
-                    delete static_cast<CONTEXT_TYPE*>(ctx);
+                // TODO: call destructor function if provided
+                delete static_cast<CONTEXT_TYPE*>(ctx);
             }
         };
     }
@@ -171,11 +176,11 @@ class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
         return {
             new CONTEXT_TYPE(std::forward<CONTEXT_TYPE>(obj)),
             [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
-                return static_cast<CONTEXT_TYPE*>(ctx)->operator()(static_cast<const ZCPP_PARAM*>(pvalue));
+                return static_cast<CONTEXT_TYPE*>(ctx)->operator()(*static_cast<const ZCPP_PARAM*>(pvalue));
             },
             [](void* ctx) {
-                    static_cast<CONTEXT_TYPE*>(ctx)->operator()(nullptr);
-                    delete static_cast<CONTEXT_TYPE*>(ctx);
+                // TODO: call destructor function if provided
+                delete static_cast<CONTEXT_TYPE*>(ctx);
             }
         };
     }

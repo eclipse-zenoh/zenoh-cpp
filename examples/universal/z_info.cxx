@@ -17,8 +17,8 @@
 #include "zenoh.hxx"
 using namespace zenoh;
 
-void print_zid(const Id* id) {
-    if (id) std::cout << id << std::endl;
+void print_zid(const Id& id) {
+    std::cout << id << std::endl;
 }
 
 int _main(int argc, char** argv) {
@@ -48,7 +48,7 @@ int _main(int argc, char** argv) {
 
     auto self_id = session.info_zid();
     printf("own id: ");
-    print_zid(&self_id);
+    print_zid(self_id);
 
     printf("routers ids:\n");
     session.info_routers_zid(print_zid);

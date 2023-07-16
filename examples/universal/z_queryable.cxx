@@ -68,19 +68,18 @@ int _main(int argc, char **argv) {
 
     printf("Declaring Queryable on '%s'...\n", expr);
 
-    auto queryable = std::get<Queryable>(session.declare_queryable(keyexpr, [](const Query *query) {
-        if (query) {
-            auto keystr = query->get_keyexpr();
-            auto pred = query->get_parameters();
-            auto query_value = query->get_value();
-            std::cout << ">> [Queryable ] Received Query '" << keystr.as_string_view() << "?" << pred.as_string_view()
-                      << "' value = '" << query_value.as_string_view() << "'\n";
-            QueryReplyOptions options;
-            options.set_encoding(Encoding(Z_ENCODING_PREFIX_TEXT_PLAIN));
-            query->reply(expr, value, options);
-        } else {
-            std::cout << "Destroying queryable\n";
-        }
+    auto queryable = std::get<Queryable>(session.declare_queryable(keyexpr, [](const Query& query) {
+        auto keystr = query.get_keyexpr();
+        auto pred = query.get_parameters();
+        auto query_value = query.get_value();
+        std::cout << ">> [Queryable ] Received Query '" << keystr.as_string_view() << "?" << pred.as_string_view()
+                    << "' value = '" << query_value.as_string_view() << "'\n";
+        QueryReplyOptions options;
+        options.set_encoding(Encoding(Z_ENCODING_PREFIX_TEXT_PLAIN));
+        query.reply(expr, value, options);
+        // } else { // TODO: uncomment when destructor notification callback is implemented
+        //     std::cout << "Destroying queryable\n";
+        // }
     }));
 
     printf("Enter 'q' to quit...\n");
