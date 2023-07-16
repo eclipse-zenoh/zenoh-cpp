@@ -13,6 +13,11 @@ else()
     add_custom_target(examples)
 endif()
 
+add_custom_target(examples_zenohc)
+add_custom_target(examples_zenohpico)
+add_dependencies(examples examples_zenohc)
+add_dependencies(examples examples_zenohpico)
+
 function(add_example file mode lib)
 	get_filename_component(filename ${file} NAME_WE)
 	set(target ${filename}_${mode})
@@ -20,7 +25,7 @@ function(add_example file mode lib)
 	set_target_properties(${target} PROPERTIES 
 		OUTPUT_NAME ${filename}
 		RUNTIME_OUTPUT_DIRECTORY ${mode})
-	add_dependencies(examples ${target})
+	add_dependencies(examples_${mode} ${target})
 	add_dependencies(${target} ${lib})
     target_link_libraries(${target} PUBLIC ${lib})
 	set_property(TARGET ${target} PROPERTY LANGUAGE CXX)
