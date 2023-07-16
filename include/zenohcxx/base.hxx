@@ -142,11 +142,11 @@ class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
    private:
     template <typename T>
     ZC_CLOSURE_TYPE wrap_ref(T& obj) {
-        return {.context = &obj,
-                .call = [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+        return {&obj,
+                [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
                     return static_cast<T*>(ctx)->operator()(static_cast<const ZCPP_PARAM*>(pvalue));
                 },
-                .drop = [](void* ctx) { static_cast<T*>(ctx)->operator()(nullptr); }};
+                [](void* ctx) { static_cast<T*>(ctx)->operator()(nullptr); }};
     }
 
     template <typename T>
