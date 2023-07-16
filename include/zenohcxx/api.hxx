@@ -170,7 +170,7 @@ template <typename Z_STR_ARRAY_T>
 struct _StrArrayView : Copyable<Z_STR_ARRAY_T> {
     typedef decltype(Z_STR_ARRAY_T::val) VALTYPE;
     using Copyable<Z_STR_ARRAY_T>::Copyable;
-    _StrArrayView() : Copyable<Z_STR_ARRAY_T>({.len = 0, .val = nullptr}) {}
+    _StrArrayView() : Copyable<Z_STR_ARRAY_T>({0, nullptr}) {}
     _StrArrayView(const std::vector<const char*>& v)
         : Copyable<Z_STR_ARRAY_T>({v.size(), const_cast<VALTYPE>(&v[0])}) {}
     _StrArrayView(const char** v, size_t len) : Copyable<Z_STR_ARRAY_T>({len, const_cast<VALTYPE>(v)}) {}
