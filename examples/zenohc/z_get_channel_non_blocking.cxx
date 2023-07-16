@@ -18,9 +18,9 @@
 #include <iostream>
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 #include <windows.h>
-#define sleep(x) Sleep(x * 1000)
 #else
 #include <unistd.h>
+#define Sleep(x) usleep(x * 1000)
 #endif
 
 #include "zenohc.hxx"
@@ -61,7 +61,7 @@ int _main(int argc, char **argv) {
     for (bool call_success = recv(reply); !call_success || reply.check(); call_success = recv(reply)) {
         if (!call_success) {
             std::cout << ".";
-            usleep(100);
+            Sleep(1);
             continue;
         }
         auto sample = std::get<Sample>(reply.get());

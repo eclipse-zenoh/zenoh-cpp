@@ -19,10 +19,10 @@
 // as this file is included multiple times into different namespaces
 
 // Validate that __ZENOHCXX_ZENOHPICO and __ZENOHCXX_ZENOHC are mutually exclusive
-#if defined(__ZENOHCXX_ZENOHPICO) and defined(__ZENOHCXX_ZENOHC)
+#if defined(__ZENOHCXX_ZENOHPICO) && defined(__ZENOHCXX_ZENOHC)
 #error("Internal include configuration error: both __ZENOHCXX_ZENOHC and __ZENOHCXX_ZENOHPICO are defined")
 #endif
-#if not defined(__ZENOHCXX_ZENOHPICO) and not defined(__ZENOHCXX_ZENOHC)
+#if !defined(__ZENOHCXX_ZENOHPICO) && !defined(__ZENOHCXX_ZENOHC)
 #error("Internal include configuration error: either __ZENOHCXX_ZENOHC or __ZENOHCXX_ZENOHPICO should be defined")
 #endif
 
@@ -172,10 +172,10 @@ struct _StrArrayView : Copyable<Z_STR_ARRAY_T> {
     using Copyable<Z_STR_ARRAY_T>::Copyable;
     _StrArrayView() : Copyable<Z_STR_ARRAY_T>({.len = 0, .val = nullptr}) {}
     _StrArrayView(const std::vector<const char*>& v)
-        : Copyable<Z_STR_ARRAY_T>({.len = v.size(), .val = const_cast<VALTYPE>(&v[0])}) {}
-    _StrArrayView(const char** v, size_t len) : Copyable<Z_STR_ARRAY_T>({.len = len, .val = const_cast<VALTYPE>(v)}) {}
+        : Copyable<Z_STR_ARRAY_T>({v.size(), const_cast<VALTYPE>(&v[0])}) {}
+    _StrArrayView(const char** v, size_t len) : Copyable<Z_STR_ARRAY_T>({len, const_cast<VALTYPE>(v)}) {}
     _StrArrayView(const char* const* v, size_t len)
-        : Copyable<Z_STR_ARRAY_T>({.len = len, .val = const_cast<VALTYPE>(v)}) {}
+        : Copyable<Z_STR_ARRAY_T>({len, const_cast<VALTYPE>(v)}) {}
     const char* operator[](size_t pos) const { return Copyable<Z_STR_ARRAY_T>::val[pos]; }
     size_t get_len() const { return Copyable<Z_STR_ARRAY_T>::len; }
 };
@@ -191,14 +191,14 @@ class BytesView : public Copyable<::z_bytes_t> {
     using Copyable::Copyable;
     BytesView(nullptr_t) : Copyable(init(nullptr, 0)) {}
     BytesView(const void* s, size_t _len) : Copyable(init(reinterpret_cast<const uint8_t*>(s), _len)) {}
-    BytesView(const char* s) : Copyable({.len = s ? strlen(s) : 0, .start = reinterpret_cast<const uint8_t*>(s)}) {}
+    BytesView(const char* s) : Copyable({s ? strlen(s) : 0, reinterpret_cast<const uint8_t*>(s)}) {}
     template <typename T>
     BytesView(const std::vector<T>& v)
-        : Copyable({.len = v.size() * sizeof(T), .start = reinterpret_cast<const uint8_t*>(&v[0])}) {}
+        : Copyable({v.size() * sizeof(T), reinterpret_cast<const uint8_t*>(&v[0])}) {}
     BytesView(const std::string_view& s)
-        : Copyable({.len = s.length(), .start = reinterpret_cast<const uint8_t*>(s.data())}) {}
+        : Copyable({s.length(), reinterpret_cast<const uint8_t*>(s.data())}) {}
     BytesView(const std::string& s)
-        : Copyable({.len = s.length(), .start = reinterpret_cast<const uint8_t*>(s.data())}) {}
+        : Copyable({s.length(), reinterpret_cast<const uint8_t*>(s.data())}) {}
     std::string_view as_string_view() const { return std::string_view(reinterpret_cast<const char*>(start), len); }
     bool operator==(const BytesView& v) const { return as_string_view() == v.as_string_view(); }
     bool operator!=(const BytesView& v) const { return !operator==(v); }
@@ -407,7 +407,7 @@ struct Sample : public Copyable<::z_sample_t> {
 struct Value : public Copyable<::z_value_t> {
     using Copyable::Copyable;
     Value(const z::BytesView& payload, const z::Encoding& encoding)
-        : Copyable({.payload = payload, .encoding = encoding}) {}
+        : Copyable({payload, encoding}) {}
     Value(const z::BytesView& payload) : Value(payload, z::Encoding()) {}
     Value(const char* payload) : Value(payload, z::Encoding()) {}
 

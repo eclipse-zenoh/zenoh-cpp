@@ -153,15 +153,14 @@ class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
     ZC_CLOSURE_TYPE wrap_func(T& func) {
         typedef std::function<T> CONTEXT_TYPE;
         return {
-            .context = new CONTEXT_TYPE(func),
-            .call = [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+            new CONTEXT_TYPE(func),
+            [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
                 return static_cast<CONTEXT_TYPE*>(ctx)->operator()(static_cast<const ZCPP_PARAM*>(pvalue));
             },
-            .drop =
-                [](void* ctx) {
+            [](void* ctx) {
                     static_cast<CONTEXT_TYPE*>(ctx)->operator()(nullptr);
                     delete static_cast<CONTEXT_TYPE*>(ctx);
-                },
+            }
         };
     }
 
@@ -170,15 +169,14 @@ class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
         typedef std::remove_reference_t<T> CONTEXT_TYPE;
 
         return {
-            .context = new CONTEXT_TYPE(std::forward<CONTEXT_TYPE>(obj)),
-            .call = [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+            new CONTEXT_TYPE(std::forward<CONTEXT_TYPE>(obj)),
+            [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
                 return static_cast<CONTEXT_TYPE*>(ctx)->operator()(static_cast<const ZCPP_PARAM*>(pvalue));
             },
-            .drop =
-                [](void* ctx) {
+            [](void* ctx) {
                     static_cast<CONTEXT_TYPE*>(ctx)->operator()(nullptr);
                     delete static_cast<CONTEXT_TYPE*>(ctx);
-                },
+            }
         };
     }
 };

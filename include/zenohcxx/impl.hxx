@@ -28,11 +28,9 @@ inline void init_logger() { ::zc_init_logger(); }
 #endif
 
 inline ::z_bytes_t z::BytesView::init(const uint8_t* start, size_t len) {
-    ::z_bytes_t ret = {.len = len,
-                       .start = start
+    ::z_bytes_t ret = {len, start
 #ifdef __ZENOHCXX_ZENOHPICO
-                       ,
-                       ._is_alloc = false
+                       ,false
 #endif
     };
     return ret;
@@ -106,7 +104,7 @@ inline bool keyexpr_canonize(std::string& s) {
 }
 
 inline bool keyexpr_is_canon(const std::string_view& s, ErrNo& error) {
-    error = ::z_keyexpr_is_canon(s.begin(), s.length());
+    error = ::z_keyexpr_is_canon(s.data() , s.length());
     return error == 0;
 }
 
