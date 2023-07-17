@@ -108,8 +108,43 @@ class Owned {
 // Base type for C++ wrappers for Zenoh closures which doesn't take ownership of passed value
 // It expects that
 // - ZCPP_PARAM type is derived from ZC_PARAM
-// - user's LAMBDA can be invoked with (const ZCPP_PARAM&)
-// - user's LAMBDA is called by zenoh with nullptr to notify that closure is being destructed
+//
+// All zenoh types wrapped with 'ClosureConstPtrParam' are defined this way:
+//
+// typedef struct ZC_CLOSURE_TYPE {
+//   void *context;
+//   void (*call)(const struct ZC_PARAM*, void*);
+//   void (*drop)(void*);
+// } ZC_CLOSURE_TYPE;
+//
+// `ClosureConstPtrParam` can be constructed from the following objects:
+//
+// - function pointer of type `void (func*)(const ZCPP_PARAM&)`
+// 
+//   Example:
+// 
+//   void on_query(const Query&) { ... }
+//   ...
+//   session.declare_queryable("foo/bar", on_query);
+//
+// - any object which can be called with `operator()(const ZCPP_PARAM&)`, e.g. lambda,
+//   passed my move reference. In this case `ClosureConstPtrParam` will take ownership
+//   of the object and will call it with `operator()(const ZCPP_PARAM&)` when `call` is called
+//   and will drop it when `drop` is called.
+//
+//   Example:
+//
+//   session.declare_queryable("foo/bar", [](const Query&) { ... });
+//
+//   or
+//  
+//   struct OnQuery {
+//     void operator()(const Query&) { ... }
+//     ~OnQuery() { ... }
+//   };  
+//
+//   OnQuery on_query;
+//   session.declare_queryable("foo/bar", std::move(on_query));
 //
 template <typename ZC_CLOSURE_TYPE, typename ZC_PARAM, typename ZCPP_PARAM,
           typename std::enable_if_t<std::is_base_of_v<ZC_PARAM, ZCPP_PARAM> && sizeof(ZC_PARAM) == sizeof(ZCPP_PARAM),
@@ -129,12 +164,6 @@ class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
 
     // Template constructors
 
-    // TODO: allow also 'const T& obj'
-
-    // Called with reference to object with operator()(const ZCPP_PARAM&) defined
-    template <typename T, typename std::enable_if_t<!std::is_function_v<T>, bool> = true>
-    ClosureConstPtrParam(T& obj) : Owned<ZC_CLOSURE_TYPE>(wrap_ref(obj)) {}
-
     // Called with pointer to function accepting const ZCPP_PARAM&
     template <typename T, typename std::enable_if_t<std::is_function_v<T>, bool> = true>
     ClosureConstPtrParam(T& func) : Owned<ZC_CLOSURE_TYPE>(wrap_func(func)) {}
@@ -146,16 +175,10 @@ class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
 
    private:
     template <typename T>
-    ZC_CLOSURE_TYPE wrap_ref(T& obj) {
-        return {&obj,
-                [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
-                    return static_cast<T*>(ctx)->operator()(static_cast<const ZCPP_PARAM*>(pvalue));
-                },
-                [](void* ctx) { static_cast<T*>(ctx)->operator()(nullptr); }};
-    }
-
-    template <typename T>
     ZC_CLOSURE_TYPE wrap_func(T& func) {
+        // It's not allowed to cast pointer to function to void* and back, see detailed explanations here: 
+        // https://stackoverflow.com/questions/36645660/why-cant-i-cast-a-function-pointer-to-void
+        // So 'func' can't be directly stored in closure context field, so we wrap it in std::function
         typedef std::function<T> CONTEXT_TYPE;
         return {
             new CONTEXT_TYPE(func),
@@ -163,7 +186,7 @@ class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
                 return static_cast<CONTEXT_TYPE*>(ctx)->operator()(*static_cast<const ZCPP_PARAM*>(pvalue));
             },
             [](void* ctx) {
-                // TODO: call destructor function if provided
+                // TODO: call destructor function if provided (make CONTEXT_TYPE std::pair instead)
                 delete static_cast<CONTEXT_TYPE*>(ctx);
             }
         };
@@ -172,14 +195,12 @@ class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
     template <typename T>
     ZC_CLOSURE_TYPE wrap_forward(T&& obj) {
         typedef std::remove_reference_t<T> CONTEXT_TYPE;
-
         return {
             new CONTEXT_TYPE(std::forward<CONTEXT_TYPE>(obj)),
             [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
                 return static_cast<CONTEXT_TYPE*>(ctx)->operator()(*static_cast<const ZCPP_PARAM*>(pvalue));
             },
             [](void* ctx) {
-                // TODO: call destructor function if provided
                 delete static_cast<CONTEXT_TYPE*>(ctx);
             }
         };
