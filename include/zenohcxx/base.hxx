@@ -162,34 +162,38 @@ class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
 
     ZC_RETVAL operator()(const ZCPP_PARAM* v) { return call(v); }
 
-    // Template constructors
+    // Construct closure from pointer to function accepting const ZCPP_PARAM&
+    typedef void (*FUNC)(const ZCPP_PARAM&);
+    ClosureConstPtrParam(FUNC func) : Owned<ZC_CLOSURE_TYPE>(wrap_func(func)) {}
 
-    // Called with pointer to function accepting const ZCPP_PARAM&
-    template <typename T, typename std::enable_if_t<std::is_function_v<T>, bool> = true>
-    ClosureConstPtrParam(T& func) : Owned<ZC_CLOSURE_TYPE>(wrap_func(func)) {}
+    // Explicitly disallow passing lvalue reference to object for 2 reasons:
+    // - this is unsafe: closure may outlive the object, keeping dangling reference
+    // - there is no way to notify referenced object that closure is dropped (unlike in case of rvalue reference, where
+    // destructor is called)
+    template <typename T>
+    ClosureConstPtrParam(T& obj) = delete;
 
-    // Called with rvalue reference to object with operator()(const ZCPP_PARAM&) defined
+    // Construct closure from rvalue reference to object with operator()(const ZCPP_PARAM&) defined
     template <typename T>
     ClosureConstPtrParam(T&& obj)
         : Owned<ZC_CLOSURE_TYPE>(wrap_forward(std::forward<std::remove_reference_t<T>>(obj))) {}
 
    private:
-    template <typename T>
-    ZC_CLOSURE_TYPE wrap_func(T& func) {
-        // It's not allowed to cast pointer to function to void* and back, see detailed explanations here: 
+    ZC_CLOSURE_TYPE wrap_func(FUNC& func) {
+        // It's not allowed to cast pointer to function to void* and back, see detailed explanations here:
         // https://stackoverflow.com/questions/36645660/why-cant-i-cast-a-function-pointer-to-void
-        // So 'func' can't be directly stored in closure context field, so we wrap it in std::function
-        typedef std::function<T> CONTEXT_TYPE;
-        return {
-            new CONTEXT_TYPE(func),
-            [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
-                return static_cast<CONTEXT_TYPE*>(ctx)->operator()(*static_cast<const ZCPP_PARAM*>(pvalue));
-            },
-            [](void* ctx) {
-                // TODO: call destructor function if provided (make CONTEXT_TYPE std::pair instead)
-                delete static_cast<CONTEXT_TYPE*>(ctx);
-            }
-        };
+        // So 'func' can't be directly stored in closure context field, so we wrap it into a sctructure
+        typedef struct {
+            FUNC func;
+        } CONTEXT_TYPE;
+        return {new CONTEXT_TYPE{func},
+                [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+                    return static_cast<CONTEXT_TYPE*>(ctx)->func(*static_cast<const ZCPP_PARAM*>(pvalue));
+                },
+                [](void* ctx) {
+                    // TODO: call destructor function if provided (make CONTEXT_TYPE std::pair instead)
+                    delete static_cast<CONTEXT_TYPE*>(ctx);
+                }};
     }
 
     template <typename T>
