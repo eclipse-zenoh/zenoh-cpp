@@ -21,85 +21,63 @@ size_t gcnt = 1;
 
 //
 // Test for all variants of construnctng closures for handling `Reply`:
-// - from functions
-// - from object copies
-// - from object references
-// - from object rvalue references
-// - from lambda expressions
+// - from function
+// - from object copy
+// - from object reference
+// - from object rvalue reference
+// - from lambda expression
 //
-// The Reply iteself is also can be handled
 
-void on_reply(Reply) { gcnt *= 2; };
-void on_reply_ref(Reply&) { gcnt *= 3; };
-void on_reply_moveref(Reply&&) { gcnt *= 5; };
+void on_reply(Reply&&) { gcnt *= 2; };
 
 struct OnReply {
-    void operator()(Reply) { gcnt *= 7; };
+    OnReply(int _v) : v(_v) {}
+    void operator()(Reply&&) { gcnt *= v; };
+    int v;
 };
-
-struct OnReplyRef {
-    void operator()(Reply&) { gcnt *= 11; };
-};
-
-struct OnReplyMoveRef {
-    void operator()(Reply&&) { gcnt *= 13; };
-};
-
-void test_closure_reply() {
-    // Create closures from functions
-    ClosureReply closure_reply_f(on_reply);
-    ClosureReply closure_reply_f_ref(on_reply_ref);
-    ClosureReply closure_reply_f_moveref(on_reply_moveref);
-
-    // Create closures from reference to objects
-    OnReply on_reply_o;
-    ClosureReply closure_reply_o(on_reply_o);
-    OnReplyRef on_reply_o_ref;
-    ClosureReply closure_reply_o_ref(on_reply_o_ref);
-    OnReplyMoveRef on_reply_o_moveref;
-    ClosureReply closure_reply_o_moveref(on_reply_o_moveref);
-
-    ClosureReply closure_reply_c([](Reply) { gcnt *= 17; });
-    ClosureReply closure_reply_c_ref([](Reply&) { gcnt *= 19; });
-    ClosureReply closure_reply_c_moveref([](Reply&&) { gcnt *= 23; });
-}
-
-void on_query_constref(const Query&) { gcnt *= 7; };
-
-void on_sample_constref(const Sample&) { gcnt *= 11; };
-
-void on_id_ref(const Id&) { gcnt *= 13; };
-
-void on_hello(Hello) { gcnt *= 17; };
-void on_hello_ref(Hello&) { gcnt *= 19; };
-void on_hello_moveref(Hello&&) { gcnt *= 23; };
 
 int main(int argc, char** argv) {
     ClosureReply closure_reply_f(on_reply);
-    ClosureReply closure_reply_f_ref(on_reply_ref);
-    ClosureReply closure_reply_f_moveref(on_reply_moveref);
-    ClosureReply closure_reply([](Reply) { gcnt *= 31; });
-    ClosureReply closure_reply_ref([](Reply&) { gcnt *= 37; });
-    ClosureReply closure_reply_moveref([](Reply&&) { gcnt *= 41; });
+    ClosureReply closure_reply_obj(OnReply(5));
+    OnReply on_reply_obj_ref(7);
+    ClosureReply closure_reply_obj_ref(on_reply_obj_ref);
+    OnReply on_reply_obj_moveref(11);
+    ClosureReply closure_reply_obj_moveref(std::move(on_reply_obj_moveref));
+    ClosureReply closure_reply_lambda([](Reply&&) { gcnt *= 13; });
 
+    // rvalue parameter tests
     gcnt = 1;
-    Reply reply(nullptr);
-    closure_reply(reply);
-    closure_reply_ref(reply);
-    closure_reply_moveref(reply);
-    closure_reply_f(reply);
-    closure_reply_f_ref(reply);
-    closure_reply_f_moveref(reply);
-    assert(gcnt == 1 * 2 * 3 * 5 * 31 * 37 * 41);
+    closure_reply_f(Reply(nullptr));
+    closure_reply_obj(Reply(nullptr));
+    closure_reply_obj_ref(Reply(nullptr));
+    closure_reply_obj_moveref(Reply(nullptr));
+    closure_reply_lambda(Reply(nullptr));
+    assert(gcnt == 2 * 5 * 7 * 11 * 13);
 
-    gcnt = 1;
-    closure_reply(std::move(reply));
-    closure_reply_ref(std::move(reply));
-    closure_reply_moveref(std::move(reply));
-    closure_reply_f(std::move(reply));
-    closure_reply_f_ref(std::move(reply));
-    closure_reply_f_moveref(std::move(reply));
-    assert(gcnt == 1 * 2 * 3 * 5 * 31 * 37 * 41);
+    // ClosureReply closure_reply_f_ref(on_reply_ref);
+    // ClosureReply closure_reply_f_moveref(on_reply_moveref);
+    // ClosureReply closure_reply([](Reply) { gcnt *= 31; });
+    // ClosureReply closure_reply_ref([](Reply&) { gcnt *= 37; });
+    // ClosureReply closure_reply_moveref([](Reply&&) { gcnt *= 41; });
+
+    // gcnt = 1;
+    // Reply reply(nullptr);
+    // closure_reply(reply);
+    // closure_reply_ref(reply);
+    // closure_reply_moveref(reply);
+    // closure_reply_f(reply);
+    // closure_reply_f_ref(reply);
+    // closure_reply_f_moveref(reply);
+    // assert(gcnt == 1 * 2 * 3 * 5 * 31 * 37 * 41);
+
+    // gcnt = 1;
+    // closure_reply(std::move(reply));
+    // closure_reply_ref(std::move(reply));
+    // closure_reply_moveref(std::move(reply));
+    // closure_reply_f(std::move(reply));
+    // closure_reply_f_ref(std::move(reply));
+    // closure_reply_f_moveref(std::move(reply));
+    // assert(gcnt == 1 * 2 * 3 * 5 * 31 * 37 * 41);
 
     // ClosureQuery closure_query([&cnt](const Query&) { cnt++; });
     // ClosureQuery closure_query_f(on_query_lv);

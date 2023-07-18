@@ -150,28 +150,24 @@ template <typename ZC_CLOSURE_TYPE, typename ZC_PARAM, typename ZCPP_PARAM,
           typename std::enable_if_t<std::is_base_of_v<ZC_PARAM, ZCPP_PARAM> && sizeof(ZC_PARAM) == sizeof(ZCPP_PARAM),
                                     bool> = true>
 class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
-    typedef decltype((*ZC_CLOSURE_TYPE::call)(nullptr, nullptr)) ZC_RETVAL;
-
    public:
     using Owned<ZC_CLOSURE_TYPE>::Owned;
 
     // Closure is valid if it can be called. The drop operation is optional
     bool check() const { return Owned<ZC_CLOSURE_TYPE>::_0.call != nullptr; }
 
-    ZC_RETVAL call(const ZC_PARAM* v) { return Owned<ZC_CLOSURE_TYPE>::_0.call(v, Owned<ZC_CLOSURE_TYPE>::_0.context); }
+    void call(const ZC_PARAM* v) { return Owned<ZC_CLOSURE_TYPE>::_0.call(v, Owned<ZC_CLOSURE_TYPE>::_0.context); }
 
-    ZC_RETVAL operator()(const ZCPP_PARAM* v) { return call(v); }
+    void operator()(const ZCPP_PARAM* v) { return call(v); }
 
     // Construct closure from pointer to function accepting const ZCPP_PARAM&
     typedef void (*FUNC)(const ZCPP_PARAM&);
     ClosureConstPtrParam(FUNC func) : Owned<ZC_CLOSURE_TYPE>(wrap_func(func)) {}
 
-    // Explicitly disallow passing lvalue reference to object for 2 reasons:
-    // - this is unsafe: closure may outlive the object, keeping dangling reference
-    // - there is no way to notify referenced object that closure is dropped (unlike in case of rvalue reference, where
-    // destructor is called)
+    // Construct closure from lvalue reference to object with operator()(const ZCPP_PARAM&) defined
+    // Be careful: the referenced object should be alive during the closure lifetime
     template <typename T>
-    ClosureConstPtrParam(T& obj) = delete;
+    ClosureConstPtrParam(T& obj) : Owned<ZC_CLOSURE_TYPE>(wrap_ref(obj)) {}
 
     // Construct closure from rvalue reference to object with operator()(const ZCPP_PARAM&) defined
     template <typename T>
@@ -187,27 +183,29 @@ class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
             FUNC func;
         } CONTEXT_TYPE;
         return {new CONTEXT_TYPE{func},
-                [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+                [](const ZC_PARAM* pvalue, void* ctx) {
                     return static_cast<CONTEXT_TYPE*>(ctx)->func(*static_cast<const ZCPP_PARAM*>(pvalue));
                 },
-                [](void* ctx) {
-                    // TODO: call destructor function if provided (make CONTEXT_TYPE std::pair instead)
-                    delete static_cast<CONTEXT_TYPE*>(ctx);
-                }};
+                [](void* ctx) { delete static_cast<CONTEXT_TYPE*>(ctx); }};
+    }
+
+    template <typename T>
+    ZC_CLOSURE_TYPE wrap_ref(T& obj) {
+        return {&obj,
+                [](const ZC_PARAM* pvalue, void* ctx) {
+                    static_cast<T*>(ctx)->operator()(*static_cast<const ZCPP_PARAM*>(pvalue));
+                },
+                nullptr};
     }
 
     template <typename T>
     ZC_CLOSURE_TYPE wrap_forward(T&& obj) {
         typedef std::remove_reference_t<T> CONTEXT_TYPE;
-        return {
-            new CONTEXT_TYPE(std::forward<CONTEXT_TYPE>(obj)),
-            [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
-                return static_cast<CONTEXT_TYPE*>(ctx)->operator()(*static_cast<const ZCPP_PARAM*>(pvalue));
-            },
-            [](void* ctx) {
-                delete static_cast<CONTEXT_TYPE*>(ctx);
-            }
-        };
+        return {new CONTEXT_TYPE(std::forward<CONTEXT_TYPE>(obj)),
+                [](const ZC_PARAM* pvalue, void* ctx) {
+                    return static_cast<CONTEXT_TYPE*>(ctx)->operator()(*static_cast<const ZCPP_PARAM*>(pvalue));
+                },
+                [](void* ctx) { delete static_cast<CONTEXT_TYPE*>(ctx); }};
     }
 };
 
@@ -215,14 +213,14 @@ class ClosureConstPtrParam : public Owned<ZC_CLOSURE_TYPE> {
 // Base type for C++ wrappers for Zenoh closures which takes ownership of passed value
 // It expects that
 // - ZCPP_PARAM is derived from Owned<ZC_PARAM>
-// - user's LAMBDA can be invoked with ZCPP_PARAM, ZCPP_PARAM& or ZCPP_PARAM&&
-// - user's LAMBDA is called by zenoh with empty ZCPP_PARAM (when .check()==false) to notify that closure is being
-// destructed
+// - user's LAMBDA can be invoked with ZCPP_PARAM&&
 //
 template <typename ZC_CLOSURE_TYPE, typename ZC_PARAM, typename ZCPP_PARAM,
           typename std::enable_if_t<std::is_base_of_v<Owned<ZC_PARAM>, ZCPP_PARAM>, bool> = true>
 
 class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
+    // The `z_owned_reply_channel_closure_t::call` have the retuurn type `bool` instead of void
+    // So have to use `decltype` to get the return type of the closure
     typedef decltype((*ZC_CLOSURE_TYPE::call)(nullptr, nullptr)) ZC_RETVAL;
 
    public:
@@ -231,72 +229,54 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
     // Closure is valid if it can be called. The drop operation is optional
     bool check() const { return Owned<ZC_CLOSURE_TYPE>::_0.call != nullptr; }
 
+    // Call closure with pointer to C parameter
     ZC_RETVAL call(ZC_PARAM* v) { return Owned<ZC_CLOSURE_TYPE>::_0.call(v, Owned<ZC_CLOSURE_TYPE>::_0.context); }
 
-    ZC_RETVAL operator()(ZCPP_PARAM& v) { return call(&(static_cast<ZC_PARAM&>(v))); }
-    ZC_RETVAL operator()(ZCPP_PARAM&& v) {
-        ZCPP_PARAM take(std::move(v));
-        return call(&(static_cast<ZC_PARAM&>(take)));
-    }
+    // Call closure with reference to C++ parameter
+    ZC_RETVAL operator()(ZCPP_PARAM&& v) { return call(&(static_cast<ZC_PARAM&>(v))); }
 
-    template <typename T, typename std::enable_if_t<!std::is_function_v<T>, bool> = true>
-    ClosureMoveParam(T& obj) : Owned<ZC_CLOSURE_TYPE>(wrap_lambda<false, true>(obj)) {}
+    // Construct closure from the pointer to function accepting ZCPP_PARAM&&
+    typedef void (*FUNC)(ZCPP_PARAM&&);
+    ClosureMoveParam(FUNC func) : Owned<ZC_CLOSURE_TYPE>(wrap_func(func)) {}
 
-    template <typename T, typename std::enable_if_t<std::is_function_v<T>, bool> = true>
-    ClosureMoveParam(T& func) : Owned<ZC_CLOSURE_TYPE>(wrap_lambda<true, false>(func)) {}
-
+    // Construct closure from the lvalue reference to object with operator()(ZCPP_PARAM&&) defined
+    // Be careful when passing lvalue object reference: the referenced object should remain alive during the closure
+    // lifetime
     template <typename T>
-    ClosureMoveParam(T&& obj)
-        : Owned<ZC_CLOSURE_TYPE>(wrap_lambda<false, false>(std::forward<std::remove_reference_t<T>>(obj))) {}
+    ClosureMoveParam(T& obj) : Owned<ZC_CLOSURE_TYPE>(wrap_ref(obj)) {}
+
+    // Construct closure from the rvalue reference to object with operator()(ZCPP_PARAM&&) defined
+    // The object is moved into closure and will be destroyed when the closure is dropped
+    template <typename T>
+    ClosureMoveParam(T&& obj) : Owned<ZC_CLOSURE_TYPE>(wrap_moveref(std::move(obj))) {}
 
    private:
-    template <bool is_function, bool is_objref, typename LAMBDA>
-    ZC_CLOSURE_TYPE wrap_lambda(LAMBDA&& lambda) {
-        constexpr bool is_lvalue_param = std::is_invocable_v<LAMBDA, ZCPP_PARAM&>;
-        typedef std::conditional_t<is_function, std::function<std::remove_reference_t<LAMBDA>>,
-                                   std::remove_reference_t<LAMBDA>>
-            CONTEXT_TYPE;
+    ZC_CLOSURE_TYPE wrap_func(FUNC& func) {
+        // It's not allowed to cast pointer to function to void* and back, see detailed explanations here:
+        // https://stackoverflow.com/questions/36645660/why-cant-i-cast-a-function-pointer-to-void
+        // So 'func' can't be directly stored in closure context field, so we wrap it into a sctructure
+        typedef struct {
+            FUNC func;
+        } CONTEXT_TYPE;
+        return {new CONTEXT_TYPE{func},
+                [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+                    return static_cast<CONTEXT_TYPE*>(ctx)->func(ZCPP_PARAM(pvalue));
+                },
+                [](void* ctx) { delete static_cast<CONTEXT_TYPE*>(ctx); }};
+    }
 
-        void* context;
-        ZC_RETVAL (*call)(ZC_PARAM*, void*);
-        void (*drop)(void*);
+    template <typename T>
+    ZC_CLOSURE_TYPE wrap_ref(T& obj) {
+        return {&obj, [](ZC_PARAM* pvalue, void* ctx) { static_cast<T*>(ctx)->operator()(ZCPP_PARAM(pvalue)); },
+                nullptr};
+    }
 
-        if constexpr (is_function) {
-            context = new CONTEXT_TYPE(lambda);
-        } else if constexpr (is_objref) {
-            context = &lambda;
-        } else {
-            context = new LAMBDA(std::move(lambda));
-        }
-
-        if constexpr (is_lvalue_param) {
-            call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
-                ZCPP_PARAM wrapper(pvalue);
-                if constexpr (std::is_same_v<ZC_RETVAL, void>) {
-                    static_cast<CONTEXT_TYPE*>(ctx)->operator()(wrapper);
-                    *pvalue = wrapper.take();
-                } else {
-                    auto r = static_cast<CONTEXT_TYPE*>(ctx)->operator()(wrapper);
-                    *pvalue = wrapper.take();
-                    return r;
-                }
-            };
-            drop = [](void* ctx) {
-                ZCPP_PARAM wrapper(nullptr);
-                static_cast<CONTEXT_TYPE*>(ctx)->operator()(wrapper);
-                if constexpr (!is_objref) delete static_cast<CONTEXT_TYPE*>(ctx);
-            };
-        } else {
-            call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
-                return static_cast<CONTEXT_TYPE*>(ctx)->operator()(ZCPP_PARAM(pvalue));
-            };
-            drop = [](void* ctx) {
-                static_cast<CONTEXT_TYPE*>(ctx)->operator()(ZCPP_PARAM(nullptr));
-                if constexpr (!is_objref) delete static_cast<CONTEXT_TYPE*>(ctx);
-            };
-        }
-        return {context, call, drop};
-    };
+    template <typename T>
+    ZC_CLOSURE_TYPE wrap_moveref(T&& obj) {
+        return {new T(std::move(obj)),
+                [](ZC_PARAM* pvalue, void* ctx) { return static_cast<T*>(ctx)->operator()(ZCPP_PARAM(pvalue)); },
+                [](void* ctx) { delete static_cast<T*>(ctx); }};
+    }
 };
 
 }  // namespace zenohcxx

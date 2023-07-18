@@ -20,7 +20,7 @@ using namespace zenoh;
 int gcnt = 0;
 
 struct OnQuery {
-    void operator()(const Query*) {
+    void operator()(const Query&) {
         cnt++;
         gcnt++;
     }
@@ -38,6 +38,9 @@ struct OnQueryMove : public OnQuery {
 
 int main(int argc, char** argv) {
     int cnt = 0;
+
+    ::z_query_t q;
+    Query query(q);
 
     OnQuery on_query;
     ClosureQuery wrap_ref(on_query);
