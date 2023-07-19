@@ -36,7 +36,7 @@ struct OnReply {
     int v;
 };
 
-int main(int argc, char** argv) {
+void test_constructors() {
     ClosureReply closure_reply_f(on_reply);
     ClosureReply closure_reply_obj(OnReply(5));
     OnReply on_reply_obj_ref(7);
@@ -53,6 +53,45 @@ int main(int argc, char** argv) {
     closure_reply_obj_moveref(Reply(nullptr));
     closure_reply_lambda(Reply(nullptr));
     assert(gcnt == 2 * 5 * 7 * 11 * 13);
+}
+
+void test_add_call() {
+    ClosureReply closure_reply_f;
+    closure_reply_f.add_call(on_reply);
+    ClosureReply closure_reply_obj;
+    closure_reply_obj.add_call(OnReply(5));
+    ClosureReply closure_reply_obj_ref;
+    OnReply on_reply_obj_ref(7);
+    closure_reply_obj_ref.add_call(on_reply_obj_ref);
+    OnReply on_reply_obj_moveref(11);
+    ClosureReply closure_reply_obj_moveref;
+    closure_reply_obj_moveref.add_call(std::move(on_reply_obj_moveref));
+    ClosureReply closure_reply_lambda;
+    closure_reply_lambda.add_call([](Reply&&) { gcnt *= 13; });
+
+    gcnt = 1;
+    closure_reply_f(Reply(nullptr));
+    closure_reply_obj(Reply(nullptr));
+    closure_reply_obj_ref(Reply(nullptr));
+    closure_reply_obj_moveref(Reply(nullptr));
+    closure_reply_lambda(Reply(nullptr));
+    assert(gcnt == 2 * 5 * 7 * 11 * 13);
+
+    gcnt = 1;
+    closure_reply_f.add_call(OnReply(17));
+    closure_reply_obj.add_call(OnReply(19));
+    closure_reply_obj_ref.add_call(OnReply(23));
+    closure_reply_obj_moveref.add_call(OnReply(29));
+    closure_reply_lambda.add_call(OnReply(31));
+    assert(false);
+    assert(gcnt == 2 * 5 * 7 * 11 * 13 * 17 * 19 * 23 * 29 * 31);
+}
+
+int main(int argc, char** argv) {
+    std::cout << "Test closure_reply" << std::endl;
+    assert(false);
+    test_constructors();
+    test_add_call();
 
     // ClosureReply closure_reply_f_ref(on_reply_ref);
     // ClosureReply closure_reply_f_moveref(on_reply_moveref);

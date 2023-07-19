@@ -120,9 +120,9 @@ class Owned {
 // `ClosureConstPtrParam` can be constructed from the following objects:
 //
 // - function pointer of type `void (func*)(const ZCPP_PARAM&)`
-// 
+//
 //   Example:
-// 
+//
 //   void on_query(const Query&) { ... }
 //   ...
 //   session.declare_queryable("foo/bar", on_query);
@@ -137,11 +137,11 @@ class Owned {
 //   session.declare_queryable("foo/bar", [](const Query&) { ... });
 //
 //   or
-//  
+//
 //   struct OnQuery {
 //     void operator()(const Query&) { ... }
 //     ~OnQuery() { ... }
-//   };  
+//   };
 //
 //   OnQuery on_query;
 //   session.declare_queryable("foo/bar", std::move(on_query));
@@ -235,47 +235,127 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
     // Call closure with reference to C++ parameter
     ZC_RETVAL operator()(ZCPP_PARAM&& v) { return call(&(static_cast<ZC_PARAM&>(v))); }
 
-    // Construct closure from the pointer to function accepting ZCPP_PARAM&&
-    typedef void (*FUNC)(ZCPP_PARAM&&);
-    ClosureMoveParam(FUNC func) : Owned<ZC_CLOSURE_TYPE>(wrap_func(func)) {}
+    // Construct empty closure
+    ClosureMoveParam() : Owned<ZC_CLOSURE_TYPE>(nullptr) {}
 
     // Construct closure from the lvalue reference to object with operator()(ZCPP_PARAM&&) defined
-    // Be careful when passing lvalue object reference: the referenced object should remain alive during the closure
-    // lifetime
+    // Be careful: the referenced object should remain alive during the closure lifetime
     template <typename T>
-    ClosureMoveParam(T& obj) : Owned<ZC_CLOSURE_TYPE>(wrap_ref(obj)) {}
+    ClosureMoveParam(T& obj) : Owned<ZC_CLOSURE_TYPE>(wrap_call_ref(obj, nullptr)) {}
 
     // Construct closure from the rvalue reference to object with operator()(ZCPP_PARAM&&) defined
     // The object is moved into closure and will be destroyed when the closure is dropped
     template <typename T>
-    ClosureMoveParam(T&& obj) : Owned<ZC_CLOSURE_TYPE>(wrap_moveref(std::move(obj))) {}
+    ClosureMoveParam(T&& obj) : Owned<ZC_CLOSURE_TYPE>(wrap_call_moveref(std::move(obj), nullptr)) {}
+
+    // When closure is deleted, it calls the drop operation if it's defined
+    ~ClosureMoveParam() {
+        if (_0.drop != nullptr) {
+            _0.drop(_0.context);
+        }
+    }
+
+    // Add data handler
+    template <typename T>
+    ClosureMoveParam& add_call(T& obj) {
+        Owned<ZC_CLOSURE_TYPE>::_0 = wrap_call_ref(obj, &_0);
+        return *this;
+    }
+    template <typename T>
+    ClosureMoveParam& add_call(T&& obj) {
+        Owned<ZC_CLOSURE_TYPE>::_0 = wrap_call_moveref(std::move(obj), &_0);
+        return *this;
+    }
+
+    // Add drop handler
+    template <typename T>
+    ClosureMoveParam& add_drop(T& obj) {
+        Owned<ZC_CLOSURE_TYPE>::_0 = wrap_drop_ref(obj, &_0);
+        return *this;
+    }
+    template <typename T>
+    ClosureMoveParam& add_drop(T&& obj) {
+        Owned<ZC_CLOSURE_TYPE>::_0 = wrap_drop_moveref(std::move(obj), &_0);
+        return *this;
+    }
 
    private:
-    ZC_CLOSURE_TYPE wrap_func(FUNC& func) {
-        // It's not allowed to cast pointer to function to void* and back, see detailed explanations here:
-        // https://stackoverflow.com/questions/36645660/why-cant-i-cast-a-function-pointer-to-void
-        // So 'func' can't be directly stored in closure context field, so we wrap it into a sctructure
-        typedef struct {
-            FUNC func;
-        } CONTEXT_TYPE;
-        return {new CONTEXT_TYPE{func},
-                [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
-                    return static_cast<CONTEXT_TYPE*>(ctx)->func(ZCPP_PARAM(pvalue));
-                },
-                [](void* ctx) { delete static_cast<CONTEXT_TYPE*>(ctx); }};
+    template <typename T>
+    ZC_CLOSURE_TYPE wrap_call_ref(T& obj, ZC_CLOSURE_TYPE* prev) {
+        auto context = new std::pair{&obj, ClosureMoveParam(prev)};
+        auto call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+            auto pair = static_cast<std::pair<T*, ClosureMoveParam>*>(ctx);
+            ZCPP_PARAM param(pvalue);
+            if constexpr (std::is_same_v<ZC_RETVAL, void>) {
+                (*pair->first)(std::move(param));
+                if (param.check()) pair->second(std::move(param));
+                return;
+            } else {
+                ZCPP_PARAM retval = (*pair->first)(std::move(param));
+                if (!param.check()) return retval;
+                return (*pair->second)(std::move(param));
+            }
+        };
+        auto drop = [](void* ctx) {
+            auto pair = static_cast<std::pair<T*, ClosureMoveParam>*>(ctx);
+            delete pair;
+        };
+        return {context, call, drop};
     }
 
     template <typename T>
-    ZC_CLOSURE_TYPE wrap_ref(T& obj) {
-        return {&obj, [](ZC_PARAM* pvalue, void* ctx) { static_cast<T*>(ctx)->operator()(ZCPP_PARAM(pvalue)); },
-                nullptr};
+    ZC_CLOSURE_TYPE wrap_call_moveref(T&& obj, ZC_CLOSURE_TYPE* prev) {
+        auto context = new std::pair{new T(std::move(obj)), ClosureMoveParam(prev)};
+        auto call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+            auto pair = static_cast<std::pair<T*, ClosureMoveParam>*>(ctx);
+            ZCPP_PARAM param(pvalue);
+            if constexpr (std::is_same_v<ZC_RETVAL, void>) {
+                (*pair->first)(std::move(param));
+                if (param.check()) pair->second(std::move(param));
+                return;
+            } else {
+                ZCPP_PARAM retval = (*pair->first)(std::move(param));
+                if (!param.check()) return retval;
+                return (*pair->second)(std::move(param));
+            }
+        };
+        auto drop = [](void* ctx) {
+            auto pair = static_cast<std::pair<T*, ClosureMoveParam>*>(ctx);
+            delete pair->first;
+            delete pair;
+        };
+        return {context, call, drop};
     }
 
     template <typename T>
-    ZC_CLOSURE_TYPE wrap_moveref(T&& obj) {
-        return {new T(std::move(obj)),
-                [](ZC_PARAM* pvalue, void* ctx) { return static_cast<T*>(ctx)->operator()(ZCPP_PARAM(pvalue)); },
-                [](void* ctx) { delete static_cast<T*>(ctx); }};
+    ZC_CLOSURE_TYPE wrap_drop_ref(T& obj, ZC_CLOSURE_TYPE* prev) {
+        auto context = new std::pair{&obj, ClosureMoveParam(prev)};
+        auto call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+            auto pair = static_cast<std::pair<T*, ClosureMoveParam>*>(ctx);
+            return pair->second.call(pvalue);
+        };
+        auto drop = [](void* ctx) {
+            auto pair = static_cast<std::pair<T*, ClosureMoveParam>*>(ctx);
+            (*pair->first)();
+            delete pair;
+        };
+        return {context, call, drop};
+    }
+
+    template <typename T>
+    ZC_CLOSURE_TYPE wrap_drop_moveref(T&& obj, ZC_CLOSURE_TYPE* prev) {
+        auto context = new std::pair{new T(std::move(obj)), ClosureMoveParam(prev)};
+        auto call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+            auto pair = static_cast<std::pair<T*, ClosureMoveParam>*>(ctx);
+            return pair->second.call(pvalue);
+        };
+        auto drop = [](void* ctx) {
+            auto pair = static_cast<std::pair<T*, ClosureMoveParam>*>(ctx);
+            (*pair->first)();
+            delete pair->first;
+            delete pair;
+        };
+        return {context, call, drop};
     }
 };
 
