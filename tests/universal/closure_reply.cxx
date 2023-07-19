@@ -17,16 +17,31 @@ using namespace zenoh;
 #undef NDEBUG
 #include <assert.h>
 
-size_t gcnt = 1;
-
 //
-// Test for all variants of construnctng closures for handling `Reply`:
+// Test for all variants of construnctng 'ClosureMoveParam' closures
+//
 // - from function
 // - from object copy
 // - from object reference
 // - from object rvalue reference
 // - from lambda expression
 //
+
+size_t gcnt = 1;
+
+void show_primes(size_t v) {
+    std::cout << v << " = 1";
+    size_t d = 2;
+    while (v > 1) {
+        if (v % d == 0) {
+            std::cout << " * " << d;
+            v /= d;
+        } else {
+            d++;
+        }
+    }
+    std::cout << std::endl;
+}
 
 void on_reply(Reply&&) { gcnt *= 2; };
 
@@ -52,7 +67,7 @@ void test_constructors() {
     closure_reply_obj_ref(Reply(nullptr));
     closure_reply_obj_moveref(Reply(nullptr));
     closure_reply_lambda(Reply(nullptr));
-    assert(gcnt == 2 * 5 * 7 * 11 * 13);
+    assert(gcnt == size_t(1) * 2 * 5 * 7 * 11 * 13);
 }
 
 void test_add_call() {
@@ -75,7 +90,8 @@ void test_add_call() {
     closure_reply_obj_ref(Reply(nullptr));
     closure_reply_obj_moveref(Reply(nullptr));
     closure_reply_lambda(Reply(nullptr));
-    assert(gcnt == 2 * 5 * 7 * 11 * 13);
+    // show_primes(gcnt);
+    assert(gcnt == size_t(1) * 2 * 5 * 7 * 11 * 13);
 
     gcnt = 1;
     closure_reply_f.add_call(OnReply(17));
@@ -83,94 +99,57 @@ void test_add_call() {
     closure_reply_obj_ref.add_call(OnReply(23));
     closure_reply_obj_moveref.add_call(OnReply(29));
     closure_reply_lambda.add_call(OnReply(31));
-    assert(false);
-    assert(gcnt == 2 * 5 * 7 * 11 * 13 * 17 * 19 * 23 * 29 * 31);
+    closure_reply_f(Reply(nullptr));
+    closure_reply_obj(Reply(nullptr));
+    closure_reply_obj_ref(Reply(nullptr));
+    closure_reply_obj_moveref(Reply(nullptr));
+    closure_reply_lambda(Reply(nullptr));
+    // show_primes(gcnt);
+    assert(gcnt == size_t(1) * 2 * 5 * 7 * 11 * 13 * 17 * 19 * 23 * 29 * 31);
+}
+
+void on_drop_2() { gcnt *= 2; };
+void on_drop_17() { gcnt *= 17; };
+
+struct OnDrop {
+    OnDrop(int _v) : v(_v) {}
+    void operator()() { gcnt *= v; };
+    int v;
+};
+
+void test_add_drop() {
+    gcnt = 1;
+    {
+        ClosureReply closure_reply_f;
+        ClosureReply closure_reply_obj;
+        ClosureReply closure_reply_obj_ref;
+        ClosureReply closure_reply_obj_moveref;
+        ClosureReply closure_reply_lambda;
+
+        closure_reply_f.add_drop(on_drop_2);
+        closure_reply_obj.add_drop(OnDrop(5));
+        OnDrop on_drop_obj_ref(7);
+        closure_reply_obj_ref.add_drop(on_drop_obj_ref);
+        OnDrop on_drop_obj_moveref(11);
+        closure_reply_obj_moveref.add_drop(std::move(on_drop_obj_moveref));
+        closure_reply_lambda.add_drop([]() { gcnt *= 13; });
+
+        closure_reply_f.add_drop(on_drop_17);
+        closure_reply_obj.add_drop(OnDrop(19));
+        OnDrop on_drop_obj_ref_23(23);
+        closure_reply_obj_ref.add_drop(on_drop_obj_ref_23);
+        OnDrop on_drop_obj_moveref_29(29);
+        closure_reply_obj_moveref.add_drop(std::move(on_drop_obj_moveref_29));
+        closure_reply_lambda.add_drop([]() { gcnt *= 31; });
+
+        assert(gcnt == size_t(1));
+    }
+    // show_primes(gcnt);
+    assert(gcnt == size_t(1) * 2 * 5 * 7 * 11 * 13 * 17 * 19 * 23 * 29 * 31);
 }
 
 int main(int argc, char** argv) {
-    std::cout << "Test closure_reply" << std::endl;
-    assert(false);
     test_constructors();
     test_add_call();
-
-    // ClosureReply closure_reply_f_ref(on_reply_ref);
-    // ClosureReply closure_reply_f_moveref(on_reply_moveref);
-    // ClosureReply closure_reply([](Reply) { gcnt *= 31; });
-    // ClosureReply closure_reply_ref([](Reply&) { gcnt *= 37; });
-    // ClosureReply closure_reply_moveref([](Reply&&) { gcnt *= 41; });
-
-    // gcnt = 1;
-    // Reply reply(nullptr);
-    // closure_reply(reply);
-    // closure_reply_ref(reply);
-    // closure_reply_moveref(reply);
-    // closure_reply_f(reply);
-    // closure_reply_f_ref(reply);
-    // closure_reply_f_moveref(reply);
-    // assert(gcnt == 1 * 2 * 3 * 5 * 31 * 37 * 41);
-
-    // gcnt = 1;
-    // closure_reply(std::move(reply));
-    // closure_reply_ref(std::move(reply));
-    // closure_reply_moveref(std::move(reply));
-    // closure_reply_f(std::move(reply));
-    // closure_reply_f_ref(std::move(reply));
-    // closure_reply_f_moveref(std::move(reply));
-    // assert(gcnt == 1 * 2 * 3 * 5 * 31 * 37 * 41);
-
-    // ClosureQuery closure_query([&cnt](const Query&) { cnt++; });
-    // ClosureQuery closure_query_f(on_query_lv);
-
-    // closure_query(nullptr);
-
-    // closure_query_f(nullptr);
-
-    // assert(cnt == 1);
-    // assert(gcnt == 1);
-    // cnt = gcnt = 0;
-
-    // ClosureSample closure_sample([&cnt](const Sample&) { cnt++; });
-    // ClosureSample closure_sample_f(on_sample_lv);
-
-    // closure_sample(nullptr);
-    // closure_sample_f(nullptr);
-
-    // assert(cnt == 1);
-    // assert(gcnt == 1);
-    // cnt = gcnt = 0;
-
-    // ClosureZid closure_zid([&cnt](const Id&) { cnt++; });
-    // ClosureZid closure_zid_f(on_id_ptr);
-
-    // closure_zid(nullptr);
-    // closure_zid_f(nullptr);
-
-    // assert(cnt == 1);
-    // assert(gcnt == 1);
-    // cnt = gcnt = 0;
-
-    // ClosureHello closure_hello_lv([&cnt](Hello) { cnt++; });
-    // ClosureHello closure_hello_rv([&cnt](Hello&) { cnt++; });
-    // ClosureHello closure_hello_rlv([&cnt](Hello&&) { cnt++; });
-    // ClosureHello closure_hello_flv(on_hello_lv);
-    // ClosureHello closure_hello_frv(on_hello_rv);
-    // ClosureHello closure_hello_frlv(on_hello_rlv);
-
-    // Hello hello(nullptr);
-    // closure_hello_lv(hello);
-    // closure_hello_rv(hello);
-    // closure_hello_rlv(hello);
-    // closure_hello_flv(hello);
-    // closure_hello_frv(hello);
-    // closure_hello_frlv(hello);
-    // closure_hello_lv(std::move(hello));
-    // closure_hello_rv(std::move(hello));
-    // closure_hello_rlv(std::move(hello));
-    // closure_hello_flv(std::move(hello));
-    // closure_hello_frv(std::move(hello));
-    // closure_hello_frlv(std::move(hello));
-
-    // assert(cnt == 6);
-    // assert(gcnt == 6);
-    // cnt = gcnt = 0;
+    test_add_drop();
 }

@@ -219,7 +219,7 @@ template <typename ZC_CLOSURE_TYPE, typename ZC_PARAM, typename ZCPP_PARAM,
           typename std::enable_if_t<std::is_base_of_v<Owned<ZC_PARAM>, ZCPP_PARAM>, bool> = true>
 
 class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
-    // The `z_owned_reply_channel_closure_t::call` have the retuurn type `bool` instead of void
+    // The `z_owned_reply_channel_closure_t::call` have the return type `bool` instead of void
     // So have to use `decltype` to get the return type of the closure
     typedef decltype((*ZC_CLOSURE_TYPE::call)(nullptr, nullptr)) ZC_RETVAL;
 
@@ -230,7 +230,7 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
     bool check() const { return Owned<ZC_CLOSURE_TYPE>::_0.call != nullptr; }
 
     // Call closure with pointer to C parameter
-    ZC_RETVAL call(ZC_PARAM* v) { return Owned<ZC_CLOSURE_TYPE>::_0.call(v, Owned<ZC_CLOSURE_TYPE>::_0.context); }
+    ZC_RETVAL call(ZC_PARAM* v) { return check() ? _0.call(v, Owned<ZC_CLOSURE_TYPE>::_0.context) : ZC_RETVAL{}; }
 
     // Call closure with reference to C++ parameter
     ZC_RETVAL operator()(ZCPP_PARAM&& v) { return call(&(static_cast<ZC_PARAM&>(v))); }
@@ -248,34 +248,27 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
     template <typename T>
     ClosureMoveParam(T&& obj) : Owned<ZC_CLOSURE_TYPE>(wrap_call_moveref(std::move(obj), nullptr)) {}
 
-    // When closure is deleted, it calls the drop operation if it's defined
-    ~ClosureMoveParam() {
-        if (_0.drop != nullptr) {
-            _0.drop(_0.context);
-        }
-    }
-
     // Add data handler
     template <typename T>
     ClosureMoveParam& add_call(T& obj) {
-        Owned<ZC_CLOSURE_TYPE>::_0 = wrap_call_ref(obj, &_0);
+        _0 = wrap_call_ref(obj, &_0);
         return *this;
     }
     template <typename T>
     ClosureMoveParam& add_call(T&& obj) {
-        Owned<ZC_CLOSURE_TYPE>::_0 = wrap_call_moveref(std::move(obj), &_0);
+        _0 = wrap_call_moveref(std::move(obj), &_0);
         return *this;
     }
 
     // Add drop handler
     template <typename T>
     ClosureMoveParam& add_drop(T& obj) {
-        Owned<ZC_CLOSURE_TYPE>::_0 = wrap_drop_ref(obj, &_0);
+        _0 = wrap_drop_ref(obj, &_0);
         return *this;
     }
     template <typename T>
     ClosureMoveParam& add_drop(T&& obj) {
-        Owned<ZC_CLOSURE_TYPE>::_0 = wrap_drop_moveref(std::move(obj), &_0);
+        _0 = wrap_drop_moveref(std::move(obj), &_0);
         return *this;
     }
 
@@ -286,15 +279,8 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
         auto call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
             auto pair = static_cast<std::pair<T*, ClosureMoveParam>*>(ctx);
             ZCPP_PARAM param(pvalue);
-            if constexpr (std::is_same_v<ZC_RETVAL, void>) {
-                (*pair->first)(std::move(param));
-                if (param.check()) pair->second(std::move(param));
-                return;
-            } else {
-                ZCPP_PARAM retval = (*pair->first)(std::move(param));
-                if (!param.check()) return retval;
-                return (*pair->second)(std::move(param));
-            }
+            (*pair->first)(std::move(param));
+            return pair->second(std::move(param));
         };
         auto drop = [](void* ctx) {
             auto pair = static_cast<std::pair<T*, ClosureMoveParam>*>(ctx);
@@ -309,15 +295,8 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
         auto call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
             auto pair = static_cast<std::pair<T*, ClosureMoveParam>*>(ctx);
             ZCPP_PARAM param(pvalue);
-            if constexpr (std::is_same_v<ZC_RETVAL, void>) {
-                (*pair->first)(std::move(param));
-                if (param.check()) pair->second(std::move(param));
-                return;
-            } else {
-                ZCPP_PARAM retval = (*pair->first)(std::move(param));
-                if (!param.check()) return retval;
-                return (*pair->second)(std::move(param));
-            }
+            (*pair->first)(std::move(param));
+            return pair->second(std::move(param));
         };
         auto drop = [](void* ctx) {
             auto pair = static_cast<std::pair<T*, ClosureMoveParam>*>(ctx);
