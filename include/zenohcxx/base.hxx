@@ -150,6 +150,8 @@ template <typename ZC_CLOSURE_TYPE, typename ZC_PARAM, typename ZCPP_PARAM,
           typename std::enable_if_t<std::is_base_of_v<ZC_PARAM, ZCPP_PARAM> && sizeof(ZC_PARAM) == sizeof(ZCPP_PARAM),
                                     bool> = true>
 class ClosureConstRefParam : public Owned<ZC_CLOSURE_TYPE> {
+    typedef decltype((*ZC_CLOSURE_TYPE::call)(nullptr, nullptr)) ZC_RETVAL;
+
    public:
     using Owned<ZC_CLOSURE_TYPE>::Owned;
 
@@ -157,82 +159,47 @@ class ClosureConstRefParam : public Owned<ZC_CLOSURE_TYPE> {
     bool check() const { return Owned<ZC_CLOSURE_TYPE>::_0.call != nullptr; }
 
     // Call closure with pointer to C parameter
-    void call(ZC_PARAM* v) {
+    ZC_RETVAL call(ZC_PARAM* v) {
         if (check()) Owned<ZC_CLOSURE_TYPE>::_0.call(v, Owned<ZC_CLOSURE_TYPE>::_0.context);
     }
 
-    // Call closure with reference to C++ parameter
-    void operator()(const ZCPP_PARAM& v) { return call(&(static_cast<const ZC_PARAM&>(v))); }
+    // Call closure with const reference to C++ parameter
+    ZC_RETVAL operator()(const ZCPP_PARAM& v) { return call(&(static_cast<const ZC_PARAM&>(v))); }
 
     // Construct empty closure
     ClosureConstRefParam() : Owned<ZC_CLOSURE_TYPE>(nullptr) {}
 
     // Construct closure from the data handler: any object with operator()(const ZCPP_PARAM&) defined
     template <typename T>
-    ClosureConstRefParam(T&& obj) : Owned<ZC_CLOSURE_TYPE>(wrap_call(std::forward<T>(obj), nullptr)) {}
+    ClosureConstRefParam(T&& obj) : Owned<ZC_CLOSURE_TYPE>(wrap_call(std::forward<T>(obj))) {}
+
+    // Construct closure from the data handler and the drop handler
+    // data handler is any object with operator()(const ZCPP_PARAM&) defined
+    // drop handler is any object with operator()() defined
+    //
+    // Drop handler is convenient when it's necessary to catch dropping of the closure costructed from function pointer,
+    // object lvalue reference or lambda. If the closure holds the user's object, the additional drop handler is
+    // probably excessive. The cleanup in this case may be done in the object's destructor.
+    template <typename T, typename D>
+    ClosureConstRefParam(T&& on_call, D&& on_drop)
+        : Owned<ZC_CLOSURE_TYPE>(wrap_call(std::forward<T>(on_call), std::forward<D>(on_drop))) {}
 
    private:
-    template <typename T>
-    ZC_CLOSURE_TYPE wrap_call(T& obj, ZC_CLOSURE_TYPE* prev) {
-        auto context = new std::pair{&obj, ClosureMoveParam(prev)};
-        auto call = [](ZC_PARAM* pvalue, void* ctx) {
-            auto pair = static_cast<std::pair<T*, ClosureConstRefParam>*>(ctx);
-            ZCPP_PARAM param(pvalue);
-            (*pair->first)(std::move(param));
-            return pair->second(std::move(param));
+    typedef ZC_RETVAL (*CALL)(const ZCPP_PARAM& pvalue);
+    struct Call {
+        CALL func;
+    };
+    typedef void (*DROP)();
+    struct Drop {
+        DROP func;
+    };
+    ZC_CLOSURE_TYPE wrap_call(CALL on_call) {
+        auto context = new Call{on_call};
+        auto call = [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+            auto on_call = static_cast<Call*>(ctx);
+            return on_call->func(*static_cast<const ZCPP_PARAM*>(pvalue));
         };
-        auto drop = [](void* ctx) {
-            auto pair = static_cast<std::pair<T*, ClosureConstRefParam>*>(ctx);
-            delete pair;
-        };
-        return {context, call, drop};
-    }
-
-    template <typename T>
-    ZC_CLOSURE_TYPE wrap_call(T&& obj, ZC_CLOSURE_TYPE* prev) {
-        auto context = new std::pair{new T(std::move(obj)), ClosureConstRefParam(prev)};
-        auto call = [](ZC_PARAM* pvalue, void* ctx) {
-            auto pair = static_cast<std::pair<T*, ClosureConstRefParam>*>(ctx);
-            ZCPP_PARAM param(pvalue);
-            (*pair->first)(std::move(param));
-            return pair->second(std::move(param));
-        };
-        auto drop = [](void* ctx) {
-            auto pair = static_cast<std::pair<T*, ClosureConstRefParam>*>(ctx);
-            delete pair->first;
-            delete pair;
-        };
-        return {context, call, drop};
-    }
-
-    template <typename T>
-    ZC_CLOSURE_TYPE wrap_drop(T& obj, ZC_CLOSURE_TYPE* prev) {
-        auto context = new std::pair{&obj, ClosureMoveParam(prev)};
-        auto call = [](ZC_PARAM* pvalue, void* ctx) {
-            auto pair = static_cast<std::pair<T*, ClosureConstRefParam>*>(ctx);
-            return pair->second.call(pvalue);
-        };
-        auto drop = [](void* ctx) {
-            auto pair = static_cast<std::pair<T*, ClosureConstRefParam>*>(ctx);
-            (*pair->first)();
-            delete pair;
-        };
-        return {context, call, drop};
-    }
-
-    template <typename T>
-    ZC_CLOSURE_TYPE wrap_drop(T&& obj, ZC_CLOSURE_TYPE* prev) {
-        auto context = new std::pair{new T(std::move(obj)), ClosureConstRefParam(prev)};
-        auto call = [](ZC_PARAM* pvalue, void* ctx) {
-            auto pair = static_cast<std::pair<T*, ClosureConstRefParam>*>(ctx);
-            return pair->second.call(pvalue);
-        };
-        auto drop = [](void* ctx) {
-            auto pair = static_cast<std::pair<T*, ClosureConstRefParam>*>(ctx);
-            (*pair->first)();
-            delete pair->first;
-            delete pair;
-        };
+        auto drop = [](void* ctx) { delete static_cast<Call*>(ctx); };
         return {context, call, drop};
     }
 };
@@ -277,12 +244,12 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
     // data handler: any object with operator()(ZCPP_PARAM&&) defined
     // drop handler: any object with operator()() defined
     //
-    // This is convenient when it's necessary to handle drop of the closure, costructed from function pointer or lambda.
-    // If the closure is constructed from the user's object. the additional drop handler is probably excessive: the
-    // cleanup may be done in the user's object destructor.
-    template <typename T1, typename T2>
-    ClosureMoveParam(T1&& on_call, T2&& on_drop)
-        : Owned<ZC_CLOSURE_TYPE>(wrap_call(std::forward<T1>(on_call), std::forward<T2>(on_drop))) {}
+    // Drop handler is convenient when it's necessary to catch dropping of the closure costructed from function pointer,
+    // object lvalue reference or lambda. If the closure holds the user's object, the additional drop handler is
+    // probably excessive. The cleanup in this case may be done in the object's destructor.
+    template <typename T, typename D>
+    ClosureMoveParam(T&& on_call, D&& on_drop)
+        : Owned<ZC_CLOSURE_TYPE>(wrap_call(std::forward<T>(on_call), std::forward<D>(on_drop))) {}
 
    private:
     typedef ZC_RETVAL (*CALL)(ZCPP_PARAM&& pvalue);
@@ -300,7 +267,7 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
             return on_call->func(ZCPP_PARAM(pvalue));
         };
         auto drop = [](void* ctx) { delete static_cast<Call*>(ctx); };
-        return {context, call, nullptr};
+        return {context, call, drop};
     }
 
     template <typename T>
