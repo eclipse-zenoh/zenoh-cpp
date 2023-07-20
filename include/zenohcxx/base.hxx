@@ -202,6 +202,42 @@ class ClosureConstRefParam : public Owned<ZC_CLOSURE_TYPE> {
         auto drop = [](void* ctx) { delete static_cast<Call*>(ctx); };
         return {context, call, drop};
     }
+    template <typename T>
+    ZC_CLOSURE_TYPE wrap_call(T& on_call) {
+        auto context = &on_call;
+        auto call = [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+            auto on_call = static_cast<T*>(ctx);
+            return (*on_call)(*static_cast<const ZCPP_PARAM*>(pvalue));
+        };
+        return {context, call, nullptr};
+    }
+    template <typename T>
+    ZC_CLOSURE_TYPE wrap_call(T&& on_call) {
+        auto context = new T(std::move(on_call));
+        auto call = [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+            auto on_call = static_cast<T*>(ctx);
+            return (*on_call)(*static_cast<const ZCPP_PARAM*>(pvalue));
+        };
+        auto drop = [](void* ctx) {
+            auto on_call = static_cast<T*>(ctx);
+            delete on_call;
+        };
+        return {context, call, drop};
+    }
+
+    ZC_CLOSURE_TYPE wrap_call(CALL on_call, DROP on_drop) {
+        auto context = new std::pair{Call{on_call}, Drop{on_drop}};
+        auto call = [](const ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
+            auto pair = static_cast<std::pair<Call, Drop>*>(ctx);
+            return pair->first.func(*static_cast<const ZCPP_PARAM*>(pvalue));
+        };
+        auto drop = [](void* ctx) {
+            auto pair = static_cast<std::pair<Call, Drop>*>(ctx);
+            pair->second.func();
+            delete pair;
+        };
+        return {context, call, drop};
+    }
 };
 
 //
@@ -238,7 +274,7 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
 
     // Construct closure from the data handler: any object with operator()(ZCPP_PARAM&&) defined
     template <typename T>
-    ClosureMoveParam(T&& on_call) : Owned<ZC_CLOSURE_TYPE>(wrap_call(std::forward<T>(on_call))) {}
+    ClosureMoveParam(T&& on_call) : Owned<ZC_CLOSURE_TYPE>(wrap_call(std::forward<T>(on_call), []() {})) {}
 
     // Construct closure from the data handler and drop handler:
     // data handler: any object with operator()(ZCPP_PARAM&&) defined
@@ -253,56 +289,17 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
 
    private:
     typedef ZC_RETVAL (*CALL)(ZCPP_PARAM&& pvalue);
-    struct Call {
-        CALL func;
-    };
     typedef void (*DROP)();
-    struct Drop {
-        DROP func;
-    };
-    ZC_CLOSURE_TYPE wrap_call(CALL on_call) {
-        auto context = new Call{on_call};
-        auto call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
-            auto on_call = static_cast<Call*>(ctx);
-            return on_call->func(ZCPP_PARAM(pvalue));
-        };
-        auto drop = [](void* ctx) { delete static_cast<Call*>(ctx); };
-        return {context, call, drop};
-    }
-
-    template <typename T>
-    ZC_CLOSURE_TYPE wrap_call(T& on_call) {
-        auto context = &on_call;
-        auto call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
-            auto on_call = static_cast<T*>(ctx);
-            return (*on_call)(ZCPP_PARAM(pvalue));
-        };
-        return {context, call, nullptr};
-    }
-
-    template <typename T>
-    ZC_CLOSURE_TYPE wrap_call(T&& on_call) {
-        auto context = new T(std::move(on_call));
-        auto call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
-            auto on_call = static_cast<T*>(ctx);
-            return (*on_call)(ZCPP_PARAM(pvalue));
-        };
-        auto drop = [](void* ctx) {
-            auto on_call = static_cast<T*>(ctx);
-            delete on_call;
-        };
-        return {context, call, drop};
-    }
 
     ZC_CLOSURE_TYPE wrap_call(CALL on_call, DROP on_drop) {
-        auto context = new std::pair{Call{on_call}, Drop{on_drop}};
+        auto context = new std::pair{on_call, on_drop};
         auto call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
-            auto pair = static_cast<std::pair<Call, Drop>*>(ctx);
-            return pair->first.func(ZCPP_PARAM(pvalue));
+            auto pair = static_cast<std::pair<CALL, DROP>*>(ctx);
+            return pair->first(ZCPP_PARAM(pvalue));
         };
         auto drop = [](void* ctx) {
-            auto pair = static_cast<std::pair<Call, Drop>*>(ctx);
-            pair->second.func();
+            auto pair = static_cast<std::pair<CALL, DROP>*>(ctx);
+            pair->second();
             delete pair;
         };
         return {context, call, drop};
@@ -310,14 +307,14 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
 
     template <typename T>
     ZC_CLOSURE_TYPE wrap_call(T& on_call, DROP on_drop) {
-        auto context = new std::pair{&on_call, Drop{on_drop}};
+        auto context = new std::pair{&on_call, on_drop};
         auto call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
-            auto pair = static_cast<std::pair<T*, Drop>*>(ctx);
+            auto pair = static_cast<std::pair<T*, DROP>*>(ctx);
             return (*pair->first)(ZCPP_PARAM(pvalue));
         };
         auto drop = [](void* ctx) {
-            auto pair = static_cast<std::pair<T*, Drop>*>(ctx);
-            pair->second.func();
+            auto pair = static_cast<std::pair<T*, DROP>*>(ctx);
+            pair->second();
             delete pair;
         };
         return {context, call, drop};
@@ -325,14 +322,14 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
 
     template <typename T>
     ZC_CLOSURE_TYPE wrap_call(T&& on_call, DROP on_drop) {
-        auto context = new std::pair<T, Drop>{std::move(on_call), Drop{on_drop}};
+        auto context = new std::pair<T, DROP>{std::move(on_call), on_drop};
         auto call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
-            auto pair = static_cast<std::pair<T, Drop>*>(ctx);
+            auto pair = static_cast<std::pair<T, DROP>*>(ctx);
             return pair->first(ZCPP_PARAM(pvalue));
         };
         auto drop = [](void* ctx) {
-            auto pair = static_cast<std::pair<T, Drop>*>(ctx);
-            pair->second.func();
+            auto pair = static_cast<std::pair<T, DROP>*>(ctx);
+            pair->second();
             delete pair;
         };
         return {context, call, drop};
@@ -340,13 +337,13 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
 
     template <typename D>
     ZC_CLOSURE_TYPE wrap_call(CALL on_call, D& on_drop) {
-        auto context = new std::pair{Call{on_call}, &on_drop};
+        auto context = new std::pair{on_call, &on_drop};
         auto call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
-            auto pair = static_cast<std::pair<Call, D*>*>(ctx);
-            return pair->first.func(ZCPP_PARAM(pvalue));
+            auto pair = static_cast<std::pair<CALL, D*>*>(ctx);
+            return pair->first(ZCPP_PARAM(pvalue));
         };
         auto drop = [](void* ctx) {
-            auto pair = static_cast<std::pair<Call, D*>*>(ctx);
+            auto pair = static_cast<std::pair<CALL, D*>*>(ctx);
             (*pair->second)();
             delete pair;
         };
@@ -385,13 +382,13 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
 
     template <typename D>
     ZC_CLOSURE_TYPE wrap_call(CALL on_call, D&& on_drop) {
-        auto context = new std::pair{Call{on_call}, std::move(on_drop)};
+        auto context = new std::pair{on_call, std::move(on_drop)};
         auto call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
-            auto pair = static_cast<std::pair<Call, D>*>(ctx);
-            return pair->first.func(ZCPP_PARAM(pvalue));
+            auto pair = static_cast<std::pair<CALL, D>*>(ctx);
+            return pair->first(ZCPP_PARAM(pvalue));
         };
         auto drop = [](void* ctx) {
-            auto pair = static_cast<std::pair<Call, D>*>(ctx);
+            auto pair = static_cast<std::pair<CALL, D>*>(ctx);
             pair->second();
             delete pair;
         };
