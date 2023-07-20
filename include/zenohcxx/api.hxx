@@ -815,17 +815,17 @@ typedef ClosureMoveParam<::z_owned_closure_reply_t, ::z_owned_reply_t, z::Reply>
 //
 //  Represents the query closure.
 //
-typedef ClosureConstPtrParam<::z_owned_closure_query_t, ::z_query_t, z::Query> ClosureQuery;
+typedef ClosureConstRefParam<::z_owned_closure_query_t, ::z_query_t, z::Query> ClosureQuery;
 
 //
 //  Represents the sample closure.
 //
-typedef ClosureConstPtrParam<::z_owned_closure_sample_t, ::z_sample_t, z::Sample> ClosureSample;
+typedef ClosureConstRefParam<::z_owned_closure_sample_t, ::z_sample_t, z::Sample> ClosureSample;
 
 //
 //  Represents the zenoh ID closure.
 //
-typedef ClosureConstPtrParam<::z_owned_closure_zid_t, ::z_id_t, z::Id> ClosureZid;
+typedef ClosureConstRefParam<::z_owned_closure_zid_t, ::z_id_t, z::Id> ClosureZid;
 
 //
 // Represents the scouting closure

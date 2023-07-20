@@ -27,7 +27,8 @@ using namespace zenoh;
 // - from lambda expression
 //
 
-size_t gcnt = 1;
+size_t callcnt = 1;
+size_t dropcnt = 1;
 
 void show_primes(size_t v) {
     std::cout << v << " = 1";
@@ -43,124 +44,195 @@ void show_primes(size_t v) {
     std::cout << std::endl;
 }
 
-void on_reply(Reply&&) { gcnt *= 2; };
+void on_reply_2(Reply&&) { callcnt *= 2; };
+void on_reply_3(Reply&&) { callcnt *= 3; };
+void on_reply_5(Reply&&) { callcnt *= 5; };
+void on_reply_7(Reply&&) { callcnt *= 7; };
+void on_reply_11(Reply&&) { callcnt *= 11; };
 
-struct OnReply {
-    OnReply() = default;
-    OnReply(const OnReply&) = delete;
-    OnReply(OnReply&&) = default;
-    OnReply& operator=(const OnReply&) = delete;
-    OnReply& operator=(OnReply&&) = default;
+struct OnCall {
+    OnCall() = default;
+    OnCall(const OnCall&) = delete;
+    OnCall(OnCall&&) = default;
+    OnCall& operator=(const OnCall&) = delete;
+    OnCall& operator=(OnCall&&) = default;
 
-    OnReply(int _v) : v(_v) {}
-    void operator()(Reply&&) { gcnt *= v; };
+    OnCall(int _v) : v(_v) {}
+    void operator()(Reply&&) { callcnt *= v; };
     int v;
 };
 
-void test_constructors() {
-    ClosureReply closure_reply_f(on_reply);
-    ClosureReply closure_reply_obj(OnReply(5));
-    OnReply on_reply_obj_ref(7);
-    ClosureReply closure_reply_obj_ref(on_reply_obj_ref);
-    OnReply on_reply_obj_moveref(11);
-    ClosureReply closure_reply_obj_moveref(std::move(on_reply_obj_moveref));
-    ClosureReply closure_reply_lambda([](Reply&&) { gcnt *= 13; });
+void test_call() {
+    ClosureReply f(on_reply_3);
+    ClosureReply o(OnCall(5));
+    OnCall o7(7);
+    ClosureReply r(o7);
+    OnCall o11(11);
+    ClosureReply m(std::move(o11));
+    ClosureReply l([](Reply&&) { callcnt *= 13; });
 
     // rvalue parameter tests
-    gcnt = 1;
-    closure_reply_f(Reply(nullptr));
-    closure_reply_obj(Reply(nullptr));
-    closure_reply_obj_ref(Reply(nullptr));
-    closure_reply_obj_moveref(Reply(nullptr));
-    closure_reply_lambda(Reply(nullptr));
+    callcnt = 1;
+    f(Reply(nullptr));
+    o(Reply(nullptr));
+    r(Reply(nullptr));
+    m(Reply(nullptr));
+    l(Reply(nullptr));
 
-    show_primes(gcnt);
-    assert(gcnt == size_t(1) * 2 * 5 * 7 * 11 * 13);
+    assert(callcnt == size_t(1) * 3 * 5 * 7 * 11 * 13);
 }
 
-void test_add_call() {
-    ClosureReply closure_reply_f;
-    closure_reply_f.add_call(on_reply);
-    ClosureReply closure_reply_obj;
-    closure_reply_obj.add_call(OnReply(5));
-    ClosureReply closure_reply_obj_ref;
-    OnReply on_reply_obj_ref(7);
-    closure_reply_obj_ref.add_call(on_reply_obj_ref);
-    OnReply on_reply_obj_moveref(11);
-    ClosureReply closure_reply_obj_moveref;
-    closure_reply_obj_moveref.add_call(std::move(on_reply_obj_moveref));
-    ClosureReply closure_reply_lambda;
-    closure_reply_lambda.add_call([](Reply&&) { gcnt *= 13; });
+void on_drop_2() { dropcnt *= 2; };
+void on_drop_3() { dropcnt *= 3; };
+void on_drop_5() { dropcnt *= 5; };
 
-    gcnt = 1;
-    closure_reply_f(Reply(nullptr));
-    closure_reply_obj(Reply(nullptr));
-    closure_reply_obj_ref(Reply(nullptr));
-    closure_reply_obj_moveref(Reply(nullptr));
-    closure_reply_lambda(Reply(nullptr));
-
-    show_primes(gcnt);
-    assert(gcnt == size_t(1) * 2 * 5 * 7 * 11 * 13);
-
-    gcnt = 1;
-    closure_reply_f.add_call(OnReply(17));
-    closure_reply_obj.add_call(OnReply(19));
-    closure_reply_obj_ref.add_call(OnReply(23));
-    closure_reply_obj_moveref.add_call(OnReply(29));
-    closure_reply_lambda.add_call(OnReply(31));
-    closure_reply_f(Reply(nullptr));
-    closure_reply_obj(Reply(nullptr));
-    closure_reply_obj_ref(Reply(nullptr));
-    closure_reply_obj_moveref(Reply(nullptr));
-    closure_reply_lambda(Reply(nullptr));
-
-    show_primes(gcnt);
-    assert(gcnt == size_t(1) * 2 * 5 * 7 * 11 * 13 * 17 * 19 * 23 * 29 * 31);
-}
-
-void on_drop_2() { gcnt *= 2; };
-void on_drop_17() { gcnt *= 17; };
+void on_drop_17() { dropcnt *= 17; };
 
 struct OnDrop {
     OnDrop(int _v) : v(_v) {}
-    void operator()() { gcnt *= v; };
+    void operator()() { dropcnt *= v; };
     int v;
 };
 
-void test_add_drop() {
-    gcnt = 1;
+void test_call_f_drop() {
+    callcnt = 1;
+    dropcnt = 1;
     {
-        ClosureReply closure_reply_f;
-        ClosureReply closure_reply_obj;
-        ClosureReply closure_reply_obj_ref;
-        ClosureReply closure_reply_obj_moveref;
-        ClosureReply closure_reply_lambda;
+        ClosureReply ff(on_reply_2, on_drop_2);
+        ClosureReply fo(on_reply_3, OnDrop(3));
+        OnDrop d5(5);
+        ClosureReply fr(on_reply_5, d5);
+        OnDrop d7(7);
+        ClosureReply fm(on_reply_7, std::move(d7));
+        ClosureReply fl(on_reply_11, []() { dropcnt *= 11; });
 
-        closure_reply_f.add_drop(on_drop_2);
-        closure_reply_obj.add_drop(OnDrop(5));
-        OnDrop on_drop_obj_ref(7);
-        closure_reply_obj_ref.add_drop(on_drop_obj_ref);
-        OnDrop on_drop_obj_moveref(11);
-        closure_reply_obj_moveref.add_drop(std::move(on_drop_obj_moveref));
-        closure_reply_lambda.add_drop([]() { gcnt *= 13; });
+        ff(Reply(nullptr));
+        fo(Reply(nullptr));
+        fr(Reply(nullptr));
+        fm(Reply(nullptr));
+        fl(Reply(nullptr));
 
-        closure_reply_f.add_drop(on_drop_17);
-        closure_reply_obj.add_drop(OnDrop(19));
-        OnDrop on_drop_obj_ref_23(23);
-        closure_reply_obj_ref.add_drop(on_drop_obj_ref_23);
-        OnDrop on_drop_obj_moveref_29(29);
-        closure_reply_obj_moveref.add_drop(std::move(on_drop_obj_moveref_29));
-        closure_reply_lambda.add_drop([]() { gcnt *= 31; });
-
-        assert(gcnt == size_t(1));
+        assert(dropcnt == size_t(1));
+        assert(callcnt == size_t(1) * 2 * 3 * 5 * 7 * 11);
     }
 
-    show_primes(gcnt);
-    assert(gcnt == size_t(1) * 2 * 5 * 7 * 11 * 13 * 17 * 19 * 23 * 29 * 31);
+    assert(dropcnt == size_t(1) * 2 * 3 * 5 * 7 * 11);
+}
+
+void test_call_o_drop() {
+    callcnt = 1;
+    dropcnt = 1;
+    {
+        ClosureReply of(OnCall(2), on_drop_2);
+        ClosureReply oo(OnCall(3), OnDrop(3));
+        OnDrop d5(5);
+        ClosureReply or_(OnCall(5), d5);
+        OnDrop d7(7);
+        ClosureReply om(OnCall(7), std::move(d7));
+        ClosureReply ol(OnCall(11), []() { dropcnt *= 11; });
+
+        of(Reply(nullptr));
+        oo(Reply(nullptr));
+        or_(Reply(nullptr));
+        om(Reply(nullptr));
+        ol(Reply(nullptr));
+
+        assert(dropcnt == size_t(1));
+        assert(callcnt == size_t(1) * 2 * 3 * 5 * 7 * 11);
+    }
+
+    assert(dropcnt == size_t(1) * 2 * 3 * 5 * 7 * 11);
+}
+
+void test_call_r_drop() {
+    callcnt = 1;
+    dropcnt = 1;
+    {
+        OnCall f2(2);
+        OnCall f3(3);
+        OnCall f5(5);
+        OnCall f7(7);
+        OnCall f11(11);
+
+        ClosureReply rf(f2, on_drop_2);
+        ClosureReply ro(f3, OnDrop(3));
+        OnDrop d5(5);
+        ClosureReply rr(f5, d5);
+        OnDrop d7(7);
+        ClosureReply rm(f7, std::move(d7));
+        ClosureReply rl(f11, []() { dropcnt *= 11; });
+
+        rf(Reply(nullptr));
+        ro(Reply(nullptr));
+        rr(Reply(nullptr));
+        rm(Reply(nullptr));
+        rl(Reply(nullptr));
+
+        assert(dropcnt == size_t(1));
+        assert(callcnt == size_t(1) * 2 * 3 * 5 * 7 * 11);
+    }
+    assert(dropcnt == size_t(1) * 2 * 3 * 5 * 7 * 11);
+}
+
+void test_call_m_drop() {
+    callcnt = 1;
+    dropcnt = 1;
+    {
+        OnCall f2(2);
+        OnCall f3(3);
+        OnCall f5(5);
+        OnCall f7(7);
+        OnCall f11(11);
+
+        ClosureReply mf(std::move(f2), on_drop_2);
+        ClosureReply mo(std::move(f3), OnDrop(3));
+        OnDrop d5(5);
+        ClosureReply mr(std::move(f5), d5);
+        OnDrop d7(7);
+        ClosureReply mm(std::move(f7), std::move(d7));
+        ClosureReply ml(std::move(f11), []() { dropcnt *= 11; });
+
+        mf(Reply(nullptr));
+        mo(Reply(nullptr));
+        mr(Reply(nullptr));
+        mm(Reply(nullptr));
+        ml(Reply(nullptr));
+
+        assert(dropcnt == size_t(1));
+        assert(callcnt == size_t(1) * 2 * 3 * 5 * 7 * 11);
+    }
+    assert(dropcnt == size_t(1) * 2 * 3 * 5 * 7 * 11);
+}
+
+void test_call_l_drop() {
+    callcnt = 1;
+    dropcnt = 1;
+    {
+        ClosureReply lf([](Reply&&) { callcnt *= 2; }, on_drop_2);
+        ClosureReply lo([](Reply&&) { callcnt *= 3; }, OnDrop(3));
+        OnDrop d5(5);
+        ClosureReply lr([](Reply&&) { callcnt *= 5; }, d5);
+        OnDrop d7(7);
+        ClosureReply lm([](Reply&&) { callcnt *= 7; }, std::move(d7));
+        ClosureReply ll([](Reply&&) { callcnt *= 11; }, []() { dropcnt *= 11; });
+
+        lf(Reply(nullptr));
+        lo(Reply(nullptr));
+        lr(Reply(nullptr));
+        lm(Reply(nullptr));
+        ll(Reply(nullptr));
+
+        assert(dropcnt == size_t(1));
+        assert(callcnt == size_t(1) * 2 * 3 * 5 * 7 * 11);
+    }
+    assert(dropcnt == size_t(1) * 2 * 3 * 5 * 7 * 11);
 }
 
 int main(int argc, char** argv) {
-    test_constructors();
-    test_add_call();
-    test_add_drop();
+    test_call();
+    test_call_f_drop();
+    test_call_o_drop();
+    test_call_r_drop();
+    test_call_m_drop();
+    test_call_l_drop();
 }
