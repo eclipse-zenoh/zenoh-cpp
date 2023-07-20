@@ -21,13 +21,13 @@ endfunction()
 
 file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/universal/*.cxx")
 foreach(file ${files})
-    add_test_instance(${file} zenohc zenohcxx::zenohc::lib)
+    add_test_instance(${file} zenohc zenohcxx::zenohc::static)
     add_test_instance(${file} zenohpico zenohcxx::zenohpico)
 endforeach()
 
 file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/zenohc/*.cxx")
 foreach(file ${files})
-    add_test_instance(${file} zenohc zenohcxx::zenohc::lib)
+    add_test_instance(${file} zenohc zenohcxx::zenohc::static)
 endforeach()
 
 file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/zenohpico/*.cxx")

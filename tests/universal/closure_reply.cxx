@@ -46,6 +46,12 @@ void show_primes(size_t v) {
 void on_reply(Reply&&) { gcnt *= 2; };
 
 struct OnReply {
+    OnReply() = default;
+    OnReply(const OnReply&) = delete;
+    OnReply(OnReply&&) = default;
+    OnReply& operator=(const OnReply&) = delete;
+    OnReply& operator=(OnReply&&) = default;
+
     OnReply(int _v) : v(_v) {}
     void operator()(Reply&&) { gcnt *= v; };
     int v;
@@ -67,6 +73,8 @@ void test_constructors() {
     closure_reply_obj_ref(Reply(nullptr));
     closure_reply_obj_moveref(Reply(nullptr));
     closure_reply_lambda(Reply(nullptr));
+
+    show_primes(gcnt);
     assert(gcnt == size_t(1) * 2 * 5 * 7 * 11 * 13);
 }
 
@@ -90,7 +98,8 @@ void test_add_call() {
     closure_reply_obj_ref(Reply(nullptr));
     closure_reply_obj_moveref(Reply(nullptr));
     closure_reply_lambda(Reply(nullptr));
-    // show_primes(gcnt);
+
+    show_primes(gcnt);
     assert(gcnt == size_t(1) * 2 * 5 * 7 * 11 * 13);
 
     gcnt = 1;
@@ -104,7 +113,8 @@ void test_add_call() {
     closure_reply_obj_ref(Reply(nullptr));
     closure_reply_obj_moveref(Reply(nullptr));
     closure_reply_lambda(Reply(nullptr));
-    // show_primes(gcnt);
+
+    show_primes(gcnt);
     assert(gcnt == size_t(1) * 2 * 5 * 7 * 11 * 13 * 17 * 19 * 23 * 29 * 31);
 }
 
@@ -144,7 +154,8 @@ void test_add_drop() {
 
         assert(gcnt == size_t(1));
     }
-    // show_primes(gcnt);
+
+    show_primes(gcnt);
     assert(gcnt == size_t(1) * 2 * 5 * 7 * 11 * 13 * 17 * 19 * 23 * 29 * 31);
 }
 

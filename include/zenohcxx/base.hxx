@@ -162,25 +162,25 @@ class ClosureConstRefParam : public Owned<ZC_CLOSURE_TYPE> {
     }
 
     // Call closure with reference to C++ parameter
-    void operator()(const ZCPP_PARAM& v) { return call(&(static_cast<ZC_PARAM&>(v))); }
+    void operator()(const ZCPP_PARAM& v) { return call(&(static_cast<const ZC_PARAM&>(v))); }
 
     // Construct empty closure
     ClosureConstRefParam() : Owned<ZC_CLOSURE_TYPE>(nullptr) {}
 
-    // Construct closure from the data handler: any object with operator()(ZCPP_PARAM&&) defined
+    // Construct closure from the data handler: any object with operator()(const ZCPP_PARAM&) defined
     template <typename T>
-    ClosureMoveParam(T&& obj) : Owned<ZC_CLOSURE_TYPE>(wrap_call(std::forward<T>(obj), nullptr)) {}
+    ClosureConstRefParam(T&& obj) : Owned<ZC_CLOSURE_TYPE>(wrap_call(std::forward<T>(obj), nullptr)) {}
 
     // Add data handler
     template <typename T>
-    ClosureMoveParam& add_call(T&& obj) {
+    ClosureConstRefParam& add_call(T&& obj) {
         _0 = wrap_call(std::forward(obj), &_0);
         return *this;
     }
 
     // Add drop handler
     template <typename T>
-    ClosureMoveParam& add_drop(T&& obj) {
+    ClosureConstRefParam& add_drop(T&& obj) {
         _0 = wrap_drop(std::forward(obj), &_0);
         return *this;
     }
