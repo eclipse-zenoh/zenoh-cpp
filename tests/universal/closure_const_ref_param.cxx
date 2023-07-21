@@ -30,7 +30,7 @@ using namespace zenoh;
 size_t callcnt = 1;
 size_t dropcnt = 1;
 
-Query query(::z_query_t{nullptr});
+Query query(::z_query_t{0});
 
 void show_primes(size_t v) {
     std::cout << v << " = 1";
@@ -71,7 +71,7 @@ void test_call() {
     ClosureQuery r(o7);
     OnCall o11(11);
     ClosureQuery m(std::move(o11));
-    ClosureQuery l([](Query&&) { callcnt *= 13; });
+    ClosureQuery l([](const Query&) { callcnt *= 13; });
 
     // rvalue parameter tests
     callcnt = 1;
@@ -210,13 +210,13 @@ void test_call_l_drop() {
     callcnt = 1;
     dropcnt = 1;
     {
-        ClosureQuery lf([](Query&&) { callcnt *= 2; }, on_drop_2);
-        ClosureQuery lo([](Query&&) { callcnt *= 3; }, OnDrop(3));
+        ClosureQuery lf([](const Query&) { callcnt *= 2; }, on_drop_2);
+        ClosureQuery lo([](const Query&) { callcnt *= 3; }, OnDrop(3));
         OnDrop d5(5);
-        ClosureQuery lr([](Query&&) { callcnt *= 5; }, d5);
+        ClosureQuery lr([](const Query&) { callcnt *= 5; }, d5);
         OnDrop d7(7);
-        ClosureQuery lm([](Query&&) { callcnt *= 7; }, std::move(d7));
-        ClosureQuery ll([](Query&&) { callcnt *= 11; }, []() { dropcnt *= 11; });
+        ClosureQuery lm([](const Query&) { callcnt *= 7; }, std::move(d7));
+        ClosureQuery ll([](const Query&) { callcnt *= 11; }, []() { dropcnt *= 11; });
 
         lf(query);
         lo(query);
