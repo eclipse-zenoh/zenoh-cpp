@@ -79,21 +79,22 @@ int _main(int argc, char **argv) {
     std::condition_variable done_signal;
     bool done = false;
 
-    scout(std::move(config.create_scouting_config()), [&m, &done, &done_signal, &count](Hello hello) {
-        if (hello.check()) {
-            printhello(hello);
-            std::cout << std::endl;
-            count++;
-        } else {
-            std::cout << "Dropping scout\n";
-            if (!count) std::cout << "Did not find any zenoh process.\n";
-            std::lock_guard lock(m);
-            done = true;
-            done_signal.notify_all();
-        }
-    });
+    auto on_hello = [&m, &done, &done_signal, &count](Hello hello) {
+        printhello(hello);
+        std::cout << std::endl;
+        count++;
+    };
 
-    std::cout << "Scout started" << std::endl;
+    auto on_end_scouting = [&m, &done, &done_signal, &count]() {
+        if (!count) std::cout << "Did not find any zenoh process.\n";
+        std::lock_guard lock(m);
+        done = true;
+        done_signal.notify_all();
+    };
+
+    std::cout << "Scout starting" << std::endl;
+
+    scout(std::move(config.create_scouting_config()), {on_hello, on_end_scouting});
 
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });
