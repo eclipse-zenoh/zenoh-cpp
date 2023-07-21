@@ -26,10 +26,8 @@ int _main(int argc, char **argv) {
 
     auto pub = std::get<Publisher>(session.declare_publisher("test/pong"));
     auto sub = std::get<Subscriber>(
-        session.declare_subscriber("test/ping", std::move([pub = std::move(pub)](const Sample *sample) mutable {
-                                       if (sample) {
-                                           pub.put(sample->get_payload());
-                                       }
+        session.declare_subscriber("test/ping", std::move([pub = std::move(pub)](const Sample& sample) mutable {
+                                        pub.put(sample.get_payload());
                                    })));
     std::cout << "Pong ready, press any key to quit\n";
     std::getchar();

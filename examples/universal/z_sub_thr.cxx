@@ -27,26 +27,24 @@ struct Stats {
     volatile clock_t end = 0;
     volatile clock_t first_start = 0;
 
-    void operator()(const Sample *sample) {
-        if (sample) {
-            if (count == 0) {
-                start = clock();
-                if (!first_start) {
-                    first_start = start;
-                }
-                count++;
-            } else if (count < N) {
-                count++;
-            } else {
-                stop = clock();
-                finished_rounds++;
-                printf("%f msg/s\n", N * (double)CLOCKS_PER_SEC / (double)(stop - start));
-                count = 0;
+    void operator()(const Sample &sample) {
+        if (count == 0) {
+            start = clock();
+            if (!first_start) {
+                first_start = start;
             }
+            count++;
+        } else if (count < N) {
+            count++;
         } else {
-            end = clock();
+            stop = clock();
+            finished_rounds++;
+            printf("%f msg/s\n", N * (double)CLOCKS_PER_SEC / (double)(stop - start));
+            count = 0;
         }
     }
+
+    void operator()() { end = clock(); }
 
     void print() const {
         const double elapsed = (double)(end - first_start) / (double)CLOCKS_PER_SEC;
@@ -83,7 +81,7 @@ int _main(int argc, char **argv) {
     KeyExpr keyexpr = session.declare_keyexpr("test/thr");
 
     Stats stats;
-    auto subscriber = std::get<Subscriber>(session.declare_subscriber(keyexpr, stats));
+    auto subscriber = std::get<Subscriber>(session.declare_subscriber(keyexpr, {stats, stats}));
     char c = 0;
     while (c != 'q') {
         c = fgetc(stdin);
