@@ -104,7 +104,9 @@ char* getopt(int argc, char** argv, char option) {
 struct args_t parse_args(int argc, char** argv) {
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-h") == 0) {
-            return (struct args_t){.help_requested = 1};
+            struct args_t args;
+            args.help_requested = 1;
+            return args;
         }
     }
     char* arg = getopt(argc, argv, 's');
@@ -127,12 +129,14 @@ struct args_t parse_args(int argc, char** argv) {
     if (arg) {
         timeout_ms = atoi(arg);
     }
-    return (struct args_t){.help_requested = 0,
-                           .number_of_pings = number_of_pings,
-                           .size = size,
-                           .warmup_ms = warmup_ms,
-                           .timeout_ms = timeout_ms,
-                           .config_path = getopt(argc, argv, 'c')};
+    struct args_t args;
+    args.help_requested = 0;
+    args.number_of_pings = number_of_pings;
+    args.size = size;
+    args.warmup_ms = warmup_ms;
+    args.timeout_ms = timeout_ms;
+    args.config_path = getopt(argc, argv, 'c');
+    return args;
 }
 
 int main(int argc, char** argv) {

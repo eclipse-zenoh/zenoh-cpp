@@ -12,12 +12,12 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 // ZENOHCXX_ZENOHPICO and ZENOHCXX_ZENOHC are mutually exclusive when using this header
-#if defined(ZENOHCXX_ZENOHPICO) and defined(ZENOHCXX_ZENOHC)
+#if defined(ZENOHCXX_ZENOHPICO) && defined(ZENOHCXX_ZENOHC)
 #error("Only one of ZENOHCXX_ZENOHPICO and ZENOHCXX_ZENOHC should be defined. \
 Explictly include zenohpico.hxx and zenohc.hxx to use both libraies in the same program\
 under namespaces zenohpico and zenohc respectively.")
 #endif
-#if not defined(ZENOHCXX_ZENOHPICO) and not defined(ZENOHCXX_ZENOHC)
+#if !defined(ZENOHCXX_ZENOHPICO) && !defined(ZENOHCXX_ZENOHC)
 #error("Either ZENOHCXX_ZENOHPICO or ZENOHCXX_ZENOHC should be defined")
 #endif
 
