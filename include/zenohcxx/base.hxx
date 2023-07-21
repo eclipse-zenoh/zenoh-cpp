@@ -158,7 +158,11 @@ class ClosureConstRefParam : public Owned<ZC_CLOSURE_TYPE> {
 
     // Call closure with pointer to C parameter
     ZC_RETVAL call(const ZC_PARAM* v) {
-        if (check()) Owned<ZC_CLOSURE_TYPE>::_0.call(v, Owned<ZC_CLOSURE_TYPE>::_0.context);
+        if constexpr (std::is_same_v<ZC_RETVAL, void>) {
+            if (check()) Owned<ZC_CLOSURE_TYPE>::_0.call(v, Owned<ZC_CLOSURE_TYPE>::_0.context);
+        } else {
+            return check() ? Owned<ZC_CLOSURE_TYPE>::_0.call(v, Owned<ZC_CLOSURE_TYPE>::_0.context) : ZC_RETVAL{};
+        }
     }
 
     // Call closure with const reference to C++ parameter
@@ -203,7 +207,8 @@ class ClosureConstRefParam : public Owned<ZC_CLOSURE_TYPE> {
 };
 
 template <typename ZC_CLOSURE_TYPE, typename ZC_PARAM, typename ZCPP_PARAM,
-          typename std::enable_if_t<std::is_base_of_v<Owned<ZC_PARAM>, ZCPP_PARAM>, bool> = true>
+          typename std::enable_if_t<
+              std::is_base_of_v<Owned<ZC_PARAM>, ZCPP_PARAM> && sizeof(ZC_PARAM) == sizeof(ZCPP_PARAM), bool> = true>
 
 class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
     typedef decltype((*ZC_CLOSURE_TYPE::call)(nullptr, nullptr)) ZC_RETVAL;
@@ -223,8 +228,11 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
         }
     }
 
-    // Call closure with reference to C++ parameter
-    ZC_RETVAL operator()(ZCPP_PARAM&& v) { return call(&(static_cast<ZC_PARAM&>(v))); }
+    // Call closure with movable reference to C++ parameter
+    ZC_RETVAL operator()(ZCPP_PARAM&& v) { return call((&static_cast<ZC_PARAM&>(v))); }
+
+    // Call closure with lvalue reference to C++ parameter
+    ZC_RETVAL operator()(ZCPP_PARAM& v) { return call((&static_cast<ZC_PARAM&>(v))); }
 
     // Construct closure from the data handler: any object with operator()(ZCPP_PARAM&&) defined
     template <typename T>
@@ -250,7 +258,7 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
         auto context = new std::pair<SC, SD>{std::forward<C>(on_call), std::forward<D>(on_drop)};
         auto call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
             auto pair = static_cast<std::pair<SC, SD>*>(ctx);
-            return pair->first(ZCPP_PARAM(pvalue));
+            return pair->first(std::move(reinterpret_cast<ZCPP_PARAM&>(*pvalue)));
         };
         auto drop = [](void* ctx) {
             auto pair = static_cast<std::pair<SC, SD>*>(ctx);
