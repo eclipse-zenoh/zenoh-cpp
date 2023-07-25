@@ -35,6 +35,9 @@ build/*
 .vscode/*
 target/*
 Testing/*
+docs/_build
+docs/.DS_Store
+.DS_Store
 
 zenohcpp.pc
 .cache
