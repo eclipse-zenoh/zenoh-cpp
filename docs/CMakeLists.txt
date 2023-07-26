@@ -1,11 +1,22 @@
-cmake_minimum_required (VERSION 3.16)
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+    cmake_minimum_required (VERSION 3.16)
+    project(zenohcxx_docs)
+else()
+    message(STATUS "zenoh-cxx docs")
+    include(../cmake/helpers.cmake)
+endif()
 
-project ("zenoh-cpp-docs")
+find_package(Doxygen)
+if(NOT DOXYGEN_FOUND)
+    message(STATUS "Doxygen not found, skipping docs")
+    return()
+endif()
 
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake" ${CMAKE_MODULE_PATH})
-
-find_package(Doxygen REQUIRED)
-find_package(Sphinx REQUIRED)
+find_package(Sphinx)
+if(NOT SPHINX_FOUND)
+    message(STATUS "Sphinx not found, skipping docs")
+    return()
+endif()
 
 # Find all the public headers
 
@@ -35,10 +46,15 @@ add_custom_target(Doxygen ALL DEPENDS ${DOXYGEN_INDEX_FILE})
 set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
 set(SPHINX_BUILD ${CMAKE_CURRENT_BINARY_DIR}/docs/sphinx)
 
+
+file (GLOB_RECURSE RST_FILES *.rst)
 add_custom_target(Sphinx ALL
+                  DEPENDS conf.py ${RST_FILES} ${DOXYGEN_INDEX_FILE}
                   COMMAND ${SPHINX_EXECUTABLE} -b html
                   # Tell Breathe where to find the Doxygen output
                   -Dbreathe_projects.zenohcpp=${DOXYGEN_OUTPUT_DIR}/xml
                   ${SPHINX_SOURCE} ${SPHINX_BUILD}
                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   COMMENT "Generating documentation with Sphinx")
+
+add_custom_target(docs ALL DEPENDS Sphinx)
