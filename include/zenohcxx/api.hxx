@@ -29,23 +29,24 @@
 class Session;
 class Value;
 
-//
-// Error message returned by some functions
-//
+/**
+Error message returned by some functions
+*/
 typedef z::Value ErrorMessage;
 
-//
-// Error code value returned as negative value from zenohc/zenohpico functions
-//
+/**
+Error code value returned as negative value from zenohc/zenohpico functions
+*/
 typedef int8_t ErrNo;
 
-//
-// Sample kind values.
-//
-// Enumerators:
-// Z_SAMPLE_KIND_PUT: The Sample was issued by a ``put`` operation.
-// Z_SAMPLE_KIND_DELETE: The Sample was issued by a ``delete`` operation.
-//
+/**
+Sample kind values.
+
+Enumerators:
+
+Z_SAMPLE_KIND_PUT: The Sample was issued by a ``put`` operation.
+Z_SAMPLE_KIND_DELETE: The Sample was issued by a ``delete`` operation.
+*/
 typedef ::z_sample_kind_t SampleKind;
 
 //

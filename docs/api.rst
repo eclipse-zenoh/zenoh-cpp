@@ -18,3 +18,12 @@ API Reference
 
 Generic types
 =============
+
+.. doxygentypedef:: ErrorMessage
+
+.. doxygentypedef:: ErrNo
+
+.. doxygentypedef:: SampleKind
+
+.. doxygenstruct:: StrArrayView
+   :members:

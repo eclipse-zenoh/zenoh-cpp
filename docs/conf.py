@@ -12,9 +12,6 @@
 #   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 #
 
-# Configuration file for the Sphinx documentation builder.
-from clang.cindex import Config
-
 # -- Project information -----------------------------------------------------
 project = 'zenoh-cpp'
 copyright = '2017, 2023 ZettaScale Technology'
@@ -23,12 +20,8 @@ release = '0.10.0.0'
 
 # -- General configuration ---------------------------------------------------
 master_doc = 'index'
-extensions = ['sphinx_c_autodoc', 'sphinx_c_autodoc.napoleon']
-language = 'c'
-c_autodoc_roots = ['../include']
-
-# -- Options for HTML output -------------------------------------------------
 html_theme = 'sphinx_rtd_theme'
 
-# ----------------------------------------------------------------------------
-Config.set_library_file('/usr/lib/llvm-6.0/lib/libclang.so.1')
+extensions = [ "breathe" ]
+
+breathe_default_project = "zenohcpp"
