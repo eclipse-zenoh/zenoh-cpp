@@ -12,13 +12,21 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-*************
-API Reference
-*************
+Copyable types
+==============
 
-.. toctree::
-    :maxdepth: 10
+Copyable types are the types which can be freely copied and passed by value.
+They either don't reference external resources or they reference resources 
+without taking ownership.
 
-    enums
-    copyable
-    utility
+All these types are based on `Copyable` template.
+
+.. doxygenstruct:: zenohcxx::Copyable
+   :members:
+
+.. doxygenclass:: BytesView
+   :members:
+
+.. doxygenstruct:: StrArrayView
+.. doxygenstruct:: _StrArrayView
+   :members:

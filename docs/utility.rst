@@ -12,13 +12,9 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-*************
-API Reference
-*************
+Utility functions
+=================
 
-.. toctree::
-    :maxdepth: 10
+.. doxygenfunction:: init_logger
 
-    enums
-    copyable
-    utility
+.. doxygenfunction:: as_cstr

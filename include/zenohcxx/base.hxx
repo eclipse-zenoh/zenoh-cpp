@@ -33,13 +33,17 @@ namespace zenohcxx {
 // Template base classes implementing common functionality
 //
 
-//
-// Base type for C++ wrappers of Zenoh copyable structures, like GetOptions, PutOptions, etc.
-//
+/// @brief Base type for C++ wrappers of Zenoh copyable structures, like GetOptions, PutOptions, etc.
+///
+/// @tparam ZC_COPYABLE_TYPE
 template <typename ZC_COPYABLE_TYPE>
 struct Copyable : public ZC_COPYABLE_TYPE {
+    /// @brief Default constructor is deleted by default, derived classes may override it to create default valid object
+    /// when corresponding z_XXX_default function is available in zenoh-c / zenoh-pico API.
     Copyable() = delete;  // May be overloaded in derived structs with corresponding z_XXX_default function
+    /// @brief Copying is allowed
     Copyable(const Copyable& v) { *this = v; }
+    /// @brief Construct from wrapped zenoh-c / zenoh-pico structure
     Copyable(ZC_COPYABLE_TYPE v) : ZC_COPYABLE_TYPE(v) {}
 };
 
