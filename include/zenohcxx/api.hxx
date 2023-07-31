@@ -62,11 +62,10 @@ typedef ::z_sample_kind_t SampleKind;
 ///     - **Z_ENCODING_PREFIX_APP_XML**: ``application/xml``. XML.
 ///     - **Z_ENCODING_PREFIX_APP_XHTML_XML**: ``application/xhtml+xml``. XHTML.
 ///     - **Z_ENCODING_PREFIX_APP_X_WWW_FORM_URLENCODED**: ``application/x-www-form-urlencoded``. The keys and values
-///     are
-///         encoded in key-value tuples separated by '&', with a '=' between the key and the value.
-///     -**Z_ENCODING_PREFIX_TEXT_JSON**: Text JSON. Non IANA standard.
-///     -**Z_ENCODING_PREFIX_TEXT_HTML**: ``text/html``.  HyperText Markup Language (HTML).
-///     -**Z_ENCODING_PREFIX_TEXT_XML**: ``text/xml``. `Application/xml` is recommended as of RFC
+///     are encoded in key-value tuples separated by '&', with a '=' between the key and the value.
+///     - **Z_ENCODING_PREFIX_TEXT_JSON**: Text JSON. Non IANA standard.
+///     - **Z_ENCODING_PREFIX_TEXT_HTML**: ``text/html``.  HyperText Markup Language (HTML).
+///     - **Z_ENCODING_PREFIX_TEXT_XML**: ``text/xml``. `Application/xml` is recommended as of RFC
 ///     7303 (section 4.1), but `text/xml` is still used sometimes.
 ///     - **Z_ENCODING_PREFIX_TEXT_CSS**: ``text/css``.  Cascading Style Sheets (CSS).
 ///     - **Z_ENCODING_PREFIX_TEXT_CSV**: ``text/csv``. Comma-separated values (CSV).
@@ -120,27 +119,38 @@ typedef ::z_priority_t Priority;
 
 /// Query target values.
 ///
+/// see also: \ref query_target_default
+///
 /// Values:
 /// - **Z_QUERY_TARGET_BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
 /// - **Z_QUERY_TARGET_ALL**: All matching queryables.
 /// - **Z_QUERY_TARGET_ALL_COMPLETE**: A set of complete queryables.
 typedef ::z_query_target_t QueryTarget;
 
+/// \anchor query_target_default
 /// Constructs a default ``QueryTarget``
 /// @return a default ``QueryTarget``
 inline z::QueryTarget query_target_default();
 
 #ifdef __ZENOHCXX_ZENOHPICO
-/// (*zenoh-pico* only) Whatami values, defined as a bitmask
+/// Whatami values, defined as a bitmask
 ///
 /// Values:
 /// - **Z_WHATAMI_ROUTER**: Bitmask to filter Zenoh routers.
 /// - **Z_WHATAMI_PEER**: Bitmask to filter for Zenoh peers.
 /// - **Z_WHATAMI_CLIENT**: Bitmask to filter for Zenoh clients.
+///
+/// See also: \ref as_cstr
+///
+/// \note *zenoh-pico* only
 typedef ::z_whatami_t WhatAmI;
 #endif
 #ifdef __ZENOHCXX_ZENOHC
-///  (*zenoh-c* only) Whatami values, defined as a bitmask
+/// Whatami values, defined as a bitmask
+///
+/// See also: \ref as_cstr
+///
+/// \note *zenoh-c* only
 enum WhatAmI {
     /// Bitmask to filter Zenoh routers
     Z_WHATAMI_ROUTER = 1,
@@ -151,6 +161,7 @@ enum WhatAmI {
 };
 #endif
 
+/// \anchor as_cstr
 /// Returns a string representation of the given ``WhatAmI`` value.
 /// @param whatami the ``WhatAmI`` value
 /// @return a string representation of the given ``WhatAmI`` value
