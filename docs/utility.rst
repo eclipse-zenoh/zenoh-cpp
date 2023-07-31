@@ -17,4 +17,6 @@ Utility functions
 
 .. doxygenfunction:: init_logger
 
+.. doxygenfunction:: query_target_default
+
 .. doxygenfunction:: as_cstr
