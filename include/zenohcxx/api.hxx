@@ -458,31 +458,64 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     bool intersects(const KeyExprView& v) const;
 };
 
-//
-// The encoding of a payload, in a MIME-like format.
-//
-// For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix`
-// may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
-//
+/// The encoding of a payload, in a MIME-like format.
+///
+/// For wire and matching efficiency, common MIME types are represented using an integer as "prefix", and a "suffix"
+/// may be used to either provide more detail, or in combination with the **Z_ENCODING_PREFIX_EMPTY** value of
+/// ``zenoh::EncodingPrefix`` to write arbitrary MIME types.
+///
 struct Encoding : public Copyable<::z_encoding_t> {
     using Copyable::Copyable;
+
+    /// @name Constructors
+
+    /// @brief Default encoding
     Encoding() : Copyable(::z_encoding_default()) {}
+
+    /// @brief Encoding with a prefix
     Encoding(EncodingPrefix _prefix) : Copyable(::z_encoding(_prefix, nullptr)) {}
+
+    /// @brief Encoding with a prefix and a suffix
     Encoding(EncodingPrefix _prefix, const char* _suffix) : Copyable(::z_encoding(_prefix, _suffix)) {}
 
+    /// @name Methods
+
+    /// @brief Set the prefix for the encoding
+    /// @param _prefix value of ``zenoh::EncodingPrefix`` type
+    /// @return Reference to the ``Encoding`` object
     Encoding& set_prefix(EncodingPrefix _prefix) {
         prefix = _prefix;
         return *this;
     }
+
+    /// @brief Set the suffix for the encoding
+    /// @param _suffix ``zenoh::BytesView`` representing the suffix
+    /// @return Reference to the ``Encoding`` object
     Encoding& set_suffix(const z::BytesView& _suffix) {
         suffix = _suffix;
         return *this;
     }
+
+    /// @brief Get the prefix of the encoding
+    /// @return value of ``zenoh::EncodingPrefix`` type
     EncodingPrefix get_prefix() const { return prefix; }
+
+    /// @brief Get the suffix of the encoding
+    /// @return ``zenoh::BytesView`` representing the suffix
     const z::BytesView& get_suffix() const { return static_cast<const z::BytesView&>(suffix); }
+
+    /// @name Operators
+
+    /// @brief Equality operator
+    /// @param v other ``Encoding`` object
+    /// @return true if the encodings are equal
     bool operator==(const Encoding& v) const {
         return get_prefix() == v.get_prefix() && get_suffix() == v.get_suffix();
     }
+
+    /// @brief Inequality operator
+    /// @param v other ``Encoding`` object
+    /// @return true if the encodings are not equal
     bool operator!=(const Encoding& v) const { return !operator==(v); }
 };
 
