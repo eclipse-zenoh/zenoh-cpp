@@ -22,5 +22,5 @@ API Reference
    namespaces
    templates 
    enums
-   copyable
+   classes
    utility

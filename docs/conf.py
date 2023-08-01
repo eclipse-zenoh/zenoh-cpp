@@ -25,3 +25,4 @@ html_theme = 'sphinx_rtd_theme'
 extensions = [ "breathe" ]
 
 breathe_default_project = "zenohcpp"
+breathe_order_parameters_first = True

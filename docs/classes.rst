@@ -12,10 +12,8 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-Copyable types
-==============
-
-Copyable types are the types which are based on `Copyable` template.
+Classes
+=======
 
 Generic types
 -------------
@@ -24,14 +22,24 @@ The classes representing data buffers, data encoding, timestamp, etc. There type
 
 .. doxygenclass:: zenoh::BytesView
    :members:
+   :membergroups: Constructors Operators Methods
 
 .. doxygenstruct:: zenoh::StrArrayView
 
 .. doxygenstruct:: zenoh::_StrArrayView
    :members:
+   :membergroups: Constructors Operators Methods
 
 .. doxygenstruct:: zenoh::Id
    :members:
+   :membergroups: Constructors Operators Methods
+
+Key Expressions
+---------------
+
+.. doxygenstruct:: zenoh::KeyExprView
+   :members:
+   :membergroups: Constructors Operators Methods
 
 Sample data
 -----------
@@ -40,6 +48,7 @@ The classes representing the data received from the network
 
 .. doxygenstruct:: zenoh::HelloView
    :members:
+   :membergroups: Constructors Operators Methods
 
 
 Options

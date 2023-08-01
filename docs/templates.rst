@@ -31,6 +31,8 @@ non-owned `::z_X_t` types.
 
 .. doxygenstruct:: zenohcxx::Copyable
    :members:
+   :membergroups: Constructors Operators Methods
 
 .. doxygenclass:: zenohcxx::Owned
    :members:
+   :membergroups: Constructors Operators Methods

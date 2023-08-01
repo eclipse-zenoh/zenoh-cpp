@@ -188,6 +188,9 @@ template <typename Z_STR_ARRAY_T>
 struct _StrArrayView : Copyable<Z_STR_ARRAY_T> {
     typedef decltype(Z_STR_ARRAY_T::val) VALTYPE;
     using Copyable<Z_STR_ARRAY_T>::Copyable;
+
+    /// @name Constructors
+
     /// Constructs an uninitialized instance
     _StrArrayView() : Copyable<Z_STR_ARRAY_T>({0, nullptr}) {}
     /// Constructs an instance from a ``std::vector`` of ``const char*``
@@ -204,10 +207,16 @@ struct _StrArrayView : Copyable<Z_STR_ARRAY_T> {
     /// @param len the length of the array
     _StrArrayView(const char* const* v, size_t len)
         : Copyable<Z_STR_ARRAY_T>({len, const_cast<VALTYPE>(v)}) {}
+
+    /// @name Operators
+
     /// Operator to access an element of the array by index
     /// @param pos the index of the element
     /// @return the element at the given index
     const char* operator[](size_t pos) const { return Copyable<Z_STR_ARRAY_T>::val[pos]; }
+
+    /// @name Methods
+
     /// Returns the length of the array
     /// @return the length of the array
     size_t get_len() const { return Copyable<Z_STR_ARRAY_T>::len; }
@@ -223,7 +232,9 @@ struct StrArrayView : z::_StrArrayView<::z_str_array_t> {
 class BytesView : public Copyable<::z_bytes_t> {
    public:
     using Copyable::Copyable;
-    /// Constructs an uninitialized instance
+    /// @name Constructors
+
+    /// @brief Constructs an uninitialized instance
     BytesView(nullptr_t) : Copyable(init(nullptr, 0)) {}
     /// Constructs an instance from an array of bytes
     /// @param s the array of bytes
@@ -245,6 +256,9 @@ class BytesView : public Copyable<::z_bytes_t> {
     /// @param s the ``std::string``
     BytesView(const std::string& s)
         : Copyable({s.length(), reinterpret_cast<const uint8_t*>(s.data())}) {}
+
+    /// @name Operators
+
     /// Returns a ``std::string_view`` representation of the array of bytes
     /// @return a ``std::string_view`` representation of the array of bytes
     std::string_view as_string_view() const { return std::string_view(reinterpret_cast<const char*>(start), len); }
@@ -256,6 +270,9 @@ class BytesView : public Copyable<::z_bytes_t> {
     /// @param v the other instance of ``BytesView``
     /// @return true if the two instances are not equal, false otherwise
     bool operator!=(const BytesView& v) const { return !operator==(v); }
+
+    /// @name Methods
+
     /// Returns the length of the array
     /// @return the length of the array
     size_t get_len() const { return len; }
@@ -273,6 +290,9 @@ class BytesView : public Copyable<::z_bytes_t> {
 /// See also: \ref operator_id_out "operator<<(std::ostream& os, const z::Id& id)"
 struct Id : public Copyable<::z_id_t> {
     using Copyable::Copyable;
+
+    /// @name Methods
+
     /// Checks if the ID is valid
     /// @return true if the ID is valid
     bool is_some() const { return id[0] != 0; }
@@ -285,10 +305,13 @@ struct Id : public Copyable<::z_id_t> {
 /// @return the output stream
 std::ostream& operator<<(std::ostream& os, const z::Id& id);
 
-/// Represents the non-owned read-only view to a "hello" message returned by a zenoh entity as a reply to a "scout"
+/// The non-owning read-only view to a "hello" message returned by a zenoh entity as a reply to a "scout"
 /// message.
 struct HelloView : public Copyable<::z_hello_t> {
     using Copyable::Copyable;
+
+    /// @name Methods
+
     /// @brief Get ``Id`` of the entity
     /// @return ``Id`` of the entity
     const z::Id& get_id() const;
@@ -317,44 +340,121 @@ inline bool keyexpr_canonize(std::string& s);
 inline bool keyexpr_is_canon(const std::string_view& s, ErrNo& error);
 inline bool keyexpr_is_canon(const std::string_view& s);
 
-//
-// Represents the non-owned read-only view to a key expression in Zenoh.
-//
+/// The non-owning read-only view to a key expression in Zenoh.
 struct KeyExprView : public Copyable<::z_keyexpr_t> {
     using Copyable::Copyable;
-    KeyExprView(nullptr_t) : Copyable(::z_keyexpr(nullptr)) {}  // allow to create uninitialized KeyExprView
+
+    /// @name Constructors
+
+    /// @brief Constructs an uninitialized instance
+    KeyExprView(nullptr_t) : Copyable(::z_keyexpr(nullptr)) {}
+    /// @brief Constructs an instance from a null-terminated string representing a key expression.
     KeyExprView(const char* name) : Copyable(::z_keyexpr(name)) {}
-    KeyExprView(const char* name, z::KeyExprUnchecked) : Copyable(::z_keyexpr_unchecked(name)) {
+    /// @brief Constructs an instance from a null-terminated string representing a key expression withot validating it
+    /// In debug mode falis on assert if passed string is not a valid key expression
+    /// @param name the null-terminated string representing a key expression
+    /// @param _unchecked the empty type used to distinguish checked and unchecked construncting of KeyExprView
+    KeyExprView(const char* name, z::KeyExprUnchecked _unchecked) : Copyable(::z_keyexpr_unchecked(name)) {
         assert(keyexpr_is_canon(name));
     }
+    /// @brief Constructs an instance from a ``std::string`` representing a key expression.
+    /// @param name the string representing a key expression
     KeyExprView(const std::string& name) : Copyable(::z_keyexpr(name.c_str())) {}
 #ifdef __ZENOHCXX_ZENOHC
+    /// @brief Constructs an instance from ``std::string_view`` representing a key expression.
+    /// @param name the ``std::string_view`` representing a key expression
+    /// @note zenoh-c only. Zenoh-pico supports only null-terminated key expression strings
     KeyExprView(const std::string_view& name) : Copyable(::zc_keyexpr_from_slice(name.data(), name.length())) {}
+    /// @brief Constructs an instance from ``std::string_view`` representing a key expression without validating it
+    /// @param name the ``std::string_view`` representing a key expression
+    /// @note zenoh-c only. Zenoh-pico supports only null-terminated key expression strings
     KeyExprView(const std::string_view& name, z::KeyExprUnchecked)
         : Copyable(::zc_keyexpr_from_slice_unchecked(name.data(), name.length())) {
         assert(keyexpr_is_canon(name));
     }
 #endif
-    bool check() const { return ::z_keyexpr_is_initialized(this); }
-    z::BytesView as_bytes() const { return z::BytesView{::z_keyexpr_as_bytes(*this)}; }
-    std::string_view as_string_view() const { return as_bytes().as_string_view(); }
+
+    /// @name Operators
 
     // operator == between keyexprs purposedly not defided to avoid ambiguity: it's not obvious is string
     // equality or z_keyexpr_equals would be used by operator==
+
+    /// @brief Equality operator between a key expression and a string
+    /// @param v ``std::string_view`` representing a key expression
+    /// @return true if the key expression and the string are equal
     bool operator==(const std::string_view& v) const { return as_string_view() == v; }
+
+    /// @brief Inequality operator between a key expression and a string
+    /// @param v ``std::string_view`` representing a key expression
+    /// @return true if the key expression and the string are not equal
     bool operator!=(const std::string_view& v) const { return !operator==(v); }
 
+    /// @name Methods
+
+    /// @brief Checks if the key expression is valid
+    /// @return true if the key expression is valid
+    bool check() const { return ::z_keyexpr_is_initialized(this); }
+    /// @brief Return the key ``BytesView`` on the key expression
+    /// @return ``BytesView`` structure pointing to the key expression
+    z::BytesView as_bytes() const { return z::BytesView{::z_keyexpr_as_bytes(*this)}; }
+    /// @brief Return the key expression as a ``std::string_view``
+    /// @return ``std::string_view`` representing the key expression
+    std::string_view as_string_view() const { return as_bytes().as_string_view(); }
 #ifdef __ZENOHCXX_ZENOHC
     // operator += purposedly not defined to not provoke ambiguity between concat (which
     // mechanically connects strings) and join (which works with path elements)
+
+    /// @brief Concatenate the key expression and a string
+    /// @param s ``std::string_view`` representing a key expression
+    /// @return Newly allocated key expression ``zenoh::KeyExpr``
+    /// @note zenoh-c only
     z::KeyExpr concat(const std::string_view& s) const;
+
+    /// @brief Join key expression with another key expression, inserting a separator between them
+    /// @param v the key expression to join with
+    /// @return Newly allocated key expression ``zenoh::KeyExpr``
+    /// @note zenoh-c only
     z::KeyExpr join(const KeyExprView& v) const;
 #endif
+
+    /// @brief Checks if the key expression is equal to another key expression
+    /// @param v Another key expression
+    /// @param error Error code returned by ``::z_keyexpr_equals`` (value < -1 if any of the key expressions is not
+    /// valid)
+    /// @return true the key expression is equal to the other key expression
     bool equals(const KeyExprView& v, ErrNo& error) const;
+
+    /// @brief Checks if the key expression is equal to another key expression
+    /// @param v Another key expression
+    /// @return true the key expression is equal to the other key expression
     bool equals(const KeyExprView& v) const;
+
+    /// @brief Checks if the key expression includes another key expression, i.e. if the set defined by the key
+    /// expression contains the set defined by the other key expression
+    /// @param v Another key expression
+    /// @param error Error code returned by ``::z_keyexpr_includes`` (value < -1 if any of the key expressions is not
+    /// valid)
+    /// @return true the key expression includes the other key expression
     bool includes(const KeyExprView& v, ErrNo& error) const;
+
+    /// @brief Checks if the key expression includes another key expression, i.e. if the set defined by the key
+    /// expression contains the set defined by the other key expression
+    /// @param v Another key expression
+    /// @return true the key expression includes the other key expression
     bool includes(const KeyExprView& v) const;
+
+    /// @brief Checks if the key expression intersects with another key expression, i.e. there exists at least one key
+    /// which is contained in both of the sets defined by the key expressions
+    /// @param v Another key expression
+    /// @param error Error code returned by ``::z_keyexpr_intersects`` (value < -1 if any of the key expressions is not
+    /// valid)
+    /// @return true the key expression intersects with the other key expression
     bool intersects(const KeyExprView& v, ErrNo& error) const;
+
+    /// @brief Checks if the key expression intersects with another key expression, i.e. there exists at least one key
+    /// which is contained in both of the sets defined by the key expressions
+    /// @param v Another key expression
+    /// @return true the key expression intersects with the other key expression
     bool intersects(const KeyExprView& v) const;
 };
 

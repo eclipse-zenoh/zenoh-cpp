@@ -38,6 +38,8 @@ namespace zenohcxx {
 template <typename ZC_COPYABLE_TYPE>
 struct Copyable : public ZC_COPYABLE_TYPE {
    public:
+    /// @name Constructors
+
     /// Default constructor is deleted
     Copyable() = delete;  // May be overloaded in derived structs with corresponding z_XXX_default function
     /// Copying is allowed
@@ -51,6 +53,8 @@ struct Copyable : public ZC_COPYABLE_TYPE {
 template <typename ZC_OWNED_TYPE>
 class Owned {
    public:
+    /// @name Constructors
+
     /// Default constructor is deleted
     Owned() = delete;  // May be overloaded in derived structs with corresponding z_XXX_default function
     /// Copy assignmment is not allowed
@@ -58,7 +62,7 @@ class Owned {
     /// Copy constructor is deleted
     Owned(const Owned& v) = delete;
     /// Creationg from non-constant pointer to structure is allowed. Ownership is taken, source structure is
-    /// emptied Creation of null owned object is also allowed by passing nullptr to constructor
+    /// emptied. Creation of null owned object is also allowed by passing nullptr to constructor
     Owned(ZC_OWNED_TYPE* pv) {
         if (pv) {
             _0 = *pv;
@@ -81,6 +85,9 @@ class Owned {
     }
     /// Destructor drops owned value using z_drop from zenoh API
     ~Owned() { ::z_drop(&_0); }
+
+    /// @name Methods
+
     /// Explicit drop. Makes the object null
     void drop() { ::z_drop(&_0); }
     /// Take zenoh structure and leave Owned object null
@@ -95,12 +102,15 @@ class Owned {
         _0 = v;
         ::z_null(v);
     }
+    /// Check object validity uzing zenoh API
+    bool check() const { return ::z_check(_0); }
+
+    /// @name Operators
+
     /// Get read/write direct access to wrapped zenoh structure
     explicit operator ZC_OWNED_TYPE&() { return _0; }
     /// Get read only direct access to wrapped zenoh structure
     explicit operator const ZC_OWNED_TYPE&() const { return _0; }
-    /// Check object validity uzing zenoh API
-    bool check() const { return ::z_check(_0); }
 
    protected:
     ZC_OWNED_TYPE _0;
