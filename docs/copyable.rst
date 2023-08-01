@@ -15,14 +15,12 @@
 Copyable types
 ==============
 
-Copyable types are the types which can be freely copied and passed by value.
-They either don't reference external resources or they reference resources 
-without taking ownership.
+Copyable types are the types which are based on `Copyable` template.
 
-All these types are based on `Copyable` template.
+Generic types
+-------------
 
-.. doxygenstruct:: zenohcxx::Copyable
-   :members:
+The classes representing data buffers, data encoding, timestamp, etc. There types are frequently used by other parts of the API.
 
 .. doxygenclass:: zenoh::BytesView
    :members:
@@ -31,3 +29,22 @@ All these types are based on `Copyable` template.
 
 .. doxygenstruct:: zenoh::_StrArrayView
    :members:
+
+.. doxygenstruct:: zenoh::Id
+   :members:
+
+Sample data
+-----------
+
+The classes representing the data received from the network
+
+.. doxygenstruct:: zenoh::HelloView
+   :members:
+
+
+Options
+-------
+
+The classes representing the options passed to the API
+
+

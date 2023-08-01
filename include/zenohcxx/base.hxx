@@ -33,35 +33,32 @@ namespace zenohcxx {
 // Template base classes implementing common functionality
 //
 
-/// @brief Base type for C++ wrappers of Zenoh copyable structures, like GetOptions, PutOptions, etc.
-///
-/// @tparam ZC_COPYABLE_TYPE
+/// Base type for C++ wrappers of Zenoh copyable structures, like GetOptions, PutOptions, etc.
+/// @tparam ZC_COPYABLE_TYPE - zenoh-c structure type ::z_XXX_t
 template <typename ZC_COPYABLE_TYPE>
 struct Copyable : public ZC_COPYABLE_TYPE {
-    /// @brief Default constructor is deleted by default, derived classes may override it to create default valid object
-    /// when corresponding z_XXX_default function is available in zenoh-c / zenoh-pico API.
+   public:
+    /// Default constructor is deleted
     Copyable() = delete;  // May be overloaded in derived structs with corresponding z_XXX_default function
-    /// @brief Copying is allowed
+    /// Copying is allowed
     Copyable(const Copyable& v) { *this = v; }
-    /// @brief Construct from wrapped zenoh-c / zenoh-pico structure
+    /// Construct from wrapped zenoh-c / zenoh-pico structure
     Copyable(ZC_COPYABLE_TYPE v) : ZC_COPYABLE_TYPE(v) {}
 };
 
-//
-// Base type for C++ wrappers of Zenoh owned structures, copying not allowed
-//
+/// Base type for C++ wrappers of Zenoh owned structures
+/// @tparam ZC_OWNED_TYPE - zenoh-c owned type ::z_owned_XXX_t
 template <typename ZC_OWNED_TYPE>
 class Owned {
    public:
-    // Default constructor is deleted by default, derived classes may override it to create default valid object.
-    // It's supposed that default constructor never creates null object, this should be done explicitly with constructor
-    // from nullptr
-    Owned() = delete;
-    // Copying is not allowed, owned object have ownership of it's value
+    /// Default constructor is deleted
+    Owned() = delete;  // May be overloaded in derived structs with corresponding z_XXX_default function
+    /// Copy assignmment is not allowed
     Owned& operator=(const Owned& v) = delete;
+    /// Copy constructor is deleted
     Owned(const Owned& v) = delete;
-    // Creating from pointer to value is allowed, ownership is taken and value is made null
-    // Also explicit creation of null owned object is allowed if nullptr is passed
+    /// Creationg from non-constant pointer to structure is allowed. Ownership is taken, source structure is
+    /// emptied Creation of null owned object is also allowed by passing nullptr to constructor
     Owned(ZC_OWNED_TYPE* pv) {
         if (pv) {
             _0 = *pv;
@@ -69,11 +66,11 @@ class Owned {
         } else
             ::z_null(_0);
     }
-    // Move constructor from wrapped value
+    /// Move constructor from wrapped value
     Owned(ZC_OWNED_TYPE&& v) : _0(v) { ::z_null(v); }
-    // Move constructor from other object
+    /// Move constructor from other object
     Owned(Owned&& v) : Owned(std::move(v._0)) {}
-    // Move assignment from other object
+    /// Move assignment from other object
     Owned&& operator=(Owned&& v) {
         if (this != &v) {
             drop();
@@ -82,26 +79,27 @@ class Owned {
         }
         return std::move(*this);
     }
-    // Destructor drops owned value using z_drop from zenoh API
+    /// Destructor drops owned value using z_drop from zenoh API
     ~Owned() { ::z_drop(&_0); }
-    // Explicit drop. Making value null is zenoh API job
+    /// Explicit drop. Makes the object null
     void drop() { ::z_drop(&_0); }
-    // Take zenoh structure and leave Owned object null
+    /// Take zenoh structure and leave Owned object null
     ZC_OWNED_TYPE take() {
         auto r = _0;
         ::z_null(_0);
         return r;
     }
-    // Replace value with zenoh structure, dropping old value
+    /// Replace value with zenoh structure, dropping old value
     void put(ZC_OWNED_TYPE& v) {
         ::z_drop(&_0);
         _0 = v;
         ::z_null(v);
     }
-    // Get direct access to wrapped zenoh structure
+    /// Get read/write direct access to wrapped zenoh structure
     explicit operator ZC_OWNED_TYPE&() { return _0; }
+    /// Get read only direct access to wrapped zenoh structure
     explicit operator const ZC_OWNED_TYPE&() const { return _0; }
-    // Check object validity uzing zenoh API
+    /// Check object validity uzing zenoh API
     bool check() const { return ::z_check(_0); }
 
    protected:

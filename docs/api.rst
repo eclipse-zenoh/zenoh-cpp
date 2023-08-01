@@ -20,6 +20,7 @@ API Reference
    :maxdepth: 10
 
    namespaces
+   templates 
    enums
    copyable
    utility

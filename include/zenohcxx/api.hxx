@@ -213,7 +213,7 @@ struct _StrArrayView : Copyable<Z_STR_ARRAY_T> {
     size_t get_len() const { return Copyable<Z_STR_ARRAY_T>::len; }
 };
 /// Represents non-owned read only array of ``char*``
-/// Impmemented in a template ``z::_StrArrayView`` to handle with different const definitions in ``::z_str_array_t``
+/// Impmemented in a template ``zenoh::_StrArrayView`` to handle with different const definitions in ``::z_str_array_t``
 /// struct in zenoh-pico and zenoh-c
 struct StrArrayView : z::_StrArrayView<::z_str_array_t> {
     using _StrArrayView<::z_str_array_t>::_StrArrayView;
@@ -267,24 +267,36 @@ class BytesView : public Copyable<::z_bytes_t> {
     ::z_bytes_t init(const uint8_t* start, size_t len);
 };
 
-//
-//  Represents a Zenoh ID.
-//  In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
-//
+///  Represents a Zenoh ID.
+///  In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
+///
+/// See also: \ref operator_id_out "operator<<(std::ostream& os, const z::Id& id)"
 struct Id : public Copyable<::z_id_t> {
     using Copyable::Copyable;
+    /// Checks if the ID is valid
+    /// @return true if the ID is valid
     bool is_some() const { return id[0] != 0; }
 };
+/// \anchor operator_id_out
+///
+/// @brief Output operator for Id
+/// @param os the output stream
+/// @param id reference to the Id
+/// @return the output stream
 std::ostream& operator<<(std::ostream& os, const z::Id& id);
 
-//
-// Represents the non-owned read-only view to a `hello` message returned by a zenoh entity as a reply to a `scout`
-// message.
-//
+/// Represents the non-owned read-only view to a "hello" message returned by a zenoh entity as a reply to a "scout"
+/// message.
 struct HelloView : public Copyable<::z_hello_t> {
     using Copyable::Copyable;
+    /// @brief Get ``Id`` of the entity
+    /// @return ``Id`` of the entity
     const z::Id& get_id() const;
+    /// @brief Get the ``zenoh::WhatAmI`` of the entity
+    /// @return ``zenoh::WhatAmI`` of the entity
     z::WhatAmI get_whatami() const { return static_cast<z::WhatAmI>(whatami); }
+    /// @brief Get the array of locators of the entity
+    /// @return the array of locators of the entity
     const z::StrArrayView& get_locators() const { return static_cast<const z::StrArrayView&>(locators); }
 };
 

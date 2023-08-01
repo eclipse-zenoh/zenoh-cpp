@@ -20,3 +20,5 @@ Utility functions
 .. doxygenfunction:: query_target_default
 
 .. doxygenfunction:: as_cstr
+
+.. doxygenfunction:: operator<<(std::ostream& os, const z::Id& id)
