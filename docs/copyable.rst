@@ -24,9 +24,10 @@ All these types are based on `Copyable` template.
 .. doxygenstruct:: zenohcxx::Copyable
    :members:
 
-.. doxygenclass:: BytesView
+.. doxygenclass:: zenoh::BytesView
    :members:
 
-.. doxygenstruct:: StrArrayView
-.. doxygenstruct:: _StrArrayView
+.. doxygenstruct:: zenoh::StrArrayView
+
+.. doxygenstruct:: zenoh::_StrArrayView
    :members:

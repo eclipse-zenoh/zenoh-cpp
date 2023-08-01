@@ -15,7 +15,7 @@
 Enums
 =====
 
-Enum types are C++ - style typedefs for corrresponding enums of zenoh-c / zenoh-pico C API.
+Enum types are C++ - style typedefs for corrresponding enums of `zenoh-c`_ / `zenoh-pico`_ C API.
 
 .. doxygentypedef:: ErrorMessage
 
@@ -38,3 +38,7 @@ Enum types are C++ - style typedefs for corrresponding enums of zenoh-c / zenoh-
 .. doxygentypedef:: WhatAmI
 
 .. doxygenenum:: WhatAmI
+
+
+.. _zenoh-c: https://zenoh-c.readthedocs.io
+.. _zenoh-pico: https://zenoh-pico.readthedocs.io 

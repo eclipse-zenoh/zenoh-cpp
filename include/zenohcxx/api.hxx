@@ -26,6 +26,14 @@
 #error("Internal include configuration error: either __ZENOHCXX_ZENOHC or __ZENOHCXX_ZENOHPICO should be defined")
 #endif
 
+#ifdef __DOXYGEN__
+// This is for generating documentation only. Doxygen is unable to handle namepace defined outside of the file scope.
+// For real code namespaces are defined in the zenohc.hxx and zenohpico.hxx files.
+namespace zenoh {
+using namespace zenohcxx;
+namespace z = zenohc;
+#endif
+
 class Session;
 class Value;
 
@@ -39,8 +47,8 @@ typedef int8_t ErrNo;
 ///
 /// Values:
 ///
-///  - **Z_SAMPLE_KIND_PUT**: The Sample was issued by a ``put`` operation.
-///  - **Z_SAMPLE_KIND_DELETE**: The Sample was issued by a ``delete`` operation.
+///  - **Z_SAMPLE_KIND_PUT**: The Sample was issued by a "put" operation.
+///  - **Z_SAMPLE_KIND_DELETE**: The Sample was issued by a "delete" operation.
 typedef ::z_sample_kind_t SampleKind;
 
 //  Zenoh encoding values.
@@ -92,34 +100,35 @@ typedef ::z_consolidation_mode_t ConsolidationMode;
 /// Reliability values.
 ///
 /// Values:
-///  - **Z_RELIABILITY_BEST_EFFORT**: Defines reliability as ``BEST_EFFORT``
-///  - **Z_RELIABILITY_RELIABLE**: Defines reliability as ``RELIABLE``
+///  - **Z_RELIABILITY_BEST_EFFORT**: Defines reliability as "best effort"
+///  - **Z_RELIABILITY_RELIABLE**: Defines reliability as "reliable"
 typedef ::z_reliability_t Reliability;
 
 ///  Congestion control values.
 ///
-///  Values:
-///   - **Z_CONGESTION_CONTROL_BLOCK**: Defines congestion control as ``BLOCK``. Messages are not dropped in case of
-///   congestion control.
-///   - **Z_CONGESTION_CONTROL_DROP**: Defines congestion control as ``DROP``. Messages are dropped in case
-///   of congestion control.
+///   Values:
+///    - **Z_CONGESTION_CONTROL_BLOCK**: Defines congestion control as "block". Messages are not dropped in case of
+///       congestion control
+///    - **Z_CONGESTION_CONTROL_DROP**: Defines congestion control as "drop". Messages are dropped in case of congestion
+///    control
+///
 typedef ::z_congestion_control_t CongestionControl;
 
 /// Priority of Zenoh messages values.
 ///
 /// Values:
-/// - **Z_PRIORITY_REAL_TIME**: Priority for ``RealTime`` messages.
-/// - **Z_PRIORITY_INTERACTIVE_HIGH**: Highest priority for ``Interactive`` messages.
-/// - **Z_PRIORITY_INTERACTIVE_LOW**: Lowest priority for ``Interactive`` messages.
-/// - **Z_PRIORITY_DATA_HIGH**: Highest priority for ``Data`` messages.
-/// - **Z_PRIORITY_DATA**: Default priority for ``Data`` messages.
-/// - **Z_PRIORITY_DATA_LOW**: Lowest priority for ``Data`` messages.
-/// - **Z_PRIORITY_BACKGROUND**: Priority for ``Background traffic`` messages.
+/// - **Z_PRIORITY_REAL_TIME**: Priority for "realtime" messages.
+/// - **Z_PRIORITY_INTERACTIVE_HIGH**: Highest priority for "interactive" messages.
+/// - **Z_PRIORITY_INTERACTIVE_LOW**: Lowest priority for "interactive" messages.
+/// - **Z_PRIORITY_DATA_HIGH**: Highest priority for "data" messages.
+/// - **Z_PRIORITY_DATA**: Default priority for "data" messages.
+/// - **Z_PRIORITY_DATA_LOW**: Lowest priority for "data" messages.
+/// - **Z_PRIORITY_BACKGROUND**: Priority for "background traffic" messages.
 typedef ::z_priority_t Priority;
 
 /// Query target values.
 ///
-/// see also: \ref query_target_default
+/// see also: ``zenoh::query_target_default``
 ///
 /// Values:
 /// - **Z_QUERY_TARGET_BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
@@ -127,30 +136,32 @@ typedef ::z_priority_t Priority;
 /// - **Z_QUERY_TARGET_ALL_COMPLETE**: A set of complete queryables.
 typedef ::z_query_target_t QueryTarget;
 
-/// \anchor query_target_default
-/// Constructs a default ``QueryTarget``
-/// @return a default ``QueryTarget``
+/// Constructs a default ``zenoh::QueryTarget``
+/// @return a default ``zenoh::QueryTarget``
 inline z::QueryTarget query_target_default();
 
 #ifdef __ZENOHCXX_ZENOHPICO
 /// Whatami values, defined as a bitmask
+///
+/// \note *zenoh-pico* only
+///
 ///
 /// Values:
 /// - **Z_WHATAMI_ROUTER**: Bitmask to filter Zenoh routers.
 /// - **Z_WHATAMI_PEER**: Bitmask to filter for Zenoh peers.
 /// - **Z_WHATAMI_CLIENT**: Bitmask to filter for Zenoh clients.
 ///
-/// See also: \ref as_cstr
+/// See also ``zenoh::as_cstr``
 ///
-/// \note *zenoh-pico* only
 typedef ::z_whatami_t WhatAmI;
 #endif
 #ifdef __ZENOHCXX_ZENOHC
+/// \note *zenoh-c* only
+///
 /// Whatami values, defined as a bitmask
 ///
-/// See also: \ref as_cstr
+/// See also ``zenoh::as_cstr``
 ///
-/// \note *zenoh-c* only
 enum WhatAmI {
     /// Bitmask to filter Zenoh routers
     Z_WHATAMI_ROUTER = 1,
@@ -202,8 +213,8 @@ struct _StrArrayView : Copyable<Z_STR_ARRAY_T> {
     size_t get_len() const { return Copyable<Z_STR_ARRAY_T>::len; }
 };
 /// Represents non-owned read only array of ``char*``
-/// Impmemented in a template ``_StrArrayView`` to handle with different const definitions in ``::z_str_array_t`` struct
-/// in zenoh-pico and zenoh-c
+/// Impmemented in a template ``z::_StrArrayView`` to handle with different const definitions in ``::z_str_array_t``
+/// struct in zenoh-pico and zenoh-c
 struct StrArrayView : z::_StrArrayView<::z_str_array_t> {
     using _StrArrayView<::z_str_array_t>::_StrArrayView;
 };
@@ -1045,4 +1056,8 @@ inline std::pair<z::ClosureReplyChannelSend, z::ClosureReplyChannelRecv> reply_n
     return {std::move(channel.send), std::move(channel.recv)};
 }
 
+#endif
+
+#ifdef __DOXYGEN__
+}  // end of namespace zenoh
 #endif

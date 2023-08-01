@@ -17,8 +17,9 @@ API Reference
 *************
 
 .. toctree::
-    :maxdepth: 10
+   :maxdepth: 10
 
-    enums
-    copyable
-    utility
+   namespaces
+   enums
+   copyable
+   utility
