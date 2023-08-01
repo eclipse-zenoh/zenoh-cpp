@@ -519,14 +519,24 @@ struct Encoding : public Copyable<::z_encoding_t> {
     bool operator!=(const Encoding& v) const { return !operator==(v); }
 };
 
-//
-// Represents timestamp value in zenoh
-//
+/// Represents timestamp value in zenoh
 struct Timestamp : Copyable<::z_timestamp_t> {
     using Copyable::Copyable;
     // TODO: add utility methods to interpret time as mils, seconds, minutes, etc
+
+    /// @name Methods
+
+    /// @brief Get the time part of timestamp in <a
+    /// href=https://docs.rs/zenoh/0.7.2-rc/zenoh/time/struct.NTP64.html>NTP64</a> format
+    /// @return timestamp value
     uint64_t get_time() const { return time; }
+
+    /// @brief Get the unique part of the timestamp
+    /// @return unique id
     z::Id get_id() const { return id; }
+
+    /// @brief Check if the timestamp is valid
+    /// @return true if the timestamp is valid
     bool check() const { return ::z_timestamp_check(*this); }
 };
 
