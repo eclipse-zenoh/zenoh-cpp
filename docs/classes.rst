@@ -42,6 +42,10 @@ The classes representing data buffers, data encoding, timestamp, etc. There type
    :members:
    :membergroups: Constructors Operators Methods
 
+.. doxygenstruct:: zenoh::Value
+   :members:
+   :membergroups: Constructors Operators Methods
+
 Key Expressions
 ---------------
 

@@ -38,12 +38,13 @@ class Session;
 class Value;
 
 /// Text error message returned in ``std::variant<T, ErrorMessage>`` retrun types.
+/// The messge is a sting represented as ``zenoh::Value`` object
 typedef z::Value ErrorMessage;
 
-/// Numeric error code value
+/// Numeric error code value. This is a value < -1 returned by zenoh-c functions
 typedef int8_t ErrNo;
 
-/// Sample kind values.
+/// ``zenoh::Sample`` kind values.
 ///
 /// Values:
 ///
@@ -51,9 +52,9 @@ typedef int8_t ErrNo;
 ///  - **Z_SAMPLE_KIND_DELETE**: The Sample was issued by a "delete" operation.
 typedef ::z_sample_kind_t SampleKind;
 
-//  Zenoh encoding values.
-//  These values are based on already existing HTTP MIME types and extended with other relevant encodings.
-
+///  Zenoh encoding values for ``zenoh::Encoding``
+///  These values are based on already existing HTTP MIME types and extended with other relevant encodings.
+///
 ///   Values:
 ///     - **Z_ENCODING_PREFIX_EMPTY**: Encoding not defined.
 ///     - **Z_ENCODING_PREFIX_APP_OCTET_STREAM**: ``application/octet-stream``. Default value for all other cases. An
@@ -675,6 +676,8 @@ struct Sample : public Copyable<::z_sample_t> {
     /// @brief The payload object of the sample. If it represents a buffer in shared memory it can be
     /// resent without actually copying the data
     /// @return ``Payload`` object
+    ///
+    /// @not zenoh-c only
     z::Payload sample_payload_rcinc() const {
         auto p = ::zc_sample_payload_rcinc(static_cast<const ::z_sample_t*>(this));
         return z::Payload(std::move(p));
@@ -682,32 +685,68 @@ struct Sample : public Copyable<::z_sample_t> {
 #endif
 };
 
-//
-// A zenoh value
-//
+/// A zenoh value. Contans refrence to data and it's encoding
 struct Value : public Copyable<::z_value_t> {
     using Copyable::Copyable;
+
+    /// @name Constructors
+
+    /// @brief Create a new value with the given payload and encoding
+    /// @param payload ``BytesView`` object
+    /// @param encoding ``Encoding`` value
     Value(const z::BytesView& payload, const z::Encoding& encoding)
         : Copyable({payload, encoding}) {}
+
+    /// @brief Create a new value with the default encoding
+    /// @param payload ``BytesView`` object
     Value(const z::BytesView& payload) : Value(payload, z::Encoding()) {}
+
+    /// @brief Create a new value from zero-ended string with the default encoding
+    /// @param payload zero-ended string
     Value(const char* payload) : Value(payload, z::Encoding()) {}
 
+    /// @name Methods
+
+    /// @brief The payload of this value
+    /// @return ``BytesView`` object
     const z::BytesView& get_payload() const { return static_cast<const z::BytesView&>(payload); }
+
+    /// @brief Set payload of this value
+    /// @param _payload ``BytesView`` object
+    /// @return referencew the value itself
     Value& set_payload(const z::BytesView& _payload) {
         payload = _payload;
         return *this;
     }
 
+    /// @brief The encoding of this value
+    /// @return ``Encoding`` object
     const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
+
+    /// @brief Set encoding of this value
+    /// @param _encoding ``Encoding`` object
+    /// @return referencew the value itself
     Value& set_encoding(const z::Encoding& _encoding) {
         encoding = _encoding;
         return *this;
     }
 
+    /// @brief The payload of this value as a ``std::string_view``
+    /// @return ``std::string_view`` object
     std::string_view as_string_view() const { return get_payload().as_string_view(); }
+
+    /// @name Operators
+
+    /// @brief Equality operator
+    /// @param v the other ``Value`` to compare with
+    /// @return true if the two values are equal (have the same payload and encoding)
     bool operator==(const Value& v) const {
         return get_payload() == v.get_payload() && get_encoding() == v.get_encoding();
     }
+
+    /// @brief Inequality operator
+    /// @param v the other ``Value`` to compare with
+    /// @return true if the two values are not equal (have different payload or encoding)
     bool operator!=(const Value& v) const { return !operator==(v); }
 };
 
