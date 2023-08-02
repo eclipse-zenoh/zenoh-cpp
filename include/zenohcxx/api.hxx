@@ -1409,33 +1409,92 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
 
 class ScoutingConfig;
 
-//
-// Zenoh config
-//
+/// Zenoh config
 class Config : public Owned<::z_owned_config_t> {
    public:
     using Owned::Owned;
+
+    /// @name Constructors
+
+    /// @brief Create the default configuration
     Config() : Owned(::z_config_default()) {}
 #ifdef __ZENOHCXX_ZENOHC
+    /// @brief Get config parameter by the string key
+    /// @param key the key
+    /// @return the ``Str`` value of the config parameter
+    /// @note zenoh-c only
     z::Str get(const char* key) const { return z::Str(::zc_config_get(::z_config_loan(&_0), key)); }
+
+    /// @brief Get the whole config as a JSON string
+    /// @return the JSON string in ``Str``
+    /// @note zenoh-c only
     z::Str to_string() const { return z::Str(::zc_config_to_string(::z_config_loan(&_0))); }
+
+    /// @brief Insert a config parameter by the string key
+    /// @param key the key
+    /// @param value the JSON string value
+    /// @return true if the parameter was inserted
+    /// @note zenoh-c only
     bool insert_json(const char* key, const char* value) {
         return ::zc_config_insert_json(::z_config_loan(&_0), key, value) == 0;
     }
 #endif
 #ifdef __ZENOHCXX_ZENOHPICO
+    /// @brief Get config parameter by it's numeric ID
+    /// @param key the key
+    /// @return pointer to the null-terminated string value of the config parameter
+    /// @note zenoh-pico only
     const char* get(uint8_t key) const { return ::zp_config_get(::z_config_loan(&_0), key); }
+
+    /// @brief Insert a config parameter by it's numeric ID
+    /// @param key the key
+    /// @param value the null-terminated string value
+    /// @return true if the parameter was inserted
+    /// @note zenoh-pico only
     bool insert(uint8_t key, const char* value);
+
+    /// @brief Insert a config parameter by it's numeric ID
+    /// @param key the key
+    /// @param value the null-terminated string value
+    /// @param error the error code
+    /// @return true if the parameter was inserted
+    /// @note zenoh-pico only
     bool insert(uint8_t key, const char* value, ErrNo& error);
 #endif
+    /// @brief Create ``ScoutingConfig`` from the config
+    /// @return the ``ScoutingConfig`` object
     z::ScoutingConfig create_scouting_config();
 };
 
 #ifdef __ZENOHCXX_ZENOHC
+
+/// @brief Create the default configuration for "peer" mode
+/// @return the ``Config`` object
+/// @note zenoh-c only
 inline z::Config config_peer() { return z::Config(::z_config_peer()); }
+
+/// @brief Create the configuration from the JSON file
+/// @param path path to the file
+/// @return the ``Config`` object
+/// @note zenoh-c only
 std::variant<z::Config, ErrorMessage> config_from_file(const char* path);
+
+/// @brief Create the configuration from the JSON string
+/// @param s the JSON string
+/// @return the ``Config`` object
+/// @note zenoh-c only
 std::variant<z::Config, ErrorMessage> config_from_str(const char* s);
+
+/// @brief Create the configuration for "client" mode
+/// @param peers the array of peers
+/// @return the ``Config`` object
+/// @note zenoh-c only
 std::variant<z::Config, ErrorMessage> config_client(const z::StrArrayView& peers);
+
+/// @brief Create the configuration for "client" mode
+/// @param peers the array of peers
+/// @return the ``Config`` object
+/// @note zenoh-c only
 std::variant<z::Config, ErrorMessage> config_client(const std::initializer_list<const char*>& peers);
 #endif
 

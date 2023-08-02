@@ -12,20 +12,19 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-*************
-API Reference
-*************
+Configuration
+=============
 
-.. toctree::
-   :maxdepth: 10
+The classes which defines network configuration parameters
 
-   namespaces
-   templates 
-   enums
-   generic
-   keyexpr
-   config
-   data
-   shm
-   options
-   utility
+.. doxygenclass:: zenoh::Config
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenfunction:: zenoh::config_peer
+
+.. doxygenfunction:: zenoh::config_from_file
+
+.. doxygenfunction:: zenoh::config_client(const z::StrArrayView& peers)
+
+.. doxygenfunction:: zenoh::config_client(const std::initializer_list<const char*>& peers)
