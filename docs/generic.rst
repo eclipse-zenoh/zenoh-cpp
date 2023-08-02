@@ -12,11 +12,8 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-Classes
-=======
-
 Generic types
--------------
+=============
 
 The classes representing data buffers, data encoding, timestamp, etc. There types are frequently used by other parts of the API
 
@@ -38,6 +35,8 @@ The classes representing data buffers, data encoding, timestamp, etc. There type
    :members:
    :membergroups: Constructors Operators Methods
 
+.. doxygenfunction:: operator<<(std::ostream& os, const z::Id& id)
+
 .. doxygenstruct:: zenoh::Timestamp
    :members:
    :membergroups: Constructors Operators Methods
@@ -45,47 +44,3 @@ The classes representing data buffers, data encoding, timestamp, etc. There type
 .. doxygenstruct:: zenoh::Value
    :members:
    :membergroups: Constructors Operators Methods
-
-Key Expressions
----------------
-
-.. doxygenstruct:: zenoh::KeyExprView
-   :members:
-   :membergroups: Constructors Operators Methods
-
-Sample data
------------
-
-The classes representing the data received from the network
-
-.. doxygenstruct:: zenoh::HelloView
-   :members:
-   :membergroups: Constructors Operators Methods
-
-.. doxygenstruct:: zenoh::Sample
-   :members:
-   :membergroups: Constructors Operators Methods
-
-Shared memory support
----------------------
-
-The classes for tranferring the data through shared memory if the receiver and transmitter are on the same host
-
-.. doxygenclass:: zenoh::Payload   
-   :members:
-   :membergroups: Constructors Operators Methods
-
-.. doxygenclass:: zenoh::Shmbuf
-   :members:
-   :membergroups: Constructors Operators Methods
-
-.. doxygenclass:: zenoh::ShmManager
-   :members:
-   :membergroups: Constructors Operators Methods
-
-Options
--------
-
-The classes representing the options passed to the API
-
-

@@ -326,19 +326,32 @@ struct HelloView : public Copyable<::z_hello_t> {
 
 class KeyExpr;
 
-//
-// Empty type used to distinguish checked and unchecked construncting of KeyExprView
-//
+/// Empty type used to distinguish checked and unchecked constructing of KeyExprView
 struct KeyExprUnchecked {
+    /// @brief Constructs an instance of the type
     explicit KeyExprUnchecked() {}
 };
 
-//
-// Keyexpr-related string functions
-//
+/// @brief Make a string containing a key expression canonical.
+/// @param s ``std::string`` with key expression
+/// @param error error code returned if the key expression is invalid
+/// @return true if the key expression was canonized, false otherwise
 inline bool keyexpr_canonize(std::string& s, ErrNo& error);
+
+/// @brief Make a string containing a key expression canonical.
+/// @param s ``std::string`` with key expression
+//// @return true if the key expression was canonized, false otherwise
 inline bool keyexpr_canonize(std::string& s);
+
+/// @brief Check if a string containing a key expression is canonical.
+/// @param s ``std::string_view`` with key expression
+/// @param error error code returned if the key expression is invalid
+/// @return true if the key expression is canonical, false otherwise
 inline bool keyexpr_is_canon(const std::string_view& s, ErrNo& error);
+
+/// @brief Check if a string containing a key expression is canonical.
+/// @param s ``std::string_view`` with key expression
+/// @return true if the key expression is canonical, false otherwise
 inline bool keyexpr_is_canon(const std::string_view& s);
 
 /// The non-owning read-only view to a key expression in Zenoh.
@@ -750,131 +763,313 @@ struct Value : public Copyable<::z_value_t> {
     bool operator!=(const Value& v) const { return !operator==(v); }
 };
 
-//
-// Represents the replies consolidation to apply on replies of get operation
-///
+/// Replies consolidation mode to apply on replies of get operation
 struct QueryConsolidation : Copyable<::z_query_consolidation_t> {
     using Copyable::Copyable;
+
+    /// @name Constructors
+
+    /// @brief Create a new default ``QueryConsolidation`` value
     QueryConsolidation() : Copyable(::z_query_consolidation_default()) {}
+
+    /// @brief Create a new ``QueryConsolidation`` value with the given consolidation mode
+    /// @param v ``zenoh::ConsolidationMode`` value
     QueryConsolidation(ConsolidationMode v) : Copyable({v}) {}
+
+    /// @name Methods
+
+    /// @brief Set the consolidation mode
+    /// @param v ``zenoh::ConsolidationMode`` value
     QueryConsolidation& set_mode(ConsolidationMode v) {
         mode = v;
         return *this;
     }
+    /// @brief The consolidation mode
+    /// @return ``zenoh::ConsolidationMode`` value
     ConsolidationMode get_mode() const { return mode; }
+
+    /// @name Operators
+
+    /// @brief Equality operator
+    /// @param v the other ``QueryConsolidation`` to compare with
+    /// @return true if the two values are equal (have the same consolidation mode)
     bool operator==(const QueryConsolidation& v) const { return get_mode() == v.get_mode(); }
+
+    /// @brief Inequality operator
+    /// @param v the other ``QueryConsolidation`` to compare with
+    /// @return true if the two values are not equal (have different consolidation mode)
     bool operator!=(const QueryConsolidation& v) const { return !operator==(v); }
 };
 
-//
-// Represents the set of options that can be applied to the get operation
-//
+/// Options passed to the get operation
 struct GetOptions : public Copyable<::z_get_options_t> {
     using Copyable::Copyable;
+
+    /// @name Constructors
+
+    /// @brief Create a new default ``GetOptions`` value
     GetOptions() : Copyable(::z_get_options_default()) {}
+
+    /// @name Methods
+
+    /// @brief Set the target of the get operation
+    /// @param v ``zenoh::QueryTarget`` value
+    /// @return reference to the structure itself
     GetOptions& set_target(QueryTarget v) {
         target = v;
         return *this;
     }
+
+    /// @brief Set the consolidation mode to apply on replies of get operation
+    /// @param v ``QueryConsolidation`` value
+    /// @return reference to the structure itself
     GetOptions& set_consolidation(z::QueryConsolidation v) {
         consolidation = v;
         return *this;
     }
+
+    /// @brief Set an optional value to attach to the query
+    /// @param v ``Value`` value
+    /// @return reference to the structure itself
     GetOptions& set_value(z::Value v) {
         value = v;
         return *this;
     }
+
+    /// @brief The target of the get operation
+    /// @return ``zenoh::QueryTarget`` value
     QueryTarget get_target() const { return target; }
+
+    /// @brief The consolidation mode to apply on replies of get operation
+    /// @return ``QueryConsolidation`` value
     const z::QueryConsolidation& get_consolidation() const {
         return static_cast<const z::QueryConsolidation&>(consolidation);
     }
+
+    /// @brief The optional value to attach to the query
+    /// @return ``Value`` value
     const z::Value& get_value() const { return static_cast<const z::Value&>(value); }
+
+    /// @name Operators
+
+    /// @brief Equality operator
+    /// @param v the other ``GetOptions`` to compare with
+    /// @return true if the two values are equal (have the same target, consolidation mode and
+    /// optional value)
     bool operator==(const GetOptions& v) const {
         return get_target() == v.get_target() && get_consolidation() == v.get_consolidation() &&
                get_value() == v.get_value();
     }
+
+    /// @brief Inequality operator
+    /// @param v the other ``GetOptions`` to compare with
+    /// @return true if the two values are not equal (have different target, consolidation mode or
+    /// optional value)
     bool operator!=(const GetOptions& v) const { return !operator==(v); }
 };
 
-//
-// Options passed to the put operation
-//
+/// Options passed to the put operation
 struct PutOptions : public Copyable<::z_put_options_t> {
     using Copyable::Copyable;
+
+    /// @name Constructors
+
+    /// @brief Create a new default ``PutOptions`` value
     PutOptions() : Copyable(::z_put_options_default()) {}
+
+    /// @name Methods
+
+    /// @brief Get the encoding of the payload
+    /// @return ``zenoh::Encoding`` value
     const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
+
+    /// @brief Set the encoding for the payload
+    /// @param v ``zenoh::Encoding`` value
+    /// @return reference to the structure itself
     PutOptions& set_encoding(z::Encoding e) {
         encoding = e;
         return *this;
     };
+
+    /// @brief Get the congestion control mode
+    /// @return ``zenoh::CongestionControl`` value
     CongestionControl get_congestion_control() const { return congestion_control; }
+
+    /// @brief Set the congestion control mode
+    /// @param v ``zenoh::CongestionControl`` value
+    /// @return reference to the structure itself
     PutOptions& set_congestion_control(CongestionControl v) {
         congestion_control = v;
         return *this;
     };
+
+    /// @brief Get the priority of the operation
+    /// @return ``zenoh::Priority`` value
     Priority get_priority() const { return priority; }
+
+    /// @brief Set the priority of the operation
+    /// @param v ``zenoh::Priority`` value
+    /// @return reference to the structure itself
     PutOptions& set_priority(Priority v) {
         priority = v;
         return *this;
     }
+
+    /// @name Operators
+
+    /// @brief Equality operator
+    /// @param v the other ``PutOptions`` to compare with
+    /// @return true if the two values are equal (have the same priority, congestion control mode
+    /// and encoding)
     bool operator==(const PutOptions& v) const {
         return get_priority() == v.get_priority() && get_congestion_control() == v.get_congestion_control() &&
                get_encoding() == v.get_encoding();
     }
+
+    /// @brief Inequality operator
+    /// @param v the other ``PutOptions`` to compare with
+    /// @return true if the two values are not equal (have different priority, congestion control
+    /// mode or encoding)
     bool operator!=(const PutOptions& v) const { return !operator==(v); }
 };
 
-//
-// Options passed to the delete operation
-//
+/// Options passed to the delete operation
 struct DeleteOptions : public Copyable<::z_delete_options_t> {
     using Copyable::Copyable;
+
+    /// @name Constructors
+
+    /// @brief Create a new default ``DeleteOptions`` value
     DeleteOptions() : Copyable(::z_delete_options_default()) {}
+
+    /// @name Methods
+
+    /// @brief Get the congestion control mode
+    /// @return ``zenoh::CongestionControl`` value
     CongestionControl get_congestion_control() const { return congestion_control; }
+
+    /// @brief Set the congestion control mode
+    /// @param v ``zenoh::CongestionControl`` value
+    /// @return reference to the structure itself
     DeleteOptions& set_congestion_control(CongestionControl v) {
         congestion_control = v;
         return *this;
     }
+
+    /// @brief Get the priority of the operation
+    /// @return ``zenoh::Priority`` value
     Priority get_priority() const { return priority; }
+
+    /// @brief Set the priority of the operation
+    /// @param v ``zenoh::Priority`` value
+    /// @return reference to the structure itself
     DeleteOptions& set_priority(Priority v) {
         priority = v;
         return *this;
     }
+
+    /// @name Operators
+
+    /// @brief Equality operator
+    /// @param v the other ``DeleteOptions`` to compare with
+    /// @return true if the two values are equal (have the same priority and congestion control)
     bool operator==(const DeleteOptions& v) const {
         return get_priority() == v.get_priority() && get_congestion_control() == v.get_congestion_control();
     }
+
+    /// @brief Inequality operator
+    /// @param v the other ``DeleteOptions`` to compare with
+    /// @return true if the two values are not equal (have different priority or congestion control)
     bool operator!=(const DeleteOptions& v) const { return !operator==(v); }
 };
 
-//
-// Options passed to the query reply
-//
+/// Options passed to the ``Query::reply`` operation
 struct QueryReplyOptions : public Copyable<::z_query_reply_options_t> {
     using Copyable::Copyable;
+
+    /// @name Constructors
+
+    /// @brief Create a new default ``QueryReplyOptions`` value
     QueryReplyOptions() : Copyable(::z_query_reply_options_default()) {}
+
+    /// @name Methods
+
+    /// @brief Get the encoding of the payload
+    /// @return ``zenoh::Encoding`` value
     const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
+
+    /// @brief Set the encoding for the payload
+    /// @param v ``zenoh::Encoding`` value
+    /// @return reference to the structure itself
     QueryReplyOptions& set_encoding(z::Encoding e) {
         encoding = e;
         return *this;
     };
+
+    /// @name Operators
+
+    /// @brief Equality operator
+    /// @param v the other ``QueryReplyOptions`` to compare with
+    /// @return true if the two values are equal (have the same encoding)
     bool operator==(const QueryReplyOptions& v) const { return get_encoding() == v.get_encoding(); }
+
+    /// @brief Inequality operator
+    /// @param v the other ``QueryReplyOptions`` to compare with
+    /// @return true if the two values are not equal (have different encoding)
     bool operator!=(const QueryReplyOptions& v) const { return !operator==(v); }
 };
 
-//
-// The query to be answered by a queryable
-//
+/// The query to be answered by a ``Queryable``
 class Query : public Copyable<::z_query_t> {
    public:
     using Copyable::Copyable;
+
+    /// @name Methods
+
+    /// @brief Get the key expression of the query
+    /// @return ``zenoh::KeyExprView`` value
     z::KeyExprView get_keyexpr() const { return z::KeyExprView(::z_query_keyexpr(this)); }
+
+    /// @brief Get a query's <a href=https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>value
+    /// selector</a>
+    /// @return ``zenoh::BytesView`` value
     z::BytesView get_parameters() const { return z::BytesView(::z_query_parameters(this)); }
+
+    /// @brief Get the value of the query
+    /// @return ``zenoh::Value`` value
     z::Value get_value() const { return z::Value(::z_query_value(this)); }
 
+    /// @brief Send reply to the query
+    /// @param key the ``KeyExprView`` of the ``Queryable``. **NOT** the key expression from the ``Query::get_keyexpr``.
+    /// E.g. queryable registered as "foo/bar" gets query with key expression "foo/*" and replies with key expression
+    /// "foo/bar"
+    /// This function can be called multiple times to send multiple replies to the same query. The reply
+    /// will be considered complete when the ``Queryable`` callback returns.
+    /// @param payload the ``BytesView`` with payload to be sent
+    /// @param options the ``QueryReplyOptions`` to be used for the reply
+    /// @param error the ``zenoh::ErrNo`` error code
+    /// @return true if the reply was sent successfully
     bool reply(z::KeyExprView key, const z::BytesView& payload, const z::QueryReplyOptions& options,
                ErrNo& error) const;
+
+    /// @brief Send reply to the query
+    /// @param key the ``KeyExprView`` of the queryable
+    /// @param payload the ``BytesView`` with payload to be sent
+    /// @param options the ``QueryReplyOptions`` to be used for the reply
+    /// @return true if the reply was sent successfully
     bool reply(z::KeyExprView key, const z::BytesView& payload, const z::QueryReplyOptions& options) const;
+
+    /// @brief Send reply to the query
+    /// @param key the ``KeyExprView`` of the queryable
+    /// @param payload the ``BytesView`` with payload to be sent
+    /// @param error the ``zenoh::ErrNo`` error code
+    /// @return true if the reply was sent successfully
     bool reply(z::KeyExprView key, const z::BytesView& payload, ErrNo& error) const;
+
+    /// @brief Send reply to the query
+    /// @param key the ``KeyExprView`` of the queryable
+    /// @param payload the ``BytesView`` with payload to be sent
+    /// @return true if the reply was sent successfully
     bool reply(z::KeyExprView key, const z::BytesView& payload) const;
 
    private:
@@ -882,39 +1077,79 @@ class Query : public Copyable<::z_query_t> {
                     ErrNo& error) const;
 };
 
-//
-// Options to be passed when declaring a queryable
-//
+/// Options to be passed when declaring a ``Queryable``
 struct QueryableOptions : public Copyable<::z_queryable_options_t> {
     using Copyable::Copyable;
+
+    /// @name Constructors
+
+    /// @brief Create a new default ``QueryableOptions`` value
     QueryableOptions() : Copyable(::z_queryable_options_default()) {}
+
+    /// @name Methods
+
+    /// @brief Get the completeness of the queryable
+    /// A queryable is defined as complete if it can serve any query “completely” related to the key expression on which
+    /// it serves. The querier will not benefit from extra information from any other queryable.
+    /// @return true if the queryable is complete
     bool get_complete() const { return complete; }
+
+    /// @brief Set the completeness of the queryable
+    /// @param v true if the queryable is complete
     QueryableOptions& set_complete(bool v) {
         complete = v;
         return *this;
     }
+
+    /// @name Operators
+
+    /// @brief Equality operator
+    /// @param v the other ``QueryableOptions`` to compare with
+    /// @return true if the two values are equal (have the same completeness)
     bool operator==(const QueryableOptions& v) const { return get_complete() == v.get_complete(); }
+
+    /// @brief Inequality operator
+    /// @param v the other ``QueryableOptions`` to compare with
+    /// @return true if the two values are not equal (have different completeness)
     bool operator!=(const QueryableOptions& v) const { return !operator==(v); }
 };
 
-//
-// Options to be passed when declaring a subscriber
-//
+/// Options to be passed when declaring a ``'Subscriber``
 struct SubscriberOptions : public Copyable<::z_subscriber_options_t> {
     using Copyable::Copyable;
+
+    /// @name Constructors
+
+    /// @brief Create a new default ``SubscriberOptions`` value
     SubscriberOptions() : Copyable(::z_subscriber_options_default()) {}
+
+    /// @name Methods
+
+    /// @brief Get the reliability of the subscriber
+    /// @return ``zenoh::Reliability`` value
     Reliability get_reliability() const { return reliability; }
+
+    /// @brief Set the reliability of the subscriber
+    /// @param v the ``zenoh::Reliability`` value
     SubscriberOptions& set_reliability(Reliability v) {
         reliability = v;
         return *this;
     }
+
+    /// @name Operators
+
+    /// @brief Equality operator
+    /// @param v the other ``SubscriberOptions`` to compare with
+    /// @return true if the two values are equal (have the same reliability)
     bool operator==(const SubscriberOptions& v) const { return get_reliability() == v.get_reliability(); }
+
+    /// @brief Inequality operator
+    /// @param v the other ``SubscriberOptions`` to compare with
+    /// @return true if the two values are not equal (have different reliability)
     bool operator!=(const SubscriberOptions& v) const { return !operator==(v); }
 };
 
-//
 // Options to be passed when declaring a pull subscriber
-//
 struct PullSubscriberOptions : public Copyable<::z_pull_subscriber_options_t> {
     using Copyable::Copyable;
     PullSubscriberOptions() : Copyable(::z_pull_subscriber_options_default()) {}

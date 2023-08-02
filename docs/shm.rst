@@ -12,9 +12,19 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-Utility functions
-=================
+Shared memory support
+=====================
 
-.. doxygenfunction:: init_logger
+The classes for tranferring the data through shared memory if the receiver and transmitter are on the same host
 
-.. doxygenfunction:: query_target_default
+.. doxygenclass:: zenoh::Payload   
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::Shmbuf
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::ShmManager
+   :members:
+   :membergroups: Constructors Operators Methods

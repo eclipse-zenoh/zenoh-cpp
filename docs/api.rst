@@ -22,5 +22,9 @@ API Reference
    namespaces
    templates 
    enums
-   classes
+   generic
+   keyexpr
+   data
+   shm
+   options
    utility

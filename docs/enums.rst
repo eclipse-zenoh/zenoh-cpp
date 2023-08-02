@@ -39,6 +39,7 @@ Enum types are C++ - style typedefs for corrresponding enums of `zenoh-c`_ / `ze
 
 .. doxygenenum:: WhatAmI
 
+.. doxygenfunction:: as_cstr
 
 .. _zenoh-c: https://zenoh-c.readthedocs.io
 .. _zenoh-pico: https://zenoh-pico.readthedocs.io 

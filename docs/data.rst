@@ -12,9 +12,19 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-Utility functions
-=================
+Data
+====
 
-.. doxygenfunction:: init_logger
+The classes representing the data which is sent and received through the network
 
-.. doxygenfunction:: query_target_default
+.. doxygenstruct:: zenoh::HelloView
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenstruct:: zenoh::Sample
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::Query
+   :members:
+   :membergroups: Constructors Operators Methods
