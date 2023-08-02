@@ -541,52 +541,100 @@ struct Timestamp : Copyable<::z_timestamp_t> {
 };
 
 #ifdef __ZENOHCXX_ZENOHC
-//
-// Owned reference-counted payload object
-// Availabel only in zenoh-c where underlying buffer is reference-counted and it's possible to
-// take this buffer for further processing. It can be convenient if it's necessary to resend the
-// buffer to one or multiple receivers without copying it.
-//
+/// Reference to data buffer in shared memory with reference counting. When all instances of ``Payload`` are destroyed,
+/// the buffer is freed.
+/// It can be convenient if it's necessary to resend the buffer to one or multiple receivers without copying it.
+///
+/// @note zenoh-c only
 class Payload : public Owned<::zc_owned_payload_t> {
    public:
     using Owned::Owned;
+
+    /// @name Methods
+
+    /// @brief Clone reference to the payload buffer with incrementing it's reference count
+    /// @return Reference to the payload buffer
     Payload rcinc() const { return Payload(::zc_payload_rcinc(&_0)); }
+
+    /// @brief Access the data in the payload buffer
+    /// @return ``BytesView`` object representing the data in the payload buffer
     const z::BytesView& get_payload() const { return static_cast<const z::BytesView&>(_0.payload); }
 };
 
-//
-// Memory buffer returned by shared memory manager
-//
+/// Memory buffer returned by shared memory manager ``ShmManager``
+///
+/// @note zenoh-c only
 class Shmbuf : public Owned<::zc_owned_shmbuf_t> {
    public:
     using Owned::Owned;
+
+    /// @name Methods
+
+    /// @brief Returns the capacity of the SHM buffer in bytes
+    /// @return capacity of the SHM buffer in bytes
     uintptr_t get_capacity() const { return ::zc_shmbuf_capacity(&_0); }
+
+    /// @brief Returns the length of data in the SHM buffer in bytes
+    /// @return length of data
     uintptr_t get_length() const { return ::zc_shmbuf_length(&_0); }
+
+    /// @brief Set the length of data in the SHM buffer in bytes. Can't be greater than the capacity.
+    /// @param length length of the data
     void set_length(uintptr_t length) { ::zc_shmbuf_set_length(&_0, length); }
+
+    /// @brief Returns the payload object with the data from the SHM buffer. The ``Shmbuf`` object itself is invalidated
+    /// @return ``Payload`` object with the data from the SHM buffer
     z::Payload into_payload() { return z::Payload(std::move(::zc_shmbuf_into_payload(&_0))); }
+
+    /// @brief Returns the pointer to the data in the SHM buffer as ``uint8_t*``
+    /// @return pointer to the data
     uint8_t* ptr() const { return ::zc_shmbuf_ptr(&_0); }
+
+    /// @brief Returns the pointer to the data in the SHM buffer as ``char*``
+    /// @return pointer to the data
     char* char_ptr() const { return reinterpret_cast<char*>(ptr()); }
+
+    /// @brief Returns pointer to data and length of the data in the SHM buffer as ``std::string_view``
+    /// @return ``std::string_view`` object representing the data and length in the SHM buffer
     std::string_view as_string_view() const {
         return std::string_view(reinterpret_cast<const char*>(ptr()), get_length());
     }
 };
 
-//
-// Shared memory manager
-//
-
 class ShmManager;
 std::variant<z::ShmManager, z::ErrorMessage> shm_manager_new(const z::Session& session, const char* id, uintptr_t size);
 
+/// Shared memory manager
+///
+/// @note zenoh-c only
 class ShmManager : public Owned<::zc_owned_shm_manager_t> {
    public:
     using Owned::Owned;
 
+    /// @name Constructors
+
+    /// @brief Create a new shared memory manager. Allocate a new shared memory buffer or joins an existing one with the
+    /// ``id``
+    /// @param session ``Session`` object
+    /// @param id string identifier of the shared memory manager
+    /// @param size size of the shared memory buffer in bytes
+    /// @return ``ShmManager`` object or ``zenoh::ErrorMessage`` if an error occurred
     friend std::variant<z::ShmManager, z::ErrorMessage> z::shm_manager_new(const z::Session& session, const char* id,
                                                                            uintptr_t size);
 
+    /// @name Methods
+
+    /// @brief Allocate a new shared memory buffer ``Shmbuf`` with the given capacity
+    /// @param capacity capacity of buffer in bytes
+    /// @return ``Shmbuf`` object or ``ErrorMessage`` object if an error occurred
     std::variant<z::Shmbuf, z::ErrorMessage> alloc(uintptr_t capacity) const;
+
+    /// @brief Perfrom defagmentation of the shared memory manager
+    /// @return The amount of memory defragmented in bytes
     uintptr_t defrag() const { return ::zc_shm_defrag(&_0); }
+
+    /// @brief Perform garbage collection of the shared memory manager
+    /// @return The amount of memory freed in bytes
     uintptr_t gc() const { return ::zc_shm_gc(&_0); }
 
    private:

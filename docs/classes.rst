@@ -18,7 +18,7 @@ Classes
 Generic types
 -------------
 
-The classes representing data buffers, data encoding, timestamp, etc. There types are frequently used by other parts of the API.
+The classes representing data buffers, data encoding, timestamp, etc. There types are frequently used by other parts of the API
 
 .. doxygenclass:: zenoh::BytesView
    :members:
@@ -58,6 +58,22 @@ The classes representing the data received from the network
    :members:
    :membergroups: Constructors Operators Methods
 
+Shared memory support
+---------------------
+
+The classes for tranferring the data through shared memory if the receiver and transmitter are on the same host
+
+.. doxygenclass:: zenoh::Payload   
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::Shmbuf
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::ShmManager
+   :members:
+   :membergroups: Constructors Operators Methods
 
 Options
 -------
