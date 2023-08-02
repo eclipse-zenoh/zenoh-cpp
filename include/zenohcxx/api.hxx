@@ -1322,29 +1322,89 @@ class Str : public Owned<::z_owned_str_t> {
     bool operator==(const char* s) const { return std::string_view(s) == c_str(); }
 };
 
-//
-// Owned key expression
-//
+/// Owned key expression
 class KeyExpr : public Owned<::z_owned_keyexpr_t> {
    public:
     using Owned::Owned;
+
+    /// @name Constructors
+
+    /// @brief Create an uninitialized instance
     explicit KeyExpr(nullptr_t) : Owned(nullptr) {}
+
+    /// @brief Create a new instance from a null-terminated string
     explicit KeyExpr(const char* name) : Owned(::z_keyexpr_new(name)) {}
+
+    /// @name Methods
+
+    /// @brief Get the key expression value
+    /// @return ``KeyExprView`` referencing the key expression value in the object
     z::KeyExprView as_keyexpr_view() const { return z::KeyExprView(::z_keyexpr_loan(&_0)); }
-    operator z::KeyExprView() const { return as_keyexpr_view(); }
+
+    /// @brief Get the key expression value
+    /// @return ``BytesView`` referencing the key expression value in the object
     z::BytesView as_bytes() const { return as_keyexpr_view().as_bytes(); }
+
+    /// @brief Get the key expression value
+    /// @return ``std::string_view`` referencing the key expression value in the object
     std::string_view as_string_view() const { return as_keyexpr_view().as_string_view(); }
-    bool operator==(const std::string_view& v) { return as_string_view() == v; }
 #ifdef __ZENOHCXX_ZENOHC
+    /// @brief Concatenate the key expression and a string
+    /// @param s ``std::string_view`` representing a key expression
+    /// @return Newly allocated key expression ``zenoh::KeyExpr``
+    /// @note zenoh-c only
     z::KeyExpr concat(const std::string_view& s) const { return as_keyexpr_view().concat(s); }
+
+    /// @brief Join key expression with another key expression, inserting a separator between them
+    /// @param v the key expression to join with
+    /// @return Newly allocated key expression ``zenoh::KeyExpr``
+    /// @note zenoh-c only
     z::KeyExpr join(const z::KeyExprView& v) const { return as_keyexpr_view().join(v); }
 #endif
+    /// @brief Checks if the key expression is equal to another key expression
+    /// @param v Another key expression
+    /// @return true the key expression is equal to the other key expression
     bool equals(const z::KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().equals(v, error); }
+
+    /// @brief Checks if the key expression is equal to another key expression
+    /// @param v Another key expression
+    /// @return true the key expression is equal to the other key expression
     bool equals(const z::KeyExprView& v) const { return as_keyexpr_view().equals(v); }
+
+    /// @brief Checks if the key expression includes another key expression, i.e. if the set defined by the key
+    /// expression contains the set defined by the other key expression
+    /// @param v Another key expression
+    /// @return true the key expression includes the other key expression
     bool includes(const z::KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().includes(v, error); }
+
+    /// @brief Checks if the key expression includes another key expression, i.e. if the set defined by the key
+    /// expression contains the set defined by the other key expression
+    /// @param v Another key expression
+    /// @return true the key expression includes the other key expression
     bool includes(const z::KeyExprView& v) const { return as_keyexpr_view().includes(v); }
+
+    /// @brief Checks if the key expression intersects another key expression, i.e.
+    /// if the set defined by the key expression intersects the set defined by the other key expression
+    /// @param v Another key expression
+    /// @return true the key expression intersects the other key expression
     bool intersects(const z::KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().intersects(v, error); }
+
+    /// @brief Checks if the key expression intersects another key expression, i.e.
+    /// if the set defined by the key expression intersects the set defined by the other key expression
+    /// @param v Another key expression
+    /// @return true the key expression intersects the other key expression
     bool intersects(const z::KeyExprView& v) const { return as_keyexpr_view().intersects(v); }
+
+    /// @name Operators
+
+    /// @brief Get the key expression value
+    /// @return ``KeyExprView`` referencing the key expression value in the object
+    operator z::KeyExprView() const { return as_keyexpr_view(); }
+
+    /// @brief Equality operator
+    /// @param v the ``std::string_view`` to compare with
+    /// @return true if the key expression is equal to the string
+    bool operator==(const std::string_view& v) { return as_string_view() == v; }
 };
 
 class ScoutingConfig;

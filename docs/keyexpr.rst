@@ -31,3 +31,6 @@ Key Expressions
    :members:
    :membergroups: Constructors Operators Methods
  
+.. doxygenclass:: zenoh::KeyExpr
+   :members:
+   :membergroups: Constructors Operators Methods
