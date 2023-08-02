@@ -58,6 +58,10 @@ The classes representing the data received from the network
    :members:
    :membergroups: Constructors Operators Methods
 
+.. doxygenstruct:: zenoh::Sample
+   :members:
+   :membergroups: Constructors Operators Methods
+
 Shared memory support
 ---------------------
 

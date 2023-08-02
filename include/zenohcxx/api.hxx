@@ -594,8 +594,8 @@ class Shmbuf : public Owned<::zc_owned_shmbuf_t> {
     /// @return pointer to the data
     char* char_ptr() const { return reinterpret_cast<char*>(ptr()); }
 
-    /// @brief Returns pointer to data and length of the data in the SHM buffer as ``std::string_view``
-    /// @return ``std::string_view`` object representing the data and length in the SHM buffer
+    /// @brief Returns pointer to data and length of the data as ``std::string_view``
+    /// @return ``std::string_view`` object representing the data in the SHM buffer
     std::string_view as_string_view() const {
         return std::string_view(reinterpret_cast<const char*>(ptr()), get_length());
     }
@@ -643,18 +643,38 @@ class ShmManager : public Owned<::zc_owned_shm_manager_t> {
 
 #endif
 
-//
-// A data sample.
-//
-// A sample is the value associated to a given resource at a given point in time.
-//
+/// A data sample.
+///
+/// A sample is the value associated to a given resource at a given point in time.
 struct Sample : public Copyable<::z_sample_t> {
     using Copyable::Copyable;
+
+    /// @name Methods
+
+    /// @brief The resource key of this data sample.
+    /// @return ``KeyExprView`` object representing the resource key
     const z::KeyExprView& get_keyexpr() const { return static_cast<const z::KeyExprView&>(keyexpr); }
+
+    /// @brief The value of this data sample
+    /// @return ``BytesView`` object representing the value
     const z::BytesView& get_payload() const { return static_cast<const z::BytesView&>(payload); }
+
+    /// @brief The encoding of the value of this data sample
+    /// @return ``Encoding`` object
     const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
+
+    /// @brief The kind of this data sample (PUT or DELETE)
+    /// @return ``zenoh::SampleKind`` value
     SampleKind get_kind() const { return kind; }
+
+    /// @brief The timestamp of this data sample
+    /// @return ``Timestamp`` object
+    const z::Timestamp& get_timestamp() const { return static_cast<const z::Timestamp&>(timestamp); }
 #ifdef __ZENOHCXX_ZENOHC
+
+    /// @brief The payload object of the sample. If it represents a buffer in shared memory it can be
+    /// resent without actually copying the data
+    /// @return ``Payload`` object
     z::Payload sample_payload_rcinc() const {
         auto p = ::zc_sample_payload_rcinc(static_cast<const ::z_sample_t*>(this));
         return z::Payload(std::move(p));
