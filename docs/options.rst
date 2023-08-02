@@ -44,3 +44,19 @@ The classes representing the options passed to the API
 .. doxygenstruct:: zenoh::SubscriberOptions
    :members:
    :membergroups: Constructors Operators Methods
+
+.. doxygenstruct:: zenoh::PullSubscriberOptions
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenstruct:: zenoh::PublisherOptions
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenstruct:: zenoh::PublisherPutOptions
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenstruct:: zenoh::PublisherDeleteOptions
+   :members:
+   :membergroups: Constructors Operators Methods

@@ -714,8 +714,8 @@ struct Value : public Copyable<::z_value_t> {
     /// @param payload ``BytesView`` object
     Value(const z::BytesView& payload) : Value(payload, z::Encoding()) {}
 
-    /// @brief Create a new value from zero-ended string with the default encoding
-    /// @param payload zero-ended string
+    /// @brief Create a new value from null-terminated string with the default encoding
+    /// @param payload null-terminated string
     Value(const char* payload) : Value(payload, z::Encoding()) {}
 
     /// @name Methods
@@ -1096,6 +1096,7 @@ struct QueryableOptions : public Copyable<::z_queryable_options_t> {
 
     /// @brief Set the completeness of the queryable
     /// @param v true if the queryable is complete
+    /// @return reference to the structure itself
     QueryableOptions& set_complete(bool v) {
         complete = v;
         return *this;
@@ -1131,6 +1132,7 @@ struct SubscriberOptions : public Copyable<::z_subscriber_options_t> {
 
     /// @brief Set the reliability of the subscriber
     /// @param v the ``zenoh::Reliability`` value
+    /// @return reference to the structure itself
     SubscriberOptions& set_reliability(Reliability v) {
         reliability = v;
         return *this;
@@ -1149,75 +1151,174 @@ struct SubscriberOptions : public Copyable<::z_subscriber_options_t> {
     bool operator!=(const SubscriberOptions& v) const { return !operator==(v); }
 };
 
-// Options to be passed when declaring a pull subscriber
+/// Options to be passed when declaring a ``PullSubscriber``
 struct PullSubscriberOptions : public Copyable<::z_pull_subscriber_options_t> {
     using Copyable::Copyable;
+
+    /// @name Constructors
+
+    /// @brief Create a new default ``PullSubscriberOptions`` value
     PullSubscriberOptions() : Copyable(::z_pull_subscriber_options_default()) {}
+
+    /// @name Methods
+
+    /// @brief Get the reliability of the pull subscriber
+    /// @return ``zenoh::Reliability`` value
     Reliability get_reliability() const { return reliability; }
+
+    /// @brief Set the reliability of the pull subscriber
+    /// @param v the ``zenoh::Reliability`` value
+    /// @return reference to the structure itself
     PullSubscriberOptions& set_reliability(Reliability v) {
         reliability = v;
         return *this;
     }
+
+    /// @name Operators
+
+    /// @brief Equality operator
+    /// @param v the other ``PullSubscriberOptions`` to compare with
+    /// @return true if the two values are equal (have the same reliability)
     bool operator==(const PullSubscriberOptions& v) const { return get_reliability() == v.get_reliability(); }
+
+    /// @brief Inequality operator
+    /// @param v the other ``PullSubscriberOptions`` to compare with
+    /// @return true if the two values are not equal (have different reliability)
     bool operator!=(const PullSubscriberOptions& v) const { return !operator==(v); }
 };
 
-//
-// Options to be passed when declaring a publisher
-//
+/// Options to be passed when declaring a ``Publisher``
 struct PublisherOptions : public Copyable<::z_publisher_options_t> {
     using Copyable::Copyable;
+
+    /// @name Constructors
+
+    /// @brief Create a new default ``PublisherOptions`` value
     PublisherOptions() : Copyable(::z_publisher_options_default()) {}
+
+    /// @name Methods
+
+    /// @brief Get the congestion control of the publisher
+    /// @return ``zenoh::CongestionControl`` value
     CongestionControl get_congestion_control() const { return congestion_control; }
+
+    /// @brief Set the congestion control of the publisher
+    /// @param v the ``zenoh::CongestionControl`` value
+    /// @return reference to the structure itself
     PublisherOptions& set_congestion_control(CongestionControl v) {
         congestion_control = v;
         return *this;
     }
+
+    /// @brief Get the priority of the publisher
+    /// @return ``zenoh::Priority`` value
     Priority get_priority() const { return priority; }
+
+    /// @brief Set the priority of the publisher
+    /// @param v the ``zenoh::Priority`` value
+    /// @return reference to the structure itself
     PublisherOptions& set_priority(Priority v) {
         priority = v;
         return *this;
     }
+
+    /// @name Operators
+
+    /// @brief Equality operator
+    /// @param v the other ``PublisherOptions`` to compare with
+    /// @return true if the two values are equal (have the same congestion control and priority)
     bool operator==(const PublisherOptions& v) const {
         return get_priority() == v.get_priority() && get_congestion_control() == v.get_congestion_control();
     }
+
+    /// @brief Inequality operator
+    /// @param v the other ``PublisherOptions`` to compare with
+    /// @return true if the two values are not equal (have different congestion control or priority)
     bool operator!=(const PublisherOptions& v) const { return !operator==(v); }
 };
 
-//
-// Options to be passed to put operation of a publisher
-//
+/// Options to be passed to ``Publisher::put`` operation
 struct PublisherPutOptions : public Copyable<::z_publisher_put_options_t> {
     using Copyable::Copyable;
+
+    /// @name Constructors
+
+    /// @brief Create a new default ``PublisherPutOptions`` value
     PublisherPutOptions() : Copyable(::z_publisher_put_options_default()) {}
+
+    /// @name Methods
+
+    /// @brief Get the encoding of the publisher
+    /// @return ``zenoh::Encoding`` value
     const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
+
+    /// @brief Set the encoding of the publisher
+    /// @param e the ``zenoh::Encoding`` value
+    /// @return reference to the structure itself
     PublisherPutOptions& set_encoding(z::Encoding e) {
         encoding = e;
         return *this;
     };
+
+    /// @name Operators
+
+    /// @brief Equality operator
+    /// @param v the other ``PublisherPutOptions`` to compare with
+    /// @return true if the two values are equal (have the same encoding)
     bool operator==(const PublisherPutOptions& v) const { return get_encoding() == v.get_encoding(); }
+
+    /// @brief Inequality operator
+    /// @param v the other ``PublisherPutOptions`` to compare with
+    /// @return true if the two values are not equal (have different encoding)
     bool operator!=(const PublisherPutOptions& v) const { return !operator==(v); }
 };
 
-//
-// Options to be passed to delete operation of a publisher
-//
+/// Options to be passed to delete operation of a publisher
 struct PublisherDeleteOptions : public Copyable<::z_publisher_delete_options_t> {
     using Copyable::Copyable;
+
+    /// @name Constructors
+
     PublisherDeleteOptions() : Copyable(::z_publisher_delete_options_default()) {}
+
+    /// @name Operators
+
+    /// @brief Equality operator
+    /// @param v the other ``PublisherDeleteOptions`` to compare with
+    /// @return true if the two values are equal
     bool operator==(const z::PublisherOptions& v) const { return true; }
+
+    /// @brief Inequality operator
+    /// @param v the other ``PublisherDeleteOptions`` to compare with
+    /// @return true if the two values are not equal
     bool operator!=(const z::PublisherOptions& v) const { return !operator==(v); }
 };
 
-//
-// Owned string returned from zenoh
-//
+/// Owned string returned from zenoh. It is automatically freed when the object is destroyed.
 class Str : public Owned<::z_owned_str_t> {
    public:
     using Owned::Owned;
-    operator const char*() const { return ::z_loan(_0); }
+
+    /// @name Methods
+
+    /// @brief Get the string value
+    /// @return ``const char*`` null-terminated string pointer
     const char* c_str() const { return ::z_loan(_0); }
+
+    /// @name Operators
+
+    /// @brief Get the string value
+    /// @return ``const char*`` null-terminated string pointer
+    operator const char*() const { return ::z_loan(_0); }
+
+    /// @brief Equality operator
+    /// @param s the ``std::string_view`` to compare with
+    /// @return true if the two strings are equal
     bool operator==(const std::string_view& s) const { return s == c_str(); }
+
+    /// @brief Equality operator
+    /// @param s the null-terminated string to compare with
+    /// @return true if the two strings are equal
     bool operator==(const char* s) const { return std::string_view(s) == c_str(); }
 };
 
