@@ -306,7 +306,7 @@ struct Id : public Copyable<::z_id_t> {
 /// @return the output stream
 std::ostream& operator<<(std::ostream& os, const z::Id& id);
 
-/// The non-owning read-only view to a "hello" message returned by a zenoh entity as a reply to a "scout"
+/// The non-owning read-only view to a ``Hello`` message returned by a zenoh entity as a reply to a "scout"
 /// message.
 struct HelloView : public Copyable<::z_hello_t> {
     using Copyable::Copyable;
@@ -558,6 +558,7 @@ struct Timestamp : Copyable<::z_timestamp_t> {
 /// Reference to data buffer in shared memory with reference counting. When all instances of ``Payload`` are destroyed,
 /// the buffer is freed.
 /// It can be convenient if it's necessary to resend the buffer to one or multiple receivers without copying it.
+/// This can be performed with ``Publisher::put_owned`` method.
 ///
 /// @note zenoh-c only
 class Payload : public Owned<::zc_owned_payload_t> {
@@ -1498,13 +1499,19 @@ std::variant<z::Config, ErrorMessage> config_client(const z::StrArrayView& peers
 std::variant<z::Config, ErrorMessage> config_client(const std::initializer_list<const char*>& peers);
 #endif
 
-//
-// An owned reply to get operation
-//
+/// An owned reply from queryable to ``Session::get`` operation
 class Reply : public Owned<::z_owned_reply_t> {
    public:
     using Owned::Owned;
+
+    /// @name Methods
+
+    /// @brief Check if the reply is OK
+    /// @return true if the reply is OK
     bool is_ok() const { return ::z_reply_is_ok(&_0); }
+
+    /// @brief Get the reply value
+    /// @return the ``Sample`` value of the reply if reply is OK, otherwise ``zenoh::ErrorMessage``
     std::variant<z::Sample, ErrorMessage> get() const {
         if (is_ok()) {
             return z::Sample{::z_reply_ok(&_0)};
@@ -1514,54 +1521,118 @@ class Reply : public Owned<::z_owned_reply_t> {
     }
 };
 
-//
-// An owned zenoh subscriber. Destroying subscriber cancels the subscription
-//
+/// An owned zenoh subscriber. Destroying subscriber cancels the subscription
+/// Constructed by ``Session::declare_subscriber`` method
 class Subscriber : public Owned<::z_owned_subscriber_t> {
    public:
     using Owned::Owned;
 };
 
-//
-// An owned zenoh pull subscriber. Destroying the subscriber cancels the subscription.
-//
+/// An owned zenoh pull subscriber. Destroying the subscriber cancels the subscription.
+/// Constructed by ``Session::declare_pull_subscriber`` method
 class PullSubscriber : public Owned<::z_owned_pull_subscriber_t> {
    public:
     using Owned::Owned;
+
+    /// @name Methods
+
+    /// @brief Pull the next sample
+    /// @return true if the sample was pulled, false otherwise
     bool pull() { return ::z_subscriber_pull(::z_loan(_0)) == 0; }
+
+    /// @brief Pull the next sample
+    /// @param error the error code
+    /// @return true if the sample was pulled, false otherwise
     bool pull(ErrNo& error) {
         error = ::z_subscriber_pull(::z_loan(_0));
         return error == 0;
     }
 };
 
-//
-// An owned zenoh queryable
-//
+/// An owned zenoh queryable. Constructed by ``Session::declare_queryable`` method
 class Queryable : public Owned<::z_owned_queryable_t> {
    public:
     using Owned::Owned;
 };
 
-//
-// An owned zenoh publisher
-//
+/// An owned zenoh publisher. Constructed by ``Session::declare_publisher`` method
 class Publisher : public Owned<::z_owned_publisher_t> {
    public:
     using Owned::Owned;
+
+    /// @name Methods
+
+    /// @brief Publish the payload
+    /// @param payload ``Payload`` to publish
+    /// @param options ``PublisherPutOptions``
+    /// @param error the error code ``zenoh::ErrNo``
+    /// @return true if the payload was published, false otherwise
     bool put(const z::BytesView& payload, const z::PublisherPutOptions& options, ErrNo& error);
+
+    /// @brief Publish the payload
+    /// @param payload ``Payload`` to publish
+    /// @param error the error code ``zenoh::ErrNo``
+    /// @return true if the payload was published, false otherwise
     bool put(const z::BytesView& payload, ErrNo& error);
+
+    /// @brief Publish the payload
+    /// @param payload ``Payload`` to publish
+    /// @param options ``PublisherPutOptions``
+    /// @return true if the payload was published, false otherwise
     bool put(const z::BytesView& payload, const z::PublisherPutOptions& options);
+
+    /// @brief Publish the payload
+    /// @param payload ``Payload`` to publish
+    /// @return true if the payload was published, false otherwise
     bool put(const z::BytesView& payload);
+
+    /// @brief Send a delete request
+    /// @param options ``PublisherDeleteOptions``
+    /// @param error the error code ``zenoh::ErrNo``
+    /// @return true if the request was sent, false otherwise
     bool delete_resource(const z::PublisherDeleteOptions& options, ErrNo& error);
+
+    /// @brief Send a delete request
+    /// @param error the error code ``zenoh::ErrNo``
+    /// @return true if the request was sent, false otherwise
     bool delete_resource(ErrNo& error);
+
+    /// @brief Send a delete request
+    /// @param options ``PublisherDeleteOptions``
+    /// @return true if the request was sent, false otherwise
     bool delete_resource(const z::PublisherDeleteOptions& options);
+
+    /// @brief Send a delete request
+    /// @return true if the request was sent, false otherwise
     bool delete_resource();
 
 #ifdef __ZENOHCXX_ZENOHC
+    /// @brief Publish the payload got from ``ShmBuf`` or from ``Sample``
+    /// @param payload ``Payload`` to publish
+    /// @param options ``PublisherPutOptions``
+    /// @param error the error code ``zenoh::ErrNo``
+    /// @return true if the payload was published, false otherwise
+    /// @note zenoh-c only
     bool put_owned(z::Payload&& payload, const z::PublisherPutOptions& options, ErrNo& error);
+
+    /// @brief Publish the payload got from ``ShmBuf`` or from ``Sample``
+    /// @param payload ``Payload`` to publish
+    /// @param error the error code ``zenoh::ErrNo``
+    /// @return true if the payload was published, false otherwise
+    /// @note zenoh-c only
     bool put_owned(z::Payload&& payload, ErrNo& error);
+
+    /// @brief Publish the payload got from ``ShmBuf`` or from ``Sample``
+    /// @param payload ``Payload`` to publish
+    /// @param options ``PublisherPutOptions``
+    /// @return true if the payload was published, false otherwise
+    /// @note zenoh-c only
     bool put_owned(z::Payload&& payload, const z::PublisherPutOptions& options);
+
+    /// @brief Publish the payload got from ``ShmBuf`` or from ``Sample``
+    /// @param payload ``Payload`` to publish
+    /// @return true if the payload was published, false otherwise
+    /// @note zenoh-c only
     bool put_owned(z::Payload&& payload);
 #endif
 
@@ -1573,12 +1644,15 @@ class Publisher : public Owned<::z_owned_publisher_t> {
 #endif
 };
 
-//
-// A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with scout operation
-//
+/// A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with scout operation
 class Hello : public Owned<::z_owned_hello_t> {
    public:
     using Owned::Owned;
+
+    /// @name Operators
+
+    /// @brief Get the content of the hello message
+    /// @return the content of the hello message as ``HelloView``
     operator z::HelloView() const { return z::HelloView(::z_hello_loan(&_0)); }
 };
 

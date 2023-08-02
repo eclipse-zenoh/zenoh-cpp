@@ -12,28 +12,23 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-Data
-====
+Entities
+========
 
-The classes representing the data which is sent and received through the network
+The classes which performs the Zenoh network operations
 
-.. doxygenclass:: zenoh::Hello
+.. doxygenclass:: zenoh::Subscriber
    :members:
    :membergroups: Constructors Operators Methods
 
-.. doxygenstruct:: zenoh::HelloView
+.. doxygenclass:: zenoh::PullSubscriber
    :members:
    :membergroups: Constructors Operators Methods
 
-.. doxygenstruct:: zenoh::Sample
+.. doxygenclass:: zenoh::Queryable
    :members:
    :membergroups: Constructors Operators Methods
 
-.. doxygenclass:: zenoh::Query
+.. doxygenclass:: zenoh::Publisher
    :members:
    :membergroups: Constructors Operators Methods
-
-.. doxygenclass:: zenoh::Reply
-   :members:
-   :membergroups: Constructors Operators Methods
-

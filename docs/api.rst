@@ -25,6 +25,7 @@ API Reference
    generic
    keyexpr
    config
+   entities
    data
    shm
    options
