@@ -26,6 +26,8 @@ The C++ wrappers for callbacks for zenoh classes.  See :doc:`closure_templates` 
 
 .. doxygentypedef:: zenoh::ClosureZid
 
+.. doxygentypedef:: zenoh::ClosureHello
+
 .. doxygenclass:: zenoh::ClosureReplyChannelSend
 
 .. doxygenclass:: zenoh::ClosureReplyChannelRecv

@@ -1684,7 +1684,17 @@ class ScoutingConfig : public Owned<::z_owned_scouting_config_t> {
     ScoutingConfig() : Owned(::z_scouting_config_default()) {}
 };
 
+/// @brief Scout for zenoh entities in the network
+/// @param config ``ScoutingConfig`` to use
+/// @param callback ``ClosureHello`` to process received ``Hello``s
+/// @param error ``ErrNo`` to store the error code
+/// @return true if the scout operation was successful, false otherwise
 bool scout(z::ScoutingConfig&& config, z::ClosureHello&& callback, ErrNo& error);
+
+/// @brief Scout for zenoh entities in the network
+/// @param config ``ScoutingConfig`` to use
+/// @param callback ``ClosureHello`` to process received ``Hello``s
+/// @return true if the scout operation was successful, false otherwise
 bool scout(z::ScoutingConfig&& config, z::ClosureHello&& callback);
 
 //

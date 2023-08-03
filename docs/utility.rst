@@ -18,3 +18,10 @@ Utility functions
 .. doxygenfunction:: init_logger
 
 .. doxygenfunction:: query_target_default
+
+.. doxygenfunction:: scout(z::ScoutingConfig&& config, z::ClosureHello&& callback, ErrNo& error)
+
+.. doxygenfunction:: scout(z::ScoutingConfig&& config, z::ClosureHello&& callback)
+
+
+
