@@ -21,6 +21,7 @@ API Reference
 
    namespaces
    templates 
+   closures
    enums
    generic
    keyexpr

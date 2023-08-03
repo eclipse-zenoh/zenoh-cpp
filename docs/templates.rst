@@ -12,8 +12,8 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-Templates
-=========
+Base templates
+==============
 
 There are two kinds of classes in zenoh-cpp: Copyable and Owned.
 
