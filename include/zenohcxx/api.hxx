@@ -1672,14 +1672,16 @@ typedef ClosureConstRefParam<::z_owned_closure_zid_t, ::z_id_t, z::Id> ClosureZi
 /// @brief Callback type passed to ``zenoh::scout`` to process received ``Hello``s
 typedef ClosureMoveParam<::z_owned_closure_hello_t, ::z_owned_hello_t, z::Hello> ClosureHello;
 
-//
-// Zenoh scouting config and function
-//
+/// @brief Configuration for a ``zenoh::scout`` operation. This configuration can be created by
+/// ``Config::create_scouting_config`` method.
 class ScoutingConfig : public Owned<::z_owned_scouting_config_t> {
    public:
     using Owned::Owned;
+
+    /// @name Constructors
+
+    /// @brief Create a default ``ScoutingConfig``
     ScoutingConfig() : Owned(::z_scouting_config_default()) {}
-    ScoutingConfig(z::Config& config) : Owned(std::move(ScoutingConfig(config))) {}
 };
 
 bool scout(z::ScoutingConfig&& config, z::ClosureHello&& callback, ErrNo& error);
