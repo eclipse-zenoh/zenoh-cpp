@@ -1656,29 +1656,20 @@ class Hello : public Owned<::z_owned_hello_t> {
     operator z::HelloView() const { return z::HelloView(::z_hello_loan(&_0)); }
 };
 
-//
-//  Represents the reply closure.
-//
+/// @brief Callback type passed to ``Session::get``to process ``Reply``s from ``Queryable``s
 typedef ClosureMoveParam<::z_owned_closure_reply_t, ::z_owned_reply_t, z::Reply> ClosureReply;
 
-//
-//  Represents the query closure.
-//
+/// @brief Callback type passed to ``Session::declare_queryable`` to process received ``Query``s
 typedef ClosureConstRefParam<::z_owned_closure_query_t, ::z_query_t, z::Query> ClosureQuery;
 
-//
-//  Represents the sample closure.
-//
+/// @brief Callback type passed to ``Session::declare_subscriber`` to process received ``Sample``s
 typedef ClosureConstRefParam<::z_owned_closure_sample_t, ::z_sample_t, z::Sample> ClosureSample;
 
-//
-//  Represents the zenoh ID closure.
-//
+/// @brief Callback type passed to ``Session::info_routers_zid`` and ``Session::info_peers_zid`` to process received
+/// ``Id``s
 typedef ClosureConstRefParam<::z_owned_closure_zid_t, ::z_id_t, z::Id> ClosureZid;
 
-//
-// Represents the scouting closure
-//
+/// @brief Callback type passed to ``zenoh::scout`` to process received ``Hello``s
 typedef ClosureMoveParam<::z_owned_closure_hello_t, ::z_owned_hello_t, z::Hello> ClosureHello;
 
 //
@@ -1807,11 +1798,13 @@ class Session : public Owned<::z_owned_session_t> {
 
 #ifdef __ZENOHCXX_ZENOHC
 
-class ClosureReplyChannelSend : public ClosureReply {
+/// @brief Send data function returned by ``zenoh::reply_fifo_new`` and ``zenoh::reply_non_blocking_fifo_new``
+class ClosureReplyChannelSend : public ClosureMoveParam<::z_owned_closure_reply_t, ::z_owned_reply_t, z::Reply> {
    public:
-    using ClosureReply::ClosureReply;
+    using ClosureMoveParam::ClosureMoveParam;
 };
 
+/// @brief Receive data function returned by ``zenoh::reply_fifo_new`` and ``zenoh::reply_non_blocking_fifo_new``
 class ClosureReplyChannelRecv
     : public ClosureMoveParam<::z_owned_reply_channel_closure_t, ::z_owned_reply_t, z::Reply> {
    public:

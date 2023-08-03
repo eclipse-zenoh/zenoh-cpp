@@ -21,13 +21,14 @@ API Reference
 
    namespaces
    templates 
-   closures
+   closure_templates
    enums
    generic
    keyexpr
    config
    entities
    data
+   closures
    shm
    options
    utility
