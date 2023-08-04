@@ -144,9 +144,6 @@ inline z::QueryTarget query_target_default();
 #ifdef __ZENOHCXX_ZENOHPICO
 /// Whatami values, defined as a bitmask
 ///
-/// \note *zenoh-pico* only
-///
-///
 /// Values:
 /// - **Z_WHATAMI_ROUTER**: Bitmask to filter Zenoh routers.
 /// - **Z_WHATAMI_PEER**: Bitmask to filter for Zenoh peers.
@@ -154,15 +151,14 @@ inline z::QueryTarget query_target_default();
 ///
 /// See also ``zenoh::as_cstr``
 ///
+/// @note zenoh-pico implementation
 typedef ::z_whatami_t WhatAmI;
 #endif
 #ifdef __ZENOHCXX_ZENOHC
-/// \note *zenoh-c* only
-///
-/// Whatami values, defined as a bitmask
+/// @brief Whatami values, defined as a bitmask
 ///
 /// See also ``zenoh::as_cstr``
-///
+/// @note zenoh-c implementation
 enum WhatAmI {
     /// Bitmask to filter Zenoh routers
     Z_WHATAMI_ROUTER = 1,
@@ -173,15 +169,17 @@ enum WhatAmI {
 };
 #endif
 
-/// \anchor as_cstr
-/// Returns a string representation of the given ``WhatAmI`` value.
-/// @param whatami the ``WhatAmI`` value
-/// @return a string representation of the given ``WhatAmI`` value
+/// @brief Returns a string representation of the given ``zenoh::WhatAmI`` value.
+/// @param whatami the ``zenoh::WhatAmI`` value
+/// @return a string representation of the given value
 inline const char* as_cstr(z::WhatAmI whatami);
 
 #ifdef __ZENOHCXX_ZENOHC
-/// Initializes logger (zenoh-c library only)
-/// User may set environment variable RUST_LOG to values debug|info|warn|error to show diagnostic output
+/// @brief Initializes logger (zenoh-c library only)
+///
+/// User may set environment variable RUST_LOG to values *debug* | *info* | *warn* | *error* to show diagnostic output
+///
+/// @note zenoh-c only
 void init_logger();
 #endif
 
@@ -641,7 +639,7 @@ class ShmManager : public Owned<::zc_owned_shm_manager_t> {
 
     /// @brief Allocate a new shared memory buffer ``Shmbuf`` with the given capacity
     /// @param capacity capacity of buffer in bytes
-    /// @return ``Shmbuf`` object or ``ErrorMessage`` object if an error occurred
+    /// @return ``Shmbuf`` object or ``zenoh::ErrorMessage`` object if an error occurred
     std::variant<z::Shmbuf, z::ErrorMessage> alloc(uintptr_t capacity) const;
 
     /// @brief Perfrom defagmentation of the shared memory manager
@@ -690,8 +688,7 @@ struct Sample : public Copyable<::z_sample_t> {
     /// @brief The payload object of the sample. If it represents a buffer in shared memory it can be
     /// resent without actually copying the data
     /// @return ``Payload`` object
-    ///
-    /// @not zenoh-c only
+    /// @note zenoh-c only
     z::Payload sample_payload_rcinc() const {
         auto p = ::zc_sample_payload_rcinc(static_cast<const ::z_sample_t*>(this));
         return z::Payload(std::move(p));
@@ -885,7 +882,7 @@ struct PutOptions : public Copyable<::z_put_options_t> {
     const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
 
     /// @brief Set the encoding for the payload
-    /// @param v ``zenoh::Encoding`` value
+    /// @param e ``zenoh::Encoding`` value
     /// @return reference to the structure itself
     PutOptions& set_encoding(z::Encoding e) {
         encoding = e;
@@ -1000,7 +997,7 @@ struct QueryReplyOptions : public Copyable<::z_query_reply_options_t> {
     const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
 
     /// @brief Set the encoding for the payload
-    /// @param v ``zenoh::Encoding`` value
+    /// @param e ``zenoh::Encoding`` value
     /// @return reference to the structure itself
     QueryReplyOptions& set_encoding(z::Encoding e) {
         encoding = e;
@@ -1364,6 +1361,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
 #endif
     /// @brief Checks if the key expression is equal to another key expression
     /// @param v Another key expression
+    /// @param error Error code if the operation fails
     /// @return true the key expression is equal to the other key expression
     bool equals(const z::KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().equals(v, error); }
 
@@ -1375,6 +1373,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @brief Checks if the key expression includes another key expression, i.e. if the set defined by the key
     /// expression contains the set defined by the other key expression
     /// @param v Another key expression
+    /// @param error Error code if the operation fails
     /// @return true the key expression includes the other key expression
     bool includes(const z::KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().includes(v, error); }
 
@@ -1387,6 +1386,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @brief Checks if the key expression intersects another key expression, i.e.
     /// if the set defined by the key expression intersects the set defined by the other key expression
     /// @param v Another key expression
+    /// @param error Error code if the operation fails
     /// @return true the key expression intersects the other key expression
     bool intersects(const z::KeyExprView& v, ErrNo& error) const { return as_keyexpr_view().intersects(v, error); }
 
@@ -1586,18 +1586,18 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     /// @return true if the payload was published, false otherwise
     bool put(const z::BytesView& payload);
 
-    /// @brief Send a delete request
+    /// @brief Undeclare the resource
     /// @param options ``PublisherDeleteOptions``
     /// @param error the error code ``zenoh::ErrNo``
     /// @return true if the request was sent, false otherwise
     bool delete_resource(const z::PublisherDeleteOptions& options, ErrNo& error);
 
-    /// @brief Send a delete request
+    /// @brief Undeclare the resource
     /// @param error the error code ``zenoh::ErrNo``
     /// @return true if the request was sent, false otherwise
     bool delete_resource(ErrNo& error);
 
-    /// @brief Send a delete request
+    /// @brief Undeclare the resource
     /// @param options ``PublisherDeleteOptions``
     /// @return true if the request was sent, false otherwise
     bool delete_resource(const z::PublisherDeleteOptions& options);
@@ -1686,101 +1686,365 @@ class ScoutingConfig : public Owned<::z_owned_scouting_config_t> {
 
 /// @brief Scout for zenoh entities in the network
 /// @param config ``ScoutingConfig`` to use
-/// @param callback ``ClosureHello`` to process received ``Hello``s
-/// @param error ``ErrNo`` to store the error code
+/// @param callback ``zenoh::ClosureHello`` to process received ``Hello``s
+/// @param error ``zenoh:::ErrNo`` to store the error code
 /// @return true if the scout operation was successful, false otherwise
 bool scout(z::ScoutingConfig&& config, z::ClosureHello&& callback, ErrNo& error);
 
 /// @brief Scout for zenoh entities in the network
 /// @param config ``ScoutingConfig`` to use
-/// @param callback ``ClosureHello`` to process received ``Hello``s
+/// @param callback ``zenoh::ClosureHello`` to process received ``Hello``s
 /// @return true if the scout operation was successful, false otherwise
 bool scout(z::ScoutingConfig&& config, z::ClosureHello&& callback);
 
-//
-// Zenoh session
-//
-
 class Session;
+
+/// @brief Create a ``Session`` with the given ``Config``
+/// @param config ``Config`` to use
+/// @param start_background_tasks for zenoh-pico only. If true, start background threads which handles the network
+/// traffic. If false, the threads should be called manually with ``Session::start_read_task`` and
+/// ``Session::start_lease_task`` or methods ``Session::read``, ``Session::send_keep_alive`` and
+/// ``Session::send_join`` should be called in loop.
+/// @return a ``Session`` if the session was successfully created, an ``zenoh::ErrorMessage`` otherwise
 std::variant<z::Session, z::ErrorMessage> open(z::Config&& config, bool start_background_tasks = true);
 
+/// Main zenoh session class.
 class Session : public Owned<::z_owned_session_t> {
    public:
     using Owned::Owned;
 
+#ifdef __ZENOHCXX_ZENOHPICO
+    //
+    // For zenoh-pico ``Session`` may start background tasks on creation and stop them in destructor.
+    // So for zenoh-pico ``Session`` overrides destructor and ``drop`` method.
+    // This also makes necessary to define move constructor and move assignment operator, which are not automatically
+    // generated by the compiler anymore
+    //
     Session(Session&& other) : Owned(std::move(other)) {}
     Session(nullptr_t) : Owned(nullptr) {}
     Session&& operator=(Session&& other);
     void drop();
     ~Session() { drop(); }
-
-#ifdef __ZENOHCXX_ZENOHC
-    Session rcinc() { return Session(::zc_session_rcinc(::z_session_loan(&_0))); }
 #endif
-
-    z::Id info_zid() const { return ::z_info_zid(::z_session_loan(&_0)); }
 
     friend std::variant<z::Session, z::ErrorMessage> z::open(z::Config&& config, bool start_background_tasks);
 
+    /// @name Methods
+
+#ifdef __ZENOHCXX_ZENOHC
+    /// @brief Clone the ``Session`` instance incrementing the reference count
+    /// This is possible in zenoh-c only where ``Session`` is a reference counted object.
+    /// @return a new ``Session`` instance
+    /// @note zenoh-c only
+    Session rcinc() { return Session(::zc_session_rcinc(::z_session_loan(&_0))); }
+#endif
+
+    /// @brief Get the unique identifier of the zenoh node associated to this ``Session``
+    /// @return the unique identifier ``Id``
+    z::Id info_zid() const { return ::z_info_zid(::z_session_loan(&_0)); }
+
+    /// @brief Create ``KeyExpr`` instance with numeric id registered in ``Session`` routing tables
+    /// @param keyexpr ``KeyExprView`` representing string key expression
+    /// @return ``KeyExpr`` instance
     z::KeyExpr declare_keyexpr(const z::KeyExprView& keyexpr);
+
+    /// @brief Remove ``KeyExpr`` instance from ``Session`` and drop ``KeyExpr`` instance
+    /// @param keyexpr ``KeyExpr`` instance to drop
+    /// @param error ``zenoh::ErrNo`` to store the error code
+    /// @return true if the ``KeyExpr`` instance was successfully removed, false otherwise
     bool undeclare_keyexpr(z::KeyExpr&& keyexpr, ErrNo& error);
+
+    /// @brief Remove ``KeyExpr`` instance from ``Session`` and drop ``KeyExpr`` instance
+    /// @param keyexpr ``KeyExpr`` instance to drop
+    /// @return true if the ``KeyExpr`` instance was successfully removed, false otherwise
     bool undeclare_keyexpr(z::KeyExpr&& keyexpr);
+
+    /// @brief Query data from the matching queryables in the system. Replies are provided through a callback function.
+    /// @param keyexpr ``KeyExprView`` the key expression matching resources to query
+    /// @param parameters the null-terminated string of query parameters
+    /// @param callback ``zenoh::ClosureReply`` callback for process ``Reply``s
+    /// @param options ``GetOptions`` query options
+    /// @param error ``zenoh::ErrNo`` to store the error code
+    /// @return true if the query operation was successful, false otherwise
     bool get(z::KeyExprView keyexpr, const char* parameters, z::ClosureReply&& callback, const z::GetOptions& options,
              ErrNo& error);
+
+    /// @brief Query data from the matching queryables in the system. Replies are provided through a callback function.
+    /// @param keyexpr ``KeyExprView`` the key expression matching resources to query
+    /// @param parameters the null-terminated string of query parameters
+    /// @param callback ``zenoh::ClosureReply`` callback for process ``Reply``s
+    /// @param options ``GetOptions`` query options
+    /// @return true if the query operation was successful, false otherwise
     bool get(z::KeyExprView keyexpr, const char* parameters, z::ClosureReply&& callback, const z::GetOptions& options);
+
+    /// @brief Query data from the matching queryables in the system.
+    /// @param keyexpr ``KeyExprView`` the key expression matching resources to query
+    /// @param parameters the null-terminated string of query parameters
+    /// @param callback ``zenoh::ClosureReply`` callback for process ``Reply``s
+    /// @param error ``zenoh::ErrNo`` to store the error code
+    /// @return true if the query operation was successful, false otherwise
     bool get(z::KeyExprView keyexpr, const char* parameters, z::ClosureReply&& callback, ErrNo& error);
+
+    /// @brief Query data from the matching queryables in the system.
+    /// @param keyexpr ``KeyExprView`` the key expression matching resources to query
+    /// @param parameters the null-terminated string of query parameters
+    /// @param callback ``zenoh::ClosureReply`` callback for process ``Reply``s
+    /// @return true if the query operation was successful, false otherwise
     bool get(z::KeyExprView keyexpr, const char* parameters, z::ClosureReply&& callback);
+
+    /// @brief Publish data to the matching subscribers in the system. Equal to ``Publisher::put``
+    /// @param keyexpr ``KeyExprView`` the key expression to put the data
+    /// @param payload ``BytesView`` the data to publish
+    /// @param options ``PutOptions`` put options
+    /// @param error ``zenoh::ErrNo`` to store the error code
+    /// @return true if the publish operation was successful, false otherwise
     bool put(z::KeyExprView keyexpr, const z::BytesView& payload, const z::PutOptions& options, ErrNo& error);
+
+    /// @brief Publish data to the matching subscribers in the system. Equal to ``Publisher::put``
+    /// @param keyexpr ``KeyExprView`` the key expression to put the data
+    /// @param payload ``BytesView`` the data to publish
+    /// @param options ``PutOptions`` put options
+    /// @return true if the publish operation was successful, false otherwise
     bool put(z::KeyExprView keyexpr, const z::BytesView& payload, const z::PutOptions& options);
+
+    /// @brief Publish data to the matching subscribers in the system. Equal to ``Publisher::put``
+    /// @param keyexpr ``KeyExprView`` the key expression to put the data
+    /// @param payload ``BytesView`` the data to publish
+    /// @param error ``zenoh::ErrNo`` to store the error code
+    /// @return true if the publish operation was successful, false otherwise
     bool put(z::KeyExprView keyexpr, const z::BytesView& payload, ErrNo& error);
+
+    /// @brief Publish data to the matching subscribers in the system. Equal to ``Publisher::put``
+    /// @param keyexpr ``KeyExprView`` the key expression to put the data
+    /// @param payload ``BytesView`` the data to publish
+    /// @return true if the publish operation was successful, false otherwise
     bool put(z::KeyExprView keyexpr, const z::BytesView& payload);
+
+    /// @brief Undeclare a resource. Equal to ``Publisher::delete_resource``
+    /// @param keyexpr ``KeyExprView`` the key expression to delete the resource
+    /// @param options ``DeleteOptions`` delete options
+    /// @param error ``zenoh::ErrNo`` to store the error code
+    /// @return true if the undeclare operation was successful, false otherwise
     bool delete_resource(z::KeyExprView keyexpr, const z::DeleteOptions& options, ErrNo& error);
+
+    /// @brief Undeclare a resource. Equal to ``Publisher::delete_resource``
+    /// @param keyexpr ``KeyExprView`` the key expression to delete the resource
+    /// @param options ``DeleteOptions`` delete options
+    /// @return true if the undeclare operation was successful, false otherwise
     bool delete_resource(z::KeyExprView keyexpr, const z::DeleteOptions& options);
+
+    /// @brief Undeclare a resource. Equal to ``Publisher::delete_resource``
+    /// @param keyexpr ``KeyExprView`` the key expression to delete the resource
+    /// @param error ``zenoh::ErrNo`` to store the error code
+    /// @return true if the undeclare operation was successful, false otherwise
     bool delete_resource(z::KeyExprView keyexpr, ErrNo& error);
+
+    /// @brief Undeclare a resource.
+    /// @param keyexpr ``KeyExprView`` the key expression to delete the resource
+    /// @return true if the undeclare operation was successful, false otherwise
     bool delete_resource(z::KeyExprView keyexpr);
+
 #ifdef __ZENOHCXX_ZENOHC
+    /// @brief Publish data to the matching subscribers in the system. Equal to ``Publisher::put_owned``
+    /// @param keyexpr ``KeyExprView`` the key expression to put the data
+    /// @param payload ``Payload`` the data to publish
+    /// @param options ``PutOptions`` put options
+    /// @param error ``zenoh::ErrNo`` to store the error code
+    /// @return true if the publish operation was successful, false otherwise
+    /// @note zenoh-c only
     bool put_owned(z::KeyExprView keyexpr, z::Payload&& payload, const z::PutOptions& options, ErrNo& error);
+
+    /// @brief Publish data to the matching subscribers in the system. Equal to ``Publisher::put_owned``
+    /// @param keyexpr ``KeyExprView`` the key expression to put the data
+    /// @param payload ``Payload`` the data to publish
+    /// @param options ``PutOptions`` put options
+    /// @return true if the publish operation was successful, false otherwise
+    /// @note zenoh-c only
     bool put_owned(z::KeyExprView keyexpr, z::Payload&& payload, const z::PutOptions& options);
+
+    /// @brief Publish data to the matching subscribers in the system. Equal to ``Publisher::put_owned``
+    /// @param keyexpr ``KeyExprView`` the key expression to put the data
+    /// @param payload ``Payload`` the data to publish
+    /// @param error ``zenoh::ErrNo`` to store the error code
+    /// @return true if the publish operation was successful, false otherwise
+    /// @note zenoh-c only
     bool put_owned(z::KeyExprView keyexpr, z::Payload&& payload, ErrNo& error);
+
+    /// @brief Publish data to the matching subscribers in the system. Equal to ``Publisher::put_owned``
+    /// @param keyexpr ``KeyExprView`` the key expression to put the data
+    /// @param payload ``Payload`` the data to publish
+    /// @return true if the publish operation was successful, false otherwise
+    /// @note zenoh-c only
     bool put_owned(z::KeyExprView keyexpr, z::Payload&& payload);
 #endif
+
+    /// @brief Create a ``Queryable`` object to answer to ``Session::get`` requests
+    /// @param keyexpr ``KeyExprView`` the key expression to match the ``Session::get`` requests
+    /// @param callback ``zenoh::ClosureQuery`` the callback to handle ``Query`` requests
+    /// @param options ``QueryableOptions`` queryable options
+    /// @return a ``Queryable`` object if the declaration was successful, an ``zenoh::ErrorMessage`` otherwise
     std::variant<z::Queryable, ErrorMessage> declare_queryable(z::KeyExprView keyexpr, z::ClosureQuery&& callback,
                                                                const z::QueryableOptions& options);
+
+    /// @brief Create a ``Queryable`` object to answer to ``Session::get`` requests
+    /// @param keyexpr ``KeyExprView`` the key expression to match the ``Session::get`` requests
+    /// @param callback ``zenoh::ClosureQuery`` the callback to handle ``Query`` requests
+    /// @return a ``Queryable`` object if the declaration was successful, an ``zenoh::ErrorMessage`` otherwise
     std::variant<z::Queryable, ErrorMessage> declare_queryable(z::KeyExprView keyexpr, z::ClosureQuery&& callback);
+
+    /// @brief Create a ``Subscriber`` object to receive data from matching ``Publisher`` objects or from
+    /// ``Session::put``, ``Session::delete_resource`` requests
+    /// @param keyexpr ``KeyExprView`` the key expression to match the publishers
+    /// @param callback ``zenoh::ClosureSample`` the callback to handle the received ``Sample`` objects
+    /// @param options ``SubscriberOptions`` subscriber options
+    /// @return a ``Subscriber`` object if the declaration was successful, an ``zenoh::ErrorMessage`` otherwise
     std::variant<z::Subscriber, ErrorMessage> declare_subscriber(z::KeyExprView keyexpr, z::ClosureSample&& callback,
                                                                  const z::SubscriberOptions& options);
+
+    /// @brief Create a ``Subscriber`` object to receive data from matching ``Publisher`` objects or from
+    /// ``Session::put``, ``Session::delete_resource`` requests
+    /// @param keyexpr ``KeyExprView`` the key expression to match the publishers
+    /// @param callback ``zenoh::ClosureSample`` the callback to handle the received ``Sample`` objects
+    /// @return a ``Subscriber`` object if the declaration was successful, an ``zenoh::ErrorMessage`` otherwise
     std::variant<z::Subscriber, ErrorMessage> declare_subscriber(z::KeyExprView keyexpr, z::ClosureSample&& callback);
+
+    /// @brief Create a ``PullSubscriber`` object to receive data from matching ``Publisher`` objects or from
+    /// ``Session::put``, ``Session::delete_resource`` requests
+    /// @param keyexpr ``KeyExprView`` the key expression to match the publishers
+    /// @param callback ``zenoh::ClosureSample`` the callback to handle the received ``Sample`` objects
+    /// @param options ``PullSubscriberOptions`` pull subscriber options
+    /// @return a ``PullSubscriber`` object if the declaration was successful, an ``zenoh::ErrorMessage`` otherwise
     std::variant<z::PullSubscriber, ErrorMessage> declare_pull_subscriber(z::KeyExprView keyexpr,
                                                                           z::ClosureSample&& callback,
                                                                           const z::PullSubscriberOptions& options);
+
+    /// @brief Create a ``PullSubscriber`` object to receive data from matching ``Publisher`` objects or from
+    /// ``Session::put``, ``Session::delete_resource`` requests
+    /// @param keyexpr ``KeyExprView`` the key expression to match the publishers
+    /// @param callback ``zenoh::ClosureSample`` the callback to handle the received ``Sample`` objects
+    /// @return a ``PullSubscriber`` object if the declaration was successful, an ``zenoh::ErrorMessage`` otherwise
     std::variant<z::PullSubscriber, ErrorMessage> declare_pull_subscriber(z::KeyExprView keyexpr,
                                                                           z::ClosureSample&& callback);
+
+    /// @brief Create a ``Publisher`` object to publish data to matching ``Subscriber`` and ``PullSubscriber`` objects
+    /// @param keyexpr ``KeyExprView`` the key expression to match the subscribers
+    /// @param options ``PublisherOptions`` publisher options
+    /// @return a ``Publisher`` object if the declaration was successful, an ``zenoh::ErrorMessage`` otherwise
     std::variant<z::Publisher, ErrorMessage> declare_publisher(z::KeyExprView keyexpr,
                                                                const z::PublisherOptions& options);
+
+    /// @brief Create a ``Publisher`` object to publish data to matching ``Subscriber`` and ``PullSubscriber`` objects
+    /// @param keyexpr ``KeyExprView`` the key expression to match the subscribers
+    /// @return a ``Publisher`` object if the declaration was successful, an ``zenoh::ErrorMessage`` otherwise
     std::variant<z::Publisher, ErrorMessage> declare_publisher(z::KeyExprView keyexpr);
+
+    /// @brief Fetches the Zenoh IDs of all connected routers.
+    /// @param callback ``zenoh::ClosureZid`` the callback to handle the received ``Id`` objects. Callback is
+    /// guaranteed to never be called concurrently, and is guaranteed to be dropped before this function exits.
+    /// @param error ``zenoh::ErrNo`` the error code
+    /// @return true if the operation was successful, false otherwise
     bool info_routers_zid(z::ClosureZid&& callback, ErrNo& error);
+
+    /// @brief Fetches the Zenoh IDs of all connected routers.
+    /// @param callback ``zenoh::ClosureZid`` the callback to handle the received ``Id`` objects. Callback is
+    /// guaranteed to never be called concurrently, and is guaranteed to be dropped before this function exits.
+    /// @return true if the operation was successful, false otherwise
     bool info_routers_zid(z::ClosureZid&& callback);
+
+    /// @brief Fetches the Zenoh IDs of all connected peers.
+    /// @param callback ``zenoh::ClosureZid`` the callback to handle the received ``Id`` objects. Callback is
+    /// guaranteed to never be called concurrently, and is guaranteed to be dropped before this function exits.
+    /// @param error ``zenoh::ErrNo`` the error code
+    /// @return true if the operation was successful, false otherwise
     bool info_peers_zid(z::ClosureZid&& callback, ErrNo& error);
+
+    /// @brief Fetches the Zenoh IDs of all connected peers.
+    /// @param callback ``zenoh::ClosureZid`` the callback to handle the received ``Id`` objects. Callback is
+    /// guaranteed to never be called concurrently, and is guaranteed to be dropped before this function exits.
+    /// @return true if the operation was successful, false otherwise
     bool info_peers_zid(z::ClosureZid&& callback);
 
 #ifdef __ZENOHCXX_ZENOHPICO
+
+    /// @brief Start a separate task to read from the network and process the messages as soon as they are received.
+    /// @return true if the operation was successful, false otherwise
+    /// @note zenoh-pico only
     bool start_read_task();
+
+    /// @brief Start a separate task to read from the network and process the messages as soon as they are received.
+    /// @param error ``zenoh::ErrNo`` the error code
+    /// @return true if the operation was successful, false otherwise
+    /// @note zenoh-pico only
     bool start_read_task(ErrNo& error);
+
+    /// @brief Stop the read task
+    /// @return true if the operation was successful, false otherwise
+    /// @note zenoh-pico only
     bool stop_read_task();
+
+    /// @brief Stop the read task
+    /// @param error ``zenoh::ErrNo`` the error code
+    /// @return true if the operation was successful, false otherwise
+    /// @note zenoh-pico only
     bool stop_read_task(ErrNo& error);
 
+    /// @brief Start a separate task to handle the session lease.  This task will send KeepAlive messages when needed
+    /// and will close the session when the lease is expired. When operating over a multicast transport, it also
+    /// periodically sends the Join messages.
+    /// @return true if the operation was successful, false otherwise
+    /// @note zenoh-pico only
     bool start_lease_task();
+
+    /// @brief Start a separate task to handle the session lease. This task will send KeepAlive messages when needed
+    /// and will close the session when the lease is expired. When operating over a multicast transport, it also
+    /// periodically sends the Join messages.
+    /// @param error ``zenoh::ErrNo`` the error code
+    /// @return true if the operation was successful, false otherwise
+    /// @note zenoh-pico only
     bool start_lease_task(ErrNo& error);
+
+    /// @brief Stop the lease task
+    /// @return true if the operation was successful, false otherwise
+    /// @note zenoh-pico only
     bool stop_lease_task();
+
+    /// @brief Stop the lease task
+    /// @param error ``zenoh::ErrNo`` the error code
+    /// @return true if the operation was successful, false otherwise
+    /// @note zenoh-pico only
     bool stop_lease_task(ErrNo& error);
 
+    /// @brief Triggers a single execution of reading procedure from the network and processes of any received the
+    /// message
+    /// @return true if the operation was successful, false otherwise
+    /// @note zenoh-pico only
     bool read();
+
+    /// @brief Triggers a single execution of reading procedure from the network and processes of any received the
+    /// message
+    /// @param error ``zenoh::ErrNo`` the error code
+    /// @return true if the operation was successful, false otherwise
+    /// @note zenoh-pico only
     bool read(ErrNo& error);
 
+    /// @brief Triggers a single execution of keep alive procedure. It will send KeepAlive messages when needed and
+    /// will close the session when the lease is expired.
+    /// @return true if the leasing procedure was executed successfully, false otherwise.
     bool send_keep_alive();
+
+    /// @brief Triggers a single execution of keep alive procedure. It will send KeepAlive messages when needed and
+    /// will close the session when the lease is expired.
+    /// @param error ``zenoh::ErrNo`` the error code
+    /// @return true if the leasing procedure was executed successfully, false otherwise.
     bool send_keep_alive(ErrNo& error);
 
+    /// @brief Triggers a single execution of join procedure: send the Join message
+    /// @return true if the join procedure was executed successfully, false otherwise.
     bool send_join();
+
+    /// @brief Triggers a single execution of join procedure: send the Join message
+    /// @param error ``zenoh::ErrNo`` the error code
+    /// @return true if the join procedure was executed successfully, false otherwise.
     bool send_join(ErrNo& error);
 #endif
 

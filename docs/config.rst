@@ -17,9 +17,8 @@ Configuration
 
 The classes which defines network configuration parameters
 
-.. doxygenclass:: zenoh::Config
-   :members:
-   :membergroups: Constructors Operators Methods
+Builder functions
+-----------------
 
 .. doxygenfunction:: zenoh::config_peer
 
@@ -28,6 +27,13 @@ The classes which defines network configuration parameters
 .. doxygenfunction:: zenoh::config_client(const z::StrArrayView& peers)
 
 .. doxygenfunction:: zenoh::config_client(const std::initializer_list<const char*>& peers)
+
+Configuration classes
+---------------------
+
+.. doxygenclass:: zenoh::Config
+   :members:
+   :membergroups: Constructors Operators Methods
 
 .. doxygenclass:: zenoh::ScoutingConfig
    :members:

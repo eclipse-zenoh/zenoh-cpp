@@ -26,6 +26,7 @@ API Reference
    generic
    keyexpr
    config
+   session
    entities
    data
    closures

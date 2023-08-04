@@ -19,9 +19,6 @@ Utility functions
 
 .. doxygenfunction:: query_target_default
 
-.. doxygenfunction:: scout(z::ScoutingConfig&& config, z::ClosureHello&& callback, ErrNo& error)
-
-.. doxygenfunction:: scout(z::ScoutingConfig&& config, z::ClosureHello&& callback)
-
+.. doxygenfunction:: as_cstr(z::WhatAmI whatami)
 
 
