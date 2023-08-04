@@ -12,25 +12,11 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-*************
-API Reference
-*************
+Channels
+========
 
-.. toctree::
-   :maxdepth: 10
+The functions allowing to receive data in synchronous mode, without a callback
 
-   namespaces
-   templates 
-   closure_templates
-   enums
-   generic
-   keyexpr
-   config
-   session
-   entities
-   data
-   closures
-   shm
-   options
-   utility
-   channels
+.. doxygenfunction:: reply_fifo_new
+
+.. doxygenfunction:: reply_non_blocking_fifo_new

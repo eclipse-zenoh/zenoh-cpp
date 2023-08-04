@@ -2075,42 +2075,43 @@ class Session : public Owned<::z_owned_session_t> {
 #ifdef __ZENOHCXX_ZENOHC
 
 /// @brief Send data function returned by ``zenoh::reply_fifo_new`` and ``zenoh::reply_non_blocking_fifo_new``
+/// @note zenoh-c only
 class ClosureReplyChannelSend : public ClosureMoveParam<::z_owned_closure_reply_t, ::z_owned_reply_t, z::Reply> {
    public:
     using ClosureMoveParam::ClosureMoveParam;
 };
 
 /// @brief Receive data function returned by ``zenoh::reply_fifo_new`` and ``zenoh::reply_non_blocking_fifo_new``
+/// @note zenoh-c only
 class ClosureReplyChannelRecv
     : public ClosureMoveParam<::z_owned_reply_channel_closure_t, ::z_owned_reply_t, z::Reply> {
    public:
     using ClosureMoveParam::ClosureMoveParam;
 };
 
-//
-// Creates a new blocking fifo channel, returned as a pair of closures.
-//
-// The `send` end should be passed as callback to a `z_get` call.
-//
-// The `recv` end is a synchronous closure to be called from user code. It will block until either a Reply is available,
-// which it will then return; or until the `send` closure is dropped and all replies have been consumed,
-// at which point it will return an invalidated Reply and so will further calls.
-//
-
+/// @brief Create a new blocking fifo channel
+/// @param bound the maximum number of replies that can be stored in the channel. 0 means unbounded
+/// @return a pair of closures: ``ClosureReplyChannelSend`` and ``ClosureReplyChannelRecv``
+/// ``ClosureReplyChannelSend`` should be passed as callback to a ``Session::get`` call
+/// ``ClosureReplyChannelRecv`` is a synchronous closure to be called from user code. It will block until either a
+/// ``zenoh::Reply`` is available, which it will then return; or until the ``ClosureReplyChannelSend`` closure is
+/// dropped and all replies have been consumed, at which point it will return an invalidated ``zenoh::Reply`` and so
+/// will further calls.
+/// @note zenoh-c only
 inline std::pair<z::ClosureReplyChannelSend, z::ClosureReplyChannelRecv> reply_fifo_new(uintptr_t bound) {
     auto channel = ::zc_reply_fifo_new(bound);
     return {std::move(channel.send), std::move(channel.recv)};
 }
 
-//
-// Creates a new non-blocking fifo channel, returned as a pair of closures.
-//
-// The `send` end should be passed as callback to a `z_get` call.
-//
-// The `recv` end is a synchronous closure to be called from user code. It will block until either a Reply is available,
-// which it will then return; or until the `send` closure is dropped and all replies have been consumed,
-// at which point it will return an invalidated Reply and so will further calls.
-//
+/// @brief Create a new non-blocking fifo channel
+/// @param bound the maximum number of replies that can be stored in the channel
+/// @return a pair of closures: ``ClosureReplyChannelSend`` and ``ClosureReplyChannelRecv``
+/// ``ClosureReplyChannelSend`` should be passed as callback to a ``Session::get`` call
+/// ``ClosureReplyChannelRecv`` is a synchronous closure to be called from user code. It will block until either a
+/// ``zenoh::Reply`` is available, which it will then return; or until the ``ClosureReplyChannelSend`` closure is
+/// dropped and all replies have been consumed, at which point it will return an invalidated ``zenoh::Reply`` and so
+/// will further calls.
+/// @note zenoh-c only
 inline std::pair<z::ClosureReplyChannelSend, z::ClosureReplyChannelRecv> reply_non_blocking_fifo_new(uintptr_t bound) {
     auto channel = ::zc_reply_non_blocking_fifo_new(bound);
     return {std::move(channel.send), std::move(channel.recv)};
