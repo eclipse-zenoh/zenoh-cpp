@@ -35,40 +35,40 @@ These templates allows to construct closures from any callable C++ object:
 
 - function pointer of type ``void (func*)(const ZCPP_PARAM&)`` or ``void (func*)(ZCPP_PARAM&&)``
 
-Example:
+   Example:
 
 
-.. code-block:: c++
+   .. code-block:: c++
 
-   void on_query(const Query&) { ... }
+      void on_query(const Query&) { ... }
 
 
-.. code-block:: c++
+   .. code-block:: c++
 
-   session.declare_queryable("foo/bar", on_query);
+      session.declare_queryable("foo/bar", on_query);
 
 - any object which can be called with corresponding parameter, e.g. lambda or custom object. If object is passed by
   move, closure will take ownership of it, otherwise it will store reference to it.
 
-Example:
+   Example:
 
-.. code-block:: c++
+   .. code-block:: c++
 
-   session.declare_queryable("foo/bar", [](const Query&) { ... });
+      session.declare_queryable("foo/bar", [](const Query&) { ... });
 
-or
+   or
 
-.. code-block:: c++
+   .. code-block:: c++
 
-   struct OnQuery {
-      void operator()(const Query&) { ... }
-      ~OnQuery() { ... }
-   };
+      struct OnQuery {
+         void operator()(const Query&) { ... }
+         ~OnQuery() { ... }
+      };
 
-.. code-block:: c++
+   .. code-block:: c++
 
-   OnQuery on_query;
-   session.declare_queryable("foo/bar", std::move(on_query));
+      OnQuery on_query;
+      session.declare_queryable("foo/bar", std::move(on_query));
 
 
 .. doxygenclass:: zenohcxx::ClosureConstRefParam

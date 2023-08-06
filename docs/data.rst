@@ -15,7 +15,7 @@
 Data
 ====
 
-The classes representing the data which is sent and received through the network
+The classes representing the data which is passed to the :doc:`closures`
 
 .. doxygenclass:: zenoh::Hello
    :members:

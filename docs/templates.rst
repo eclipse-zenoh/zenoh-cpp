@@ -24,9 +24,9 @@ without taking ownership.
 Owned types are the types which own resources. They implements move semantics and
 cannot be copied. They releases their resources when they are destroyed.
 
-This separation follows the logic of the zenoh-c API. Owned zenoh-cpp types are the wrappers
-for the corresponding `::z_owned_X_t` types. Copyable zenoh-cpp types are the wrappers for the
-non-owned `::z_X_t` types.
+This separation follows the logic of the `zenoh-c`_ and `zenoh-pico`_ API. Owned zenoh-cpp types are the wrappers
+for the corresponding ``::z_owned_X_t`` types. Copyable zenoh-cpp types are the wrappers for the
+non-owned ``::z_X_t`` types.
 
 .. doxygenstruct:: zenohcxx::Copyable
    :members:
@@ -35,3 +35,6 @@ non-owned `::z_X_t` types.
 .. doxygenclass:: zenohcxx::Owned
    :members:
    :membergroups: Constructors Operators Methods
+
+.. _zenoh-c: https://zenoh-c.readthedocs.io
+.. _zenoh-pico: https://zenoh-pico.readthedocs.io 

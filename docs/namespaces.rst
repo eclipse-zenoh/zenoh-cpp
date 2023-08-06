@@ -42,7 +42,7 @@ the corrresponding namespace to ``zenoh``:
    #include "zenoh.hxx"
    using namespace zenoh;
 
-This can be useful if it's necessary compile the same source for both `zenoh-c`_ and `zenoh-pico`_.
+This can be useful if it's necessary to compile the same source for both `zenoh-c`_ and `zenoh-pico`_.
 
 .. index:: z:: namespace
 

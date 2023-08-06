@@ -201,7 +201,7 @@ namespace zenoh {
 inline const char* as_cstr(z::WhatAmI whatami);
 
 #ifdef __ZENOHCXX_ZENOHC
-/// @brief Initializes logger (zenoh-c library only)
+/// @brief Initializes logger
 ///
 /// User may set environment variable RUST_LOG to values *debug* | *info* | *warn* | *error* to show diagnostic output
 ///

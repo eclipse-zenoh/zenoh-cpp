@@ -15,7 +15,8 @@
 Generic types
 =============
 
-The classes representing data buffers, data encoding, timestamp, etc. There types are frequently used by other parts of the API
+The classes representing data buffers, data encoding, timestamp, etc. 
+There types are frequently used by other parts of the API.
 
 .. doxygenclass:: zenoh::BytesView
    :members:

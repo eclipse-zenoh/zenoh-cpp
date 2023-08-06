@@ -15,6 +15,10 @@
 Key Expressions
 ===============
 
+Classes implementing key expressions. See `zenoh abstractions`_ for details.
+
+.. _`zenoh abstractions`: https://zenoh.io/docs/manual/abstractions/
+
 .. doxygenfunction:: keyexpr_canonize(std::string& s, ErrNo& error)
 
 .. doxygenfunction:: keyexpr_canonize(std::string& s)

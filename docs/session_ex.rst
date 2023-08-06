@@ -15,11 +15,8 @@
 Session
 =======
 
-The :cpp:class:`zenoh::Session` is the main zenoh object. The instance of the session reprsents a single 
-zenoh node in the network.
-
-The session is created using the :cpp:func:`zenoh::open` function, consuming the configuration
-object :cpp:class:`zenoh::Config`.
+The zenoh session is created using the :cpp:func:`zenoh::open` function, 
+consuming the configuration object :cpp:class:`zenoh::Config`.
 
 .. code-block:: c++
 
@@ -37,24 +34,3 @@ object :cpp:class:`zenoh::Config`.
          std::cout << "Received an error :" << e.as_string_view() << "\n";
       }
    }
-
-Builder function
-----------------
-
-.. doxygenfunction:: zenoh::open
-
-Utility functions
------------------
-
-.. doxygenfunction:: init_logger
-
-.. doxygenfunction:: scout(z::ScoutingConfig&& config, z::ClosureHello&& callback, ErrNo& error)
-
-.. doxygenfunction:: scout(z::ScoutingConfig&& config, z::ClosureHello&& callback)
-   
-Session class
--------------
-
-.. doxygenclass:: zenoh::Session
-   :members:
-   :membergroups: Constructors Operators Methods

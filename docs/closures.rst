@@ -16,7 +16,7 @@
 Closures
 ========
 
-The C++ wrappers for callbacks for zenoh classes.  See :doc:`closure_templates` for details of closures API
+The C++ wrappers for zenoh callbacks.  See :doc:`closure_templates` for details of closures API
 
 .. doxygentypedef:: zenoh::ClosureReply
 

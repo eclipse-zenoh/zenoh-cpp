@@ -15,3 +15,10 @@
 ********
 Examples
 ********
+
+.. toctree::
+    :maxdepth: 10
+
+    session_ex
+    pubsub
+    queryable

@@ -21,7 +21,7 @@ release = '0.10.0.0'
 # -- General configuration ---------------------------------------------------
 master_doc = 'index'
 html_theme = 'sphinx_rtd_theme'
-cpp_index_common_prefix = ['zenoh::', 'zenohcxx::', 'zenohc::', 'zenohpico::']
+cpp_index_common_prefix = ['z::', 'zenoh::', 'zenohcxx::', 'zenohc::', 'zenohpico::']
 
 extensions = [ "breathe" ]
 
