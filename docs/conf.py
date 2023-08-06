@@ -12,6 +12,13 @@
 #   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 #
 
+# -- Run doxygen if executing on readthedocs -------------------------------
+# see https://breathe.readthedocs.io/en/latest/readthedocs.html
+import subprocess, os
+read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
+if read_the_docs_build:
+     subprocess.call('doxygen', shell=True)
+
 # -- Project information -----------------------------------------------------
 project = 'zenoh-cpp'
 copyright = '2017, 2023 ZettaScale Technology'
