@@ -28,7 +28,6 @@ This separation follows the logic of the zenoh-c API. Owned zenoh-cpp types are 
 for the corresponding `::z_owned_X_t` types. Copyable zenoh-cpp types are the wrappers for the
 non-owned `::z_X_t` types.
 
-
 .. doxygenstruct:: zenohcxx::Copyable
    :members:
    :membergroups: Constructors Operators Methods

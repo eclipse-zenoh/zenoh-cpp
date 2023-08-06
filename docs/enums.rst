@@ -35,9 +35,11 @@ Enum types are C++ - style typedefs for corrresponding enums of `zenoh-c`_ / `ze
 
 .. doxygentypedef:: QueryTarget
 
-.. doxygentypedef:: WhatAmI
+.. doxygenfunction:: query_target_default
 
-.. doxygenenum:: WhatAmI
+.. doxygentypedef:: zenohpico::WhatAmI
+
+.. doxygenenum:: zenohc::WhatAmI
 
 .. doxygenfunction:: as_cstr
 

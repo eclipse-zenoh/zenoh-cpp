@@ -27,6 +27,7 @@ The zenoh-c library is C interface to main implementation of zenoh on Rust. So d
 
     examples
     api
+    genindex
 
 .. _zenoh.io: https://zenoh.io
 .. _zenoh: https://docs.rs/zenoh

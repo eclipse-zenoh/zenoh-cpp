@@ -25,13 +25,12 @@ Builder function
 Utility functions
 -----------------
 
-These functions allows to search other zenoh nodes in the network
+.. doxygenfunction:: init_logger
 
 .. doxygenfunction:: scout(z::ScoutingConfig&& config, z::ClosureHello&& callback, ErrNo& error)
 
 .. doxygenfunction:: scout(z::ScoutingConfig&& config, z::ClosureHello&& callback)
-
-
+   
 Session class
 -------------
 

@@ -1,7 +1,7 @@
 #Look for an executable called sphinx-build
 find_program(SPHINX_EXECUTABLE
-             NAMES sphinx-build
-             DOC "Path to sphinx-build executable")
+            NAMES sphinx-build
+            DOC "Path to sphinx-build executable")
 
 include(FindPackageHandleStandardArgs)
 

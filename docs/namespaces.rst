@@ -14,6 +14,8 @@
 
 Headers and namespaces
 ======================
+.. index:: zenohc:: namespace
+.. index:: zenohpico:: namespace
 
 Zenoh C++ API is available through one of the following headers: "zenohc.hxx", "zenohpico.hxx" and "zenoh.hxx".
 The first two defines C++ wrappers for C libraries `zenoh-c`_ and `zenoh-pico`_ respectively in namespaces ``zenohc`` and ``zenohpico``:
@@ -28,6 +30,8 @@ The first two defines C++ wrappers for C libraries `zenoh-c`_ and `zenoh-pico`_ 
    #include "zenohpico.hxx"
    using namespace zenohpico;
 
+.. index:: zenoh: namespace
+
 The header "zenoh.hxx" selects between one of headers above depending on the macro ``ZENOHCXX_ZENOHC`` or ``ZENOHCXX_ZENOHPICO``. It also aliases
 the corrresponding namespace to ``zenoh``:
 
@@ -39,6 +43,12 @@ the corrresponding namespace to ``zenoh``:
    using namespace zenoh;
 
 This can be useful if it's necessary compile the same source for both `zenoh-c`_ and `zenoh-pico`_.
+
+.. index:: z:: namespace
+
+There is also ``z::`` namespace which appears in the method and function prototypes. 
+It is an internal alias for the current namespace (``zenohc`` or ``zenohpico``), 
+it's never used in the user code.
 
 In the documentation below, we will use the ``zenoh`` namespace.
 

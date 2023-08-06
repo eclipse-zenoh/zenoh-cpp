@@ -32,5 +32,4 @@ API Reference
    closures
    shm
    options
-   utility
    channels

@@ -142,6 +142,12 @@ typedef ::z_query_target_t QueryTarget;
 inline z::QueryTarget query_target_default();
 
 #ifdef __ZENOHCXX_ZENOHPICO
+
+#ifdef __DOXYGEN__
+}
+namespace zenohpico {
+#endif
+
 /// Whatami values, defined as a bitmask
 ///
 /// Values:
@@ -153,8 +159,21 @@ inline z::QueryTarget query_target_default();
 ///
 /// @note zenoh-pico implementation
 typedef ::z_whatami_t WhatAmI;
+
+#ifdef __DOXYGEN__
+}
+namespace zenoh {
 #endif
+
+#endif
+
 #ifdef __ZENOHCXX_ZENOHC
+
+#ifdef __DOXYGEN__
+}
+namespace zenohc {
+#endif
+
 /// @brief Whatami values, defined as a bitmask
 ///
 /// See also ``zenoh::as_cstr``
@@ -167,10 +186,17 @@ enum WhatAmI {
     /// Bitmask to filter for Zenoh clients
     Z_WHATAMI_CLIENT = 1 << 2
 };
+
+#ifdef __DOXYGEN__
+}
+namespace zenoh {
 #endif
 
-/// @brief Returns a string representation of the given ``zenoh::WhatAmI`` value.
-/// @param whatami the ``zenoh::WhatAmI`` value
+#endif
+
+/// @brief Returns a string representation of the given ``zenohc::WhatAmI``
+/// (or the ``zenohpico::WhatAmI``) value.
+/// @param whatami the ``zenohc::WhatAmI`` / ``zenohpico::WhatAmI`` value
 /// @return a string representation of the given value
 inline const char* as_cstr(z::WhatAmI whatami);
 
@@ -204,8 +230,7 @@ struct _StrArrayView : Copyable<Z_STR_ARRAY_T> {
     /// Constructs an instance from an constant array of ``const char*``
     /// @param v the array of ``const char*``
     /// @param len the length of the array
-    _StrArrayView(const char* const* v, size_t len)
-        : Copyable<Z_STR_ARRAY_T>({len, const_cast<VALTYPE>(v)}) {}
+    _StrArrayView(const char* const* v, size_t len) : Copyable<Z_STR_ARRAY_T>({len, const_cast<VALTYPE>(v)}) {}
 
     /// @name Operators
 
@@ -245,16 +270,13 @@ class BytesView : public Copyable<::z_bytes_t> {
     /// Constructs an instance from a ``std::vector`` of type ``T``
     /// @param v the ``std::vector`` of type ``T``
     template <typename T>
-    BytesView(const std::vector<T>& v)
-        : Copyable({v.size() * sizeof(T), reinterpret_cast<const uint8_t*>(&v[0])}) {}
+    BytesView(const std::vector<T>& v) : Copyable({v.size() * sizeof(T), reinterpret_cast<const uint8_t*>(&v[0])}) {}
     /// Constructs an instance from a ``std::string_view``
     /// @param s the ``std::string_view``
-    BytesView(const std::string_view& s)
-        : Copyable({s.length(), reinterpret_cast<const uint8_t*>(s.data())}) {}
+    BytesView(const std::string_view& s) : Copyable({s.length(), reinterpret_cast<const uint8_t*>(s.data())}) {}
     /// Constructs an instance from a ``std::string``
     /// @param s the ``std::string``
-    BytesView(const std::string& s)
-        : Copyable({s.length(), reinterpret_cast<const uint8_t*>(s.data())}) {}
+    BytesView(const std::string& s) : Copyable({s.length(), reinterpret_cast<const uint8_t*>(s.data())}) {}
 
     /// @name Operators
 
@@ -705,8 +727,7 @@ struct Value : public Copyable<::z_value_t> {
     /// @brief Create a new value with the given payload and encoding
     /// @param payload ``BytesView`` object
     /// @param encoding ``Encoding`` value
-    Value(const z::BytesView& payload, const z::Encoding& encoding)
-        : Copyable({payload, encoding}) {}
+    Value(const z::BytesView& payload, const z::Encoding& encoding) : Copyable({payload, encoding}) {}
 
     /// @brief Create a new value with the default encoding
     /// @param payload ``BytesView`` object
