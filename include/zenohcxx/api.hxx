@@ -37,7 +37,7 @@ class Session;
 class Value;
 
 /// Text error message returned in ``std::variant<T, ErrorMessage>`` retrun types.
-/// The messge is a sting represented as ``zenoh::Value`` object
+/// The message is a sting represented as ``zenoh::Value`` object
 typedef z::Value ErrorMessage;
 
 /// Numeric error code value. This is a value < -1 returned by zenoh-c functions
