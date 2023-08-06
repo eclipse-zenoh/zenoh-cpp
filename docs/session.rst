@@ -18,26 +18,6 @@ Session
 The :cpp:class:`zenoh::Session` is the main zenoh object. The instance of the session reprsents a single 
 zenoh node in the network.
 
-The session is created using the :cpp:func:`zenoh::open` function, consuming the configuration
-object :cpp:class:`zenoh::Config`.
-
-.. code-block:: c++
-
-   #include "zenoh.hxx"
-   using namespace zenoh;
-
-   int main(int argc, char **argv) {
-      try {
-         Config config;
-         // take Session from std::variant
-         auto session = std::get<Session>(open(std::move(config)));
-         session.put("demo/example/simple", "Simple!");
-      } catch (ErrorMessage e) {
-         // Exception comes from ``std::get``, the zenoh-cpp itself does not throw any exception
-         std::cout << "Received an error :" << e.as_string_view() << "\n";
-      }
-   }
-
 Builder function
 ----------------
 
@@ -48,9 +28,9 @@ Utility functions
 
 .. doxygenfunction:: init_logger
 
-.. doxygenfunction:: scout(z::ScoutingConfig&& config, z::ClosureHello&& callback, ErrNo& error)
+.. doxygenfunction:: scout(zenoh::ScoutingConfig&& config, zenoh::ClosureHello&& callback, ErrNo& error)
 
-.. doxygenfunction:: scout(z::ScoutingConfig&& config, z::ClosureHello&& callback)
+.. doxygenfunction:: scout(zenoh::ScoutingConfig&& config, zenoh::ClosureHello&& callback)
    
 Session class
 -------------

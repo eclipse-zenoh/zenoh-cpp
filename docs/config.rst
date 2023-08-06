@@ -24,7 +24,7 @@ Builder functions
 
 .. doxygenfunction:: zenoh::config_from_file
 
-.. doxygenfunction:: zenoh::config_client(const z::StrArrayView& peers)
+.. doxygenfunction:: zenoh::config_client(const zenoh::StrArrayView& peers)
 
 .. doxygenfunction:: zenoh::config_client(const std::initializer_list<const char*>& peers)
 

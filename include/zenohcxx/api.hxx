@@ -31,7 +31,6 @@
 // For real code namespaces are defined in the zenohc.hxx and zenohpico.hxx files.
 namespace zenoh {
 using namespace zenohcxx;
-namespace z = zenohc;
 #endif
 
 class Session;

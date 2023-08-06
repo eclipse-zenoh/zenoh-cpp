@@ -46,7 +46,7 @@ This can be useful if it's necessary to compile the same source for both `zenoh-
 
 .. index:: z:: namespace
 
-There is also ``z::`` namespace which appears in the method and function prototypes. 
+There is also ``z::`` namespace which appears in the method and function prototypes in source files. 
 It is an internal alias for the current namespace (``zenohc`` or ``zenohpico``), 
 it's never used in the user code.
 

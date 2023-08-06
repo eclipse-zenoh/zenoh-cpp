@@ -40,7 +40,7 @@ There types are frequently used by other parts of the API.
    :members:
    :membergroups: Constructors Operators Methods
 
-.. doxygenfunction:: operator<<(std::ostream& os, const z::Id& id)
+.. doxygenfunction:: operator<<(std::ostream& os, const zenoh::Id& id)
 
 .. doxygenstruct:: zenoh::Timestamp
    :members:

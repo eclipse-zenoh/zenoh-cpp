@@ -15,7 +15,8 @@
 Base templates
 ==============
 
-There are two kinds of classes in zenoh-cpp: Copyable and Owned.
+There are two kinds of classes in zenoh-cpp: :cpp:class:`zenohcxx::Copyable`
+and :cpp:class:`zenohcxx::Owned`.
 
 Copyable types are the types which can be freely copied and passed by value.
 They either don't reference external resources or they reference resources 
@@ -25,8 +26,8 @@ Owned types are the types which own resources. They implements move semantics an
 cannot be copied. They releases their resources when they are destroyed.
 
 This separation follows the logic of the `zenoh-c`_ and `zenoh-pico`_ API. Owned zenoh-cpp types are the wrappers
-for the corresponding ``::z_owned_X_t`` types. Copyable zenoh-cpp types are the wrappers for the
-non-owned ``::z_X_t`` types.
+for the corresponding ``::z_owned_XXX_t`` types. Copyable zenoh-cpp types are the wrappers for the
+non-owned ``::z_XXX_t`` types.
 
 .. doxygenstruct:: zenohcxx::Copyable
    :members:
