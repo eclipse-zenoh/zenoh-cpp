@@ -116,7 +116,7 @@ class Owned {
     ZC_OWNED_TYPE _0;
 };
 
-/// @brief Base type for C++ wrappers of Zenoh closures with owned parameter
+/// @brief Base type for C++ wrappers of Zenoh closures with const pointer parameter
 /// @tparam ZC_CLOSURE_TYPE - zenoh-c closure type ``::z_owned_closure_XXX_t``
 /// @tparam ZC_PARAM - zenoh-c parameter type which is passed to closure ``::z_owned_XXX_t``
 /// @tparam ZCPP_PARAM - zenoh-cpp parameter type which wraps zenoh-c parameter type (e.g. ``Reply`` for
@@ -143,7 +143,8 @@ class ClosureConstRefParam : public Owned<ZC_CLOSURE_TYPE> {
     /// @brief Construct closure from the data handler and the drop handler
     /// @param on_call data handler - any object with operator()(const ZCPP_PARAM&) defined
     /// @param on_drop drop handler - any object with operator()() defined
-    //
+    ///
+    ///
     /// Drop handler is convenient when it's necessary to catch dropping of the closure costructed from function
     /// pointer, object lvalue reference or lambda. If the closure holds the user's object, the additional drop handler
     /// is probably excessive. The cleanup in this case may be done in the object's destructor.
@@ -193,7 +194,7 @@ class ClosureConstRefParam : public Owned<ZC_CLOSURE_TYPE> {
     }
 };
 
-/// @brief Base type for C++ wrappers of Zenoh closures with const pointer parameter
+/// @brief Base type for C++ wrappers of Zenoh closures with owned parameter
 /// @tparam ZC_CLOSURE_TYPE - zenoh-c closure type ``::z_owned_closure_XXX_t``
 /// @tparam ZC_PARAM - zenoh-c parameter type which is passed to closure ``::z_XXX_t``
 /// @tparam ZCPP_PARAM - zenoh-cpp parameter type which wraps zenoh-c parameter type (e.g. ``Sample`` for
@@ -223,6 +224,7 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
     /// @param on_call data handler - any object with ``operator()(const ZCPP_PARAM&)`` or
     /// ``operator()(ZCPP_PARAM&&)`` defined
     /// @param on_drop drop handler - any object with ``operator()()`` defined
+    ///
     ///
     /// Drop handler is convenient when it's necessary to catch dropping of the closure costructed from function
     /// pointer, object lvalue reference or lambda. If the closure holds the user's object, the additional drop handler

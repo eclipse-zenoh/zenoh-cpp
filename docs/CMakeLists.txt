@@ -23,7 +23,9 @@ endif()
 #
 
 set(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/docs/doxygen)
-set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/html/index.html)
+set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/xml/index.xml)
+
+message(STATUS "Doxygen output dir: ${DOXYGEN_OUTPUT_DIR}")
 
 # Input files are configured in "Doxyfile" with relative paths:
 # INPUT = ../include/zenohcxx/base.hxx ../include/zenohcxx/api.hxx
@@ -43,7 +45,7 @@ ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile
 file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR})
 file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR}/../include)
 
-add_custom_target(Doxygen ALL DEPENDS ${DOXYGEN_INDEX_FILE})
+add_custom_target(Doxygen)
 
 add_custom_command(TARGET Doxygen PRE_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -55,7 +57,8 @@ add_custom_command(TARGET Doxygen PRE_BUILD
                    ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile
                    ${DOXYGEN_OUTPUT_DIR}/Doxyfile)
 
-add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
+add_custom_command(TARGET Doxygen POST_BUILD
+                   BYPRODUCTS ${DOXYGEN_INDEX_FILE}
                    DEPENDS ${DOXYGEN_INPUT_FILES}
                    WORKING_DIRECTORY ${DOXYGEN_OUTPUT_DIR}
                    COMMAND ${DOXYGEN_EXECUTABLE}
@@ -69,7 +72,7 @@ set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
 set(SPHINX_BUILD ${CMAKE_CURRENT_BINARY_DIR}/docs/sphinx)
 
 file (GLOB_RECURSE RST_FILES *.rst)
-add_custom_target(Sphinx ALL
+add_custom_target(Sphinx
                   DEPENDS conf.py ${RST_FILES} ${DOXYGEN_INDEX_FILE}
                   COMMAND ${SPHINX_EXECUTABLE} -b html
                   # Tell Breathe where to find the Doxygen output
