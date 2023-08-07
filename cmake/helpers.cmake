@@ -19,6 +19,12 @@
 #
 
 #
+# Allow to find cmake modules in this directory
+#
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}" ${CMAKE_MODULE_PATH})
+
+
+#
 # Show VARIABLE = value on configuration stage
 #
 macro(status_print var)
