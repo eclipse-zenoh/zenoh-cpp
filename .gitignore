@@ -35,8 +35,9 @@ build/*
 .vscode/*
 target/*
 Testing/*
-docs/_build
-docs/.DS_Store
+docs/xml
+docs/html
+docs/latex
 .DS_Store
 
 zenohcpp.pc

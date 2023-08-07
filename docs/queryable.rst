@@ -16,7 +16,7 @@ Queryable
 =========
 
 The data query pattern is implemented by the 
-:cpp:class:`zenoh::Queryable` and :cpp::func:`zenoh::Session::get`.
+:cpp:class:`zenoh::Queryable` and :cpp:func:`zenoh::Session::get`.
 
 Queryable example:
 

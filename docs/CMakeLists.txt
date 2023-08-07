@@ -25,7 +25,7 @@ endif()
 set(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/docs/doxygen)
 set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/html/index.html)
 
-# Input file files are configured in "Doxyfile" with relative paths:
+# Input files are configured in "Doxyfile" with relative paths:
 # INPUT = ../include/zenohcxx/base.hxx ../include/zenohcxx/api.hxx
 # So on adding/changing header files, they should be added both here and in "Doxyfile"
 #
