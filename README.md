@@ -186,7 +186,9 @@ Below are the steps to include [zenoh-cpp] into CMake project. See also [example
 
 ### Documentation
 
-The library API is not documented yet, but the [api.hxx] file contains commented class definitions and can be used for reference.
+The documentation is on [zenoh-cpp.readthedocs.io]. 
+You may also refer directly to [base.hxx] and [api.hxx] which contains all the definitions.
+Instruction how to build documentation locally is at [docs/README.md].
 
 ### Conventions
 
@@ -227,18 +229,18 @@ Classes which protects corresponding so-called `owned` structures from copying, 
 It's classes representing [zenoh-c] and [zenoh-pico] callback structures:
 ```C++
 typedef ClosureMoveParam<::z_owned_closure_reply_t, ::z_owned_reply_t, Reply> ClosureReply;
-typedef ClosureConstPtrParam<::z_owned_closure_query_t, ::z_query_t, Query> ClosureQuery;
+typedef ClosureConstRefParam<::z_owned_closure_query_t, ::z_query_t, Query> ClosureQuery;
 ```
 
 They allows to wrap C++ invocable objects (fuctions, lambdas, classes with operator() overloaded) and pass them as callbacks to zenoh.
 
-The `ClosureConstPtrParam` types accepts objects, invocable with `const Foo*` parameter. For example
+The `ClosureConstRefParam` types accepts objects, invocable with `const Foo&` parameter. For example
 ```C++
-session.declare_subscriber("foo/bar", [](const Sample *sample) { ... });
+session.declare_subscriber("foo/bar", [](const Sample& sample) { ... });
 ```
 or
 ```C++
-void on_query(const Query* query) { ... };
+void on_query(const Query& query) { ... };
 ...
 auto queryable = std::get<Queryable>(session.declare_queryable("foo/bar", on_query);
 ```
@@ -251,36 +253,6 @@ session.get("foo/bar", "", [](Reply& reply) { ... });
 session.get("foo/bar", "", [](Reply&& reply) { ... });
 ```
 
-The `nullptr` or invalid value (`value.check() == false`) are passed to callback before the callback is dropped.
-This may be changed in nearest future (see below).
-
-### Known API issues and restrictions:
-
-- Objects created by `Session` keeps reference to the stack instance of `Session` object. This means that C++ move semantics
-doesn't supported correctly. See the code below (which is copied with a few changes from [here](examples/simple/universal/z_simple.cxx)).
-**This is planned to be fixed in next release, on [zenoh-c] or [zenoh] level**
-   ```C++
-   Config config;
-   Session s = std::get<Session>(open(std::move(config)));
-   Session s1 = std::move(s); // That's ok
-   Publisher p = std::get<Publisher>(s1.declare_publisher("demo/example/simple"));
-   Session s_moved = std::move(s1); // DON'T DO THAT, `p` holds `&s1` reference when zenoh-c is used
-   p.put("Value"); // CRASH!!!
-   ```
-
-- There is a special meaning for `null` parameter of closures: drop notification. So the programmer is responsible to test parameter for
-validity on each call.  It doesn't follow the logic of original [zenoh] API and modern C++ practice, discouraging raw pointer usage.
-So **in the next release the `const T*` closure prototype supposedly will be changed to `const T&`**.
-```C++
-session.declare_subscriber("foo/bar", [](const Sample *sample) {
-   if (sample) {
-      ... // process it
-   } else {
-      ... // cleanup
-   }
-});
-```
-
 [rust-lang]: https://www.rust-lang.org
 [zenoh]: https://github.com/eclipse-zenoh/zenoh
 [zenoh-c]: https://github.com/eclipse-zenoh/zenoh-c
@@ -290,6 +262,9 @@ session.declare_subscriber("foo/bar", [](const Sample *sample) {
 [zenohc.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohc.hxx
 [zenohpico.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohpico.hxx
 [api.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohcxx/api.hxx
+[base.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohcxx/base.hxx
 [add_subdirectory]: https://cmake.org/cmake/help/latest/command/add_subdirectory.html
 [find_package]: https://cmake.org/cmake/help/latest/command/find_package.html
 [FetchContent]: https://cmake.org/cmake/help/latest/module/FetchContent.html
+[zenoh-cpp.readthedocs.io]: https://zenoh-cpp.readthedocs.io
+[docs/README.md]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/docs/README.md
