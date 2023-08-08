@@ -33,7 +33,8 @@ the output should be
 -- Found Sphinx: /home/username/.local/bin/sphinx-build  
 ...
 ```
-or something like this. If doxygen or sphinx not found, check first step
+or something like this. If doxygen or sphinx are not found, check first step. If everything is ok,
+build the documentation with this command:
 
 ```
 cmake --build build --target docs

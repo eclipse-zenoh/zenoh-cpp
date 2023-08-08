@@ -81,7 +81,7 @@ add_custom_target(Sphinx
                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   COMMENT "Generating documentation with Sphinx")
 
-add_custom_target(docs ALL DEPENDS Sphinx)
+add_custom_target(docs DEPENDS Sphinx)
 
 add_custom_command(TARGET docs POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan
