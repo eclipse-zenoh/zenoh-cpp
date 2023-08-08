@@ -186,7 +186,7 @@ Below are the steps to include [zenoh-cpp] into CMake project. See also [example
 
 ### Documentation
 
-The documentation is on [zenoh-cpp.readthdocs.io]. 
+The documentation is on [zenoh-cpp.readthedocs.io]. 
 You may also refer directly to [base.hxx] and [api.hxx] which contains all the definitions.
 Instruction how to build documentation locally is at [docs/README.md].
 
