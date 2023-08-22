@@ -29,27 +29,23 @@ class CustomerClass {
     CustomerClass(const CustomerClass&) = delete;
     CustomerClass& operator=(const CustomerClass&) = delete;
     CustomerClass& operator=(CustomerClass&&) = delete;
-
-    CustomerClass(const KeyExprView& keyexpr) : session(nullptr), pub(nullptr) {
-        Config config;
-        Session s = std::get<Session>(open(std::move(config)));
-        session = std::move(s);
-        // Publisher holds a reference to the Session, so after creating the publisher the session should
-        // not be moved anymore (as well as the whole CustomerClass)
-        Publisher p = std::get<Publisher>(session.declare_publisher(keyexpr));
-        pub = std::move(p);
+    // This example also demomstrates the usage of nullptr constructor if it's necessary to postpone
+    // initialization of the member variable
+    CustomerClass(Session& session, const KeyExprView& keyexpr) : pub(nullptr) {
+        pub = std::get<Publisher>(session.declare_publisher(keyexpr));
     }
 
     void put(const BytesView& value) { pub.put(value); }
 
    private:
-    Session session;
     Publisher pub;
 };
 
 int main(int argc, char** argv) {
+    Config config;
+    auto session = std::get<Session>(open(std::move(config)));
     std::string keyexpr = "demo/example/simple";
     std::string value = "Simple!";
-    CustomerClass customer(keyexpr);
+    CustomerClass customer(session, keyexpr);
     customer.put(value);
 }
