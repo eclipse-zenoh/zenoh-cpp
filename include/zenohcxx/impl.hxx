@@ -30,7 +30,8 @@ inline void init_logger() { ::zc_init_logger(); }
 inline ::z_bytes_t z::BytesView::init(const uint8_t* start, size_t len) {
     ::z_bytes_t ret = {len, start
 #ifdef __ZENOHCXX_ZENOHPICO
-                       ,false
+                       ,
+                       false
 #endif
     };
     return ret;
@@ -104,7 +105,7 @@ inline bool keyexpr_canonize(std::string& s) {
 }
 
 inline bool keyexpr_is_canon(const std::string_view& s, ErrNo& error) {
-    error = ::z_keyexpr_is_canon(s.data() , s.length());
+    error = ::z_keyexpr_is_canon(s.data(), s.length());
     return error == 0;
 }
 
@@ -169,7 +170,7 @@ inline std::variant<z::Config, ErrorMessage> config_client(const std::initialize
 }
 
 inline z::ShmManager::ShmManager(const z::Session& session, const char* id, uintptr_t size)
-    : Owned(std::move(::zc_shm_manager_new(::z_loan(static_cast<const ::z_owned_session_t&>(session)), id, size))) {}
+    : Owned(std::move(::zc_shm_manager_new(session.loan(), id, size))) {}
 
 inline std::variant<z::ShmManager, z::ErrorMessage> shm_manager_new(const z::Session& session, const char* id,
                                                                     uintptr_t size) {
@@ -187,7 +188,7 @@ inline std::variant<z::Shmbuf, z::ErrorMessage> z::ShmManager::alloc(uintptr_t c
 #endif
 
 inline z::ScoutingConfig z::Config::create_scouting_config() {
-    return z::ScoutingConfig(::z_scouting_config_from(::z_loan(_0)));
+    return z::ScoutingConfig(::z_scouting_config_from(loan()));
 }
 
 inline bool z::Publisher::put(const z::BytesView& payload, const PublisherPutOptions& options, ErrNo& error) {
@@ -239,19 +240,19 @@ inline bool z::Publisher::put_owned(z::Payload&& payload) {
 #endif
 
 inline bool z::Publisher::put_impl(const z::BytesView& payload, const PublisherPutOptions* options, ErrNo& error) {
-    error = ::z_publisher_put(::z_loan(_0), payload.start, payload.len, options);
+    error = ::z_publisher_put(loan(), payload.start, payload.len, options);
     return error == 0;
 }
 
 inline bool z::Publisher::delete_impl(const PublisherDeleteOptions* options, ErrNo& error) {
-    error = ::z_publisher_delete(::z_loan(_0), options);
+    error = ::z_publisher_delete(loan(), options);
     return error == 0;
 }
 
 #ifdef __ZENOHCXX_ZENOHC
 
 inline bool z::Publisher::put_owned_impl(z::Payload&& payload, const z::PublisherPutOptions* options, ErrNo& error) {
-    error = ::zc_publisher_put_owned(::z_loan(_0), &static_cast<::zc_owned_payload_t&>(payload), options);
+    error = ::zc_publisher_put_owned(loan(), &static_cast<::zc_owned_payload_t&>(payload), options);
     return error == 0;
 }
 
@@ -270,7 +271,7 @@ inline bool scout(z::ScoutingConfig&& config, ClosureHello&& callback) {
 }
 
 inline z::KeyExpr z::Session::declare_keyexpr(const z::KeyExprView& keyexpr) {
-    return z::KeyExpr(::z_declare_keyexpr(::z_session_loan(&_0), keyexpr));
+    return z::KeyExpr(::z_declare_keyexpr(loan(), keyexpr));
 }
 
 inline bool z::Session::undeclare_keyexpr(z::KeyExpr&& keyexpr, ErrNo& error) {
@@ -389,51 +390,51 @@ inline std::variant<z::Publisher, ErrorMessage> z::Session::declare_publisher(z:
 
 inline bool z::Session::info_routers_zid(ClosureZid&& callback, ErrNo& error) {
     auto c = callback.take();
-    error = ::z_info_routers_zid(::z_session_loan(&_0), &c);
+    error = ::z_info_routers_zid(loan(), &c);
     return error == 0;
 }
 inline bool z::Session::info_routers_zid(ClosureZid&& callback) {
     auto c = callback.take();
-    return ::z_info_routers_zid(::z_session_loan(&_0), &c) == 0;
+    return ::z_info_routers_zid(loan(), &c) == 0;
 }
 
 inline bool z::Session::info_peers_zid(ClosureZid&& callback, ErrNo& error) {
     auto c = callback.take();
-    error = ::z_info_peers_zid(::z_session_loan(&_0), &c);
+    error = ::z_info_peers_zid(loan(), &c);
     return error == 0;
 }
 inline bool z::Session::info_peers_zid(ClosureZid&& callback) {
     auto c = callback.take();
-    return ::z_info_peers_zid(::z_session_loan(&_0), &c) == 0;
+    return ::z_info_peers_zid(loan(), &c) == 0;
 }
 
 inline bool z::Session::undeclare_keyexpr_impl(KeyExpr&& keyexpr, ErrNo& error) {
-    error = ::z_undeclare_keyexpr(::z_session_loan(&_0), &(static_cast<::z_owned_keyexpr_t&>(keyexpr)));
+    error = ::z_undeclare_keyexpr(loan(), &(static_cast<::z_owned_keyexpr_t&>(keyexpr)));
     return error == 0;
 }
 
 inline bool z::Session::get_impl(z::KeyExprView keyexpr, const char* parameters, ClosureReply&& callback,
                                  const GetOptions* options, ErrNo& error) {
     auto c = callback.take();
-    error = ::z_get(::z_session_loan(&_0), keyexpr, parameters, &c, options);
+    error = ::z_get(loan(), keyexpr, parameters, &c, options);
     return error == 0;
 }
 
 inline bool z::Session::put_impl(z::KeyExprView keyexpr, const z::BytesView& payload, const PutOptions* options,
                                  ErrNo& error) {
-    error = ::z_put(::z_session_loan(&_0), keyexpr, payload.start, payload.len, options);
+    error = ::z_put(loan(), keyexpr, payload.start, payload.len, options);
     return error == 0;
 }
 
 inline bool z::Session::delete_impl(z::KeyExprView keyexpr, const DeleteOptions* options, ErrNo& error) {
-    error = ::z_delete(::z_session_loan(&_0), keyexpr, options);
+    error = ::z_delete(loan(), keyexpr, options);
     return error == 0;
 }
 
 #ifdef __ZENOHCXX_ZENOHC
 inline bool z::Session::put_owned_impl(z::KeyExprView keyexpr, z::Payload&& payload, const PutOptions* options,
                                        ErrNo& error) {
-    error = ::zc_put_owned(::z_session_loan(&_0), keyexpr, &(static_cast<::zc_owned_payload_t&>(payload)), options);
+    error = ::zc_put_owned(loan(), keyexpr, &(static_cast<::zc_owned_payload_t&>(payload)), options);
     return error == 0;
 }
 #endif
@@ -442,7 +443,7 @@ inline std::variant<z::Queryable, ErrorMessage> z::Session::declare_queryable_im
                                                                                    ClosureQuery&& callback,
                                                                                    const QueryableOptions* options) {
     auto c = callback.take();
-    z::Queryable queryable(::z_declare_queryable(::z_session_loan(&_0), keyexpr, &c, options));
+    z::Queryable queryable(::z_declare_queryable(loan(), keyexpr, &c, options));
     if (queryable.check()) {
         return std::move(queryable);
     } else {
@@ -454,7 +455,7 @@ inline std::variant<z::Subscriber, ErrorMessage> z::Session::declare_subscriber_
                                                                                      ClosureSample&& callback,
                                                                                      const SubscriberOptions* options) {
     auto c = callback.take();
-    z::Subscriber subscriber(::z_declare_subscriber(::z_session_loan(&_0), keyexpr, &c, options));
+    z::Subscriber subscriber(::z_declare_subscriber(loan(), keyexpr, &c, options));
     if (subscriber.check()) {
         return std::move(subscriber);
     } else {
@@ -465,7 +466,7 @@ inline std::variant<z::Subscriber, ErrorMessage> z::Session::declare_subscriber_
 inline std::variant<z::PullSubscriber, ErrorMessage> z::Session::declare_pull_subscriber_impl(
     z::KeyExprView keyexpr, ClosureSample&& callback, const PullSubscriberOptions* options) {
     auto c = callback.take();
-    z::PullSubscriber pull_subscriber(::z_declare_pull_subscriber(::z_session_loan(&_0), keyexpr, &c, options));
+    z::PullSubscriber pull_subscriber(::z_declare_pull_subscriber(loan(), keyexpr, &c, options));
     if (pull_subscriber.check()) {
         return std::move(pull_subscriber);
     } else {
@@ -475,7 +476,7 @@ inline std::variant<z::PullSubscriber, ErrorMessage> z::Session::declare_pull_su
 
 inline std::variant<z::Publisher, ErrorMessage> z::Session::declare_publisher_impl(z::KeyExprView keyexpr,
                                                                                    const PublisherOptions* options) {
-    z::Publisher publisher(::z_declare_publisher(::z_session_loan(&_0), keyexpr, options));
+    z::Publisher publisher(::z_declare_publisher(loan(), keyexpr, options));
     if (publisher.check()) {
         return std::move(publisher);
     } else {
@@ -533,7 +534,7 @@ inline bool z::Config::insert(uint8_t key, const char* value) {
 }
 
 inline bool z::Config::insert(uint8_t key, const char* value, ErrNo& error) {
-    error = ::zp_config_insert(::z_config_loan(&_0), key, ::z_string_make(value));
+    error = ::zp_config_insert(loan(), key, ::z_string_make(value));
     return error == 0;
 }
 
@@ -545,7 +546,7 @@ inline bool Session::start_read_task() {
     return start_read_task(error);
 }
 inline bool Session::start_read_task(ErrNo& error) {
-    error = ::zp_start_read_task(::z_session_loan(&_0), nullptr);
+    error = ::zp_start_read_task(loan(), nullptr);
     return error == 0;
 }
 inline bool Session::stop_read_task() {
@@ -553,7 +554,7 @@ inline bool Session::stop_read_task() {
     return stop_read_task(error);
 }
 inline bool Session::stop_read_task(ErrNo& error) {
-    error = ::zp_stop_read_task(::z_session_loan(&_0));
+    error = ::zp_stop_read_task(loan());
     return error == 0;
 }
 inline bool Session::start_lease_task() {
@@ -561,7 +562,7 @@ inline bool Session::start_lease_task() {
     return start_lease_task(error);
 }
 inline bool Session::start_lease_task(ErrNo& error) {
-    error = ::zp_start_lease_task(::z_session_loan(&_0), nullptr);
+    error = ::zp_start_lease_task(loan(), nullptr);
     return error == 0;
 }
 inline bool Session::stop_lease_task() {
@@ -569,7 +570,7 @@ inline bool Session::stop_lease_task() {
     return stop_lease_task(error);
 }
 inline bool Session::stop_lease_task(ErrNo& error) {
-    error = ::zp_stop_lease_task(::z_session_loan(&_0));
+    error = ::zp_stop_lease_task(loan());
     return error == 0;
 }
 inline bool Session::read() {
@@ -577,7 +578,7 @@ inline bool Session::read() {
     return read(error);
 }
 inline bool Session::read(ErrNo& error) {
-    error = ::zp_read(::z_session_loan(&_0), nullptr);
+    error = ::zp_read(loan(), nullptr);
     return error == 0;
 }
 inline bool Session::send_keep_alive() {
@@ -585,7 +586,7 @@ inline bool Session::send_keep_alive() {
     return send_keep_alive(error);
 }
 inline bool Session::send_keep_alive(ErrNo& error) {
-    error = ::zp_send_keep_alive(::z_session_loan(&_0), nullptr);
+    error = ::zp_send_keep_alive(loan(), nullptr);
     return error == 0;
 }
 inline bool Session::send_join() {
@@ -593,7 +594,7 @@ inline bool Session::send_join() {
     return send_join(error);
 }
 inline bool Session::send_join(ErrNo& error) {
-    error = ::zp_send_join(::z_session_loan(&_0), nullptr);
+    error = ::zp_send_join(loan(), nullptr);
     return error == 0;
 }
 #endif
