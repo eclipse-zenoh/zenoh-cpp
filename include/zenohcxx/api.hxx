@@ -1321,13 +1321,13 @@ class Str : public Owned<::z_owned_str_t> {
 
     /// @brief Get the string value
     /// @return ``const char*`` null-terminated string pointer
-    const char* c_str() const { return ::z_loan(_0); }
+    const char* c_str() const { return loan(); }
 
     /// @name Operators
 
     /// @brief Get the string value
     /// @return ``const char*`` null-terminated string pointer
-    operator const char*() const { return ::z_loan(_0); }
+    operator const char*() const { return loan(); }
 
     /// @brief Equality operator
     /// @param s the ``std::string_view`` to compare with
@@ -1357,7 +1357,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
 
     /// @brief Get the key expression value
     /// @return ``KeyExprView`` referencing the key expression value in the object
-    z::KeyExprView as_keyexpr_view() const { return z::KeyExprView(::z_keyexpr_loan(&_0)); }
+    z::KeyExprView as_keyexpr_view() const { return z::KeyExprView(loan()); }
 
     /// @brief Get the key expression value
     /// @return ``BytesView`` referencing the key expression value in the object
@@ -1444,28 +1444,26 @@ class Config : public Owned<::z_owned_config_t> {
     /// @param key the key
     /// @return the ``Str`` value of the config parameter
     /// @note zenoh-c only
-    z::Str get(const char* key) const { return z::Str(::zc_config_get(::z_config_loan(&_0), key)); }
+    z::Str get(const char* key) const { return z::Str(::zc_config_get(loan(), key)); }
 
     /// @brief Get the whole config as a JSON string
     /// @return the JSON string in ``Str``
     /// @note zenoh-c only
-    z::Str to_string() const { return z::Str(::zc_config_to_string(::z_config_loan(&_0))); }
+    z::Str to_string() const { return z::Str(::zc_config_to_string(loan())); }
 
     /// @brief Insert a config parameter by the string key
     /// @param key the key
     /// @param value the JSON string value
     /// @return true if the parameter was inserted
     /// @note zenoh-c only
-    bool insert_json(const char* key, const char* value) {
-        return ::zc_config_insert_json(::z_config_loan(&_0), key, value) == 0;
-    }
+    bool insert_json(const char* key, const char* value) { return ::zc_config_insert_json(loan(), key, value) == 0; }
 #endif
 #ifdef __ZENOHCXX_ZENOHPICO
     /// @brief Get config parameter by it's numeric ID
     /// @param key the key
     /// @return pointer to the null-terminated string value of the config parameter
     /// @note zenoh-pico only
-    const char* get(uint8_t key) const { return ::zp_config_get(::z_config_loan(&_0), key); }
+    const char* get(uint8_t key) const { return ::zp_config_get(loan(), key); }
 
     /// @brief Insert a config parameter by it's numeric ID
     /// @param key the key
@@ -1558,13 +1556,13 @@ class PullSubscriber : public Owned<::z_owned_pull_subscriber_t> {
 
     /// @brief Pull the next sample
     /// @return true if the sample was pulled, false otherwise
-    bool pull() { return ::z_subscriber_pull(::z_loan(_0)) == 0; }
+    bool pull() { return ::z_subscriber_pull(loan()) == 0; }
 
     /// @brief Pull the next sample
     /// @param error the error code
     /// @return true if the sample was pulled, false otherwise
     bool pull(ErrNo& error) {
-        error = ::z_subscriber_pull(::z_loan(_0));
+        error = ::z_subscriber_pull(loan());
         return error == 0;
     }
 };
@@ -1673,7 +1671,7 @@ class Hello : public Owned<::z_owned_hello_t> {
 
     /// @brief Get the content of the hello message
     /// @return the content of the hello message as ``HelloView``
-    operator z::HelloView() const { return z::HelloView(::z_hello_loan(&_0)); }
+    operator z::HelloView() const { return z::HelloView(loan()); }
 };
 
 /// @brief Callback type passed to ``Session::get``to process ``Reply``s from ``Queryable``s
@@ -1756,12 +1754,12 @@ class Session : public Owned<::z_owned_session_t> {
     /// This is possible in zenoh-c only where ``Session`` is a reference counted object.
     /// @return a new ``Session`` instance
     /// @note zenoh-c only
-    Session rcinc() { return Session(::zc_session_rcinc(::z_session_loan(&_0))); }
+    Session rcinc() { return Session(::zc_session_rcinc(loan())); }
 #endif
 
     /// @brief Get the unique identifier of the zenoh node associated to this ``Session``
     /// @return the unique identifier ``Id``
-    z::Id info_zid() const { return ::z_info_zid(::z_session_loan(&_0)); }
+    z::Id info_zid() const { return ::z_info_zid(loan()); }
 
     /// @brief Create ``KeyExpr`` instance with numeric id registered in ``Session`` routing tables
     /// @param keyexpr ``KeyExprView`` representing string key expression
