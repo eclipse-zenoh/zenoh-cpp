@@ -142,6 +142,14 @@ void includes() {
     assert(!keyexpr_includes("FOO/*", nul));
     assert(!keyexpr_includes("FOO/*", nul, err));
     assert(err < 0);
+
+    KeyExpr foo("FOO");
+    assert(keyexpr_includes(foo, "FOO/BAR"));
+    assert(keyexpr_includes(foo, "FOO/BAR", err));
+    assert(err == 0);
+    assert(!keyexpr_includes("FOO/BAR", foo));
+    assert(!keyexpr_includes("FOO/BAR", foo, err));
+    assert(err == 0);
 }
 
 void intersects() {
@@ -159,6 +167,11 @@ void intersects() {
     assert(!keyexpr_intersects("FOO/*", nul));
     assert(!keyexpr_intersects("FOO/*", nul, err));
     assert(err < 0);
+
+    KeyExpr foobar("FOO/BAR");
+    assert(keyexpr_intersects("FOO/*", foobar));
+    assert(keyexpr_intersects("FOO/*", foobar, err));
+    assert(err == 0);
 }
 
 #include <variant>
