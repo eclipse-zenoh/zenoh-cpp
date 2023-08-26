@@ -90,25 +90,23 @@ void canonize() {
 
 void concat() {
 #ifdef ZENOHCXX_ZENOHC
-    KeyExprView foov("FOO");
-    auto foobar = foov.concat("BAR");
-    assert(foobar == "FOOBAR");
-
-    KeyExpr foo("FOO");
-    auto foobar1 = foo.concat("BAR");
-    assert(foobar1 == "FOOBAR");
+    assert(keyexpr_concat("FOO", "BAR") == "FOOBAR");
+    assert(keyexpr_concat(KeyExpr("FOO"), "BAR") == "FOOBAR");
+    assert(keyexpr_concat(KeyExprView("FOO"), "BAR") == "FOOBAR");
 #endif
 }
 
 void join() {
 #ifdef ZENOHCXX_ZENOHC
-    KeyExprView foov("FOO");
-    auto foobar = foov.concat("BAR");
-    assert(foobar == "FOO/BAR");
-
-    KeyExpr foo("FOO");
-    auto foobar1 = foo.concat("BAR");
-    assert(foobar1 == "FOO/BAR");
+    assert(keyexpr_join("FOO", "BAR") == "FOO/BAR");
+    assert(keyexpr_join(KeyExpr("FOO"), "BAR") == "FOO/BAR");
+    assert(keyexpr_join(KeyExprView("FOO"), "BAR") == "FOO/BAR");
+    assert(keyexpr_join("FOO", KeyExpr("BAR")) == "FOO/BAR");
+    assert(keyexpr_join(KeyExpr("FOO"), KeyExpr("BAR")) == "FOO/BAR");
+    assert(keyexpr_join(KeyExprView("FOO"), KeyExpr("BAR")) == "FOO/BAR");
+    assert(keyexpr_join("FOO", KeyExprView("BAR")) == "FOO/BAR");
+    assert(keyexpr_join(KeyExpr("FOO"), KeyExprView("BAR")) == "FOO/BAR");
+    assert(keyexpr_join(KeyExprView("FOO"), KeyExprView("BAR")) == "FOO/BAR");
 #endif
 }
 
@@ -116,43 +114,16 @@ void equals() {
     KeyExprView nul(nullptr);
     ErrNo err;
 
-    KeyExpr foo("FOO");
-    KeyExprView foov("FOO");
-    KeyExpr bar("BAR");
-    KeyExprView barv("BAR");
-
-    assert(foo.equals(foo));
-    assert(foo.equals(foo, err));
-    assert(err == 0);
-    assert(foo.equals(foov));
-    assert(foo.equals(foov, err));
-    assert(err == 0);
-    assert(foov.equals(foo));
-    assert(foov.equals(foo, err));
-    assert(err == 0);
-    assert(foov.equals(foov));
-    assert(foov.equals(foov, err));
+    assert(keyexpr_equals("FOO", "FOO"));
+    assert(keyexpr_equals("FOO", "FOO", err));
     assert(err == 0);
 
-    assert(!foo.equals(bar));
-    assert(!foo.equals(bar, err));
-    assert(err == 0);
-    assert(!foo.equals(barv));
-    assert(!foo.equals(barv, err));
-    assert(err == 0);
-    assert(!foov.equals(bar));
-    assert(!foov.equals(bar, err));
-    assert(err == 0);
-    assert(!foov.equals(barv));
-    assert(!foov.equals(barv, err));
+    assert(!keyexpr_equals("FOO", "BAR"));
+    assert(!keyexpr_equals("FOO", "BAR", err));
     assert(err == 0);
 
-    assert(!foo.equals(nul));
-    assert(!foo.equals(nul, err));
-    assert(err < 0);
-
-    assert(!foov.equals(nul));
-    assert(!foov.equals(nul, err));
+    assert(!keyexpr_equals("FOO", nul));
+    assert(!keyexpr_equals("FOO", nul, err));
     assert(err < 0);
 }
 
@@ -160,28 +131,16 @@ void includes() {
     KeyExprView nul(nullptr);
     ErrNo err;
 
-    KeyExprView foostarv("FOO/*");
-    KeyExprView foobarv("FOO/BAR");
-    assert(foostarv.includes(foobarv));
-    assert(foostarv.includes(foobarv, err));
+    assert(keyexpr_includes("FOO/*", "FOO/BAR"));
+    assert(keyexpr_includes("FOO/*", "FOO/BAR", err));
     assert(err == 0);
-    assert(!foobarv.includes(foostarv));
-    assert(!foobarv.includes(foostarv, err));
-    assert(err == 0);
-    assert(!foostarv.includes(nul));
-    assert(!foostarv.includes(nul, err));
-    assert(err < 0);
 
-    KeyExpr foostar("FOO/*");
-    KeyExpr foobar("FOO/BAR");
-    assert(foostar.includes(foobar));
-    assert(foostar.includes(foobar, err));
+    assert(!keyexpr_includes("FOO/BAR", "FOO/*"));
+    assert(!keyexpr_includes("FOO/BAR", "FOO/*", err));
     assert(err == 0);
-    assert(!foobar.includes(foostar));
-    assert(!foobar.includes(foostar, err));
-    assert(err == 0);
-    assert(!foostar.includes(nul));
-    assert(!foostar.includes(nul, err));
+
+    assert(!keyexpr_includes("FOO/*", nul));
+    assert(!keyexpr_includes("FOO/*", nul, err));
     assert(err < 0);
 }
 
@@ -189,31 +148,17 @@ void intersects() {
     KeyExprView nul(nullptr);
     ErrNo err;
 
-    KeyExprView foostarv("FOO/*");
-    KeyExprView foobarv("FOO/BAR");
-    KeyExprView starbuzv("*/BUZ");
-    assert(foostarv.intersects(foobarv));
-    assert(!starbuzv.intersects(foobarv));
-    assert(!foostarv.intersects(nul));
-    assert(foostarv.intersects(foobarv, err));
+    assert(keyexpr_intersects("FOO/*", "FOO/BAR"));
+    assert(keyexpr_intersects("FOO/*", "FOO/BAR", err));
     assert(err == 0);
-    assert(!starbuzv.intersects(foobarv, err));
-    assert(err == 0);
-    assert(!foostarv.intersects(nul, err));
-    assert(err != 0);
 
-    KeyExpr foostar("FOO/*");
-    KeyExpr foobar("FOO/BAR");
-    KeyExpr starbuz("*/BUZ");
-    assert(foostar.intersects(foobar));
-    assert(!starbuz.intersects(foobar));
-    assert(!foostar.intersects(nul));
-    assert(foostar.intersects(foobar, err));
+    assert(!keyexpr_intersects("*/BUZ", "FOO/BAR"));
+    assert(!keyexpr_intersects("*/BUZ", "FOO/BAR", err));
     assert(err == 0);
-    assert(!starbuz.intersects(foobar, err));
-    assert(err == 0);
-    assert(!foostar.intersects(nul, err));
-    assert(err != 0);
+
+    assert(!keyexpr_intersects("FOO/*", nul));
+    assert(!keyexpr_intersects("FOO/*", nul, err));
+    assert(err < 0);
 }
 
 #include <variant>

@@ -63,33 +63,33 @@ inline bool _split_ret_to_bool_and_err(int8_t ret, ErrNo& error) {
     }
 }
 
-inline bool z::KeyExprView::equals(const z::KeyExprView& v, ErrNo& error) const {
-    return z::_split_ret_to_bool_and_err(::z_keyexpr_equals(*this, v), error);
+inline bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error) {
+    return z::_split_ret_to_bool_and_err(::z_keyexpr_equals(a, b), error);
 }
-inline bool z::KeyExprView::equals(const z::KeyExprView& v) const {
+inline bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b) {
     ErrNo error;
-    return equals(v, error);
+    return z::keyexpr_equals(a, b, error);
 }
-inline bool z::KeyExprView::includes(const z::KeyExprView& v, ErrNo& error) const {
-    return z::_split_ret_to_bool_and_err(::z_keyexpr_includes(*this, v), error);
+inline bool keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error) {
+    return z::_split_ret_to_bool_and_err(::z_keyexpr_includes(a, b), error);
 }
-inline bool z::KeyExprView::includes(const z::KeyExprView& v) const {
+inline bool keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b) {
     ErrNo error;
-    return includes(v, error);
+    return z::keyexpr_includes(a, b, error);
 }
-inline bool z::KeyExprView::intersects(const z::KeyExprView& v, ErrNo& error) const {
-    return z::_split_ret_to_bool_and_err(::z_keyexpr_intersects(*this, v), error);
+inline bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error) {
+    return z::_split_ret_to_bool_and_err(::z_keyexpr_intersects(a, b), error);
 }
-inline bool z::KeyExprView::intersects(const z::KeyExprView& v) const {
+inline bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b) {
     ErrNo error;
-    return includes(v, error);
+    return z::keyexpr_intersects(a, b, error);
 }
 
 #ifdef __ZENOHCXX_ZENOHC
-inline z::KeyExpr z::KeyExprView::concat(const std::string_view& s) const {
-    return ::z_keyexpr_concat(*this, s.data(), s.length());
+inline z::KeyExpr keyexpr_concat(const z::KeyExprView& k, const std::string_view& s) {
+    return ::z_keyexpr_concat(k, s.data(), s.length());
 }
-inline z::KeyExpr z::KeyExprView::join(const z::KeyExprView& v) const { return ::z_keyexpr_join(*this, v); }
+inline z::KeyExpr keyexpr_join(const z::KeyExprView& a, const z::KeyExprView& b) { return ::z_keyexpr_join(a, b); }
 #endif
 
 inline bool keyexpr_canonize(std::string& s, ErrNo& error) {
