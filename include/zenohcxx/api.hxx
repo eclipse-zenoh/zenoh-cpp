@@ -428,7 +428,8 @@ inline bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b, Err
 
 /// @brief Checks if the key expression includes another key expression, i.e. if the set defined by the key
 /// expression contains the set defined by the other key expression
-/// @param v Another key expression
+/// @param a Key expression
+/// @param b Key expression
 /// @param error Error code returned by ``::z_keyexpr_includes`` (value < -1 if any of the key expressions is not
 /// valid)
 /// @return true the key expression includes the other key expression
@@ -436,7 +437,8 @@ inline bool keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b, E
 
 /// @brief Checks if the key expression intersects with another key expression, i.e. there exists at least one key
 /// which is contained in both of the sets defined by the key expressions
-/// @param v Another key expression
+/// @param a Key expression
+/// @param b Key expression
 /// @param error Error code returned by ``::z_keyexpr_intersects`` (value < -1 if any of the key expressions is not
 /// valid)
 /// @return true the key expression intersects with the other key expression
@@ -451,13 +453,15 @@ inline bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b);
 
 /// @brief Checks if the key expression includes another key expression, i.e. if the set defined by the key
 /// expression contains the set defined by the other key expression
-/// @param v Another key expression
+/// @param a Key expression
+/// @param b Key expression
 /// @return true the key expression includes the other key expression
 inline bool keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b);
 
 /// @brief Checks if the key expression intersects with another key expression, i.e. there exists at least one key
 /// which is contained in both of the sets defined by the key expressions
-/// @param v Another key expression
+/// @param a Key expression
+/// @param b Key expression
 /// @return true the key expression intersects with the other key expression
 inline bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b);
 #endif
@@ -524,6 +528,10 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     std::string_view as_string_view() const { return as_bytes().as_string_view(); }
 
 #ifdef __ZENOHCXX_ZENOHPICO
+    /// @brief Get string representation for key expression created with ``zenoh::Session::declare_keyexpr``
+    /// @param s ``zenoh::Session`` object
+    /// @return string representation of the key expression
+    /// @note zenoh-pico only
     z::Str resolve(const z::Session& s) const;
 #endif
 
