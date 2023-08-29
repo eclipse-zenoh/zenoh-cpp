@@ -404,29 +404,27 @@ inline bool keyexpr_is_canon(const std::string_view& s);
 
 #ifdef __ZENOHCXX_ZENOHC
 /// @brief Concatenate the key expression and a string
+/// @param k the key expression
 /// @param s ``std::string_view`` representing a key expression
 /// @return Newly allocated key expression ``zenoh::KeyExpr``
 /// @note zenoh-c only
 inline z::KeyExpr keyexpr_concat(const z::KeyExprView& k, const std::string_view& s);
 
-/// @brief Join key expression with another key expression, inserting a separator between them
-/// @param v the key expression to join with
+/// @brief Join two key expressions, inserting a separator between them
+/// @param a Key expression
+/// @param b Key expressio
 /// @return Newly allocated key expression ``zenoh::KeyExpr``
 /// @note zenoh-c only
 inline z::KeyExpr keyexpr_join(const z::KeyExprView& a, const z::KeyExprView& b);
 #endif
 
-/// @brief Checks if the key expression is equal to another key expression
-/// @param v Another key expression
+/// @brief Checks if the two key expressions are equal
+/// @param a Key expression
+/// @param b Key expression
 /// @param error Error code returned by ``::z_keyexpr_equals`` (value < -1 if any of the key expressions is not
 /// valid)
-/// @return true the key expression is equal to the other key expression
+/// @return true the key expressions are equal
 inline bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error);
-
-/// @brief Checks if the key expression is equal to another key expression
-/// @param v Another key expression
-/// @return true the key expression is equal to the other key expression
-inline bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b);
 
 /// @brief Checks if the key expression includes another key expression, i.e. if the set defined by the key
 /// expression contains the set defined by the other key expression
@@ -435,6 +433,21 @@ inline bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b);
 /// valid)
 /// @return true the key expression includes the other key expression
 inline bool keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error);
+
+/// @brief Checks if the key expression intersects with another key expression, i.e. there exists at least one key
+/// which is contained in both of the sets defined by the key expressions
+/// @param v Another key expression
+/// @param error Error code returned by ``::z_keyexpr_intersects`` (value < -1 if any of the key expressions is not
+/// valid)
+/// @return true the key expression intersects with the other key expression
+inline bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error);
+
+#ifdef __ZENOHCXX_ZENOHC
+/// @brief Checks if the two key expressions are equal
+/// @param a Key expression
+/// @param b Key expression
+/// @return true the key expressions are equal
+inline bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b);
 
 /// @brief Checks if the key expression includes another key expression, i.e. if the set defined by the key
 /// expression contains the set defined by the other key expression
@@ -445,16 +458,9 @@ inline bool keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b);
 /// @brief Checks if the key expression intersects with another key expression, i.e. there exists at least one key
 /// which is contained in both of the sets defined by the key expressions
 /// @param v Another key expression
-/// @param error Error code returned by ``::z_keyexpr_intersects`` (value < -1 if any of the key expressions is not
-/// valid)
-/// @return true the key expression intersects with the other key expression
-inline bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error);
-
-/// @brief Checks if the key expression intersects with another key expression, i.e. there exists at least one key
-/// which is contained in both of the sets defined by the key expressions
-/// @param v Another key expression
 /// @return true the key expression intersects with the other key expression
 inline bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b);
+#endif
 
 /// The non-owning read-only view to a key expression in Zenoh.
 struct KeyExprView : public Copyable<::z_keyexpr_t> {
@@ -532,25 +538,25 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     /// @brief see ``zenoh::keyexpr_join``
     /// @note zenoh-c only
     z::KeyExpr join(const z::KeyExprView& v) const;
-#endif
-
-    /// @brief see ``zenoh::keyexpr_equals``
-    bool equals(const z::KeyExprView& v, ErrNo& error) const;
 
     /// @brief see ``zenoh::keyexpr_equals``
     bool equals(const z::KeyExprView& v) const;
 
     /// @brief see ``zenoh::keyexpr_includes``
-    bool includes(const z::KeyExprView& v, ErrNo& error) const;
-
-    /// @brief see ``zenoh::keyexpr_includes``
     bool includes(const z::KeyExprView& v) const;
 
     /// @brief see ``zenoh::keyexpr_intersects``
-    bool intersects(const z::KeyExprView& v, ErrNo& error) const;
+    bool intersects(const z::KeyExprView& v) const;
+#endif
+
+    /// @brief see ``zenoh::keyexpr_equals``
+    bool equals(const z::KeyExprView& v, ErrNo& error) const;
+
+    /// @brief see ``zenoh::keyexpr_includes``
+    bool includes(const z::KeyExprView& v, ErrNo& error) const;
 
     /// @brief see ``zenoh::keyexpr_intersects``
-    bool intersects(const z::KeyExprView& v) const;
+    bool intersects(const z::KeyExprView& v, ErrNo& error) const;
 };
 
 /// The encoding of a payload, in a MIME-like format.
@@ -1420,25 +1426,25 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @brief see ``zenoh::keyexpr_join``
     /// @note zenoh-c only
     z::KeyExpr join(const z::KeyExprView& v) const;
-#endif
-
-    /// @brief see ``zenoh::keyexpr_equals``
-    bool equals(const z::KeyExprView& v, ErrNo& error) const;
 
     /// @brief see ``zenoh::keyexpr_equals``
     bool equals(const z::KeyExprView& v) const;
 
     /// @brief see ``zenoh::keyexpr_includes``
-    bool includes(const z::KeyExprView& v, ErrNo& error) const;
-
-    /// @brief see ``zenoh::keyexpr_includes``
     bool includes(const z::KeyExprView& v) const;
 
     /// @brief see ``zenoh::keyexpr_intersects``
-    bool intersects(const z::KeyExprView& v, ErrNo& error) const;
+    bool intersects(const z::KeyExprView& v) const;
+#endif
+
+    /// @brief see ``zenoh::keyexpr_equals``
+    bool equals(const z::KeyExprView& v, ErrNo& error) const;
+
+    /// @brief see ``zenoh::keyexpr_includes``
+    bool includes(const z::KeyExprView& v, ErrNo& error) const;
 
     /// @brief see ``zenoh::keyexpr_intersects``
-    bool intersects(const z::KeyExprView& v) const;
+    bool intersects(const z::KeyExprView& v, ErrNo& error) const;
 };
 
 class ScoutingConfig;
@@ -2078,6 +2084,70 @@ class Session : public Owned<::z_owned_session_t> {
     /// @return true if the join procedure was executed successfully, false otherwise.
     bool send_join(ErrNo& error);
 #endif
+
+#ifdef __ZENOHCXX_ZENOHC
+    /// @brief Concatenate the key expression and a string, resolving them if necessary
+    /// @param k the key expression
+    /// @param s ``std::string_view`` representing a key expression
+    /// @return Newly allocated key expression ``zenoh::KeyExpr``
+    /// @note zenoh-c only
+    z::KeyExpr keyexpr_concat(const z::KeyExprView& k, const std::string_view& s);
+
+    /// @brief Join two key expressions, inserting a separator between them
+    /// @param a Key expression
+    /// @param b Key expressio
+    /// @return Newly allocated key expression ``zenoh::KeyExpr``
+    /// @note zenoh-c only
+    z::KeyExpr keyexpr_join(const z::KeyExprView& a, const z::KeyExprView& b);
+#endif
+
+    /// @brief Checks if the two key expressions are equal, resolving them if necessary
+    /// @param a Key expression
+    /// @param b Key expression
+    /// @param error Error code returned by ``::z_keyexpr_equals`` (value < -1 if any of the key expressions is not
+    /// valid)
+    /// @return true the key expressions are equal
+    bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error);
+
+    /// @brief Checks if the two key expressions are equal, resolving them if necessary
+    /// @param a Key expression
+    /// @param b Key expression
+    /// @return true the key expressions are equal
+    bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b);
+
+    /// @brief Checks if the key expression "a" includes expression "b", resolving them if necessary.
+    // "Includes" means that the set defined by the key expression contains the set defined by the other key expression
+    /// @param a Key expression
+    /// @param b Key expression
+    /// @param error Error code returned by ``::z_keyexpr_includes`` (value < -1 if any of the key expressions is not
+    /// valid)
+    /// @return true the key expression includes the other key expression
+    bool keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error);
+
+    /// @brief Checks if the key expression "a" includes key expression "b", resolving them if necessary.
+    // "Includes" means that the set defined by the key expression contains the set defined by the other key expression
+    /// @param a Key expression
+    /// @param b Key expression
+    /// @return true the key expression includes the other key expression
+    bool keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b);
+
+    /// @brief Checks if the key expression intersects with another key expression, resolving them if necessaRY.
+    /// "Intersects" means that exists at least one key which is contained in both of the sets defined by the key
+    /// expressions
+    /// @param a Key expression
+    /// @param b Key expression
+    /// @param error Error code returned by ``::z_keyexpr_intersects`` (value < -1 if any of the key expressions is not
+    /// valid)
+    /// @return true the key expression intersects with the other key expression
+    bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error);
+
+    /// @brief Checks if the key expression intersects with another key expression, resolving them if necessaRY.
+    /// "Intersects" means that exists at least one key which is contained in both of the sets defined by the key
+    /// expressions
+    /// @param a Key expression
+    /// @param b Key expression
+    /// @return true the key expression intersects with the other key expression
+    bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b);
 
    private:
     Session(z::Config&& v) : Owned(_z_open(std::move(v))) {}

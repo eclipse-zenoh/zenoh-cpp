@@ -72,24 +72,27 @@ inline bool _split_ret_to_bool_and_err(int8_t ret, ErrNo& error) {
 inline bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error) {
     return z::_split_ret_to_bool_and_err(::z_keyexpr_equals(a, b), error);
 }
+inline bool keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error) {
+    return z::_split_ret_to_bool_and_err(::z_keyexpr_includes(a, b), error);
+}
+inline bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error) {
+    return z::_split_ret_to_bool_and_err(::z_keyexpr_intersects(a, b), error);
+}
+
+#ifdef __ZENOHCXX_ZENOHC
 inline bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b) {
     ErrNo error;
     return z::keyexpr_equals(a, b, error);
-}
-inline bool keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error) {
-    return z::_split_ret_to_bool_and_err(::z_keyexpr_includes(a, b), error);
 }
 inline bool keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b) {
     ErrNo error;
     return z::keyexpr_includes(a, b, error);
 }
-inline bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error) {
-    return z::_split_ret_to_bool_and_err(::z_keyexpr_intersects(a, b), error);
-}
 inline bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b) {
     ErrNo error;
     return z::keyexpr_intersects(a, b, error);
 }
+#endif
 
 #ifdef __ZENOHCXX_ZENOHC
 inline z::KeyExpr keyexpr_concat(const z::KeyExprView& k, const std::string_view& s) {
@@ -102,48 +105,46 @@ inline bool z::KeyExprView::equals(const z::KeyExprView& other, ErrNo& error) co
     return z::keyexpr_equals(*this, other, error);
 }
 
-inline bool z::KeyExprView::equals(const z::KeyExprView& other) const { return z::keyexpr_equals(*this, other); }
-
 inline bool z::KeyExprView::includes(const z::KeyExprView& other, ErrNo& error) const {
     return z::keyexpr_includes(*this, other, error);
 }
 
-inline bool z::KeyExprView::includes(const z::KeyExprView& other) const { return z::keyexpr_includes(*this, other); }
-
 inline bool z::KeyExprView::intersects(const z::KeyExprView& other, ErrNo& error) const {
     return z::keyexpr_intersects(*this, other, error);
-}
-
-inline bool z::KeyExprView::intersects(const z::KeyExprView& other) const {
-    return z::keyexpr_intersects(*this, other);
 }
 
 inline bool z::KeyExpr::equals(const z::KeyExprView& other, ErrNo& error) const {
     return z::keyexpr_equals(*this, other, error);
 }
 
-inline bool z::KeyExpr::equals(const z::KeyExprView& other) const { return z::keyexpr_equals(*this, other); }
-
 inline bool z::KeyExpr::includes(const z::KeyExprView& other, ErrNo& error) const {
     return z::keyexpr_includes(*this, other, error);
 }
 
-inline bool z::KeyExpr::includes(const z::KeyExprView& other) const { return z::keyexpr_includes(*this, other); }
-
 inline bool z::KeyExpr::intersects(const z::KeyExprView& other, ErrNo& error) const {
     return z::keyexpr_intersects(*this, other, error);
 }
-
-inline bool z::KeyExpr::intersects(const z::KeyExprView& other) const { return z::keyexpr_intersects(*this, other); }
-
 #ifdef __ZENOHCXX_ZENOHC
 inline z::KeyExpr z::KeyExprView::concat(const std::string_view& s) const { return z::keyexpr_concat(*this, s); }
 
-inline z::KeyExpr z::KeyExpr::concat(const std::string_view& s) const { return z::keyexpr_concat(*this, s); }
-
 inline z::KeyExpr z::KeyExprView::join(const z::KeyExprView& other) const { return z::keyexpr_join(*this, other); }
 
+inline bool z::KeyExprView::equals(const z::KeyExprView& other) const { return z::keyexpr_equals(*this, other); }
+
+inline bool z::KeyExprView::includes(const z::KeyExprView& other) const { return z::keyexpr_includes(*this, other); }
+inline bool z::KeyExprView::intersects(const z::KeyExprView& other) const {
+    return z::keyexpr_intersects(*this, other);
+}
+
+inline z::KeyExpr z::KeyExpr::concat(const std::string_view& s) const { return z::keyexpr_concat(*this, s); }
+
 inline z::KeyExpr z::KeyExpr::join(const z::KeyExprView& other) const { return z::keyexpr_join(*this, other); }
+
+inline bool z::KeyExpr::equals(const z::KeyExprView& other) const { return z::keyexpr_equals(*this, other); }
+
+inline bool z::KeyExpr::includes(const z::KeyExprView& other) const { return z::keyexpr_includes(*this, other); }
+
+inline bool z::KeyExpr::intersects(const z::KeyExprView& other) const { return z::keyexpr_intersects(*this, other); }
 #endif
 
 inline bool keyexpr_canonize(std::string& s, ErrNo& error) {
@@ -598,60 +599,113 @@ inline bool z::Config::insert(uint8_t key, const char* value, ErrNo& error) {
 #endif
 
 #ifdef __ZENOHCXX_ZENOHPICO
-inline bool Session::start_read_task() {
+inline bool z::Session::start_read_task() {
     ErrNo error;
     return start_read_task(error);
 }
-inline bool Session::start_read_task(ErrNo& error) {
+inline bool z::Session::start_read_task(ErrNo& error) {
     error = ::zp_start_read_task(loan(), nullptr);
     return error == 0;
 }
-inline bool Session::stop_read_task() {
+inline bool z::Session::stop_read_task() {
     ErrNo error;
     return stop_read_task(error);
 }
-inline bool Session::stop_read_task(ErrNo& error) {
+inline bool z::Session::stop_read_task(ErrNo& error) {
     error = ::zp_stop_read_task(loan());
     return error == 0;
 }
-inline bool Session::start_lease_task() {
+inline bool z::Session::start_lease_task() {
     ErrNo error;
     return start_lease_task(error);
 }
-inline bool Session::start_lease_task(ErrNo& error) {
+inline bool z::Session::start_lease_task(ErrNo& error) {
     error = ::zp_start_lease_task(loan(), nullptr);
     return error == 0;
 }
-inline bool Session::stop_lease_task() {
+inline bool z::Session::stop_lease_task() {
     ErrNo error;
     return stop_lease_task(error);
 }
-inline bool Session::stop_lease_task(ErrNo& error) {
+inline bool z::Session::stop_lease_task(ErrNo& error) {
     error = ::zp_stop_lease_task(loan());
     return error == 0;
 }
-inline bool Session::read() {
+inline bool z::Session::read() {
     ErrNo error;
     return read(error);
 }
-inline bool Session::read(ErrNo& error) {
+inline bool z::Session::read(ErrNo& error) {
     error = ::zp_read(loan(), nullptr);
     return error == 0;
 }
-inline bool Session::send_keep_alive() {
+inline bool z::Session::send_keep_alive() {
     ErrNo error;
     return send_keep_alive(error);
 }
-inline bool Session::send_keep_alive(ErrNo& error) {
+inline bool z::Session::send_keep_alive(ErrNo& error) {
     error = ::zp_send_keep_alive(loan(), nullptr);
     return error == 0;
 }
-inline bool Session::send_join() {
+inline bool z::Session::send_join() {
     ErrNo error;
     return send_join(error);
 }
-inline bool Session::send_join(ErrNo& error) {
+inline bool z::Session::send_join(ErrNo& error) {
     error = ::zp_send_join(loan(), nullptr);
     return error == 0;
 }
 #endif
+
+#ifdef __ZENOHCXX_ZENOHPICO
+// If the source is successfully resolved, i.e. it was keyexpression declared in the session and call to ``resolve``
+// function successfully returned keyexpr string representation, then the resolved keyexpr is returned. Otherwise, the
+// original source is returned.
+class _Resolved {
+   public:
+    _Resolved(const z::Session& s, const z::KeyExprView& source)
+        : str(std::move(source.resolve(s))),
+          keyexpr(str.check() ? z::KeyExprView(str.c_str(), KeyExprUnchecked()) : source) {}
+    operator const z::KeyExprView&() const { return keyexpr; }
+
+   private:
+    z::Str str;
+    const z::KeyExprView keyexpr;
+};
+#else
+class _Resolved {
+   public:
+    _Resolved(const z::Session&, const z::KeyExprView& source) : keyexpr(source) {}
+    operator const z::KeyExprView&() const { return keyexpr; }
+
+   private:
+    const z::KeyExprView& keyexpr;
+};
+#endif
+
+inline bool z::Session::keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error) {
+    return z::keyexpr_equals(_Resolved(*this, a), _Resolved(*this, b), error);
+}
+
+inline bool z::Session::keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b) {
+    ErrNo error;
+    return z::Session::keyexpr_equals(a, b, error);
+}
+
+inline bool z::Session::keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error) {
+    return z::keyexpr_includes(_Resolved(*this, a), _Resolved(*this, b), error);
+}
+
+inline bool z::Session::keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b) {
+    ErrNo error;
+    return z::Session::keyexpr_includes(a, b, error);
+}
+
+inline bool z::Session::keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error) {
+    return z::keyexpr_intersects(_Resolved(*this, a), _Resolved(*this, b), error);
+}
+
+inline bool z::Session::keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b) {
+    ErrNo error;
+    return z::Session::keyexpr_intersects(a, b, error);
+}

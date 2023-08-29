@@ -135,45 +135,50 @@ void equals() {
     KeyExpr bar("BAR");
     KeyExprView barv("BAR");
 
+#ifdef ZENOHCXX_ZENOHC
     assert(foo.equals(foo));
+    assert(foo.equals(foov));
+    assert(foov.equals(foo));
+    assert(foov.equals(foov));
+    assert(keyexpr_equals("FOO", "FOO"));
+    assert(!keyexpr_equals("FOO", "BAR"));
+    assert(!keyexpr_equals("FOO", nul));
+    assert(!foo.equals(bar));
+    assert(!foo.equals(barv));
+    assert(!foov.equals(bar));
+    assert(!foov.equals(barv));
+    assert(!foo.equals(nul));
+    assert(!foov.equals(nul));
+#endif
     assert(foo.equals(foo, err));
     assert(err == 0);
-    assert(foo.equals(foov));
     assert(foo.equals(foov, err));
     assert(err == 0);
-    assert(foov.equals(foo));
     assert(foov.equals(foo, err));
     assert(err == 0);
-    assert(foov.equals(foov));
     assert(foov.equals(foov, err));
+    assert(err == 0);
 
-    assert(keyexpr_equals("FOO", "FOO"));
     assert(keyexpr_equals("FOO", "FOO", err));
     assert(err == 0);
 
-    assert(!foo.equals(bar));
     assert(!foo.equals(bar, err));
     assert(err == 0);
-    assert(!foo.equals(barv));
     assert(!foo.equals(barv, err));
     assert(err == 0);
-    assert(!foov.equals(bar));
     assert(!foov.equals(bar, err));
     assert(err == 0);
-    assert(!foov.equals(barv));
     assert(!foov.equals(barv, err));
+    assert(err == 0);
 
-    assert(!keyexpr_equals("FOO", "BAR"));
     assert(!keyexpr_equals("FOO", "BAR", err));
     assert(err == 0);
 
-    assert(!foo.equals(nul));
     assert(!foo.equals(nul, err));
     assert(err < 0);
-    assert(!foov.equals(nul));
     assert(!foov.equals(nul, err));
+    assert(err < 0);
 
-    assert(!keyexpr_equals("FOO", nul));
     assert(!keyexpr_equals("FOO", nul, err));
     assert(err < 0);
 }
@@ -184,40 +189,52 @@ void includes() {
 
     KeyExprView foostarv("FOO/*");
     KeyExprView foobarv("FOO/BAR");
-    assert(foostarv.includes(foobarv));
-    assert(foostarv.includes(foobarv, err));
-    assert(!foobarv.includes(foostarv));
-    assert(!foobarv.includes(foostarv, err));
-    assert(!foostarv.includes(nul));
-    assert(!foostarv.includes(nul, err));
 
+#ifdef ZENOHCXX_ZENOHC
+    assert(foostarv.includes(foobarv));
+    assert(!foobarv.includes(foostarv));
+    assert(!foostarv.includes(nul));
     assert(keyexpr_includes("FOO/*", "FOO/BAR"));
+#endif
+
+    assert(foostarv.includes(foobarv, err));
+    assert(err == 0);
+    assert(!foobarv.includes(foostarv, err));
+    assert(err == 0);
+    assert(!foostarv.includes(nul, err));
+    assert(err < 0);
     assert(keyexpr_includes("FOO/*", "FOO/BAR", err));
     assert(err == 0);
 
     KeyExpr foostar("FOO/*");
     KeyExpr foobar("FOO/BAR");
+
+#ifdef ZENOHCXX_ZENOHC
     assert(foostar.includes(foobar));
-    assert(foostar.includes(foobar, err));
     assert(!foobar.includes(foostar));
-    assert(!foobar.includes(foostar, err));
     assert(!foostar.includes(nul));
+    assert(!keyexpr_includes("FOO/BAR", "FOO/*"));
+    assert(!keyexpr_includes("FOO/*", nul));
+#endif
+
+    assert(foostar.includes(foobar, err));
+    assert(err == 0);
+    assert(!foobar.includes(foostar, err));
+    assert(err == 0);
     assert(!foostar.includes(nul, err));
     assert(err < 0);
-
-    assert(!keyexpr_includes("FOO/BAR", "FOO/*"));
     assert(!keyexpr_includes("FOO/BAR", "FOO/*", err));
     assert(err == 0);
-
-    assert(!keyexpr_includes("FOO/*", nul));
     assert(!keyexpr_includes("FOO/*", nul, err));
     assert(err < 0);
 
     KeyExpr foo("FOO");
+#ifdef ZENOHCXX_ZENOHC
     assert(!keyexpr_includes(foo, "FOO/BAR"));
+    assert(!keyexpr_includes("FOO/BAR", foo));
+#endif
     assert(!keyexpr_includes(foo, "FOO/BAR", err));
     assert(err == 0);
-    assert(!keyexpr_includes("FOO/BAR", foo));
     assert(!keyexpr_includes("FOO/BAR", foo, err));
     assert(err == 0);
 }
@@ -229,41 +246,58 @@ void intersects() {
     KeyExprView foostarv("FOO/*");
     KeyExprView foobarv("FOO/BAR");
     KeyExprView starbuzv("*/BUZ");
+
+#ifdef ZENOHCXX_ZENOHC
     assert(foostarv.intersects(foobarv));
     assert(!starbuzv.intersects(foobarv));
     assert(!foostarv.intersects(nul));
+    assert(keyexpr_intersects("FOO/*", "FOO/BAR"));
+    assert(!keyexpr_intersects("*/BUZ", "FOO/BAR"));
+    assert(!keyexpr_intersects("FOO/*", nul));
+#endif
+
     assert(foostarv.intersects(foobarv, err));
+    assert(err == 0);
     assert(!starbuzv.intersects(foobarv, err));
+    assert(err == 0);
     assert(!foostarv.intersects(nul, err));
     assert(err != 0);
 
-    assert(keyexpr_intersects("FOO/*", "FOO/BAR"));
     assert(keyexpr_intersects("FOO/*", "FOO/BAR", err));
     assert(err == 0);
 
-    assert(!keyexpr_intersects("*/BUZ", "FOO/BAR"));
     assert(!keyexpr_intersects("*/BUZ", "FOO/BAR", err));
     assert(err == 0);
 
-    assert(!keyexpr_intersects("FOO/*", nul));
     assert(!keyexpr_intersects("FOO/*", nul, err));
     assert(err < 0);
 
     KeyExpr foostar("FOO/*");
     KeyExpr foobar("FOO/BAR");
     KeyExpr starbuz("*/BUZ");
+
+#ifdef ZENOHCXX_ZENOHC
     assert(foostar.intersects(foobar));
     assert(!starbuz.intersects(foobar));
     assert(!foostar.intersects(nul));
+    assert(keyexpr_intersects("FOO/*", foobar));
+    assert(!keyexpr_intersects("*/BUZ", foobar));
+    assert(!keyexpr_intersects("FOO/*", nul));
+#endif
+
     assert(foostar.intersects(foobar, err));
     assert(err == 0);
     assert(!starbuz.intersects(foobar, err));
+    assert(err == 0);
     assert(!foostar.intersects(nul, err));
     assert(err != 0);
 
-    assert(keyexpr_intersects("FOO/*", foobar));
     assert(keyexpr_intersects("FOO/*", foobar, err));
     assert(err == 0);
+    assert(!keyexpr_intersects("*/BUZ", foobar, err));
+    assert(err == 0);
+    assert(!keyexpr_intersects("FOO/*", nul, err));
+    assert(err < 0);
 }
 
 #include <variant>
