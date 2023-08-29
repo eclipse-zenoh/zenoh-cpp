@@ -27,6 +27,22 @@ Classes implementing key expressions. See `zenoh abstractions`_ for details.
 
 .. doxygenfunction:: keyexpr_is_canon(const std::string_view& s)
 
+.. doxygenfunction:: keyexpr_concat(const zenoh::KeyExprView& k, const std::string_view& s)
+
+.. doxygenfunction:: keyexpr_join(const zenoh::KeyExprView& a, const zenoh::KeyExprView& b)
+
+.. doxygenfunction:: keyexpr_equals(const zenoh::KeyExprView& a, const zenoh::KeyExprView& b, ErrNo& error)
+
+.. doxygenfunction:: keyexpr_equals(const zenoh::KeyExprView& a, const zenoh::KeyExprView& b)
+
+.. doxygenfunction:: keyexpr_includes(const zenoh::KeyExprView& a, const zenoh::KeyExprView& b, ErrNo& error)
+
+.. doxygenfunction:: keyexpr_includes(const zenoh::KeyExprView& a, const zenoh::KeyExprView& b)
+
+.. doxygenfunction:: keyexpr_intersects(const zenoh::KeyExprView& a, const zenoh::KeyExprView& b, ErrNo& error)
+
+.. doxygenfunction:: keyexpr_intersects(const zenoh::KeyExprView& a, const zenoh::KeyExprView& b)
+
 .. doxygenstruct:: zenoh::KeyExprUnchecked
    :members:
    :membergroups: Constructors Operators Methods
