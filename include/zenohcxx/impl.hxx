@@ -53,11 +53,17 @@ inline const z::Id& z::HelloView::get_id() const {
 #endif
 }
 
+#ifdef __ZENOHCXX_ZENOHPICO
+inline z::Str z::KeyExprView::resolve(const z::Session& s) const { return ::zp_keyexpr_resolve(s.loan(), *this); }
+#endif
+
 inline bool _split_ret_to_bool_and_err(int8_t ret, ErrNo& error) {
     if (ret < -1) {
+        // return value less than -1 is an error code
         error = ret;
         return false;
     } else {
+        // return value -1 is false, 0 is true
         error = 0;
         return ret == 0;
     }
@@ -300,7 +306,8 @@ inline bool z::Publisher::delete_impl(const PublisherDeleteOptions* options, Err
 #ifdef __ZENOHCXX_ZENOHC
 
 inline bool z::Publisher::put_owned_impl(z::Payload&& payload, const z::PublisherPutOptions* options, ErrNo& error) {
-    error = ::zc_publisher_put_owned(loan(), &static_cast<::zc_owned_payload_t&>(payload), options);
+    auto p = payload.take();
+    error = ::zc_publisher_put_owned(loan(), z_move(p), options);
     return error == 0;
 }
 
@@ -438,33 +445,34 @@ inline std::variant<z::Publisher, ErrorMessage> z::Session::declare_publisher(z:
 
 inline bool z::Session::info_routers_zid(ClosureZid&& callback, ErrNo& error) {
     auto c = callback.take();
-    error = ::z_info_routers_zid(loan(), &c);
+    error = ::z_info_routers_zid(loan(), z_move(c));
     return error == 0;
 }
 inline bool z::Session::info_routers_zid(ClosureZid&& callback) {
     auto c = callback.take();
-    return ::z_info_routers_zid(loan(), &c) == 0;
+    return ::z_info_routers_zid(loan(), z_move(c)) == 0;
 }
 
 inline bool z::Session::info_peers_zid(ClosureZid&& callback, ErrNo& error) {
     auto c = callback.take();
-    error = ::z_info_peers_zid(loan(), &c);
+    error = ::z_info_peers_zid(loan(), z_move(c));
     return error == 0;
 }
 inline bool z::Session::info_peers_zid(ClosureZid&& callback) {
     auto c = callback.take();
-    return ::z_info_peers_zid(loan(), &c) == 0;
+    return ::z_info_peers_zid(loan(), z_move(c)) == 0;
 }
 
 inline bool z::Session::undeclare_keyexpr_impl(KeyExpr&& keyexpr, ErrNo& error) {
-    error = ::z_undeclare_keyexpr(loan(), &(static_cast<::z_owned_keyexpr_t&>(keyexpr)));
+    auto k = keyexpr.take();
+    error = ::z_undeclare_keyexpr(loan(), z_move(k));
     return error == 0;
 }
 
 inline bool z::Session::get_impl(z::KeyExprView keyexpr, const char* parameters, ClosureReply&& callback,
                                  const GetOptions* options, ErrNo& error) {
     auto c = callback.take();
-    error = ::z_get(loan(), keyexpr, parameters, &c, options);
+    error = ::z_get(loan(), keyexpr, parameters, z_move(c), options);
     return error == 0;
 }
 
@@ -482,7 +490,8 @@ inline bool z::Session::delete_impl(z::KeyExprView keyexpr, const DeleteOptions*
 #ifdef __ZENOHCXX_ZENOHC
 inline bool z::Session::put_owned_impl(z::KeyExprView keyexpr, z::Payload&& payload, const PutOptions* options,
                                        ErrNo& error) {
-    error = ::zc_put_owned(loan(), keyexpr, &(static_cast<::zc_owned_payload_t&>(payload)), options);
+    auto p = payload.take();
+    error = ::zc_put_owned(loan(), keyexpr, z_move(p), options);
     return error == 0;
 }
 #endif
@@ -491,7 +500,7 @@ inline std::variant<z::Queryable, ErrorMessage> z::Session::declare_queryable_im
                                                                                    ClosureQuery&& callback,
                                                                                    const QueryableOptions* options) {
     auto c = callback.take();
-    z::Queryable queryable(::z_declare_queryable(loan(), keyexpr, &c, options));
+    z::Queryable queryable(::z_declare_queryable(loan(), keyexpr, z_move(c), options));
     if (queryable.check()) {
         return std::move(queryable);
     } else {
@@ -503,7 +512,7 @@ inline std::variant<z::Subscriber, ErrorMessage> z::Session::declare_subscriber_
                                                                                      ClosureSample&& callback,
                                                                                      const SubscriberOptions* options) {
     auto c = callback.take();
-    z::Subscriber subscriber(::z_declare_subscriber(loan(), keyexpr, &c, options));
+    z::Subscriber subscriber(::z_declare_subscriber(loan(), keyexpr, z_move(c), options));
     if (subscriber.check()) {
         return std::move(subscriber);
     } else {
@@ -514,7 +523,7 @@ inline std::variant<z::Subscriber, ErrorMessage> z::Session::declare_subscriber_
 inline std::variant<z::PullSubscriber, ErrorMessage> z::Session::declare_pull_subscriber_impl(
     z::KeyExprView keyexpr, ClosureSample&& callback, const PullSubscriberOptions* options) {
     auto c = callback.take();
-    z::PullSubscriber pull_subscriber(::z_declare_pull_subscriber(loan(), keyexpr, &c, options));
+    z::PullSubscriber pull_subscriber(::z_declare_pull_subscriber(loan(), keyexpr, z_move(c), options));
     if (pull_subscriber.check()) {
         return std::move(pull_subscriber);
     } else {

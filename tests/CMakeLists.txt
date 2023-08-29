@@ -15,7 +15,6 @@ function(add_test_instance file mode lib)
 	target_link_libraries(${target} PUBLIC ${lib})
 	set_property(TARGET ${target} PROPERTY LANGUAGE CXX)
 	set_property(TARGET ${target} PROPERTY CXX_STANDARD 17)
-	add_platform_libraries(${target})
 	add_test(NAME "test_${target}" COMMAND ${target})
 endfunction()
 

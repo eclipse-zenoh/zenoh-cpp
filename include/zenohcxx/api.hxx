@@ -343,6 +343,34 @@ struct HelloView : public Copyable<::z_hello_t> {
     const z::StrArrayView& get_locators() const { return static_cast<const z::StrArrayView&>(locators); }
 };
 
+/// Owned string returned from zenoh. It is automatically freed when the object is destroyed.
+class Str : public Owned<::z_owned_str_t> {
+   public:
+    using Owned::Owned;
+
+    /// @name Methods
+
+    /// @brief Get the string value
+    /// @return ``const char*`` null-terminated string pointer
+    const char* c_str() const { return loan(); }
+
+    /// @name Operators
+
+    /// @brief Get the string value
+    /// @return ``const char*`` null-terminated string pointer
+    operator const char*() const { return loan(); }
+
+    /// @brief Equality operator
+    /// @param s the ``std::string_view`` to compare with
+    /// @return true if the two strings are equal
+    bool operator==(const std::string_view& s) const { return s == c_str(); }
+
+    /// @brief Equality operator
+    /// @param s the null-terminated string to compare with
+    /// @return true if the two strings are equal
+    bool operator==(const char* s) const { return std::string_view(s) == c_str(); }
+};
+
 class KeyExpr;
 class KeyExprView;
 
@@ -488,6 +516,10 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     /// @brief Return the key expression as a ``std::string_view``
     /// @return ``std::string_view`` representing the key expression
     std::string_view as_string_view() const { return as_bytes().as_string_view(); }
+
+#ifdef __ZENOHCXX_ZENOHPICO
+    z::Str resolve(const z::Session& s) const;
+#endif
 
 #ifdef __ZENOHCXX_ZENOHC
     // operator += purposedly not defined to not provoke ambiguity between concat (which
@@ -1340,34 +1372,6 @@ struct PublisherDeleteOptions : public Copyable<::z_publisher_delete_options_t> 
     /// @param v the other ``PublisherDeleteOptions`` to compare with
     /// @return true if the two values are not equal
     bool operator!=(const z::PublisherOptions& v) const { return !operator==(v); }
-};
-
-/// Owned string returned from zenoh. It is automatically freed when the object is destroyed.
-class Str : public Owned<::z_owned_str_t> {
-   public:
-    using Owned::Owned;
-
-    /// @name Methods
-
-    /// @brief Get the string value
-    /// @return ``const char*`` null-terminated string pointer
-    const char* c_str() const { return loan(); }
-
-    /// @name Operators
-
-    /// @brief Get the string value
-    /// @return ``const char*`` null-terminated string pointer
-    operator const char*() const { return loan(); }
-
-    /// @brief Equality operator
-    /// @param s the ``std::string_view`` to compare with
-    /// @return true if the two strings are equal
-    bool operator==(const std::string_view& s) const { return s == c_str(); }
-
-    /// @brief Equality operator
-    /// @param s the null-terminated string to compare with
-    /// @return true if the two strings are equal
-    bool operator==(const char* s) const { return std::string_view(s) == c_str(); }
 };
 
 /// Owned key expression
