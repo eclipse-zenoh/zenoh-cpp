@@ -66,11 +66,14 @@ int _main(int argc, char **argv) {
         }
     }
 
-    printf("Opening session...\n");
+    std::cout << "Opening session..." << std::endl;
     auto session = std::get<Session>(open(std::move(config)));
 
-    printf("Declaring Publisher on '%s'...\n", keyexpr);
+    std::cout << "Declaring Publisher on '" << keyexpr << "'..." << std::endl;
     auto pub = std::get<Publisher>(session.declare_publisher(keyexpr));
+#ifdef ZENOHCXX_ZENOHC
+    std::cout << "Publisher on '" << pub.get_keyexpr().as_string_view() << "' declared" << std::endl;
+#endif
 
     PublisherPutOptions options;
     options.set_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN);

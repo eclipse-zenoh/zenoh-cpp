@@ -1544,6 +1544,12 @@ class Reply : public Owned<::z_owned_reply_t> {
 class Subscriber : public Owned<::z_owned_subscriber_t> {
    public:
     using Owned::Owned;
+
+#ifdef __ZENOHCXX_ZENOHC
+    /// @brief Get the key expression of the subscriber
+    /// @return ``zenoh::KeyExpr`` value
+    z::KeyExpr get_keyexpr() const;
+#endif
 };
 
 /// An owned zenoh pull subscriber. Destroying the subscriber cancels the subscription.
@@ -1623,6 +1629,12 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     /// @brief Send a delete request
     /// @return true if the request was sent, false otherwise
     bool delete_resource();
+
+#ifdef __ZENOHCXX_ZENOHC
+    /// @brief Get the key expression of the publisher
+    /// @return ``zenoh::KeyExpr`` value
+    z::KeyExpr get_keyexpr() const;
+#endif
 
 #ifdef __ZENOHCXX_ZENOHC
     /// @brief Publish the payload got from ``ShmBuf`` or from ``Sample``
