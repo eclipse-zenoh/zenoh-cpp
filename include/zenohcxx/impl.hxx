@@ -48,8 +48,7 @@ inline const z::Id& z::HelloView::get_id() const {
     return static_cast<const z::Id&>(pid);
 #endif
 #ifdef __ZENOHCXX_ZENOHPICO
-    assert(zid.len == sizeof(Id));  // TODO: is this invariant that Id is always 16 bytes?
-    return reinterpret_cast<const z::Id&>(*zid.start);
+    return static_cast<const z::Id&>(zid);
 #endif
 }
 
