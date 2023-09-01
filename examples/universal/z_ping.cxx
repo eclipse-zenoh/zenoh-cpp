@@ -49,17 +49,17 @@ int _main(int argc, char** argv) {
     Config config;
 #ifdef ZENOHCXX_ZENOHC
     if (args.config_path) {
-        config = std::get<Config>(config_from_file(args.config_path));
+        config = expect<Config>(config_from_file(args.config_path));
     }
 #endif
     std::cout << "Opening session...\n";
-    auto session = std::get<Session>(open(std::move(config)));
+    auto session = expect<Session>(open(std::move(config)));
 
-    auto sub = std::get<Subscriber>(
+    auto sub = expect<Subscriber>(
         session.declare_subscriber("test/pong", std::move([&condvar](const Sample&) mutable {
                                         condvar.notify_one();
                                    })));
-    auto pub = std::get<Publisher>(session.declare_publisher("test/ping"));
+    auto pub = expect<Publisher>(session.declare_publisher("test/ping"));
     std::vector<char> data(args.size);
     std::unique_lock lock(mutex);
     if (args.warmup_ms) {

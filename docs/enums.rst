@@ -19,6 +19,8 @@ Enum types are C++ - style typedefs for corrresponding enums of `zenoh-c`_ / `ze
 
 .. doxygentypedef:: ErrorMessage
 
+.. doxygenfunction:: expect
+
 .. doxygentypedef:: ErrNo
 
 .. doxygentypedef:: SampleKind

@@ -27,10 +27,10 @@ consuming the configuration object :cpp:class:`zenoh::Config`.
       try {
          Config config;
          // take Session from std::variant
-         auto session = std::get<Session>(open(std::move(config)));
+         auto session = expect<Session>(open(std::move(config)));
          session.put("demo/example/simple", "Simple!");
       } catch (ErrorMessage e) {
-         // Exception comes from ``std::get``, the zenoh-cpp itself does not throw any exception
+         // Exception comes from ``expect``, the zenoh-cpp itself does not throw any exception
          std::cout << "Received an error :" << e.as_string_view() << "\n";
       }
    }

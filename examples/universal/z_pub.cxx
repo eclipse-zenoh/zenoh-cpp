@@ -67,10 +67,10 @@ int _main(int argc, char **argv) {
     }
 
     printf("Opening session...\n");
-    auto session = std::get<Session>(open(std::move(config)));
+    auto session = expect<Session>(open(std::move(config)));
 
     printf("Declaring Publisher on '%s'...\n", keyexpr);
-    auto pub = std::get<Publisher>(session.declare_publisher(keyexpr));
+    auto pub = expect<Publisher>(session.declare_publisher(keyexpr));
 
     PublisherPutOptions options;
     options.set_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN);

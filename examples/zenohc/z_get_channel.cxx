@@ -42,7 +42,7 @@ int _main(int argc, char **argv) {
     }
 
     printf("Opening session...\n");
-    auto session = std::get<Session>(open(std::move(config)));
+    auto session = expect<Session>(open(std::move(config)));
 
     std::cout << "Sending Query '" << expr << "'...\n";
     GetOptions opts;
@@ -53,7 +53,7 @@ int _main(int argc, char **argv) {
 
     Reply reply(nullptr);
     for (recv(reply); reply.check(); recv(reply)) {
-        auto sample = std::get<Sample>(reply.get());
+        auto sample = expect<Sample>(reply.get());
         std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
                   << sample.get_payload().as_string_view() << "')\n";
     }
