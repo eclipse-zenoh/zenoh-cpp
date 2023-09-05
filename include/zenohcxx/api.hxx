@@ -46,9 +46,9 @@ typedef z::Value ErrorMessage;
 /// @return the value of type ``T`` if ``std::variant<T, zenoh::ErrorMessage>`` value contains it
 /// @throws  ``zenoh::ErrorMessage`` if ``std::variant<T, zenoh::ErrorMessage>`` value contains it
 template <typename T>
-inline T expect(std::variant<T, z::Value>&& v) {
-    if (std::holds_alternative<z::Value>(std::move(v))) {
-        throw std::get<z::Value>(std::move(v));
+inline T expect(std::variant<T, z::ErrorMessage>&& v) {
+    if (v.index() == 1) {
+        throw std::get<z::ErrorMessage>(std::move(v));
     } else {
         return std::get<T>(std::move(v));
     }
