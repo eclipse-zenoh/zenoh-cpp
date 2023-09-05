@@ -29,8 +29,8 @@ Queryable example:
    int main(int argc, char **argv) {
       auto queryable_keyexpr = "demo/example/simple";
       Config config;
-      auto session = std::get<Session>(open(std::move(config)));
-      auto queryable = std::get<Queryable>(
+      auto session = expect<Session>(open(std::move(config)));
+      auto queryable = expect<Queryable>(
          session.declare_queryable(queryable_keyexpr, [](const Query& query) {
             std::cout << "Received Query '" 
                       << query.get_keyexpr().as_string_view() 
@@ -52,7 +52,7 @@ Also notice that the callback is processed asynchronously, so the client must no
 
    int main(int argc, char **argv) {
       Config config;
-      auto session = std::get<Session>(open(std::move(config)));
+      auto session = expect<Session>(open(std::move(config)));
 
       auto on_reply = [](Reply&& reply) {
          auto result = reply.get();

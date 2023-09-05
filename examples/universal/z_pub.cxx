@@ -67,10 +67,10 @@ int _main(int argc, char **argv) {
     }
 
     std::cout << "Opening session..." << std::endl;
-    auto session = std::get<Session>(open(std::move(config)));
+    auto session = expect<Session>(open(std::move(config)));
 
     std::cout << "Declaring Publisher on '" << keyexpr << "'..." << std::endl;
-    auto pub = std::get<Publisher>(session.declare_publisher(keyexpr));
+    auto pub = expect<Publisher>(session.declare_publisher(keyexpr));
 #ifdef ZENOHCXX_ZENOHC
     std::cout << "Publisher on '" << pub.get_keyexpr().as_string_view() << "' declared" << std::endl;
 #endif

@@ -68,19 +68,19 @@ int _main(int argc, char **argv) {
     }
 
     printf("Opening session...\n");
-    auto session = std::get<Session>(open(std::move(config)));
+    auto session = expect<Session>(open(std::move(config)));
     std::ostringstream oss;
     oss << session.info_zid();
 
-    auto manager = std::get<ShmManager>(shm_manager_new(session, oss.str().c_str(), N * 256));
+    auto manager = expect<ShmManager>(shm_manager_new(session, oss.str().c_str(), N * 256));
 
     printf("Declaring Publisher on '%s'...\n", keyexpr);
-    auto pub = std::get<Publisher>(session.declare_publisher(keyexpr));
+    auto pub = expect<Publisher>(session.declare_publisher(keyexpr));
 
     PublisherPutOptions options;
     options.set_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN);
     for (int idx = 0; idx < N; ++idx) {
-        auto shmbuf = std::get<z::Shmbuf>(manager.alloc(256));
+        auto shmbuf = expect<z::Shmbuf>(manager.alloc(256));
         auto buf = shmbuf.char_ptr();
         snprintf(buf, 255, "[%4d] %s", idx, value);
         shmbuf.set_length(strlen(buf));

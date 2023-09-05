@@ -27,7 +27,7 @@ Publisher example:
 
    int main(int argc, char **argv) {
       Config config;
-      auto session = std::get<Session>(open(std::move(config)));
+      auto session = expect<Session>(open(std::move(config)));
       // Publish without creating a Publisher object
       session.put("demo/example/simple", "Simple!");
 
@@ -46,8 +46,8 @@ Subscriber example:
 
    int main(int argc, char **argv) {
       Config config;
-      auto session = std::get<Session>(open(std::move(config)));
-      auto subscriber = std::get<Subscriber>(
+      auto session = expect<Session>(open(std::move(config)));
+      auto subscriber = expect<Subscriber>(
          session.declare_subscriber("demo/example/simple", [](const Sample& sample) {
             std::cout << "Received: " << sample.get_payload().as_string_view() << std::endl;
          })
