@@ -58,10 +58,10 @@ int _main(int argc, char **argv) {
     KeyExprView keyexpr(expr);
 
     printf("Opening session...\n");
-    auto session = std::get<Session>(open(std::move(config)));
+    auto session = expect<Session>(open(std::move(config)));
 
     printf("Declaring Subscriber on '%s'...\n", expr);
-    auto subscriber = std::get<PullSubscriber>(session.declare_pull_subscriber(keyexpr, data_handler));
+    auto subscriber = expect<PullSubscriber>(session.declare_pull_subscriber(keyexpr, data_handler));
 
     printf("Press <enter> to pull data...\n");
     char c = 0;

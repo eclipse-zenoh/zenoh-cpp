@@ -22,10 +22,10 @@ int _main(int argc, char **argv) {
     Config config;
 
     std::cout << "Opening session...\n";
-    auto session = std::get<Session>(open(std::move(config)));
+    auto session = expect<Session>(open(std::move(config)));
 
-    auto pub = std::get<Publisher>(session.declare_publisher("test/pong"));
-    auto sub = std::get<Subscriber>(
+    auto pub = expect<Publisher>(session.declare_publisher("test/pong"));
+    auto sub = expect<Subscriber>(
         session.declare_subscriber("test/ping", std::move([pub = std::move(pub)](const Sample& sample) mutable {
                                         pub.put(sample.get_payload());
                                    })));

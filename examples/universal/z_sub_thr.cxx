@@ -76,12 +76,12 @@ int _main(int argc, char **argv) {
     }
 
     printf("Opening session...\n");
-    auto session = std::get<Session>(open(std::move(config)));
+    auto session = expect<Session>(open(std::move(config)));
 
     KeyExpr keyexpr = session.declare_keyexpr("test/thr");
 
     Stats stats;
-    auto subscriber = std::get<Subscriber>(session.declare_subscriber(keyexpr, {stats, stats}));
+    auto subscriber = expect<Subscriber>(session.declare_subscriber(keyexpr, {stats, stats}));
     char c = 0;
     while (c != 'q') {
         c = fgetc(stdin);

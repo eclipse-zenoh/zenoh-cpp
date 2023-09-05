@@ -244,6 +244,11 @@ void on_query(const Query& query) { ... };
 ...
 auto queryable = std::get<Queryable>(session.declare_queryable("foo/bar", on_query);
 ```
+Instead of `std::get` it makes sense to use `zenoh::expect` here. It is a helper template which takes `std::variant<T,ErrorMessage>` and
+either returns `T` or throws `ErrorMessage`:
+```C++
+auto queryable = expect(session.declare_queryable("foo/bar", on_query));
+```
 
 The `ClosureMoveParam` types accepts types, invocable with `Foo`, `Foo&` or `Foo&&`. Callback may take ownership of the reference parameter passed
 or do nothing and leave to caller to drop it.

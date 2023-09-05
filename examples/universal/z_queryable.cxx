@@ -58,7 +58,7 @@ int _main(int argc, char **argv) {
     }
 
     printf("Opening session...\n");
-    auto session = std::get<Session>(open(std::move(config)));
+    auto session = expect<Session>(open(std::move(config)));
 
     KeyExprView keyexpr(expr);
     if (!keyexpr.check()) {
@@ -81,7 +81,7 @@ int _main(int argc, char **argv) {
 
     auto on_drop_queryable = []() { std::cout << "Destroying queryable\n"; };
 
-    auto queryable = std::get<Queryable>(session.declare_queryable(keyexpr, {on_query, on_drop_queryable}));
+    auto queryable = expect<Queryable>(session.declare_queryable(keyexpr, {on_query, on_drop_queryable}));
 
     printf("Enter 'q' to quit...\n");
     char c = 0;
