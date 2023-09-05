@@ -36,9 +36,23 @@ using namespace zenohcxx;
 class Session;
 class Value;
 
-/// Text error message returned in ``std::variant<T, ErrorMessage>`` retrun types.
-/// The message is a sting represented as ``zenoh::Value`` object
+/// Text error message returned in ``std::variant<T, ErrorMessage>`` return types.
+/// The message is a sting represented as ``zenoh::Value`` object. See also ``zenoh::expect`` function
+/// which eases access to the return value in this variant type.
 typedef z::Value ErrorMessage;
+
+/// Uility function which either returns the value or throws an exception with the ``zenoh::ErrorMessage`` value
+/// @param v the ``std::variant<T, zenoh:::ErrorMessage>`` value
+/// @return the value of type ``T`` if ``std::variant<T, zenoh::ErrorMessage>`` value contains it
+/// @throws  ``zenoh::ErrorMessage`` if ``std::variant<T, zenoh::ErrorMessage>`` value contains it
+template <typename T>
+inline T expect(std::variant<T, z::ErrorMessage>&& v) {
+    if (v.index() == 1) {
+        throw std::get<z::ErrorMessage>(std::move(v));
+    } else {
+        return std::get<T>(std::move(v));
+    }
+}
 
 /// Numeric error code value. This is a value < -1 returned by zenoh-c functions
 typedef int8_t ErrNo;
@@ -56,10 +70,11 @@ typedef ::z_sample_kind_t SampleKind;
 ///
 ///   Values:
 ///     - **Z_ENCODING_PREFIX_EMPTY**: Encoding not defined.
-///     - **Z_ENCODING_PREFIX_APP_OCTET_STREAM**: ``application/octet-stream``. Default value for all other cases. An
-///     unknown file type should use this type.
+///     - **Z_ENCODING_PREFIX_APP_OCTET_STREAM**: ``application/octet-stream``. Default value for all other cases.
+///     An unknown file type should use this type.
 ///     - **Z_ENCODING_PREFIX_APP_CUSTOM**: Custom application type. Non IANA standard.
-///     - **Z_ENCODING_PREFIX_TEXT_PLAIN**: ``text/plain``. Default value for textual files. A textual file should be
+///     - **Z_ENCODING_PREFIX_TEXT_PLAIN**: ``text/plain``. Default value for textual files. A textual file should
+///     be
 ///         human-readable and must not contain binary data.
 ///     - **Z_ENCODING_PREFIX_APP_PROPERTIES**: Application properties
 ///         type. Non IANA standard.
@@ -69,8 +84,8 @@ typedef ::z_sample_kind_t SampleKind;
 ///     - **Z_ENCODING_PREFIX_APP_FLOAT**: Application float type. Non IANA standard.
 ///     - **Z_ENCODING_PREFIX_APP_XML**: ``application/xml``. XML.
 ///     - **Z_ENCODING_PREFIX_APP_XHTML_XML**: ``application/xhtml+xml``. XHTML.
-///     - **Z_ENCODING_PREFIX_APP_X_WWW_FORM_URLENCODED**: ``application/x-www-form-urlencoded``. The keys and values
-///     are encoded in key-value tuples separated by '&', with a '=' between the key and the value.
+///     - **Z_ENCODING_PREFIX_APP_X_WWW_FORM_URLENCODED**: ``application/x-www-form-urlencoded``. The keys and
+///     values are encoded in key-value tuples separated by '&', with a '=' between the key and the value.
 ///     - **Z_ENCODING_PREFIX_TEXT_JSON**: Text JSON. Non IANA standard.
 ///     - **Z_ENCODING_PREFIX_TEXT_HTML**: ``text/html``.  HyperText Markup Language (HTML).
 ///     - **Z_ENCODING_PREFIX_TEXT_XML**: ``text/xml``. `Application/xml` is recommended as of RFC
@@ -86,8 +101,10 @@ typedef ::z_encoding_prefix_t EncodingPrefix;
 ///   Consolidation mode values.
 ///
 ///   Values:
-///       - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector.
-///       - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any number.
+///       - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query
+///       selector.
+///       - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any
+///       number.
 ///       - **Z_CONSOLIDATION_MODE_MONOTONIC**: It guarantees that any reply for a given key expression will be
 ///       monotonic in time
 ///           w.r.t. the previous received replies for the same key expression. I.e., for the same key expression
@@ -109,8 +126,8 @@ typedef ::z_reliability_t Reliability;
 ///   Values:
 ///    - **Z_CONGESTION_CONTROL_BLOCK**: Defines congestion control as "block". Messages are not dropped in case of
 ///       congestion control
-///    - **Z_CONGESTION_CONTROL_DROP**: Defines congestion control as "drop". Messages are dropped in case of congestion
-///    control
+///    - **Z_CONGESTION_CONTROL_DROP**: Defines congestion control as "drop". Messages are dropped in case of
+///    congestion control
 ///
 typedef ::z_congestion_control_t CongestionControl;
 
@@ -1321,13 +1338,13 @@ class Str : public Owned<::z_owned_str_t> {
 
     /// @brief Get the string value
     /// @return ``const char*`` null-terminated string pointer
-    const char* c_str() const { return ::z_loan(_0); }
+    const char* c_str() const { return loan(); }
 
     /// @name Operators
 
     /// @brief Get the string value
     /// @return ``const char*`` null-terminated string pointer
-    operator const char*() const { return ::z_loan(_0); }
+    operator const char*() const { return loan(); }
 
     /// @brief Equality operator
     /// @param s the ``std::string_view`` to compare with
@@ -1357,7 +1374,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
 
     /// @brief Get the key expression value
     /// @return ``KeyExprView`` referencing the key expression value in the object
-    z::KeyExprView as_keyexpr_view() const { return z::KeyExprView(::z_keyexpr_loan(&_0)); }
+    z::KeyExprView as_keyexpr_view() const { return z::KeyExprView(loan()); }
 
     /// @brief Get the key expression value
     /// @return ``BytesView`` referencing the key expression value in the object
@@ -1444,28 +1461,26 @@ class Config : public Owned<::z_owned_config_t> {
     /// @param key the key
     /// @return the ``Str`` value of the config parameter
     /// @note zenoh-c only
-    z::Str get(const char* key) const { return z::Str(::zc_config_get(::z_config_loan(&_0), key)); }
+    z::Str get(const char* key) const { return z::Str(::zc_config_get(loan(), key)); }
 
     /// @brief Get the whole config as a JSON string
     /// @return the JSON string in ``Str``
     /// @note zenoh-c only
-    z::Str to_string() const { return z::Str(::zc_config_to_string(::z_config_loan(&_0))); }
+    z::Str to_string() const { return z::Str(::zc_config_to_string(loan())); }
 
     /// @brief Insert a config parameter by the string key
     /// @param key the key
     /// @param value the JSON string value
     /// @return true if the parameter was inserted
     /// @note zenoh-c only
-    bool insert_json(const char* key, const char* value) {
-        return ::zc_config_insert_json(::z_config_loan(&_0), key, value) == 0;
-    }
+    bool insert_json(const char* key, const char* value) { return ::zc_config_insert_json(loan(), key, value) == 0; }
 #endif
 #ifdef __ZENOHCXX_ZENOHPICO
     /// @brief Get config parameter by it's numeric ID
     /// @param key the key
     /// @return pointer to the null-terminated string value of the config parameter
     /// @note zenoh-pico only
-    const char* get(uint8_t key) const { return ::zp_config_get(::z_config_loan(&_0), key); }
+    const char* get(uint8_t key) const { return ::zp_config_get(loan(), key); }
 
     /// @brief Insert a config parameter by it's numeric ID
     /// @param key the key
@@ -1558,13 +1573,13 @@ class PullSubscriber : public Owned<::z_owned_pull_subscriber_t> {
 
     /// @brief Pull the next sample
     /// @return true if the sample was pulled, false otherwise
-    bool pull() { return ::z_subscriber_pull(::z_loan(_0)) == 0; }
+    bool pull() { return ::z_subscriber_pull(loan()) == 0; }
 
     /// @brief Pull the next sample
     /// @param error the error code
     /// @return true if the sample was pulled, false otherwise
     bool pull(ErrNo& error) {
-        error = ::z_subscriber_pull(::z_loan(_0));
+        error = ::z_subscriber_pull(loan());
         return error == 0;
     }
 };
@@ -1673,7 +1688,7 @@ class Hello : public Owned<::z_owned_hello_t> {
 
     /// @brief Get the content of the hello message
     /// @return the content of the hello message as ``HelloView``
-    operator z::HelloView() const { return z::HelloView(::z_hello_loan(&_0)); }
+    operator z::HelloView() const { return z::HelloView(loan()); }
 };
 
 /// @brief Callback type passed to ``Session::get``to process ``Reply``s from ``Queryable``s
@@ -1756,12 +1771,12 @@ class Session : public Owned<::z_owned_session_t> {
     /// This is possible in zenoh-c only where ``Session`` is a reference counted object.
     /// @return a new ``Session`` instance
     /// @note zenoh-c only
-    Session rcinc() { return Session(::zc_session_rcinc(::z_session_loan(&_0))); }
+    Session rcinc() { return Session(::zc_session_rcinc(loan())); }
 #endif
 
     /// @brief Get the unique identifier of the zenoh node associated to this ``Session``
     /// @return the unique identifier ``Id``
-    z::Id info_zid() const { return ::z_info_zid(::z_session_loan(&_0)); }
+    z::Id info_zid() const { return ::z_info_zid(loan()); }
 
     /// @brief Create ``KeyExpr`` instance with numeric id registered in ``Session`` routing tables
     /// @param keyexpr ``KeyExprView`` representing string key expression

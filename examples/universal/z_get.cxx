@@ -54,7 +54,7 @@ int _main(int argc, char **argv) {
     }
 
     printf("Opening session...\n");
-    auto session = std::get<Session>(open(std::move(config)));
+    auto session = expect<Session>(open(std::move(config)));
 
     std::cout << "Sending Query '" << expr << "'...\n";
     GetOptions opts;

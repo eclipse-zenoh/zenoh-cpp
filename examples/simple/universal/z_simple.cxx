@@ -32,7 +32,7 @@ class CustomerClass {
     // This example also demomstrates the usage of nullptr constructor if it's necessary to postpone
     // initialization of the member variable
     CustomerClass(Session& session, const KeyExprView& keyexpr) : pub(nullptr) {
-        pub = std::get<Publisher>(session.declare_publisher(keyexpr));
+        pub = expect<Publisher>(session.declare_publisher(keyexpr));
     }
 
     void put(const BytesView& value) { pub.put(value); }
@@ -42,10 +42,14 @@ class CustomerClass {
 };
 
 int main(int argc, char** argv) {
-    Config config;
-    auto session = std::get<Session>(open(std::move(config)));
-    std::string keyexpr = "demo/example/simple";
-    std::string value = "Simple!";
-    CustomerClass customer(session, keyexpr);
-    customer.put(value);
+    try {
+        Config config;
+        auto session = expect<Session>(open(std::move(config)));
+        std::string keyexpr = "demo/example/simple";
+        std::string value = "Simple!";
+        CustomerClass customer(session, keyexpr);
+        customer.put(value);
+    } catch (ErrorMessage e) {
+        std::cout << "Error: " << e.as_string_view() << std::endl;
+    }
 }

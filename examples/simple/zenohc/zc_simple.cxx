@@ -21,6 +21,6 @@ using namespace zenohc;
 
 int main(int argc, char **argv) {
     Config config;
-    auto session = std::get<Session>(open(std::move(config)));
+    auto session = expect<Session>(open(std::move(config)));
     session.put("demo/example/simple", "Simple!");
 }
