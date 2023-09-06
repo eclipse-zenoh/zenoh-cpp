@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.16)
 project(zenohcxx_examples LANGUAGES C CXX)
 
 if(CMAKE_BUILD_TYPE STREQUAL "")
