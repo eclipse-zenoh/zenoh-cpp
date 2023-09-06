@@ -106,7 +106,7 @@ class Owned {
     bool check() const { return ::z_check(_0); }
 
     /// @brief Get zenoh-c loan structure ``z_XXX_t`` associated with owned object ``z_owned_XXX_t``
-    /// if the corresponding zenoh-c function ``z_loan`` is defined/
+    /// if the corresponding zenoh-c function ``z_loan`` is defined
     /// @return zenoh-c loan structure ``z_XXX_t``
     template <typename ZC_LOAN_TYPE = decltype(::z_loan(*static_cast<const ZC_OWNED_TYPE*>(nullptr)))>
     ZC_LOAN_TYPE loan() const {

@@ -67,21 +67,6 @@ function(debug_print var)
 endfunction()
 
 #
-# Add default set of libraries depending on platform
-#
-function(add_platform_libraries target)
-	if(APPLE)
-		find_library(FFoundation Foundation)
-		find_library(FSecurity Security)
-		target_link_libraries(${target} PUBLIC ${FFoundation} ${FSecurity})
-	elseif(UNIX)
-		target_link_libraries(${target} PUBLIC rt pthread m dl)
-	elseif(WIN32)
-		target_link_libraries(${target} PUBLIC ws2_32 crypt32 secur32 bcrypt ncrypt userenv ntdll iphlpapi runtimeobject)
-	endif()
-endfunction()
-
-#
 # Copy necessary dlls to target runtime directory
 #
 function(copy_dlls target)
