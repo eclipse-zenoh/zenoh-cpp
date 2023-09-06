@@ -29,27 +29,27 @@ class CustomerClass {
     CustomerClass(const CustomerClass&) = delete;
     CustomerClass& operator=(const CustomerClass&) = delete;
     CustomerClass& operator=(CustomerClass&&) = delete;
-
-    CustomerClass(const KeyExprView& keyexpr) : session(nullptr), pub(nullptr) {
-        Config config;
-        Session s = expect(open(std::move(config)));
-        session = std::move(s);
-        // Publisher holds a reference to the Session, so after creating the publisher the session should
-        // not be moved anymore (as well as the whole CustomerClass)
-        Publisher p = expect(session.declare_publisher(keyexpr));
-        pub = std::move(p);
+    // This example also demomstrates the usage of nullptr constructor if it's necessary to postpone
+    // initialization of the member variable
+    CustomerClass(Session& session, const KeyExprView& keyexpr) : pub(nullptr) {
+        pub = expect<Publisher>(session.declare_publisher(keyexpr));
     }
 
     void put(const BytesView& value) { pub.put(value); }
 
    private:
-    Session session;
     Publisher pub;
 };
 
 int main(int argc, char** argv) {
-    std::string keyexpr = "demo/example/simple";
-    std::string value = "Simple!";
-    CustomerClass customer(keyexpr);
-    customer.put(value);
+    try {
+        Config config;
+        auto session = expect<Session>(open(std::move(config)));
+        std::string keyexpr = "demo/example/simple";
+        std::string value = "Simple!";
+        CustomerClass customer(session, keyexpr);
+        customer.put(value);
+    } catch (ErrorMessage e) {
+        std::cout << "Error: " << e.as_string_view() << std::endl;
+    }
 }
