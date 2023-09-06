@@ -429,6 +429,8 @@ inline bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b,
 inline bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b);
 
 /// The non-owning read-only view to a key expression in Zenoh.
+/// See details about key expression syntax in the <a
+/// href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Key%20Expressions.md"> Key Expressions RFC</a>.
 struct KeyExprView : public Copyable<::z_keyexpr_t> {
     using Copyable::Copyable;
 
@@ -1370,7 +1372,9 @@ class Str : public Owned<::z_owned_str_t> {
     bool operator==(const char* s) const { return std::string_view(s) == c_str(); }
 };
 
-/// Owned key expression
+/// Owned key expression.
+/// See details about key expression syntax in the <a
+/// href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Key%20Expressions.md"> Key Expressions RFC</a>.
 class KeyExpr : public Owned<::z_owned_keyexpr_t> {
    public:
     using Owned::Owned;
