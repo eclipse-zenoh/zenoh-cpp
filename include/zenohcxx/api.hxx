@@ -963,6 +963,22 @@ struct GetOptions : public Copyable<::z_get_options_t> {
     /// @return ``Value`` value
     const z::Value& get_value() const { return static_cast<const z::Value&>(value); }
 
+#ifdef __ZENOHCXX_ZENOHC
+    /// @brief Set the timeout for the query operation
+    /// @param v timeout in milliseconds. 0 means default query timeout from zenoh configuration.
+    /// @return reference to the structure itself
+    /// @note zenoh-c only
+    GetOptions& set_timeout_ms(uint64_t ms) {
+        timeout_ms = ms;
+        return *this;
+    }
+
+    /// @brief The timeout for the query operation
+    /// @return timeout in milliseconds. 0 means default query timeout from zenoh configuration.
+    /// @note zenoh-c only
+    uint64_t get_timeout_ms() const { return timeout_ms; }
+#endif
+
     /// @name Operators
 
     /// @brief Equality operator
