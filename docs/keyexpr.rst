@@ -15,7 +15,7 @@
 Key Expressions
 ===============
 
-Classes and functions for processing key expressions. See `zenoh abstractions`_ for detailed explanation of key expression concept.
+Classes and functions for processing key expressions. See `zenoh abstractions`_ and `Key Expression RFC`_ for detailed explanation of key expression concept.
 
 Key expression can be registered in the :cpp:class:`zenoh::Session` object with :cpp:func:`zenoh::Session::declare_keyexpr` method. The unique id is internally assinged to the key expression string in this case.
 
@@ -30,6 +30,7 @@ For that reason the operations without explicit error handling are disabled for 
 The methods which automatically performs the necessary resolving are provided instead: :cpp:func:`zenoh::Session::keyexpr_equals`, :cpp:func:`zenoh::Session::keyexpr_includes`, :cpp:func:`zenoh::Session::keyexpr_intersects`.
 
 .. _`zenoh abstractions`: https://zenoh.io/docs/manual/abstractions/
+.. _`Key Expression RFC`: https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Key%20Expressions.md
 
 .. doxygenfunction:: zenoh::keyexpr_canonize(std::string& s, ErrNo& error)
 

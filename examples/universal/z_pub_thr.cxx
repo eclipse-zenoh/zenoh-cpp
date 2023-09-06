@@ -50,13 +50,13 @@ int _main(int argc, char **argv) {
     }
 
     printf("Opening session...\n");
-    auto session = std::get<Session>(open(std::move(config)));
+    auto session = expect<Session>(open(std::move(config)));
 
     PublisherOptions options;
     options.set_congestion_control(Z_CONGESTION_CONTROL_BLOCK);
 
     printf("Declaring Publisher on '%s'...\n", keyexpr);
-    auto pub = std::get<Publisher>(session.declare_publisher(keyexpr, options));
+    auto pub = expect<Publisher>(session.declare_publisher(keyexpr, options));
 
     while (1) pub.put(payload);
 }

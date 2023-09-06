@@ -21,7 +21,7 @@ using namespace zenohc;
 
 void test_session_rcinc() {
     Config config;
-    auto s1 = std::get<Session>(open(std::move(config)));
+    auto s1 = expect<Session>(open(std::move(config)));
     auto s2 = s1.rcinc();
     assert(s1.check());
     assert(s2.check());

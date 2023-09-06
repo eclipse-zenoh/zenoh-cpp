@@ -32,11 +32,11 @@ class CustomerClass {
 
     CustomerClass(const KeyExprView& keyexpr) : session(nullptr), pub(nullptr) {
         Config config;
-        Session s = std::get<Session>(open(std::move(config)));
+        Session s = expect(open(std::move(config)));
         session = std::move(s);
         // Publisher holds a reference to the Session, so after creating the publisher the session should
         // not be moved anymore (as well as the whole CustomerClass)
-        Publisher p = std::get<Publisher>(session.declare_publisher(keyexpr));
+        Publisher p = expect(session.declare_publisher(keyexpr));
         pub = std::move(p);
     }
 

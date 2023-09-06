@@ -25,10 +25,9 @@ using namespace zenoh;
 
 const char *kind_to_str(z_sample_kind_t kind);
 
-void data_handler(const Sample& sample) {
+void data_handler(const Sample &sample) {
     std::cout << ">> [Subscriber] Received " << kind_to_str(sample.get_kind()) << " ('"
-                << sample.get_keyexpr().as_string_view() << "' : '" << sample.get_payload().as_string_view()
-                << "')\n";
+              << sample.get_keyexpr().as_string_view() << "' : '" << sample.get_payload().as_string_view() << "')\n";
 }
 
 int _main(int argc, char **argv) {
@@ -58,10 +57,10 @@ int _main(int argc, char **argv) {
     KeyExprView keyexpr(expr);
 
     printf("Opening session...\n");
-    auto session = std::get<Session>(open(std::move(config)));
+    auto session = expect<Session>(open(std::move(config)));
 
     printf("Declaring Subscriber on '%s'...\n", expr);
-    auto subscriber = std::get<Subscriber>(session.declare_subscriber(keyexpr, data_handler));
+    auto subscriber = expect<Subscriber>(session.declare_subscriber(keyexpr, data_handler));
 
     printf("Enter 'q' to quit...\n");
     char c = 0;

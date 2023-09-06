@@ -36,9 +36,23 @@ using namespace zenohcxx;
 class Session;
 class Value;
 
-/// Text error message returned in ``std::variant<T, ErrorMessage>`` retrun types.
-/// The message is a sting represented as ``zenoh::Value`` object
+/// Text error message returned in ``std::variant<T, ErrorMessage>`` return types.
+/// The message is a sting represented as ``zenoh::Value`` object. See also ``zenoh::expect`` function
+/// which eases access to the return value in this variant type.
 typedef z::Value ErrorMessage;
+
+/// Uility function which either returns the value or throws an exception with the ``zenoh::ErrorMessage`` value
+/// @param v the ``std::variant<T, zenoh:::ErrorMessage>`` value
+/// @return the value of type ``T`` if ``std::variant<T, zenoh::ErrorMessage>`` value contains it
+/// @throws  ``zenoh::ErrorMessage`` if ``std::variant<T, zenoh::ErrorMessage>`` value contains it
+template <typename T>
+inline T expect(std::variant<T, z::ErrorMessage>&& v) {
+    if (v.index() == 1) {
+        throw std::get<z::ErrorMessage>(std::move(v));
+    } else {
+        return std::get<T>(std::move(v));
+    }
+}
 
 /// Numeric error code value. This is a value < -1 returned by zenoh-c functions
 typedef int8_t ErrNo;
@@ -56,10 +70,11 @@ typedef ::z_sample_kind_t SampleKind;
 ///
 ///   Values:
 ///     - **Z_ENCODING_PREFIX_EMPTY**: Encoding not defined.
-///     - **Z_ENCODING_PREFIX_APP_OCTET_STREAM**: ``application/octet-stream``. Default value for all other cases. An
-///     unknown file type should use this type.
+///     - **Z_ENCODING_PREFIX_APP_OCTET_STREAM**: ``application/octet-stream``. Default value for all other cases.
+///     An unknown file type should use this type.
 ///     - **Z_ENCODING_PREFIX_APP_CUSTOM**: Custom application type. Non IANA standard.
-///     - **Z_ENCODING_PREFIX_TEXT_PLAIN**: ``text/plain``. Default value for textual files. A textual file should be
+///     - **Z_ENCODING_PREFIX_TEXT_PLAIN**: ``text/plain``. Default value for textual files. A textual file should
+///     be
 ///         human-readable and must not contain binary data.
 ///     - **Z_ENCODING_PREFIX_APP_PROPERTIES**: Application properties
 ///         type. Non IANA standard.
@@ -69,8 +84,8 @@ typedef ::z_sample_kind_t SampleKind;
 ///     - **Z_ENCODING_PREFIX_APP_FLOAT**: Application float type. Non IANA standard.
 ///     - **Z_ENCODING_PREFIX_APP_XML**: ``application/xml``. XML.
 ///     - **Z_ENCODING_PREFIX_APP_XHTML_XML**: ``application/xhtml+xml``. XHTML.
-///     - **Z_ENCODING_PREFIX_APP_X_WWW_FORM_URLENCODED**: ``application/x-www-form-urlencoded``. The keys and values
-///     are encoded in key-value tuples separated by '&', with a '=' between the key and the value.
+///     - **Z_ENCODING_PREFIX_APP_X_WWW_FORM_URLENCODED**: ``application/x-www-form-urlencoded``. The keys and
+///     values are encoded in key-value tuples separated by '&', with a '=' between the key and the value.
 ///     - **Z_ENCODING_PREFIX_TEXT_JSON**: Text JSON. Non IANA standard.
 ///     - **Z_ENCODING_PREFIX_TEXT_HTML**: ``text/html``.  HyperText Markup Language (HTML).
 ///     - **Z_ENCODING_PREFIX_TEXT_XML**: ``text/xml``. `Application/xml` is recommended as of RFC
@@ -86,8 +101,10 @@ typedef ::z_encoding_prefix_t EncodingPrefix;
 ///   Consolidation mode values.
 ///
 ///   Values:
-///       - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector.
-///       - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any number.
+///       - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query
+///       selector.
+///       - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any
+///       number.
 ///       - **Z_CONSOLIDATION_MODE_MONOTONIC**: It guarantees that any reply for a given key expression will be
 ///       monotonic in time
 ///           w.r.t. the previous received replies for the same key expression. I.e., for the same key expression
@@ -109,8 +126,8 @@ typedef ::z_reliability_t Reliability;
 ///   Values:
 ///    - **Z_CONGESTION_CONTROL_BLOCK**: Defines congestion control as "block". Messages are not dropped in case of
 ///       congestion control
-///    - **Z_CONGESTION_CONTROL_DROP**: Defines congestion control as "drop". Messages are dropped in case of congestion
-///    control
+///    - **Z_CONGESTION_CONTROL_DROP**: Defines congestion control as "drop". Messages are dropped in case of
+///    congestion control
 ///
 typedef ::z_congestion_control_t CongestionControl;
 
@@ -467,6 +484,8 @@ inline bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b)
 #endif
 
 /// The non-owning read-only view to a key expression in Zenoh.
+/// See details about key expression syntax in the <a
+/// href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Key%20Expressions.md"> Key Expressions RFC</a>.
 struct KeyExprView : public Copyable<::z_keyexpr_t> {
     using Copyable::Copyable;
 
@@ -1388,7 +1407,9 @@ struct PublisherDeleteOptions : public Copyable<::z_publisher_delete_options_t> 
     bool operator!=(const z::PublisherOptions& v) const { return !operator==(v); }
 };
 
-/// Owned key expression
+/// Owned key expression.
+/// See details about key expression syntax in the <a
+/// href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Key%20Expressions.md"> Key Expressions RFC</a>.
 class KeyExpr : public Owned<::z_owned_keyexpr_t> {
    public:
     using Owned::Owned;
