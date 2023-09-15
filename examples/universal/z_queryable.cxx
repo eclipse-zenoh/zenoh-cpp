@@ -84,7 +84,7 @@ int _main(int argc, char **argv) {
     auto queryable = expect<Queryable>(session.declare_queryable(keyexpr, {on_query, on_drop_queryable}));
 
     printf("Enter 'q' to quit...\n");
-    char c = 0;
+    int c = 0;
     while (c != 'q') {
         c = getchar();
         if (c == -1) {

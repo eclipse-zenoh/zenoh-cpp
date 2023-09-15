@@ -499,7 +499,7 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     /// In debug mode falis on assert if passed string is not a valid key expression
     /// @param name the null-terminated string representing a key expression
     /// @param _unchecked the empty type used to distinguish checked and unchecked construncting of KeyExprView
-    KeyExprView(const char* name, z::KeyExprUnchecked _unchecked) : Copyable(::z_keyexpr_unchecked(name)) {
+    KeyExprView(const char* name, z::KeyExprUnchecked) : Copyable(::z_keyexpr_unchecked(name)) {
         assert(keyexpr_is_canon(name));
     }
     /// @brief Constructs an instance from a ``std::string`` representing a key expression.
@@ -1399,7 +1399,7 @@ struct PublisherDeleteOptions : public Copyable<::z_publisher_delete_options_t> 
     /// @brief Equality operator
     /// @param v the other ``PublisherDeleteOptions`` to compare with
     /// @return true if the two values are equal
-    bool operator==(const z::PublisherOptions& v) const { return true; }
+    bool operator==(const z::PublisherOptions&) const { return true; }
 
     /// @brief Inequality operator
     /// @param v the other ``PublisherDeleteOptions`` to compare with

@@ -18,7 +18,7 @@
 #include "zenoh.hxx"
 using namespace zenoh;
 
-int _main(int argc, char **argv) {
+int _main(int, char **) {
     Config config;
 
     std::cout << "Opening session...\n";

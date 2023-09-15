@@ -19,7 +19,7 @@
 #include "zenohc.hxx"
 using namespace zenohc;
 
-int main(int argc, char **argv) {
+int main(int, char **) {
     Config config;
     auto session = expect<Session>(open(std::move(config)));
     session.put("demo/example/simple", "Simple!");

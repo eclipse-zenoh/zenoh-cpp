@@ -30,6 +30,16 @@ function(add_example file mode lib)
     target_link_libraries(${target} PUBLIC ${lib})
 	set_property(TARGET ${target} PROPERTY LANGUAGE CXX)
 	set_property(TARGET ${target} PROPERTY CXX_STANDARD 17)
+
+	# Enable all warnings and treat warnings as errors only when building examples.
+	# Supposedly this is a good compromise between continous checking the code and not
+	# breaking dependent projects.
+	if(MSVC)
+		target_compile_options(${target} PRIVATE /W4 /WX)
+	else()
+		target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+	endif()
+
 endfunction()
 
 function(add_examples glob mode lib)
