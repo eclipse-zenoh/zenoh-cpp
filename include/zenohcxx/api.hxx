@@ -282,17 +282,18 @@ class BytesView : public Copyable<::z_bytes_t> {
     BytesView(const void* s, size_t _len) : Copyable(init(reinterpret_cast<const uint8_t*>(s), _len)) {}
     /// Constructs an instance from a null-terminated string
     /// @param s the null-terminated string
-    BytesView(const char* s) : Copyable({s ? strlen(s) : 0, reinterpret_cast<const uint8_t*>(s)}) {}
+    BytesView(const char* s) : Copyable(init(reinterpret_cast<const uint8_t*>(s), s ? strlen(s) : 0)) {}
     /// Constructs an instance from a ``std::vector`` of type ``T``
     /// @param v the ``std::vector`` of type ``T``
     template <typename T>
-    BytesView(const std::vector<T>& v) : Copyable({v.size() * sizeof(T), reinterpret_cast<const uint8_t*>(&v[0])}) {}
+    BytesView(const std::vector<T>& v)
+        : Copyable(init(reinterpret_cast<const uint8_t*>(&v[0]), v.size() * sizeof(T))) {}
     /// Constructs an instance from a ``std::string_view``
     /// @param s the ``std::string_view``
-    BytesView(const std::string_view& s) : Copyable({s.length(), reinterpret_cast<const uint8_t*>(s.data())}) {}
+    BytesView(const std::string_view& s) : Copyable(init(reinterpret_cast<const uint8_t*>(s.data()), s.length())) {}
     /// Constructs an instance from a ``std::string``
     /// @param s the ``std::string``
-    BytesView(const std::string& s) : Copyable({s.length(), reinterpret_cast<const uint8_t*>(s.data())}) {}
+    BytesView(const std::string& s) : Copyable(init(reinterpret_cast<const uint8_t*>(s.data()), s.length())) {}
 
     /// @name Operators
 

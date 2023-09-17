@@ -27,7 +27,7 @@ struct Stats {
     volatile clock_t end = 0;
     volatile clock_t first_start = 0;
 
-    void operator()(const Sample &sample) {
+    void operator()(const Sample &) {
         if (count == 0) {
             start = clock();
             if (!first_start) {

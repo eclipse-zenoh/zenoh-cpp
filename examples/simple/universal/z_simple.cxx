@@ -41,7 +41,7 @@ class CustomerClass {
     Publisher pub;
 };
 
-int main(int argc, char** argv) {
+int main(int, char**) {
     try {
         Config config;
         auto session = expect<Session>(open(std::move(config)));
