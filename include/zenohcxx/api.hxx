@@ -34,7 +34,7 @@ using namespace zenohcxx;
 #endif
 
 class Session;
-class Value;
+struct Value;
 
 /// Text error message returned in ``std::variant<T, ErrorMessage>`` return types.
 /// The message is a sting represented as ``zenoh::Value`` object. See also ``zenoh::expect`` function
