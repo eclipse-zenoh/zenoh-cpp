@@ -79,7 +79,7 @@ int _main(int argc, char **argv) {
     std::condition_variable done_signal;
     bool done = false;
 
-    auto on_hello = [&m, &done, &done_signal, &count](Hello hello) {
+    auto on_hello = [&count](Hello hello) {
         printhello(hello);
         std::cout << std::endl;
         count++;
@@ -94,7 +94,7 @@ int _main(int argc, char **argv) {
 
     std::cout << "Scout starting" << std::endl;
 
-    scout(std::move(config.create_scouting_config()), {on_hello, on_end_scouting});
+    scout(config.create_scouting_config(), {on_hello, on_end_scouting});
 
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });

@@ -63,7 +63,7 @@ int _main(int argc, char **argv) {
     auto subscriber = expect<Subscriber>(session.declare_subscriber(keyexpr, data_handler));
 
     printf("Enter 'q' to quit...\n");
-    char c = 0;
+    int c = 0;
     while (c != 'q') {
         c = getchar();
         if (c == -1) {

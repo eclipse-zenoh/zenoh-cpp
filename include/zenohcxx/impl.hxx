@@ -194,7 +194,7 @@ inline bool z::Query::reply_impl(z::KeyExprView key, const z::BytesView& payload
 inline std::variant<z::Config, ErrorMessage> config_from_file(const char* path) {
     z::Config config(::zc_config_from_file(path));
     if (config.check()) {
-        return std::move(config);
+        return config;
     } else {
         return "Failed to create config from file";
     }
@@ -203,7 +203,7 @@ inline std::variant<z::Config, ErrorMessage> config_from_file(const char* path) 
 inline std::variant<z::Config, ErrorMessage> config_from_str(const char* s) {
     z::Config config(::zc_config_from_str(s));
     if (config.check()) {
-        return std::move(config);
+        return config;
     } else {
         return "Failed to create config from string";
     }
@@ -212,7 +212,7 @@ inline std::variant<z::Config, ErrorMessage> config_from_str(const char* s) {
 inline std::variant<z::Config, ErrorMessage> config_client(const z::StrArrayView& peers) {
     z::Config config(::z_config_client(peers.val, peers.len));
     if (config.check()) {
-        return std::move(config);
+        return config;
     } else {
         return "Failed to create config from list of peers";
     }
@@ -224,19 +224,19 @@ inline std::variant<z::Config, ErrorMessage> config_client(const std::initialize
 }
 
 inline z::ShmManager::ShmManager(const z::Session& session, const char* id, uintptr_t size)
-    : Owned(std::move(::zc_shm_manager_new(session.loan(), id, size))) {}
+    : Owned(::zc_shm_manager_new(session.loan(), id, size)) {}
 
 inline std::variant<z::ShmManager, z::ErrorMessage> shm_manager_new(const z::Session& session, const char* id,
                                                                     uintptr_t size) {
     z::ShmManager shm_manager(session, id, size);
     if (!shm_manager.check()) return "Failed to create shm manager";
-    return std::move(shm_manager);
+    return shm_manager;
 }
 
 inline std::variant<z::Shmbuf, z::ErrorMessage> z::ShmManager::alloc(uintptr_t capacity) const {
-    auto shmbuf = z::Shmbuf(std::move(::zc_shm_alloc(&_0, capacity)));
+    auto shmbuf = z::Shmbuf(::zc_shm_alloc(&_0, capacity));
     if (!shmbuf.check()) return "Failed to allocate shared memor buffer";
-    return std::move(shmbuf);
+    return shmbuf;
 }
 
 #endif
@@ -502,7 +502,7 @@ inline std::variant<z::Queryable, ErrorMessage> z::Session::declare_queryable_im
     auto c = callback.take();
     z::Queryable queryable(::z_declare_queryable(loan(), keyexpr, z_move(c), options));
     if (queryable.check()) {
-        return std::move(queryable);
+        return queryable;
     } else {
         return "Unable to create queryable";
     }
@@ -514,7 +514,7 @@ inline std::variant<z::Subscriber, ErrorMessage> z::Session::declare_subscriber_
     auto c = callback.take();
     z::Subscriber subscriber(::z_declare_subscriber(loan(), keyexpr, z_move(c), options));
     if (subscriber.check()) {
-        return std::move(subscriber);
+        return subscriber;
     } else {
         return "Unable to create subscriber";
     }
@@ -525,7 +525,7 @@ inline std::variant<z::PullSubscriber, ErrorMessage> z::Session::declare_pull_su
     auto c = callback.take();
     z::PullSubscriber pull_subscriber(::z_declare_pull_subscriber(loan(), keyexpr, z_move(c), options));
     if (pull_subscriber.check()) {
-        return std::move(pull_subscriber);
+        return pull_subscriber;
     } else {
         return "Unable to create pull subscriber";
     }
@@ -535,7 +535,7 @@ inline std::variant<z::Publisher, ErrorMessage> z::Session::declare_publisher_im
                                                                                    const PublisherOptions* options) {
     z::Publisher publisher(::z_declare_publisher(loan(), keyexpr, options));
     if (publisher.check()) {
-        return std::move(publisher);
+        return publisher;
     } else {
         return "Unable to create publisher";
     }
@@ -546,7 +546,11 @@ inline ::z_owned_session_t z::Session::_z_open(z::Config&& v) {
     return ::z_open(z_move(config));
 }
 
-inline std::variant<z::Session, z::ErrorMessage> open(z::Config&& config, bool start_background_tasks) {
+inline std::variant<z::Session, z::ErrorMessage> open(z::Config&& config, bool
+#ifdef __ZENOHCXX_ZENOHPICO
+                                                                              start_background_tasks
+#endif
+) {
     z::Session session(std::move(config));
     if (!session.check()) {
         return "Unable to open session";
@@ -663,8 +667,7 @@ inline bool z::Session::send_join(ErrNo& error) {
 class _Resolved {
    public:
     _Resolved(const z::Session& s, const z::KeyExprView& source)
-        : str(std::move(source.resolve(s))),
-          keyexpr(str.check() ? z::KeyExprView(str.c_str(), KeyExprUnchecked()) : source) {}
+        : str(source.resolve(s)), keyexpr(str.check() ? z::KeyExprView(str.c_str(), KeyExprUnchecked()) : source) {}
     operator const z::KeyExprView&() const { return keyexpr; }
 
    private:

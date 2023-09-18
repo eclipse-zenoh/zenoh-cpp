@@ -34,7 +34,7 @@ using namespace zenohcxx;
 #endif
 
 class Session;
-class Value;
+struct Value;
 
 /// Text error message returned in ``std::variant<T, ErrorMessage>`` return types.
 /// The message is a sting represented as ``zenoh::Value`` object. See also ``zenoh::expect`` function
@@ -282,17 +282,18 @@ class BytesView : public Copyable<::z_bytes_t> {
     BytesView(const void* s, size_t _len) : Copyable(init(reinterpret_cast<const uint8_t*>(s), _len)) {}
     /// Constructs an instance from a null-terminated string
     /// @param s the null-terminated string
-    BytesView(const char* s) : Copyable({s ? strlen(s) : 0, reinterpret_cast<const uint8_t*>(s)}) {}
+    BytesView(const char* s) : Copyable(init(reinterpret_cast<const uint8_t*>(s), s ? strlen(s) : 0)) {}
     /// Constructs an instance from a ``std::vector`` of type ``T``
     /// @param v the ``std::vector`` of type ``T``
     template <typename T>
-    BytesView(const std::vector<T>& v) : Copyable({v.size() * sizeof(T), reinterpret_cast<const uint8_t*>(&v[0])}) {}
+    BytesView(const std::vector<T>& v)
+        : Copyable(init(reinterpret_cast<const uint8_t*>(&v[0]), v.size() * sizeof(T))) {}
     /// Constructs an instance from a ``std::string_view``
     /// @param s the ``std::string_view``
-    BytesView(const std::string_view& s) : Copyable({s.length(), reinterpret_cast<const uint8_t*>(s.data())}) {}
+    BytesView(const std::string_view& s) : Copyable(init(reinterpret_cast<const uint8_t*>(s.data()), s.length())) {}
     /// Constructs an instance from a ``std::string``
     /// @param s the ``std::string``
-    BytesView(const std::string& s) : Copyable({s.length(), reinterpret_cast<const uint8_t*>(s.data())}) {}
+    BytesView(const std::string& s) : Copyable(init(reinterpret_cast<const uint8_t*>(s.data()), s.length())) {}
 
     /// @name Operators
 
@@ -389,7 +390,7 @@ class Str : public Owned<::z_owned_str_t> {
 };
 
 class KeyExpr;
-class KeyExprView;
+struct KeyExprView;
 
 /// Empty type used to distinguish checked and unchecked constructing of KeyExprView
 struct KeyExprUnchecked {
@@ -499,7 +500,7 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     /// In debug mode falis on assert if passed string is not a valid key expression
     /// @param name the null-terminated string representing a key expression
     /// @param _unchecked the empty type used to distinguish checked and unchecked construncting of KeyExprView
-    KeyExprView(const char* name, z::KeyExprUnchecked _unchecked) : Copyable(::z_keyexpr_unchecked(name)) {
+    KeyExprView(const char* name, z::KeyExprUnchecked) : Copyable(::z_keyexpr_unchecked(name)) {
         assert(keyexpr_is_canon(name));
     }
     /// @brief Constructs an instance from a ``std::string`` representing a key expression.
@@ -713,7 +714,7 @@ class Shmbuf : public Owned<::zc_owned_shmbuf_t> {
 
     /// @brief Returns the payload object with the data from the SHM buffer. The ``Shmbuf`` object itself is invalidated
     /// @return ``Payload`` object with the data from the SHM buffer
-    z::Payload into_payload() { return z::Payload(std::move(::zc_shmbuf_into_payload(&_0))); }
+    z::Payload into_payload() { return z::Payload(::zc_shmbuf_into_payload(&_0)); }
 
     /// @brief Returns the pointer to the data in the SHM buffer as ``uint8_t*``
     /// @return pointer to the data
@@ -806,8 +807,7 @@ struct Sample : public Copyable<::z_sample_t> {
     /// @return ``Payload`` object
     /// @note zenoh-c only
     z::Payload sample_payload_rcinc() const {
-        auto p = ::zc_sample_payload_rcinc(static_cast<const ::z_sample_t*>(this));
-        return z::Payload(std::move(p));
+        return z::Payload(::zc_sample_payload_rcinc(static_cast<const ::z_sample_t*>(this)));
     }
 #endif
 };
@@ -1399,7 +1399,7 @@ struct PublisherDeleteOptions : public Copyable<::z_publisher_delete_options_t> 
     /// @brief Equality operator
     /// @param v the other ``PublisherDeleteOptions`` to compare with
     /// @return true if the two values are equal
-    bool operator==(const z::PublisherOptions& v) const { return true; }
+    bool operator==(const z::PublisherOptions&) const { return true; }
 
     /// @brief Inequality operator
     /// @param v the other ``PublisherDeleteOptions`` to compare with
