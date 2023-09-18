@@ -56,11 +56,14 @@ int _main(int argc, char **argv) {
 
     KeyExprView keyexpr(expr);
 
-    printf("Opening session...\n");
+    std::cout << "Opening session..." << std::endl;
     auto session = expect<Session>(open(std::move(config)));
 
-    printf("Declaring Subscriber on '%s'...\n", expr);
+    std::cout << "Declaring Subscriber on '" << keyexpr.as_string_view() << "'..." << std::endl;
     auto subscriber = expect<Subscriber>(session.declare_subscriber(keyexpr, data_handler));
+#ifdef ZENOHCXX_ZENOHC
+    std::cout << "Subscriber on '" << subscriber.get_keyexpr().as_string_view() << "' declared" << std::endl;
+#endif
 
     printf("Enter 'q' to quit...\n");
     int c = 0;
