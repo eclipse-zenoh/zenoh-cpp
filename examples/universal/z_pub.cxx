@@ -55,7 +55,7 @@ int _main(int argc, char **argv) {
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
         if (!config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str()))
 #elif ZENOHCXX_ZENOHPICO
-        if (!config.insert(Z_CONFIG_PEER_KEY, locator))
+        if (!config.insert(Z_CONFIG_CONNECT_KEY, locator))
 #else
 #error "Unknown zenoh backend"
 #endif
@@ -66,11 +66,14 @@ int _main(int argc, char **argv) {
         }
     }
 
-    printf("Opening session...\n");
+    std::cout << "Opening session..." << std::endl;
     auto session = expect<Session>(open(std::move(config)));
 
-    printf("Declaring Publisher on '%s'...\n", keyexpr);
+    std::cout << "Declaring Publisher on '" << keyexpr << "'..." << std::endl;
     auto pub = expect<Publisher>(session.declare_publisher(keyexpr));
+#ifdef ZENOHCXX_ZENOHC
+    std::cout << "Publisher on '" << pub.get_keyexpr().as_string_view() << "' declared" << std::endl;
+#endif
 
     PublisherPutOptions options;
     options.set_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN);

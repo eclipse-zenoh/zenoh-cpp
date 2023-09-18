@@ -56,9 +56,7 @@ int _main(int argc, char** argv) {
     auto session = expect<Session>(open(std::move(config)));
 
     auto sub = expect<Subscriber>(
-        session.declare_subscriber("test/pong", std::move([&condvar](const Sample&) mutable {
-                                        condvar.notify_one();
-                                   })));
+        session.declare_subscriber("test/pong", [&condvar](const Sample&) mutable { condvar.notify_one(); }));
     auto pub = expect<Publisher>(session.declare_publisher("test/ping"));
     std::vector<char> data(args.size);
     std::unique_lock lock(mutex);

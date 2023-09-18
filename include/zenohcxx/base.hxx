@@ -43,7 +43,7 @@ struct Copyable : public ZC_COPYABLE_TYPE {
     /// Default constructor is deleted
     Copyable() = delete;  // May be overloaded in derived structs with corresponding z_XXX_default function
     /// Copying is allowed
-    Copyable(const Copyable& v) { *this = v; }
+    Copyable(const Copyable&) = default;
     /// Construct from wrapped zenoh-c / zenoh-pico structure
     Copyable(ZC_COPYABLE_TYPE v) : ZC_COPYABLE_TYPE(v) {}
 };

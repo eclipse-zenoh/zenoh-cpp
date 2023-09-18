@@ -63,7 +63,7 @@ int _main(int argc, char **argv) {
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
         if (!config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str()))
 #elif ZENOHCXX_ZENOHPICO
-        if (!config.insert(Z_CONFIG_PEER_KEY, locator))
+        if (!config.insert(Z_CONFIG_CONNECT_KEY, locator))
 #else
 #error "Unknown zenoh backend"
 #endif
@@ -79,7 +79,7 @@ int _main(int argc, char **argv) {
     std::condition_variable done_signal;
     bool done = false;
 
-    auto on_hello = [&m, &done, &done_signal, &count](Hello hello) {
+    auto on_hello = [&count](Hello hello) {
         printhello(hello);
         std::cout << std::endl;
         count++;
@@ -94,7 +94,7 @@ int _main(int argc, char **argv) {
 
     std::cout << "Scout starting" << std::endl;
 
-    scout(std::move(config.create_scouting_config()), {on_hello, on_end_scouting});
+    scout(config.create_scouting_config(), {on_hello, on_end_scouting});
 
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });

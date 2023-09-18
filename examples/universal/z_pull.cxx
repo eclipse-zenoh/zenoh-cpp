@@ -44,7 +44,7 @@ int _main(int argc, char **argv) {
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
         if (!config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str()))
 #elif ZENOHCXX_ZENOHPICO
-        if (!config.insert(Z_CONFIG_PEER_KEY, locator))
+        if (!config.insert(Z_CONFIG_CONNECT_KEY, locator))
 #else
 #error "Unknown zenoh backend"
 #endif
@@ -64,7 +64,7 @@ int _main(int argc, char **argv) {
     auto subscriber = expect<PullSubscriber>(session.declare_pull_subscriber(keyexpr, data_handler));
 
     printf("Press <enter> to pull data...\n");
-    char c = 0;
+    int c = 0;
     while (c != 'q') {
         c = getchar();
         if (c == -1) {

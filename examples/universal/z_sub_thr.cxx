@@ -27,7 +27,7 @@ struct Stats {
     volatile clock_t end = 0;
     volatile clock_t first_start = 0;
 
-    void operator()(const Sample &sample) {
+    void operator()(const Sample &) {
         if (count == 0) {
             start = clock();
             if (!first_start) {
@@ -64,7 +64,7 @@ int _main(int argc, char **argv) {
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
         if (!config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str()))
 #elif ZENOHCXX_ZENOHPICO
-        if (!config.insert(Z_CONFIG_PEER_KEY, locator))
+        if (!config.insert(Z_CONFIG_CONNECT_KEY, locator))
 #else
 #error "Unknown zenoh backend"
 #endif
