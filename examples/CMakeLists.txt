@@ -32,8 +32,9 @@ function(add_example file mode lib)
 	set_property(TARGET ${target} PROPERTY CXX_STANDARD 17)
 
 	# Enable all warnings and treat warnings as errors only when building examples.
-	# Supposedly this is a good compromise between continous checking the code and not
-	# breaking dependent projects.
+	# Supposedly, enabling it for examples only, but not for the library target itself 
+	# is a good compromise. It guarantees the continuous checking the code and do not
+	# breaks dependent projects if warnings are mistakenly introduced in the library.	
 	if(MSVC)
 		target_compile_options(${target} PRIVATE /W4 /WX)
 	else()
