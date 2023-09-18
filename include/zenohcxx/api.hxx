@@ -714,7 +714,7 @@ class Shmbuf : public Owned<::zc_owned_shmbuf_t> {
 
     /// @brief Returns the payload object with the data from the SHM buffer. The ``Shmbuf`` object itself is invalidated
     /// @return ``Payload`` object with the data from the SHM buffer
-    z::Payload into_payload() { return z::Payload(std::move(::zc_shmbuf_into_payload(&_0))); }
+    z::Payload into_payload() { return z::Payload(::zc_shmbuf_into_payload(&_0)); }
 
     /// @brief Returns the pointer to the data in the SHM buffer as ``uint8_t*``
     /// @return pointer to the data
@@ -807,8 +807,7 @@ struct Sample : public Copyable<::z_sample_t> {
     /// @return ``Payload`` object
     /// @note zenoh-c only
     z::Payload sample_payload_rcinc() const {
-        auto p = ::zc_sample_payload_rcinc(static_cast<const ::z_sample_t*>(this));
-        return z::Payload(std::move(p));
+        return z::Payload(::zc_sample_payload_rcinc(static_cast<const ::z_sample_t*>(this)));
     }
 #endif
 };
