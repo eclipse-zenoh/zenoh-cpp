@@ -67,6 +67,11 @@ void get_options() {
     assert(opts.get_timeout_ms() == 1000);
 #endif
 
+#ifdef ZENOHCXX_ZENOHC
+    opts2.set_timeout_ms(2000);
+    assert(opts2 != opts);
+#endif
+
     opts2.set_consolidation(Z_CONSOLIDATION_MODE_LATEST);
     assert(opts2 != opts);
 }

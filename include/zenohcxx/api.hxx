@@ -987,7 +987,11 @@ struct GetOptions : public Copyable<::z_get_options_t> {
     /// optional value)
     bool operator==(const GetOptions& v) const {
         return get_target() == v.get_target() && get_consolidation() == v.get_consolidation() &&
-               get_value() == v.get_value();
+               get_value() == v.get_value()
+#ifdef __ZENOHCXX_ZENOHC
+               && get_timeout_ms() == v.get_timeout_ms()
+#endif
+            ;
     }
 
     /// @brief Inequality operator
