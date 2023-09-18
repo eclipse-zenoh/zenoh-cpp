@@ -224,7 +224,7 @@ inline std::variant<z::Config, ErrorMessage> config_client(const std::initialize
 }
 
 inline z::ShmManager::ShmManager(const z::Session& session, const char* id, uintptr_t size)
-    : Owned(std::move(::zc_shm_manager_new(session.loan(), id, size))) {}
+    : Owned(::zc_shm_manager_new(session.loan(), id, size)) {}
 
 inline std::variant<z::ShmManager, z::ErrorMessage> shm_manager_new(const z::Session& session, const char* id,
                                                                     uintptr_t size) {
@@ -234,7 +234,7 @@ inline std::variant<z::ShmManager, z::ErrorMessage> shm_manager_new(const z::Ses
 }
 
 inline std::variant<z::Shmbuf, z::ErrorMessage> z::ShmManager::alloc(uintptr_t capacity) const {
-    auto shmbuf = z::Shmbuf(std::move(::zc_shm_alloc(&_0, capacity)));
+    auto shmbuf = z::Shmbuf(::zc_shm_alloc(&_0, capacity));
     if (!shmbuf.check()) return "Failed to allocate shared memor buffer";
     return shmbuf;
 }
