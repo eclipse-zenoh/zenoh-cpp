@@ -667,8 +667,7 @@ inline bool z::Session::send_join(ErrNo& error) {
 class _Resolved {
    public:
     _Resolved(const z::Session& s, const z::KeyExprView& source)
-        : str(std::move(source.resolve(s))),
-          keyexpr(str.check() ? z::KeyExprView(str.c_str(), KeyExprUnchecked()) : source) {}
+        : str(source.resolve(s)), keyexpr(str.check() ? z::KeyExprView(str.c_str(), KeyExprUnchecked()) : source) {}
     operator const z::KeyExprView&() const { return keyexpr; }
 
    private:

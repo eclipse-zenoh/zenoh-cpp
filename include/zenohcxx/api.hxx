@@ -390,7 +390,7 @@ class Str : public Owned<::z_owned_str_t> {
 };
 
 class KeyExpr;
-class KeyExprView;
+struct KeyExprView;
 
 /// Empty type used to distinguish checked and unchecked constructing of KeyExprView
 struct KeyExprUnchecked {
