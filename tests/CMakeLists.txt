@@ -34,3 +34,24 @@ foreach(file ${files})
     add_test_instance(${file} zenohpico zenohcxx::zenohpico)
 endforeach()
 
+function(set_strict_warnings file mode)
+	get_filename_component(filename ${file} NAME_WE)
+	set(target ${filename}_${mode})
+	# Enable all warnings and treat warnings as errors
+	# to check that library can be built in maximally strict mode
+	if(MSVC)
+		target_compile_options(${target} PRIVATE /W4 /WX)
+	else()
+		target_compile_options(${target} PRIVATE 
+			-Wall 
+			-Wextra 
+			-Wpedantic
+			-Wold-style-cast 
+			-Werror)
+	endif()
+endfunction()
+
+add_test_instance(${CMAKE_CURRENT_SOURCE_DIR}/build/warnings.cxx zenohc zenohcxx::zenohc::static)
+add_test_instance(${CMAKE_CURRENT_SOURCE_DIR}/build/warnings.cxx zenohpico zenohcxx::zenohpico)
+set_strict_warnings(${CMAKE_CURRENT_SOURCE_DIR}/build/warnings.hxx zenohc)
+set_strict_warnings(${CMAKE_CURRENT_SOURCE_DIR}/build/warnings.hxx zenohpico)

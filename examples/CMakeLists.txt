@@ -42,7 +42,6 @@ function(add_example file mode lib)
 			-Wall 
 			-Wextra 
 			-Wpedantic
-			-Wold-style-cast 
 			-Werror)
 	endif()
 
