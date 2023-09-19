@@ -963,6 +963,22 @@ struct GetOptions : public Copyable<::z_get_options_t> {
     /// @return ``Value`` value
     const z::Value& get_value() const { return static_cast<const z::Value&>(value); }
 
+#ifdef __ZENOHCXX_ZENOHC
+    /// @brief Set the timeout for the query operation
+    /// @param v timeout in milliseconds. 0 means default query timeout from zenoh configuration.
+    /// @return reference to the structure itself
+    /// @note zenoh-c only
+    GetOptions& set_timeout_ms(uint64_t ms) {
+        timeout_ms = ms;
+        return *this;
+    }
+
+    /// @brief The timeout for the query operation
+    /// @return timeout in milliseconds. 0 means default query timeout from zenoh configuration.
+    /// @note zenoh-c only
+    uint64_t get_timeout_ms() const { return timeout_ms; }
+#endif
+
     /// @name Operators
 
     /// @brief Equality operator
@@ -971,7 +987,11 @@ struct GetOptions : public Copyable<::z_get_options_t> {
     /// optional value)
     bool operator==(const GetOptions& v) const {
         return get_target() == v.get_target() && get_consolidation() == v.get_consolidation() &&
-               get_value() == v.get_value();
+               get_value() == v.get_value()
+#ifdef __ZENOHCXX_ZENOHC
+               && get_timeout_ms() == v.get_timeout_ms()
+#endif
+            ;
     }
 
     /// @brief Inequality operator

@@ -53,6 +53,9 @@ void get_options() {
     opts.set_consolidation(QueryConsolidation())
         .set_consolidation(ConsolidationMode::Z_CONSOLIDATION_MODE_AUTO)
         .set_target(Z_QUERY_TARGET_ALL)
+#ifdef ZENOHCXX_ZENOHC
+        .set_timeout_ms(1000)
+#endif
         .set_value("TEST");
 
     GetOptions opts2 = opts;
@@ -60,6 +63,14 @@ void get_options() {
     assert(opts.get_consolidation() == QueryConsolidation(ConsolidationMode::Z_CONSOLIDATION_MODE_AUTO));
     assert(opts.get_target() == QueryTarget::Z_QUERY_TARGET_ALL);
     assert(opts.get_value() == Value("TEST"));
+#ifdef ZENOHCXX_ZENOHC
+    assert(opts.get_timeout_ms() == 1000);
+#endif
+
+#ifdef ZENOHCXX_ZENOHC
+    opts2.set_timeout_ms(2000);
+    assert(opts2 != opts);
+#endif
 
     opts2.set_consolidation(Z_CONSOLIDATION_MODE_LATEST);
     assert(opts2 != opts);
