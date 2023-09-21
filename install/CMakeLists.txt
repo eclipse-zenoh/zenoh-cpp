@@ -8,7 +8,8 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
         HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-cpp"
         LANGUAGES C CXX
     )
-    include(../cmake/helpers.cmake)
+    set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake ${CMAKE_MODULE_PATH})
+    include(helpers)
     include_project(zenohcxx TARGET zenohcxx PATH "..")
 else()
     message(STATUS "zenoh-cpp install")
