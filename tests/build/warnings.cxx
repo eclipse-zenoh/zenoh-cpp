@@ -16,7 +16,6 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #ifdef ZENOHCXX_ZENOHPICO
-typedef bool _Bool;
 #include "zenoh-pico.h"
 #endif
 #ifdef ZENOHCXX_ZENOHC
@@ -26,8 +25,6 @@ typedef bool _Bool;
 
 #include "zenoh.hxx"
 
-int main() {
-    std::string foo = "foo";
-    zenoh::KeyExprView kfoo(foo);
-    return 0;
-}
+using namespace zenoh;
+
+int main() { return 0; }
