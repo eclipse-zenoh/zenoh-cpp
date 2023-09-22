@@ -3,7 +3,7 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     cmake_minimum_required(VERSION 3.16)
     project(
         zenohcxx
-        VERSION 0.10.0.0
+        VERSION 0.10.0.1
         DESCRIPTION "C++ bindings for Zenoh"
         HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-cpp"
         LANGUAGES C CXX
