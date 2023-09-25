@@ -10,21 +10,21 @@
 //
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
+//
 
-#pragma once
-
-#define __ZENOHCXX_ZENOHPICO
-#undef __ZENOHCXX_ZENOHC
-
+// Disable 'old-style-cast` warning for C headers only
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#ifdef ZENOHCXX_ZENOHPICO
 #include "zenoh-pico.h"
-#include "zenohcxx/base.hxx"
+#endif
+#ifdef ZENOHCXX_ZENOHC
+#include "zenoh.h"
+#endif
+#pragma GCC diagnostic pop
 
-namespace zenohpico {
-using namespace zenohcxx;
-namespace z = zenohpico;  // to disambiguate names for code analyzers
-// clang-format off
-// include order is important
-#include "zenohcxx/api.hxx"
-#include "zenohcxx/impl.hxx"
-// clang-format on
-}  // namespace zenohpico
+#include "zenoh.hxx"
+
+using namespace zenoh;
+
+int main() { return 0; }

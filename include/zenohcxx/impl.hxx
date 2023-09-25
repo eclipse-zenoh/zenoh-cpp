@@ -39,7 +39,7 @@ inline ::z_bytes_t z::BytesView::init(const uint8_t* start, size_t len) {
 
 inline std::ostream& operator<<(std::ostream& os, const z::Id& id) {
     for (size_t i = 0; id.id[i] != 0 && i < 16; i++)
-        os << std::hex << std::setfill('0') << std::setw(2) << (int)id.id[i];
+        os << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(id.id[i]);
     return os;
 }
 
