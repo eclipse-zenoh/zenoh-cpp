@@ -22,6 +22,7 @@
 #include <unistd.h>
 #endif
 
+#include "../getargs.h"
 #include "zenoh.hxx"
 using namespace zenoh;
 
@@ -37,10 +38,21 @@ const char *value = "Queryable from C++ zenoh-pico!";
 const char *locator = nullptr;
 
 int _main(int argc, char **argv) {
-    if (argc > 1) expr = argv[1];
-    if (argc > 2) locator = argv[2];
+    const char *configfile = nullptr;
+    getargs(argc, argv, {}, {{"key expression", &expr}, {"value", &value}, {"locator", &locator}}
+#ifdef ZENOHCXX_ZENOHC
+            ,
+            {{"-c", {"config file", &configfile}}}
+#endif
+    );
 
     Config config;
+#ifdef ZENOHCXX_ZENOHC
+    if (configfile) {
+        config = expect(config_from_file(configfile));
+    }
+#endif
+
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";

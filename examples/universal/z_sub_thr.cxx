@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "../getargs.h"
 #include "zenoh.hxx"
 using namespace zenoh;
 
@@ -56,9 +57,22 @@ struct Stats {
 
 int _main(int argc, char **argv) {
     const char *locator = nullptr;
-    if (argc > 1) locator = argv[1];
+    const char *configfile = nullptr;
+
+    getargs(argc, argv, {}, {{"locator", &locator}}
+#ifdef ZENOHCXX_ZENOHC
+            ,
+            {{"-c", {"config file", &configfile}}}
+#endif
+    );
 
     Config config;
+#ifdef ZENOHCXX_ZENOHC
+    if (configfile) {
+        config = expect(config_from_file(configfile));
+    }
+#endif
+
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";

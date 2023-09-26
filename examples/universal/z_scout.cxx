@@ -24,6 +24,7 @@
 #include <unistd.h>
 #endif
 
+#include "../getargs.h"
 #include "zenoh.hxx"
 using namespace zenoh;
 
@@ -54,10 +55,22 @@ void printhello(const HelloView &hello) {
 
 int _main(int argc, char **argv) {
     const char *locator = nullptr;
+    const char *configfile = nullptr;
 
-    if (argc > 2) locator = argv[1];
+    getargs(argc, argv, {}, {{"locator", &locator}}
+#ifdef ZENOHCXX_ZENOHC
+            ,
+            {{"-c", {"config file", &configfile}}}
+#endif
+    );
 
     Config config;
+#ifdef ZENOHCXX_ZENOHC
+    if (configfile) {
+        config = expect(config_from_file(configfile));
+    }
+#endif
+
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";

@@ -13,6 +13,7 @@
 //
 #include <iostream>
 
+#include "../getargs.h"
 #include "stdio.h"
 #include "zenoh.hxx"
 using namespace zenoh;
@@ -28,11 +29,22 @@ const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-pico-pub";
 int _main(int argc, char **argv) {
     const char *keyexpr = default_keyexpr;
     const char *locator = nullptr;
+    const char *configfile = nullptr;
 
-    if (argc > 1) keyexpr = argv[1];
-    if (argc > 2) locator = argv[2];
+    getargs(argc, argv, {}, {{"key expression", &keyexpr}, {"locator", &locator}}
+#ifdef ZENOHCXX_ZENOHC
+            ,
+            {{"-c", {"config file", &configfile}}}
+#endif
+    );
 
     Config config;
+#ifdef ZENOHCXX_ZENOHC
+    if (configfile) {
+        config = expect(config_from_file(configfile));
+    }
+#endif
+
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";

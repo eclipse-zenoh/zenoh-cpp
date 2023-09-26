@@ -16,21 +16,25 @@
 
 #include <vector>
 
+#include "../getargs.h"
 #include "zenoh.hxx"
 using namespace zenoh;
 
 int _main(int argc, char **argv) {
-    if (argc < 2) {
-        printf("USAGE:\n\tz_pub_thr <payload-size> [<zenoh-locator>]\n\n");
-        exit(-1);
-    }
-
     const char *keyexpr = "test/thr";
-    size_t len = atoi(argv[1]);
-    std::vector<char> payload(len, 1);
-
+    const char *payload_size = nullptr;
     const char *locator = nullptr;
-    if (argc > 2) locator = argv[2];
+    const char *configfile = nullptr;
+
+    getargs(argc, argv, {{"payload_size", &payload_size}}, {{"locator", &locator}}
+#ifdef ZENOHCXX_ZENOHC
+            ,
+            {{"-c", {"config file", &configfile}}}
+#endif
+    );
+
+    size_t len = atoi(payload_size);
+    std::vector<char> payload(len, 1);
 
     Config config;
     if (locator) {
