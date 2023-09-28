@@ -40,7 +40,7 @@ jobs:
           echo "GIT_TAG=${GIT_TAG}"
           echo "GIT_TAG=${GIT_TAG}" >> $GITHUB_OUTPUT
 
-          ZENOH_VERSION=$(sed -n 's/^[ \t].*VERSION \([0-9][0-9]*\.[0-9][0-9]*\.[0.9][0-9]*\.[0-9][0-9]*\).*/\1/p' CMakeLists.txt | head -n1)
+          ZENOH_VERSION=$(sed -n 's/^[ \t]*VERSION \([0-9][0-9]*\.[0-9][0-9]*\.[0.9][0-9]*\.[0-9][0-9]*\).*/\1/p' CMakeLists.txt | head -n1)
           echo "ZENOH_VERSION=${ZENOH_VERSION}"
           echo "ZENOH_VERSION=${ZENOH_VERSION}" >> $GITHUB_OUTPUT
           if [ -n "${GIT_TAG}" ]; then
