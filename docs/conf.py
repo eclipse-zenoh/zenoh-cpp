@@ -24,7 +24,7 @@ if read_the_docs_build:
 project = 'zenoh-cpp'
 copyright = '2017, 2023 ZettaScale Technology'
 author = 'ZettaScale Zenoh team'
-release = '0.10.0.0'
+release = '0.11.0.0'
 
 # -- General configuration ---------------------------------------------------
 master_doc = 'index'
