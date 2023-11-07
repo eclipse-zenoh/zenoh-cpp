@@ -275,7 +275,7 @@ class BytesView : public Copyable<::z_bytes_t> {
     /// @name Constructors
 
     /// @brief Constructs an uninitialized instance
-    BytesView(nullptr_t) : Copyable(init(nullptr, 0)) {}
+    BytesView(std::nullptr_t) : Copyable(init(nullptr, 0)) {}
     /// Constructs an instance from an array of bytes
     /// @param s the array of bytes
     /// @param _len the length of the array
@@ -493,7 +493,7 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     /// @name Constructors
 
     /// @brief Constructs an uninitialized instance
-    KeyExprView(nullptr_t) : Copyable(::z_keyexpr(nullptr)) {}
+    KeyExprView(std::nullptr_t) : Copyable(::z_keyexpr(nullptr)) {}
     /// @brief Constructs an instance from a null-terminated string representing a key expression.
     KeyExprView(const char* name) : Copyable(::z_keyexpr(name)) {}
     /// @brief Constructs an instance from a null-terminated string representing a key expression withot validating it
@@ -1437,7 +1437,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @name Constructors
 
     /// @brief Create an uninitialized instance
-    explicit KeyExpr(nullptr_t) : Owned(nullptr) {}
+    explicit KeyExpr(std::nullptr_t) : Owned(nullptr) {}
 
     /// @brief Create a new instance from a null-terminated string
     explicit KeyExpr(const char* name) : Owned(::z_keyexpr_new(name)) {}

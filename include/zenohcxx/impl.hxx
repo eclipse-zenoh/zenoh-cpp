@@ -326,7 +326,7 @@ inline bool scout(z::ScoutingConfig&& config, ClosureHello&& callback, ErrNo& er
     auto cb = callback.take();
     error = ::z_scout(z_move(c), z_move(cb));
     return error == 0;
-};
+}
 
 inline bool scout(z::ScoutingConfig&& config, ClosureHello&& callback) {
     ErrNo error;
@@ -574,7 +574,7 @@ inline std::variant<z::Session, z::ErrorMessage> open(z::Config&& config, bool
     }
 #endif
     return session;
-};
+}
 
 #ifdef __ZENOHCXX_ZENOHPICO
 inline z::Session&& z::Session::operator=(Session&& other) {
