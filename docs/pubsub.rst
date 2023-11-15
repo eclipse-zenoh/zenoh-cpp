@@ -53,5 +53,5 @@ Subscriber example:
          })
       );
       // Wait for a key press to exit
-      c = getchar();
+      char c = getchar();
    }
