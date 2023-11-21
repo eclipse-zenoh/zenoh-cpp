@@ -32,7 +32,7 @@ Publisher example:
       session.put("demo/example/simple", "Simple!");
 
       // Publish from a Publisher object
-      auto publisher = session.declare_publisher("demo/example/simple");
+      auto publisher = expect<Publisher>(session.declare_publisher("demo/example/simple"));
       publisher.put("Simple!");
    }
 
@@ -53,5 +53,5 @@ Subscriber example:
          })
       );
       // Wait for a key press to exit
-      c = getchar();
+      char c = getchar();
    }
