@@ -381,6 +381,13 @@ void includes_declared(Session& s) {
     assert(foobarv.check());
     assert(starbuzv.check());
 
+    assert(keyexpr_includes("FOO/*", "FOO/BAR", err));
+    assert(err == 0);
+    assert(!keyexpr_includes("*/BUZ", "FOO/BAR", err));
+    assert(err == 0);
+    assert(!keyexpr_includes("FOO/*", nul, err));
+    assert(err < 0);
+
 #ifdef ZENOHCXX_ZENOHC
     // zenoh-c is able to check declared keyexprs
     assert(foostar.includes(foobar, err));
@@ -389,12 +396,6 @@ void includes_declared(Session& s) {
     assert(err == 0);
     assert(!foostar.includes(nul, err));
     assert(err < 0);
-    assert(keyexpr_includes("FOO/*", "FOO/BAR", err));
-    assert(err == 0);
-    assert(!keyexpr_includes("*/BUZ", "FOO/BAR", err));
-    assert(err == 0);
-    assert(!keyexpr_includes("FOO/*", nul, err));
-    assert(err < 0);
 #else
     // zenoh-pico returns error when checking declared keyexprs: the string value is avaliable in session only
     assert(!foostar.includes(foobar, err));
@@ -402,12 +403,6 @@ void includes_declared(Session& s) {
     assert(!starbuz.includes(foobar, err));
     assert(err < 0);
     assert(!foostar.includes(nul, err));
-    assert(err < 0);
-    assert(!keyexpr_includes("FOO/*", "FOO/BAR", err));
-    assert(err < 0);
-    assert(!keyexpr_includes("*/BUZ", "FOO/BAR", err));
-    assert(err < 0);
-    assert(!keyexpr_includes("FOO/*", nul, err));
     assert(err < 0);
 #endif
 
