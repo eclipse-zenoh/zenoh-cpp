@@ -48,6 +48,13 @@ jobs:
           cmake ../examples -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHCXX_SOURCE=PACKAGE
           cmake --build . --config Release
 
+      - name: make standalone example with zenoh-cpp as installed package
+        shell: bash
+        run: |
+          mkdir -p build_examples_standalone_findproj && cd build_examples_standalone_findproj
+          cmake ../examples/standalone -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHCXX_SOURCE=PACKAGE
+          cmake --build . --config Release
+
       - name: make tests
         shell: bash
         run: |
