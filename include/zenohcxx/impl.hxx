@@ -719,3 +719,12 @@ inline bool z::Session::keyexpr_intersects(const z::KeyExprView& a, const z::Key
     ErrNo error;
     return z::Session::keyexpr_intersects(a, b, error);
 }
+
+#ifdef __ZENOHCXX_ZENOHC
+inline bool AttachmentView::iterate(const AttachmentView::IterBody& body) const {
+    auto cbody = [](struct z_bytes_t key, struct z_bytes_t value, void* context) -> int8_t {
+        return (*(static_cast<const IterBody*>(context)))(key, value) == 0;
+    };
+    return ::z_attachment_iterate(*this, cbody, const_cast<IterBody*>(&body)) == 0;
+}
+#endif  // ifdef __ZENOHCXX_ZENOHC
