@@ -36,7 +36,7 @@ if(TARGET zenohpico)
 	add_library(zenohcxx::zenohpico ALIAS zenohcxx_zenohpico)
 endif()
 
-# zenohcxx for zenohc dynamic
+# zenohcxx for zenohc static/dynamic depending on ZENOHC_LIB_STATIC
 if(TARGET zenohc::lib)
 	message(STATUS "defined lib target zenohcxx::zenohc::lib for zenohc::lib")
 	add_library(zenohcxx_zenohc_lib INTERFACE)
@@ -45,6 +45,17 @@ if(TARGET zenohc::lib)
 	add_dependencies(zenohcxx_zenohc_lib zenohc::lib)
 	target_link_libraries(zenohcxx_zenohc_lib INTERFACE zenohc::lib)
 	add_library(zenohcxx::zenohc::lib ALIAS zenohcxx_zenohc_lib)
+endif()
+
+# zenohcxx for zenohc dynamic
+if(TARGET zenohc::shared)
+	message(STATUS "defined lib target zenohcxx::zenohc::shared for zenohc::shared")
+	add_library(zenohcxx_zenohc_shared INTERFACE)
+	target_compile_definitions(zenohcxx_zenohc_shared INTERFACE ZENOHCXX_ZENOHC)
+	target_include_directories(zenohcxx_zenohc_shared INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+	add_dependencies(zenohcxx_zenohc_lib zenohc::shared)
+	target_link_libraries(zenohcxx_zenohc_shared INTERFACE zenohc::shared)
+	add_library(zenohcxx::zenohc::shared ALIAS zenohcxx_zenohc_shared)
 endif()
 
 # zenohcxx for zenohc static

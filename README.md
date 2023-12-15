@@ -140,10 +140,10 @@ After 30-40 seconds delay the `z_sub_thr` will start to show the throughput meas
 
 Below are the steps to include [zenoh-cpp] into CMake project. See also [examples/simple](examples/simple) directory for short examples of CMakeLists.txt.
 
-- include [zenoh-c] or [zenoh-pico] into your CMake project.
-  This is important as the library targets you need (`zenohcxx::zenohpico`, `zenohcxx::zenohc::lib` and `zenohcxx::zenohc::static)`
+- include [zenoh-c] or [zenoh-pico] into your CMake project **before** dependency on [zenoh-cpp] itself.
+  This is important as the library targets you need (`zenohcxx::zenohpico`, `zenohcxx::zenohc::lib`, `zenohcxx::zenohc::shared` and `zenohcxx::zenohc::static)`
   are defined only if their backend library
-  targets (`zenohpico`, `zenohc::lib` and `zenohc::static` are defined)
+  targets (`zenohpico`, `zenohc::lib`, `zenohc::shared` and `zenohc::static` are defined)
 
 - include [zenoh-cpp] itself. This can be done with [add_subdirectory], [find_package] or [FetchContent] CMake commands.
   ```
@@ -156,12 +156,15 @@ Below are the steps to include [zenoh-cpp] into CMake project. See also [example
   FetchContent_Declare(zenohcxx GIT_REPOSITORY https://github.com/eclipse-zenoh/zenoh-cpp GIT_TAG main)
   FetchContent_MakeAvailable(zenohcxx)
   ```
-- add dependency on zenoh-cpp to your project:
+- add dependency on zenoh-cpp to your project in one of these ways:
    ```
    target_link_libraries(yourproject PUBLIC zenohcxx::zenohpico)
    ```
    ```
    target_link_libraries(yourproject PUBLIC zenohcxx::zenohc::lib)
+   ```
+   ```
+   target_link_libraries(yourproject PUBLIC zenohcxx::zenohc::shared)
    ```
    ```
    target_link_libraries(yourproject PUBLIC zenohcxx::zenohc::static)
