@@ -40,7 +40,7 @@ endif()
 
 # zenohcxx for zenohc dynamic
 if(TARGET zenohc::shared)
-	message(STATUS "defined lib target if(TARGET zenohc::shared for zenohc::lib")
+	message(STATUS "defined lib target if(TARGET zenohc::shared for zenohc::shared")
 	add_library(zenohcxx_zenohc_shared INTERFACE)
 	target_compile_definitions(zenohcxx_zenohc_shared INTERFACE ZENOHCXX_ZENOHC)
 	target_include_directories(zenohcxx_zenohc_shared INTERFACE "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@")
