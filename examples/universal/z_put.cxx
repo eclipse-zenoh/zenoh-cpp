@@ -70,7 +70,12 @@ int _main(int argc, char **argv) {
     printf("Putting Data ('%s': '%s')...\n", keyexpr, value);
     PutOptions options;
     options.set_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN);
-
+#ifdef ZENOHCXX_ZENOHC
+    std::map<std::string, std::string> amap;
+    amap.insert(std::make_pair("serial_number", "123"));
+    amap.insert(std::make_pair("coordinates", "48.7082,2.1498"));
+    options.set_attachment(amap);
+#endif
     if (!session.put(keyexpr, value, options)) {
         printf("Put failed...\n");
     }

@@ -670,6 +670,84 @@ struct Timestamp : Copyable<::z_timestamp_t> {
 };
 
 #ifdef __ZENOHCXX_ZENOHC
+/// The attachment.
+/// A iteration driver based map of byte slice to byte slice.
+struct AttachmentView : public Copyable<::z_attachment_t> {
+    using Copyable::Copyable;
+
+    /// The body of a loop over an attachment's key-value pairs.
+    ///
+    /// `key` and `value` are loaned to the body for the duration of a single call.
+    ///
+    /// Returning `true` is treated as `continue`.
+    /// Returning `false` is treated as `break`.
+    typedef std::function<bool(const BytesView& key, const BytesView& value)> IterBody;
+
+    /// The driver of a loop over an attachment's key-value pairs.
+    ///
+    /// This function is expected to call `body` once for each key-value pair.
+    /// Returning `false` value immediately (breaking iteration).
+    typedef std::function<bool(const IterBody& body)> IterDriver;
+
+    /// @name Constructors
+
+    /// @brief AttachmentView constructor by interation driver
+    AttachmentView(const AttachmentView::IterDriver& _iter_driver)
+        : Copyable({static_cast<const void*>(&_iter_driver),
+                    [](const void* data, z_attachment_iter_body_t body, void* ctx) -> int8_t {
+                        const IterDriver* _iter_driver = static_cast<const IterDriver*>(data);
+                        return (*_iter_driver)([&body, &ctx](const BytesView& key, const BytesView& value) {
+                            return body(key, value, ctx);
+                        });
+                    }}) {}
+
+    /// @brief AttachmentView constructor by the container which allows
+    /// iterate by std::pair<std::string_view, std::string_view>
+    /// (e.g. std::map<std::string_view, std::string_view>).
+    template <typename T>
+    AttachmentView(const T& pair_container)
+        : Copyable({static_cast<const void*>(&pair_container),
+                    [](const void* data, z_attachment_iter_body_t body, void* ctx) -> int8_t {
+                        const T* pair_container = static_cast<const T*>(data);
+                        for (const auto& it : *pair_container) {
+                            int8_t ret = body(BytesView(it.first), BytesView(it.second), ctx);
+                            if (ret) {
+                                return ret;
+                            }
+                        }
+                        return 0;
+                    }}) {}
+
+    /// @name Methods
+
+    /// Returns the item value from the attachment by key
+    /// @return the item value
+    BytesView get(const BytesView& key) const { return ::z_attachment_get(*this, key); }
+
+    /// Checks if the attachment is initialized
+    /// @return true if the attachment is initialized
+    bool check() const { return ::z_attachment_check(this); }
+
+    /// Iterate over attachment's key-value pairs, breaking if `body` returns a `false` value for a key-value pair.
+    /// `context` is passed to `body` to allow stateful closures.
+    /// This function takes no ownership whatsoever.
+    /// @return `true` if the iteration has passed to the end of all elements,
+    /// 	or `false` if it has been interrupted
+    bool iterate(const IterBody& body) const;
+
+    /// @name Operators
+
+    /// @brief Equality operator
+    /// @param v other ``AttachmentView`` object
+    /// @return true if the attachment objects encodings are equal
+    bool operator==(const AttachmentView& v) const { return data == v.data && iteration_driver == v.iteration_driver; }
+
+    /// @brief Inequality operator
+    /// @param v other ``AttachmentView`` object
+    /// @return true if the attachment objects are not equal
+    bool operator!=(const AttachmentView& v) const { return !operator==(v); }
+};
+
 /// Reference to data buffer in shared memory with reference counting. When all instances of ``Payload`` are destroyed,
 /// the buffer is freed.
 /// It can be convenient if it's necessary to resend the buffer to one or multiple receivers without copying it.
@@ -809,6 +887,10 @@ struct Sample : public Copyable<::z_sample_t> {
     z::Payload sample_payload_rcinc() const {
         return z::Payload(::zc_sample_payload_rcinc(static_cast<const ::z_sample_t*>(this)));
     }
+
+    /// @brief The attachment of this data sample
+    /// @return ``AttachmentView`` object
+    const z::AttachmentView& get_attachment() const { return static_cast<const z::AttachmentView&>(attachment); }
 #endif
 };
 
@@ -977,6 +1059,18 @@ struct GetOptions : public Copyable<::z_get_options_t> {
     /// @return timeout in milliseconds. 0 means default query timeout from zenoh configuration.
     /// @note zenoh-c only
     uint64_t get_timeout_ms() const { return timeout_ms; }
+
+    /// @brief Get the attachment
+    /// @return ``zenoh::AttachmentView`` value
+    const z::AttachmentView& get_attachment() const { return static_cast<const z::AttachmentView&>(attachment); }
+
+    /// @brief Set the attachment
+    /// @param a the ``zenoh::AttachmentView`` value
+    /// @return reference to the structure itself
+    GetOptions& set_attachment(const z::AttachmentView& a) {
+        attachment = a;
+        return *this;
+    };
 #endif
 
     /// @name Operators
@@ -1047,6 +1141,20 @@ struct PutOptions : public Copyable<::z_put_options_t> {
         priority = v;
         return *this;
     }
+
+#ifdef __ZENOHCXX_ZENOHC
+    /// @brief Get the attachment
+    /// @return ``zenoh::AttachmentView`` value
+    const z::AttachmentView& get_attachment() const { return static_cast<const z::AttachmentView&>(attachment); }
+
+    /// @brief Set the attachment
+    /// @param a the ``zenoh::AttachmentView`` value
+    /// @return reference to the structure itself
+    PutOptions& set_attachment(const z::AttachmentView& a) {
+        attachment = a;
+        return *this;
+    };
+#endif  // ifdef __ZENOHCXX_ZENOHC
 
     /// @name Operators
 
@@ -1139,6 +1247,20 @@ struct QueryReplyOptions : public Copyable<::z_query_reply_options_t> {
         return *this;
     };
 
+#ifdef __ZENOHCXX_ZENOHC
+    /// @brief Get the attachment
+    /// @return ``zenoh::AttachmentView`` value
+    const z::AttachmentView& get_attachment() const { return static_cast<const z::AttachmentView&>(attachment); }
+
+    /// @brief Set the attachment
+    /// @param a the ``zenoh::AttachmentView`` value
+    /// @return reference to the structure itself
+    QueryReplyOptions& set_attachment(const z::AttachmentView& a) {
+        attachment = a;
+        return *this;
+    };
+#endif  // ifdef __ZENOHCXX_ZENOHC
+
     /// @name Operators
 
     /// @brief Equality operator
@@ -1171,6 +1293,12 @@ class Query : public Copyable<::z_query_t> {
     /// @brief Get the value of the query
     /// @return ``zenoh::Value`` value
     z::Value get_value() const { return z::Value(::z_query_value(this)); }
+
+#ifdef __ZENOHCXX_ZENOHC
+    /// @brief Get the attachment of the query
+    /// @return ``zenoh::AttachmentView`` value
+    z::AttachmentView get_attachment() const { return z::AttachmentView(::z_query_attachment(this)); }
+#endif  // ifdef __ZENOHCXX_ZENOHC
 
     /// @brief Send reply to the query
     /// @param key the ``KeyExprView`` of the ``Queryable``. **NOT** the key expression from the ``Query::get_keyexpr``.
@@ -1392,6 +1520,20 @@ struct PublisherPutOptions : public Copyable<::z_publisher_put_options_t> {
         encoding = e;
         return *this;
     };
+
+#ifdef __ZENOHCXX_ZENOHC
+    /// @brief Get the attachment
+    /// @return ``zenoh::AttachmentView`` value
+    const z::AttachmentView& get_attachment() const { return static_cast<const z::AttachmentView&>(attachment); }
+
+    /// @brief Set the attachment
+    /// @param a the ``zenoh::AttachmentView`` value
+    /// @return reference to the structure itself
+    PublisherPutOptions& set_attachment(const z::AttachmentView& a) {
+        attachment = a;
+        return *this;
+    };
+#endif  // ifdef __ZENOHCXX_ZENOHC
 
     /// @name Operators
 
