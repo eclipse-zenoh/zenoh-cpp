@@ -12,13 +12,14 @@ jobs:
   build:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    strategy: 
+    strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macOS-latest]
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Clone this repository
+        uses: actions/checkout@v4
 
       - name: install zenoh-cpp
         shell: bash
@@ -54,8 +55,6 @@ jobs:
           cd build
           cmake --build . --target tests
 
-  
-
       - name: run tests
         shell: bash
         run: |
@@ -63,7 +62,7 @@ jobs:
           ctest
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           # Artifact name
           name: zenoh-cpp-${{ matrix.os }}
