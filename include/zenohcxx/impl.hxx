@@ -313,14 +313,6 @@ inline bool z::Publisher::put_owned_impl(z::Payload&& payload, const z::Publishe
 
 #endif
 
-#ifdef __ZENOHCXX_ZENOHC
-z::KeyExpr z::Publisher::get_keyexpr() const { return ::z_publisher_keyexpr(loan()); }
-#endif
-
-#ifdef __ZENOHCXX_ZENOHC
-z::KeyExpr z::Subscriber::get_keyexpr() const { return ::z_subscriber_keyexpr(loan()); }
-#endif
-
 inline bool scout(z::ScoutingConfig&& config, ClosureHello&& callback, ErrNo& error) {
     auto c = config.take();
     auto cb = callback.take();
