@@ -1758,7 +1758,7 @@ class Subscriber : public Owned<::z_owned_subscriber_t> {
 #ifdef __ZENOHCXX_ZENOHC
     /// @brief Get the key expression of the subscriber
     /// @return ``zenoh::KeyExpr`` value
-    z::KeyExpr get_keyexpr() const const { return ::z_subscriber_keyexpr(loan()); }
+    z::KeyExpr get_keyexpr() const { return ::z_subscriber_keyexpr(loan()); }
 #endif
 };
 
