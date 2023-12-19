@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(
 	zenohcxx
-	VERSION 0.11.0.0
+	VERSION 0.10.1.1
 	DESCRIPTION "C++ bindings for Zenoh"
 	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-cpp"
 	LANGUAGES C CXX
@@ -13,8 +13,8 @@ include(helpers)
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 	enable_testing()
 	set_default_build_type(Release)
-	configure_include_project(ZENOHCXX_ZENOHPICO zenohpico zenohpico "../zenoh-pico" zenohpico "https://github.com/eclipse-zenoh/zenoh-pico" "")
-	configure_include_project(ZENOHCXX_ZENOHC zenohc zenohc::lib "../zenoh-c" zenohc "https://github.com/eclipse-zenoh/zenoh-c" "")
+	configure_include_project(ZENOHCXX_ZENOHPICO zenohpico zenohpico "../zenoh-pico" zenohpico "https://github.com/eclipse-zenoh/zenoh-pico" "release-0.10.1-rc")
+	configure_include_project(ZENOHCXX_ZENOHC zenohc zenohc::lib "../zenoh-c" zenohc "https://github.com/eclipse-zenoh/zenoh-c" "release-0.10.1-rc")
 endif()
 
 #
