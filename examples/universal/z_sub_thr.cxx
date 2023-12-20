@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 #include <stdio.h>
-#include <time.h>
+#include <chrono>
 
 #include "../getargs.h"
 #include "zenoh.hxx"
@@ -23,35 +23,37 @@ using namespace zenoh;
 struct Stats {
     volatile unsigned long count = 0;
     volatile unsigned long finished_rounds = 0;
-    volatile clock_t start = 0;
-    volatile clock_t stop = 0;
-    volatile clock_t end = 0;
-    volatile clock_t first_start = 0;
+    std::chrono::_V2::steady_clock::time_point start = {};
+    std::chrono::_V2::steady_clock::time_point first_start = {};
+    std::chrono::_V2::steady_clock::time_point end = {};
 
     void operator()(const Sample &) {
         if (count == 0) {
-            start = clock();
-            if (!first_start) {
+            start = std::chrono::steady_clock::now();
+            if (first_start == std::chrono::_V2::steady_clock::time_point()) {
                 first_start = start;
             }
             count++;
         } else if (count < N) {
             count++;
         } else {
-            stop = clock();
             finished_rounds++;
-            printf("%f msg/s\n", N * (double)CLOCKS_PER_SEC / (double)(stop - start));
+            auto elapsed_us =
+                std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start).count();
+            std::cout << static_cast<double>(N) * 1000000.0 / static_cast<double>(elapsed_us) << " msg/s\n";
             count = 0;
         }
     }
 
-    void operator()() { end = clock(); }
+    void operator()() { end = std::chrono::steady_clock::now(); }
 
     void print() const {
-        const double elapsed = (double)(end - first_start) / (double)CLOCKS_PER_SEC;
+        auto elapsed_s =
+            static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(end - first_start).count()) /
+            1000000.0;
         const unsigned long sent_messages = N * finished_rounds + count;
-        printf("Sent %ld messages over %f seconds (%f msg/s)\n", sent_messages, elapsed,
-               (double)sent_messages / elapsed);
+        std::cout << "Sent " << sent_messages << " messages over " << elapsed_s << " seconds ("
+                  << static_cast<double>(sent_messages) / elapsed_s << " msg/s)\n";
     }
 };
 
