@@ -23,14 +23,14 @@ using namespace zenoh;
 struct Stats {
     volatile unsigned long count = 0;
     volatile unsigned long finished_rounds = 0;
-    std::chrono::_V2::steady_clock::time_point start = {};
-    std::chrono::_V2::steady_clock::time_point first_start = {};
-    std::chrono::_V2::steady_clock::time_point end = {};
+    std::chrono::steady_clock::time_point start = {};
+    std::chrono::steady_clock::time_point first_start = {};
+    std::chrono::steady_clock::time_point end = {};
 
     void operator()(const Sample &) {
         if (count == 0) {
             start = std::chrono::steady_clock::now();
-            if (first_start == std::chrono::_V2::steady_clock::time_point()) {
+            if (first_start == std::chrono::steady_clock::time_point()) {
                 first_start = start;
             }
             count++;
