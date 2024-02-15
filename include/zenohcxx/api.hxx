@@ -143,6 +143,16 @@ typedef ::z_congestion_control_t CongestionControl;
 /// - **Z_PRIORITY_BACKGROUND**: Priority for "background traffic" messages.
 typedef ::z_priority_t Priority;
 
+/**
+ * QoS settings of zenoh message.
+ *
+ * Members:
+ *   Priority priority: Priority of the message.
+ *   CongestionControl congestion_control: Congestion control of the message.
+ *   bool express: If true, the message is not batched during transmission, in order to reduce latency.
+ */
+typedef ::z_qos_t QoS;
+
 /// Query target values.
 ///
 /// see also: ``zenoh::query_target_default``
@@ -874,6 +884,10 @@ struct Sample : public Copyable<::z_sample_t> {
     /// @brief The kind of this data sample (PUT or DELETE)
     /// @return ``zenoh::SampleKind`` value
     SampleKind get_kind() const { return kind; }
+
+    /// @brief QoS settings this sample was sent with
+    /// @return ``zenoh::QoS`` struct
+    QoS get_qos() const { return qos; }
 
     /// @brief The timestamp of this data sample
     /// @return ``Timestamp`` object
