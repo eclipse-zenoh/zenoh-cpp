@@ -145,13 +145,16 @@ typedef ::z_priority_t Priority;
 
 /**
  * QoS settings of zenoh message.
- *
- * Members:
- *   Priority priority: Priority of the message.
- *   CongestionControl congestion_control: Congestion control of the message.
- *   bool express: If true, the message is not batched during transmission, in order to reduce latency.
  */
-typedef ::z_qos_t QoS;
+struct QoS : public Copyable<::z_qos_t> {
+    using Copyable::Copyable;
+    /// Returns message priority.
+    Priority get_priority() const { return ::z_qos_get_priority(*this); }
+    /// Returns message congestion control.
+    CongestionControl get_congestion_control() const { return ::z_qos_get_congestion_control(*this); }
+    /// Returns message express flag. If set to true, the message is not batched to reduce the latency.
+    bool get_express() const { return ::z_qos_get_express(*this); }
+};
 
 /// Query target values.
 ///
