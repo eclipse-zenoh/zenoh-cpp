@@ -143,17 +143,18 @@ typedef ::z_congestion_control_t CongestionControl;
 /// - **Z_PRIORITY_BACKGROUND**: Priority for "background traffic" messages.
 typedef ::z_priority_t Priority;
 
-/**
- * QoS settings of zenoh message.
- */
+ /// QoS settings of zenoh message.
+ ///
 struct QoS : public Copyable<::z_qos_t> {
     using Copyable::Copyable;
-    /// Returns message priority.
+    /// @brief Returns message priority.
     Priority get_priority() const { return ::z_qos_get_priority(*this); }
-    /// Returns message congestion control.
+    /// @brief Returns message congestion control.
     CongestionControl get_congestion_control() const { return ::z_qos_get_congestion_control(*this); }
-    /// Returns message express flag. If set to true, the message is not batched to reduce the latency.
+    /// @brief Returns message express flag. If set to true, the message is not batched to reduce the latency.
     bool get_express() const { return ::z_qos_get_express(*this); }
+    /// @brief Crates default QoS settings.
+    QoS() : Copyable(z_qos_default()) {};
 };
 
 /// Query target values.
