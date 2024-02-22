@@ -13,6 +13,12 @@
 //
 #include <stdio.h>
 #include <chrono>
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#include <windows.h>
+#define sleep(x) Sleep(x * 1000)
+#else
+#include <unistd.h>
+#endif
 
 #include "../getargs.h"
 #include "zenoh.hxx"
@@ -98,10 +104,12 @@ int _main(int argc, char **argv) {
 
     Stats stats;
     auto subscriber = expect<Subscriber>(session.declare_subscriber(keyexpr, {stats, stats}));
-    char c = 0;
-    while (c != 'q') {
-        c = fgetc(stdin);
+
+    printf("Press CTRL-C to quit...\n");
+    while (1) {
+        sleep(1);
     }
+
     subscriber.drop();
     stats.print();
 

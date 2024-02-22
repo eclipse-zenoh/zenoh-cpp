@@ -62,6 +62,7 @@ int _main(int argc, char **argv) {
     printf("Declaring Publisher on '%s'...\n", keyexpr);
     auto pub = expect<Publisher>(session.declare_publisher(keyexpr, options));
 
+    printf("Press CTRL-C to quit...\n");
     while (1) pub.put(payload);
 }
 
