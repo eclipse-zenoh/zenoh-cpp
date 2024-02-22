@@ -79,7 +79,8 @@ int _main(int argc, char **argv) {
     // add some value
     amap.insert(std::pair("source", "C++"));
 #endif
-    for (int idx = 0; std::numeric_limits<int>::max(); ++idx) {
+    std::cout << "Press CTRL-C to quit..." << std::endl;
+    for (int idx = 0; idx < std::numeric_limits<int>::max(); ++idx) {
         sleep(1);
         std::ostringstream ss;
         ss << "[" << idx << "] " << value;
