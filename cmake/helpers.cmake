@@ -214,7 +214,7 @@ endmacro()
 #
 # include_project(zenohc TARGET zenohc::lib PATH ..\zenoh_c QUIET)
 # include_project(zenohc TARGET zenohc::lib PACKAGE zenohc QUIET)
-# include_project(zenohc TARGET zenohc::lib GIT_URL https://github.com/eclipse-zenoh/zenoh-c)
+# include_project(zenohc TARGET zenohc::lib GIT_URL https://github.com/eclipse-zenoh/zenoh-c GIT_TAG main)
 #
 # QUIET parameter not supported for GIT_URL due to lack of support of such mode in FetchContent
 #
