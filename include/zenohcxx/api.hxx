@@ -45,6 +45,7 @@ typedef z::Value ErrorMessage;
 /// @param v the ``std::variant<T, zenoh:::ErrorMessage>`` value
 /// @return the value of type ``T`` if ``std::variant<T, zenoh::ErrorMessage>`` value contains it
 /// @throws  ``zenoh::ErrorMessage`` if ``std::variant<T, zenoh::ErrorMessage>`` value contains it
+// tags{cpp.expect}
 template <typename T>
 inline T expect(std::variant<T, z::ErrorMessage>&& v) {
     if (v.index() == 1) {
@@ -55,6 +56,7 @@ inline T expect(std::variant<T, z::ErrorMessage>&& v) {
 }
 
 /// Numeric error code value. This is a value < -1 returned by zenoh-c functions
+// tags{cpp.errno}
 typedef int8_t ErrNo;
 
 /// ``zenoh::Sample`` kind values.
@@ -63,6 +65,7 @@ typedef int8_t ErrNo;
 ///
 ///  - **Z_SAMPLE_KIND_PUT**: The Sample was issued by a "put" operation.
 ///  - **Z_SAMPLE_KIND_DELETE**: The Sample was issued by a "delete" operation.
+// tags{cpp.sample_kind, c.z_sample_kind_t}
 typedef ::z_sample_kind_t SampleKind;
 
 ///  Zenoh encoding values for ``zenoh::Encoding``
@@ -96,6 +99,7 @@ typedef ::z_sample_kind_t SampleKind;
 ///     - **Z_ENCODING_PREFIX_IMAGE_JPEG**: ``image/jpeg``. JPEG images.
 ///     - **Z_ENCODING_PREFIX_IMAGE_PNG**: ``image/png``. Portable Network Graphics.
 ///     - **Z_ENCODING_PREFIX_IMAGE_GIF**: ``image/gif``. Graphics Interchange Format (GIF).
+// tags{cpp.encoding_prefix, c.z_encoding_prefix_t}
 typedef ::z_encoding_prefix_t EncodingPrefix;
 
 ///   Consolidation mode values.
@@ -112,6 +116,7 @@ typedef ::z_encoding_prefix_t EncodingPrefix;
 ///           timestamp ts2 > ts1. It optimizes latency.
 ///       - **Z_CONSOLIDATION_MODE_LATEST**: It guarantees unicity of replies for the same key expression.
 ///           It optimizes bandwidth.
+// tags{cpp.consolidation_mode, c.z_consolidation_mode_t}
 typedef ::z_consolidation_mode_t ConsolidationMode;
 
 /// Reliability values.
@@ -119,6 +124,7 @@ typedef ::z_consolidation_mode_t ConsolidationMode;
 /// Values:
 ///  - **Z_RELIABILITY_BEST_EFFORT**: Defines reliability as "best effort"
 ///  - **Z_RELIABILITY_RELIABLE**: Defines reliability as "reliable"
+// tags{cpp.reliability, c.z_reliability_t}
 typedef ::z_reliability_t Reliability;
 
 ///  Congestion control values.
@@ -129,6 +135,7 @@ typedef ::z_reliability_t Reliability;
 ///    - **Z_CONGESTION_CONTROL_DROP**: Defines congestion control as "drop". Messages are dropped in case of
 ///    congestion control
 ///
+// tags{cpp.congestion_control, c.z_congestion_control_t}
 typedef ::z_congestion_control_t CongestionControl;
 
 /// Priority of Zenoh messages values.
@@ -141,6 +148,7 @@ typedef ::z_congestion_control_t CongestionControl;
 /// - **Z_PRIORITY_DATA**: Default priority for "data" messages.
 /// - **Z_PRIORITY_DATA_LOW**: Lowest priority for "data" messages.
 /// - **Z_PRIORITY_BACKGROUND**: Priority for "background traffic" messages.
+// tags{cpp.priority, c.z_priority_t}
 typedef ::z_priority_t Priority;
 
 /// Query target values.
@@ -151,10 +159,12 @@ typedef ::z_priority_t Priority;
 /// - **Z_QUERY_TARGET_BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
 /// - **Z_QUERY_TARGET_ALL**: All matching queryables.
 /// - **Z_QUERY_TARGET_ALL_COMPLETE**: A set of complete queryables.
+// tags{cpp.query_target, cpp.z_query_target_t}
 typedef ::z_query_target_t QueryTarget;
 
 /// Constructs a default ``zenoh::QueryTarget``
 /// @return a default ``zenoh::QueryTarget``
+// tags{cpp.query_target_default, c.z_query_target_default_t}
 inline z::QueryTarget query_target_default();
 
 #ifdef __ZENOHCXX_ZENOHPICO
@@ -194,12 +204,16 @@ namespace zenohc {
 ///
 /// See also ``zenoh::as_cstr``
 /// @note zenoh-c implementation
+// tags{cpp.whatami}
 enum WhatAmI {
     /// Bitmask to filter Zenoh routers
+    // tags{cpp.whatami.router}
     Z_WHATAMI_ROUTER = 1,
     /// Bitmask to filter for Zenoh peers
+    // tags{cpp.whatami.peer}
     Z_WHATAMI_PEER = 1 << 1,
     /// Bitmask to filter for Zenoh clients
+    // tags{cpp.whatami.client}
     Z_WHATAMI_CLIENT = 1 << 2
 };
 
@@ -214,6 +228,7 @@ namespace zenoh {
 /// (or the ``zenohpico::WhatAmI``) value.
 /// @param whatami the ``zenohc::WhatAmI`` / ``zenohpico::WhatAmI`` value
 /// @return a string representation of the given value
+// tags{cpp.whatami.as_cstr}
 inline const char* as_cstr(z::WhatAmI whatami);
 
 #ifdef __ZENOHCXX_ZENOHC
@@ -222,9 +237,11 @@ inline const char* as_cstr(z::WhatAmI whatami);
 /// User may set environment variable RUST_LOG to values *debug* | *info* | *warn* | *error* to show diagnostic output
 ///
 /// @note zenoh-c only
+// tags{cpp.init_logger, c.zc_init_logger}
 void init_logger();
 #endif
 
+// tags{cpp.str_array_view, c.z_str_array_t}
 template <typename Z_STR_ARRAY_T>
 struct _StrArrayView : Copyable<Z_STR_ARRAY_T> {
     typedef decltype(Z_STR_ARRAY_T::val) VALTYPE;
@@ -233,19 +250,23 @@ struct _StrArrayView : Copyable<Z_STR_ARRAY_T> {
     /// @name Constructors
 
     /// Constructs an uninitialized instance
+    // tags{cpp.str_array_view.create.nullptr}
     _StrArrayView() : Copyable<Z_STR_ARRAY_T>({0, nullptr}) {}
     /// Constructs an instance from a ``std::vector`` of ``const char*``
     /// @param v the ``std::vector`` of ``const char*``
+    // tags{cpp.str_array_view.create.empty}
     _StrArrayView(const std::vector<const char*>& v)
         : Copyable<Z_STR_ARRAY_T>({v.size(), const_cast<VALTYPE>(&v[0])}) {}
     /// Constructs an instance from an array of ``const char*``
     /// @param v the array of ``const char*``
     /// @param len the length of the array
-    ////
+    ///
+    // tags{cpp.str_array_view.create.from_const_pchar_array}
     _StrArrayView(const char** v, size_t len) : Copyable<Z_STR_ARRAY_T>({len, const_cast<VALTYPE>(v)}) {}
     /// Constructs an instance from an constant array of ``const char*``
     /// @param v the array of ``const char*``
     /// @param len the length of the array
+    // tags{cpp.str_array_view.create.from_const_pchar_const_array}
     _StrArrayView(const char* const* v, size_t len) : Copyable<Z_STR_ARRAY_T>({len, const_cast<VALTYPE>(v)}) {}
 
     /// @name Operators
@@ -253,12 +274,14 @@ struct _StrArrayView : Copyable<Z_STR_ARRAY_T> {
     /// Operator to access an element of the array by index
     /// @param pos the index of the element
     /// @return the element at the given index
+    // tags{cpp.str_array_view.get_at}
     const char* operator[](size_t pos) const { return Copyable<Z_STR_ARRAY_T>::val[pos]; }
 
     /// @name Methods
 
     /// Returns the length of the array
     /// @return the length of the array
+    // tags{cpp.str_array_view.get_len}
     size_t get_len() const { return Copyable<Z_STR_ARRAY_T>::len; }
 };
 /// Represents non-owned read only array of ``char*``
@@ -269,53 +292,65 @@ struct StrArrayView : z::_StrArrayView<::z_str_array_t> {
 };
 
 /// Represents non-owned read only array of bytes
+// tags{cpp.bytes_view, c.z_bytes_t}
 class BytesView : public Copyable<::z_bytes_t> {
    public:
     using Copyable::Copyable;
     /// @name Constructors
 
     /// @brief Constructs an uninitialized instance
+    // tags{cpp.bytes_view.create.empty}
     BytesView(nullptr_t) : Copyable(init(nullptr, 0)) {}
     /// Constructs an instance from an array of bytes
     /// @param s the array of bytes
     /// @param _len the length of the array
+    // tags{cpp.bytes_view.create.from_const_pvoid}
     BytesView(const void* s, size_t _len) : Copyable(init(reinterpret_cast<const uint8_t*>(s), _len)) {}
     /// Constructs an instance from a null-terminated string
     /// @param s the null-terminated string
+    // tags{cpp.bytes_view.create.from_const_pchar}
     BytesView(const char* s) : Copyable(init(reinterpret_cast<const uint8_t*>(s), s ? strlen(s) : 0)) {}
     /// Constructs an instance from a ``std::vector`` of type ``T``
     /// @param v the ``std::vector`` of type ``T``
+    // tags{cpp.bytes_view.create.from_vector}
     template <typename T>
     BytesView(const std::vector<T>& v)
         : Copyable(init(reinterpret_cast<const uint8_t*>(&v[0]), v.size() * sizeof(T))) {}
     /// Constructs an instance from a ``std::string_view``
     /// @param s the ``std::string_view``
+    // tags{cpp.bytes_view.create.from_string_view}
     BytesView(const std::string_view& s) : Copyable(init(reinterpret_cast<const uint8_t*>(s.data()), s.length())) {}
     /// Constructs an instance from a ``std::string``
     /// @param s the ``std::string``
+    // tags{cpp.bytes_view.create.from_string}
     BytesView(const std::string& s) : Copyable(init(reinterpret_cast<const uint8_t*>(s.data()), s.length())) {}
 
     /// @name Operators
 
     /// Returns a ``std::string_view`` representation of the array of bytes
     /// @return a ``std::string_view`` representation of the array of bytes
+    // tags{cpp.bytes_view.as_string_view}
     std::string_view as_string_view() const { return std::string_view(reinterpret_cast<const char*>(start), len); }
     /// Compares two instances of ``BytesView``
     /// @param v the other instance of ``BytesView``
     /// @return true if the two instances are equal, false otherwise
+    // tags{cpp.bytes_view.eq}
     bool operator==(const BytesView& v) const { return as_string_view() == v.as_string_view(); }
     /// Compares two instances of ``BytesView``
     /// @param v the other instance of ``BytesView``
     /// @return true if the two instances are not equal, false otherwise
+    // tags{cpp.bytes_view.ne}
     bool operator!=(const BytesView& v) const { return !operator==(v); }
 
     /// @name Methods
 
     /// Returns the length of the array
     /// @return the length of the array
+    // tags{cpp.bytes_view.get_len}
     size_t get_len() const { return len; }
     /// Checks if the array is initialized
     /// @return true if the array is initialized
+    // tags{cpp.bytes_view.check, c.z_bytes_check}
     bool check() const { return ::z_bytes_check(this); }
 
    private:
@@ -326,6 +361,7 @@ class BytesView : public Copyable<::z_bytes_t> {
 ///  In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
 ///
 /// See also: \ref operator_id_out "operator<<(std::ostream& os, const z::Id& id)"
+// tags{cpp.id, c.z_id_t}
 struct Id : public Copyable<::z_id_t> {
     using Copyable::Copyable;
 
@@ -333,6 +369,7 @@ struct Id : public Copyable<::z_id_t> {
 
     /// Checks if the ID is valid
     /// @return true if the ID is valid
+    // tags{cpp.id.is_some}
     bool is_some() const { return id[0] != 0; }
 };
 /// \anchor operator_id_out
@@ -341,10 +378,12 @@ struct Id : public Copyable<::z_id_t> {
 /// @param os the output stream
 /// @param id reference to the Id
 /// @return the output stream
+// tags{cpp.id.to_string}
 std::ostream& operator<<(std::ostream& os, const z::Id& id);
 
 /// The non-owning read-only view to a ``Hello`` message returned by a zenoh entity as a reply to a "scout"
 /// message.
+// tags{cpp.hello_view, c.z_hello_t}
 struct HelloView : public Copyable<::z_hello_t> {
     using Copyable::Copyable;
 
@@ -352,16 +391,20 @@ struct HelloView : public Copyable<::z_hello_t> {
 
     /// @brief Get ``Id`` of the entity
     /// @return ``Id`` of the entity
+    // tags{cpp.hello_view.get_id}
     const z::Id& get_id() const;
     /// @brief Get the ``zenoh::WhatAmI`` of the entity
     /// @return ``zenoh::WhatAmI`` of the entity
+    // tags{cpp.hello_view.get_whatami}
     z::WhatAmI get_whatami() const { return static_cast<z::WhatAmI>(whatami); }
     /// @brief Get the array of locators of the entity
     /// @return the array of locators of the entity
+    // tags{cpp.hello_view.get_locators}
     const z::StrArrayView& get_locators() const { return static_cast<const z::StrArrayView&>(locators); }
 };
 
 /// Owned string returned from zenoh. It is automatically freed when the object is destroyed.
+// tags{cpp.str, c.z_owned_str_t}
 class Str : public Owned<::z_owned_str_t> {
    public:
     using Owned::Owned;
@@ -370,22 +413,26 @@ class Str : public Owned<::z_owned_str_t> {
 
     /// @brief Get the string value
     /// @return ``const char*`` null-terminated string pointer
+    // tags{cpp.str.c_str, c.z_str_loan}
     const char* c_str() const { return loan(); }
 
     /// @name Operators
 
     /// @brief Get the string value
     /// @return ``const char*`` null-terminated string pointer
+    // tags{cpp.str.c_str, c.z_str_loan}
     operator const char*() const { return loan(); }
 
     /// @brief Equality operator
     /// @param s the ``std::string_view`` to compare with
     /// @return true if the two strings are equal
+    // tags{cpp.str.eq.string_view}
     bool operator==(const std::string_view& s) const { return s == c_str(); }
 
     /// @brief Equality operator
     /// @param s the null-terminated string to compare with
     /// @return true if the two strings are equal
+    // tags{cpp.str.eq.const_pchar}
     bool operator==(const char* s) const { return std::string_view(s) == c_str(); }
 };
 
@@ -402,22 +449,26 @@ struct KeyExprUnchecked {
 /// @param s ``std::string`` with key expression
 /// @param error error code returned if the key expression is invalid
 /// @return true if the key expression was canonized, false otherwise
+// tags{cpp.keyexpr_canonize, c.z_keyexpr_canonize}
 inline bool keyexpr_canonize(std::string& s, ErrNo& error);
 
 /// @brief Make a string containing a key expression canonical.
 /// @param s ``std::string`` with key expression
 //// @return true if the key expression was canonized, false otherwise
+// tags{cpp.keyexpr_canonize, c.z_keyexpr_canonize}
 inline bool keyexpr_canonize(std::string& s);
 
 /// @brief Check if a string containing a key expression is canonical.
 /// @param s ``std::string_view`` with key expression
 /// @param error error code returned if the key expression is invalid
 /// @return true if the key expression is canonical, false otherwise
+// tags{cpp.keyexpr_is_canon, c.z_keyexpr_is_canon}
 inline bool keyexpr_is_canon(const std::string_view& s, ErrNo& error);
 
 /// @brief Check if a string containing a key expression is canonical.
 /// @param s ``std::string_view`` with key expression
 /// @return true if the key expression is canonical, false otherwise
+// tags{cpp.keyexpr_is_canon, c.z_keyexpr_is_canon}
 inline bool keyexpr_is_canon(const std::string_view& s);
 
 #ifdef __ZENOHCXX_ZENOHC
@@ -426,6 +477,7 @@ inline bool keyexpr_is_canon(const std::string_view& s);
 /// @param s ``std::string_view`` representing a key expression
 /// @return Newly allocated key expression ``zenoh::KeyExpr``
 /// @note zenoh-c only
+// tags{cpp.keyexpr_concat, c.z_keyexpr_concat}
 inline z::KeyExpr keyexpr_concat(const z::KeyExprView& k, const std::string_view& s);
 
 /// @brief Join two key expressions, inserting a separator between them
@@ -433,6 +485,7 @@ inline z::KeyExpr keyexpr_concat(const z::KeyExprView& k, const std::string_view
 /// @param b Key expressio
 /// @return Newly allocated key expression ``zenoh::KeyExpr``
 /// @note zenoh-c only
+// tags{cpp.keyexpr_join, c.z_keyexpr_join}
 inline z::KeyExpr keyexpr_join(const z::KeyExprView& a, const z::KeyExprView& b);
 #endif
 
@@ -442,6 +495,7 @@ inline z::KeyExpr keyexpr_join(const z::KeyExprView& a, const z::KeyExprView& b)
 /// @param error Error code returned by ``::z_keyexpr_equals`` (value < -1 if any of the key expressions is not
 /// valid)
 /// @return true the key expressions are equal
+// tags{cpp.keyexpr_equals, c.z_keyexpr_equals}
 inline bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error);
 
 /// @brief Checks if the key expression includes another key expression, i.e. if the set defined by the key
@@ -451,6 +505,7 @@ inline bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b, Err
 /// @param error Error code returned by ``::z_keyexpr_includes`` (value < -1 if any of the key expressions is not
 /// valid)
 /// @return true the key expression includes the other key expression
+// tags{cpp.keyexpr_includes, c.z_keyexpr_includes}
 inline bool keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error);
 
 /// @brief Checks if the key expression intersects with another key expression, i.e. there exists at least one key
@@ -460,6 +515,7 @@ inline bool keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b, E
 /// @param error Error code returned by ``::z_keyexpr_intersects`` (value < -1 if any of the key expressions is not
 /// valid)
 /// @return true the key expression intersects with the other key expression
+// tags{cpp.keyexpr_intersects, c.z_keyexpr_intersects}
 inline bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error);
 
 #ifdef __ZENOHCXX_ZENOHC
@@ -467,6 +523,7 @@ inline bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b,
 /// @param a Key expression
 /// @param b Key expression
 /// @return true the key expressions are equal
+// tags{cpp.keyexpr_equals, c.z_keyexpr_equals}
 inline bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b);
 
 /// @brief Checks if the key expression includes another key expression, i.e. if the set defined by the key
