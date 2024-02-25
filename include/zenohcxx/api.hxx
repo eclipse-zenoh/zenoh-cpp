@@ -531,6 +531,7 @@ inline bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b);
 /// @param a Key expression
 /// @param b Key expression
 /// @return true the key expression includes the other key expression
+// tags{cpp.keyexpr_includes, c.z_keyexpr_includes}
 inline bool keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b);
 
 /// @brief Checks if the key expression intersects with another key expression, i.e. there exists at least one key
@@ -538,39 +539,47 @@ inline bool keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b);
 /// @param a Key expression
 /// @param b Key expression
 /// @return true the key expression intersects with the other key expression
+// tags{cpp.keyexpr_intersects, c.z_keyexpr_intersects}
 inline bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b);
 #endif
 
 /// The non-owning read-only view to a key expression in Zenoh.
 /// See details about key expression syntax in the <a
 /// href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Key%20Expressions.md"> Key Expressions RFC</a>.
+// tags{cpp.keyexpr_view, c.z_keyexpr_t}
 struct KeyExprView : public Copyable<::z_keyexpr_t> {
     using Copyable::Copyable;
 
     /// @name Constructors
 
     /// @brief Constructs an uninitialized instance
+    // tags{cpp.keyexpr_view.create.empty, c.z_keyexpr}
     KeyExprView(nullptr_t) : Copyable(::z_keyexpr(nullptr)) {}
     /// @brief Constructs an instance from a null-terminated string representing a key expression.
+    // tags{cpp.keyexpr_view.create.from_const_pchar, c.z_keyexpr}
     KeyExprView(const char* name) : Copyable(::z_keyexpr(name)) {}
     /// @brief Constructs an instance from a null-terminated string representing a key expression withot validating it
     /// In debug mode falis on assert if passed string is not a valid key expression
     /// @param name the null-terminated string representing a key expression
     /// @param _unchecked the empty type used to distinguish checked and unchecked construncting of KeyExprView
+    // tags{cpp.keyexpr_view.create.from_const_pchar_unchecked, c.z_keyexpr_unchecked}
     KeyExprView(const char* name, z::KeyExprUnchecked) : Copyable(::z_keyexpr_unchecked(name)) {
         assert(keyexpr_is_canon(name));
     }
     /// @brief Constructs an instance from a ``std::string`` representing a key expression.
     /// @param name the string representing a key expression
+    // tags{cpp.keyexpr_view.create.from_string, c.z_keyexpr}
     KeyExprView(const std::string& name) : Copyable(::z_keyexpr(name.c_str())) {}
 #ifdef __ZENOHCXX_ZENOHC
     /// @brief Constructs an instance from ``std::string_view`` representing a key expression.
     /// @param name the ``std::string_view`` representing a key expression
     /// @note zenoh-c only. Zenoh-pico supports only null-terminated key expression strings
+    // tags{cpp.keyexpr_view.create.from_string_view, c.zc_keyexpr_from_slice}
     KeyExprView(const std::string_view& name) : Copyable(::zc_keyexpr_from_slice(name.data(), name.length())) {}
     /// @brief Constructs an instance from ``std::string_view`` representing a key expression without validating it
     /// @param name the ``std::string_view`` representing a key expression
     /// @note zenoh-c only. Zenoh-pico supports only null-terminated key expression strings
+    // tags{cpp.keyexpr_view.create.from_string_view_unchecked, c.zc_keyexpr_from_slice_unchecked}
     KeyExprView(const std::string_view& name, z::KeyExprUnchecked)
         : Copyable(::zc_keyexpr_from_slice_unchecked(name.data(), name.length())) {
         assert(keyexpr_is_canon(name));
@@ -585,23 +594,28 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     /// @brief Equality operator between a key expression and a string
     /// @param v ``std::string_view`` representing a key expression
     /// @return true if the key expression and the string are equal
+    // tags{cpp.keyexpr_view.eq.string_view}
     bool operator==(const std::string_view& v) const { return as_string_view() == v; }
 
     /// @brief Inequality operator between a key expression and a string
     /// @param v ``std::string_view`` representing a key expression
     /// @return true if the key expression and the string are not equal
+    // tags{cpp.keyexpr_view.ne.string_view}
     bool operator!=(const std::string_view& v) const { return !operator==(v); }
 
     /// @name Methods
 
     /// @brief Checks if the key expression is valid
     /// @return true if the key expression is valid
+    // tags{cpp.keyexpr_view.check, c.z_keyexpr_is_initialized}
     bool check() const { return ::z_keyexpr_is_initialized(this); }
     /// @brief Return the key ``BytesView`` on the key expression
     /// @return ``BytesView`` structure pointing to the key expression
+    // tags{cpp.keyexpr_view.as_bytes, c.z_keyexpr_as_bytes}
     z::BytesView as_bytes() const { return z::BytesView{::z_keyexpr_as_bytes(*this)}; }
     /// @brief Return the key expression as a ``std::string_view``
     /// @return ``std::string_view`` representing the key expression
+    // tags{cpp.keyexpr_view.as_string_view}
     std::string_view as_string_view() const { return as_bytes().as_string_view(); }
 
 #ifdef __ZENOHCXX_ZENOHPICO
@@ -609,6 +623,7 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
     /// @param s ``zenoh::Session`` object
     /// @return string representation of the key expression
     /// @note zenoh-pico only
+    // tags{cpp.keyexpr_view.resolve, c.zp_keyexpr_resolve}
     z::Str resolve(const z::Session& s) const;
 #endif
 
@@ -618,29 +633,37 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
 
     /// @brief see ``zenoh::keyexpr_concat``
     /// @note zenoh-c only
+    // tags{cpp.keyexpr_view.concat, c.z_keyexpr_concat}
     z::KeyExpr concat(const std::string_view& s) const;
 
     /// @brief see ``zenoh::keyexpr_join``
     /// @note zenoh-c only
+    // tags{cpp.keyexpr_view.join, c.z_keyexpr_join}
     z::KeyExpr join(const z::KeyExprView& v) const;
 
     /// @brief see ``zenoh::keyexpr_equals``
+    // tags{cpp.keyexpr_view.equals, c.z_keyexpr_equals}
     bool equals(const z::KeyExprView& v) const;
 
     /// @brief see ``zenoh::keyexpr_includes``
+    // tags{cpp.keyexpr_view.includes, c.z_keyexpr_includes}
     bool includes(const z::KeyExprView& v) const;
 
     /// @brief see ``zenoh::keyexpr_intersects``
+    // tags{cpp.keyexpr_view.intersects, c.z_keyexpr_intersects}
     bool intersects(const z::KeyExprView& v) const;
 #endif
 
     /// @brief see ``zenoh::keyexpr_equals``
+    // tags{cpp.keyexpr_view.equals, c.z_keyexpr_equals}
     bool equals(const z::KeyExprView& v, ErrNo& error) const;
 
     /// @brief see ``zenoh::keyexpr_includes``
+    // tags{cpp.keyexpr_view.includes, c.z_keyexpr_includes}
     bool includes(const z::KeyExprView& v, ErrNo& error) const;
 
     /// @brief see ``zenoh::keyexpr_intersects``
+    // tags{cpp.keyexpr_view.intersects, c.z_keyexpr_intersects}
     bool intersects(const z::KeyExprView& v, ErrNo& error) const;
 };
 
@@ -650,18 +673,22 @@ struct KeyExprView : public Copyable<::z_keyexpr_t> {
 /// may be used to either provide more detail, or in combination with the **Z_ENCODING_PREFIX_EMPTY** value of
 /// ``zenoh::EncodingPrefix`` to write arbitrary MIME types.
 ///
+// tags{cpp.encoding, c.z_encoding_t}
 struct Encoding : public Copyable<::z_encoding_t> {
     using Copyable::Copyable;
 
     /// @name Constructors
 
     /// @brief Default encoding
+    // tags{cpp.encoding.create.default, c.z_encoding_default}
     Encoding() : Copyable(::z_encoding_default()) {}
 
     /// @brief Encoding with a prefix
+    // tags{cpp.encoding.create, c.z_encoding}
     Encoding(EncodingPrefix _prefix) : Copyable(::z_encoding(_prefix, nullptr)) {}
 
     /// @brief Encoding with a prefix and a suffix
+    // tags{cpp.encoding.create, c.z_encoding}
     Encoding(EncodingPrefix _prefix, const char* _suffix) : Copyable(::z_encoding(_prefix, _suffix)) {}
 
     /// @name Methods
@@ -669,6 +696,7 @@ struct Encoding : public Copyable<::z_encoding_t> {
     /// @brief Set the prefix for the encoding
     /// @param _prefix value of ``zenoh::EncodingPrefix`` type
     /// @return Reference to the ``Encoding`` object
+    // tags{cpp.encoding.set_prefix}
     Encoding& set_prefix(EncodingPrefix _prefix) {
         prefix = _prefix;
         return *this;
@@ -677,6 +705,7 @@ struct Encoding : public Copyable<::z_encoding_t> {
     /// @brief Set the suffix for the encoding
     /// @param _suffix ``zenoh::BytesView`` representing the suffix
     /// @return Reference to the ``Encoding`` object
+    // tags{cpp.encoding.set_suffix}
     Encoding& set_suffix(const z::BytesView& _suffix) {
         suffix = _suffix;
         return *this;
@@ -684,10 +713,12 @@ struct Encoding : public Copyable<::z_encoding_t> {
 
     /// @brief Get the prefix of the encoding
     /// @return value of ``zenoh::EncodingPrefix`` type
+    // tags{cpp.encoding.get_prefix}
     EncodingPrefix get_prefix() const { return prefix; }
 
     /// @brief Get the suffix of the encoding
     /// @return ``zenoh::BytesView`` representing the suffix
+    // tags{cpp.encoding.get_suffix}
     const z::BytesView& get_suffix() const { return static_cast<const z::BytesView&>(suffix); }
 
     /// @name Operators
@@ -695,6 +726,7 @@ struct Encoding : public Copyable<::z_encoding_t> {
     /// @brief Equality operator
     /// @param v other ``Encoding`` object
     /// @return true if the encodings are equal
+    // tags{cpp.encoding.eq}
     bool operator==(const Encoding& v) const {
         return get_prefix() == v.get_prefix() && get_suffix() == v.get_suffix();
     }
@@ -702,10 +734,12 @@ struct Encoding : public Copyable<::z_encoding_t> {
     /// @brief Inequality operator
     /// @param v other ``Encoding`` object
     /// @return true if the encodings are not equal
+    // tags{cpp.encoding.ne}
     bool operator!=(const Encoding& v) const { return !operator==(v); }
 };
 
 /// Represents timestamp value in zenoh
+// tags{cpp.timestamp, c.z_timestamp_t}
 struct Timestamp : Copyable<::z_timestamp_t> {
     using Copyable::Copyable;
     // TODO: add utility methods to interpret time as mils, seconds, minutes, etc
@@ -715,20 +749,24 @@ struct Timestamp : Copyable<::z_timestamp_t> {
     /// @brief Get the time part of timestamp in <a
     /// href=https://docs.rs/zenoh/0.7.2-rc/zenoh/time/struct.NTP64.html>NTP64</a> format
     /// @return timestamp value
+    // tags{cpp.timestamp.get_time}
     uint64_t get_time() const { return time; }
 
     /// @brief Get the unique part of the timestamp
     /// @return unique id
+    // tags{cpp.timestamp.get_id}
     z::Id get_id() const { return id; }
 
     /// @brief Check if the timestamp is valid
     /// @return true if the timestamp is valid
+    // tags{cpp.timestamp.check, c.z_timestamp_check}
     bool check() const { return ::z_timestamp_check(*this); }
 };
 
 #ifdef __ZENOHCXX_ZENOHC
 /// The attachment.
 /// A iteration driver based map of byte slice to byte slice.
+// tags{cpp.attachment_view, c.z_attachment_t}
 struct AttachmentView : public Copyable<::z_attachment_t> {
     using Copyable::Copyable;
 
@@ -749,6 +787,7 @@ struct AttachmentView : public Copyable<::z_attachment_t> {
     /// @name Constructors
 
     /// @brief AttachmentView constructor by interation driver
+    // tags{cpp.attachment_view.create.from_iter_driver, c.z_attachment_iter}
     AttachmentView(const AttachmentView::IterDriver& _iter_driver)
         : Copyable({static_cast<const void*>(&_iter_driver),
                     [](const void* data, z_attachment_iter_body_t body, void* ctx) -> int8_t {
@@ -761,6 +800,7 @@ struct AttachmentView : public Copyable<::z_attachment_t> {
     /// @brief AttachmentView constructor by the container which allows
     /// iterate by std::pair<std::string_view, std::string_view>
     /// (e.g. std::map<std::string_view, std::string_view>).
+    // tags{cpp.attachment_view.create.from_container, api.attachment.create.from_map}
     template <typename T>
     AttachmentView(const T& pair_container)
         : Copyable({static_cast<const void*>(&pair_container),
@@ -779,10 +819,12 @@ struct AttachmentView : public Copyable<::z_attachment_t> {
 
     /// Returns the item value from the attachment by key
     /// @return the item value
+    // tags{cpp.attachment_view.get, c.z_attachment_get}
     BytesView get(const BytesView& key) const { return ::z_attachment_get(*this, key); }
 
     /// Checks if the attachment is initialized
     /// @return true if the attachment is initialized
+    // tags{cpp.attachment_view.check, c.z_attachment_check}
     bool check() const { return ::z_attachment_check(this); }
 
     /// Iterate over attachment's key-value pairs, breaking if `body` returns a `false` value for a key-value pair.
@@ -790,6 +832,7 @@ struct AttachmentView : public Copyable<::z_attachment_t> {
     /// This function takes no ownership whatsoever.
     /// @return `true` if the iteration has passed to the end of all elements,
     /// 	or `false` if it has been interrupted
+    // tags{cpp.attachment_view.iterate, c.z_attachment_iter}
     bool iterate(const IterBody& body) const;
 
     /// @name Operators
@@ -797,11 +840,13 @@ struct AttachmentView : public Copyable<::z_attachment_t> {
     /// @brief Equality operator
     /// @param v other ``AttachmentView`` object
     /// @return true if the attachment objects encodings are equal
+    // tags{cpp.attachment_view.eq}
     bool operator==(const AttachmentView& v) const { return data == v.data && iteration_driver == v.iteration_driver; }
 
     /// @brief Inequality operator
     /// @param v other ``AttachmentView`` object
     /// @return true if the attachment objects are not equal
+    // tags{cpp.attachment_view.ne}
     bool operator!=(const AttachmentView& v) const { return !operator==(v); }
 };
 
@@ -811,6 +856,7 @@ struct AttachmentView : public Copyable<::z_attachment_t> {
 /// This can be performed with ``Publisher::put_owned`` method.
 ///
 /// @note zenoh-c only
+// tags{cpp.payload, c.zc_owned_payload_t}
 class Payload : public Owned<::zc_owned_payload_t> {
    public:
     using Owned::Owned;
@@ -819,16 +865,19 @@ class Payload : public Owned<::zc_owned_payload_t> {
 
     /// @brief Clone reference to the payload buffer with incrementing it's reference count
     /// @return Reference to the payload buffer
+    // tags{cpp.payload.rcinc, c.zc_payload_rcinc}
     Payload rcinc() const { return Payload(::zc_payload_rcinc(&_0)); }
 
     /// @brief Access the data in the payload buffer
     /// @return ``BytesView`` object representing the data in the payload buffer
+    // tags{cpp.payload.get_payload, api.buffer.read}
     const z::BytesView& get_payload() const { return static_cast<const z::BytesView&>(_0.payload); }
 };
 
 /// Memory buffer returned by shared memory manager ``ShmManager``
 ///
 /// @note zenoh-c only
+// tags{cpp.shmbuf, c.zc_owned_shmbuf_t}
 class Shmbuf : public Owned<::zc_owned_shmbuf_t> {
    public:
     using Owned::Owned;
@@ -837,30 +886,37 @@ class Shmbuf : public Owned<::zc_owned_shmbuf_t> {
 
     /// @brief Returns the capacity of the SHM buffer in bytes
     /// @return capacity of the SHM buffer in bytes
+    // tags{cpp.shmbuf.get_capacity, c.zc_shmbuf_capacity}
     uintptr_t get_capacity() const { return ::zc_shmbuf_capacity(&_0); }
 
     /// @brief Returns the length of data in the SHM buffer in bytes
     /// @return length of data
+    // tags{cpp.shmbuf.get_length, c.zc_shmbuf_length}
     uintptr_t get_length() const { return ::zc_shmbuf_length(&_0); }
 
     /// @brief Set the length of data in the SHM buffer in bytes. Can't be greater than the capacity.
     /// @param length length of the data
+    // tags{cpp.shmbuf.set_length, c.zc_shmbuf_set_length}
     void set_length(uintptr_t length) { ::zc_shmbuf_set_length(&_0, length); }
 
     /// @brief Returns the payload object with the data from the SHM buffer. The ``Shmbuf`` object itself is invalidated
     /// @return ``Payload`` object with the data from the SHM buffer
+    // tags{cpp.shmbuf.into_payload, c.zc_shmbuf_into_payload}
     z::Payload into_payload() { return z::Payload(::zc_shmbuf_into_payload(&_0)); }
 
     /// @brief Returns the pointer to the data in the SHM buffer as ``uint8_t*``
     /// @return pointer to the data
+    // tags{cpp.shmbuf.ptr, c.zc_shmbuf_ptr}
     uint8_t* ptr() const { return ::zc_shmbuf_ptr(&_0); }
 
     /// @brief Returns the pointer to the data in the SHM buffer as ``char*``
     /// @return pointer to the data
+    // tags{cpp.shmbuf.char_ptr, c.zc_shmbuf_char_ptr}
     char* char_ptr() const { return reinterpret_cast<char*>(ptr()); }
 
     /// @brief Returns pointer to data and length of the data as ``std::string_view``
     /// @return ``std::string_view`` object representing the data in the SHM buffer
+    // tags{cpp.shmbuf.as_string_view}
     std::string_view as_string_view() const {
         return std::string_view(reinterpret_cast<const char*>(ptr()), get_length());
     }
@@ -872,6 +928,7 @@ std::variant<z::ShmManager, z::ErrorMessage> shm_manager_new(const z::Session& s
 /// Shared memory manager
 ///
 /// @note zenoh-c only
+// tags{cpp.shm_manager, c.zc_owned_shm_manager_t}
 class ShmManager : public Owned<::zc_owned_shm_manager_t> {
    public:
     using Owned::Owned;
@@ -884,6 +941,7 @@ class ShmManager : public Owned<::zc_owned_shm_manager_t> {
     /// @param id string identifier of the shared memory manager
     /// @param size size of the shared memory buffer in bytes
     /// @return ``ShmManager`` object or ``zenoh::ErrorMessage`` if an error occurred
+    // tags{cpp.shm_manager_new, c.zc_shm_manager_new}
     friend std::variant<z::ShmManager, z::ErrorMessage> z::shm_manager_new(const z::Session& session, const char* id,
                                                                            uintptr_t size);
 
@@ -892,14 +950,17 @@ class ShmManager : public Owned<::zc_owned_shm_manager_t> {
     /// @brief Allocate a new shared memory buffer ``Shmbuf`` with the given capacity
     /// @param capacity capacity of buffer in bytes
     /// @return ``Shmbuf`` object or ``zenoh::ErrorMessage`` object if an error occurred
+    // tags{cpp.shm_manager.alloc, c.zc_shm_alloc}
     std::variant<z::Shmbuf, z::ErrorMessage> alloc(uintptr_t capacity) const;
 
     /// @brief Perfrom defagmentation of the shared memory manager
     /// @return The amount of memory defragmented in bytes
+    // tags{cpp.shm_manager.defrag, c.zc_shm_defrag}
     uintptr_t defrag() const { return ::zc_shm_defrag(&_0); }
 
     /// @brief Perform garbage collection of the shared memory manager
     /// @return The amount of memory freed in bytes
+    // tags{cpp.shm_manager.gc, c.zc_shm_gc}
     uintptr_t gc() const { return ::zc_shm_gc(&_0); }
 
    private:
@@ -911,6 +972,7 @@ class ShmManager : public Owned<::zc_owned_shm_manager_t> {
 /// A data sample.
 ///
 /// A sample is the value associated to a given resource at a given point in time.
+// tags{cpp.sample, c.z_sample_t}
 struct Sample : public Copyable<::z_sample_t> {
     using Copyable::Copyable;
 
@@ -918,22 +980,27 @@ struct Sample : public Copyable<::z_sample_t> {
 
     /// @brief The resource key of this data sample.
     /// @return ``KeyExprView`` object representing the resource key
+    // tags{cpp.sample.get_keyexpr, c.z_sample_t.keyexpr}
     const z::KeyExprView& get_keyexpr() const { return static_cast<const z::KeyExprView&>(keyexpr); }
 
     /// @brief The value of this data sample
     /// @return ``BytesView`` object representing the value
+    // tags{cpp.sample.get_payload, c.z_sample_t.payload}
     const z::BytesView& get_payload() const { return static_cast<const z::BytesView&>(payload); }
 
     /// @brief The encoding of the value of this data sample
     /// @return ``Encoding`` object
+    // tags{cpp.sample.get_encoding, c.z_sample_t.encoding}
     const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
 
     /// @brief The kind of this data sample (PUT or DELETE)
     /// @return ``zenoh::SampleKind`` value
+    // tags{cpp.sample.get_kind, c.z_sample_t.kind}
     SampleKind get_kind() const { return kind; }
 
     /// @brief The timestamp of this data sample
     /// @return ``Timestamp`` object
+    // tags{cpp.sample.get_timestamp, c.z_sample_t.timestamp}
     const z::Timestamp& get_timestamp() const { return static_cast<const z::Timestamp&>(timestamp); }
 #ifdef __ZENOHCXX_ZENOHC
 
@@ -941,17 +1008,20 @@ struct Sample : public Copyable<::z_sample_t> {
     /// resent without actually copying the data
     /// @return ``Payload`` object
     /// @note zenoh-c only
+    // tags{cpp.sample.sample_payload_rcinc, c.zc_sample_payload_rcinc}
     z::Payload sample_payload_rcinc() const {
         return z::Payload(::zc_sample_payload_rcinc(static_cast<const ::z_sample_t*>(this)));
     }
 
     /// @brief The attachment of this data sample
     /// @return ``AttachmentView`` object
+    // tags{cpp.sample.get_attachment, c.z_sample_t.attachment}
     const z::AttachmentView& get_attachment() const { return static_cast<const z::AttachmentView&>(attachment); }
 #endif
 };
 
 /// A zenoh value. Contans refrence to data and it's encoding
+// tags{cpp.value, c.z_value_t}
 struct Value : public Copyable<::z_value_t> {
     using Copyable::Copyable;
 
@@ -960,25 +1030,30 @@ struct Value : public Copyable<::z_value_t> {
     /// @brief Create a new value with the given payload and encoding
     /// @param payload ``BytesView`` object
     /// @param encoding ``Encoding`` value
+    // tags{cpp.value.create.from_payload_and_encoding}
     Value(const z::BytesView& payload, const z::Encoding& encoding) : Copyable({payload, encoding}) {}
 
     /// @brief Create a new value with the default encoding
     /// @param payload ``BytesView`` object
+    // tags{cpp.value.create.from_payload}
     Value(const z::BytesView& payload) : Value(payload, z::Encoding()) {}
 
     /// @brief Create a new value from null-terminated string with the default encoding
     /// @param payload null-terminated string
+    // tags{cpp.value.create.from_const_pchar}
     Value(const char* payload) : Value(payload, z::Encoding()) {}
 
     /// @name Methods
 
     /// @brief The payload of this value
     /// @return ``BytesView`` object
+    // tags{cpp.value.get_payload, c.z_value_t.payload.get}
     const z::BytesView& get_payload() const { return static_cast<const z::BytesView&>(payload); }
 
     /// @brief Set payload of this value
     /// @param _payload ``BytesView`` object
     /// @return referencew the value itself
+    // tags{cpp.value.set_payload, c.z_value_t.payload.set}
     Value& set_payload(const z::BytesView& _payload) {
         payload = _payload;
         return *this;
@@ -986,11 +1061,13 @@ struct Value : public Copyable<::z_value_t> {
 
     /// @brief The encoding of this value
     /// @return ``Encoding`` object
+    // tags{cpp.value.get_encoding, c.z_value_t.encoding.get}
     const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
 
     /// @brief Set encoding of this value
     /// @param _encoding ``Encoding`` object
     /// @return referencew the value itself
+    // tags{cpp.value.set_encoding, c.z_value_t.encoding.set}
     Value& set_encoding(const z::Encoding& _encoding) {
         encoding = _encoding;
         return *this;
@@ -998,6 +1075,7 @@ struct Value : public Copyable<::z_value_t> {
 
     /// @brief The payload of this value as a ``std::string_view``
     /// @return ``std::string_view`` object
+    // tags{cpp.value.as_string_view}
     std::string_view as_string_view() const { return get_payload().as_string_view(); }
 
     /// @name Operators
@@ -1005,6 +1083,7 @@ struct Value : public Copyable<::z_value_t> {
     /// @brief Equality operator
     /// @param v the other ``Value`` to compare with
     /// @return true if the two values are equal (have the same payload and encoding)
+    // tags{cpp.value.eq}
     bool operator==(const Value& v) const {
         return get_payload() == v.get_payload() && get_encoding() == v.get_encoding();
     }
@@ -1012,32 +1091,42 @@ struct Value : public Copyable<::z_value_t> {
     /// @brief Inequality operator
     /// @param v the other ``Value`` to compare with
     /// @return true if the two values are not equal (have different payload or encoding)
+    // tags{cpp.value.ne}
     bool operator!=(const Value& v) const { return !operator==(v); }
 };
 
 /// Replies consolidation mode to apply on replies of get operation
+// tags{cpp.consolidation_mode, c.z_query_consolidation_t}
 struct QueryConsolidation : Copyable<::z_query_consolidation_t> {
     using Copyable::Copyable;
 
     /// @name Constructors
 
     /// @brief Create a new default ``QueryConsolidation`` value
+    // tags{cpp.consolidation_mode.create.default, c.z_query_consolidation_default}
     QueryConsolidation() : Copyable(::z_query_consolidation_default()) {}
 
     /// @brief Create a new ``QueryConsolidation`` value with the given consolidation mode
     /// @param v ``zenoh::ConsolidationMode`` value
+    // tags{cpp.consolidation_mode.create.from_consolidation_mode}
+    // tags{c.z_query_consolidation_auto}
+    // tags{c.z_query_consolidation_none}
+    // tags{c.z_query_consolidation_monotonic}
+    // tags{c.z_query_consolidation_latest}
     QueryConsolidation(ConsolidationMode v) : Copyable({v}) {}
 
     /// @name Methods
 
     /// @brief Set the consolidation mode
     /// @param v ``zenoh::ConsolidationMode`` value
+    // tags{cpp.consolidation_mode.set_mode, c.z_query_consolidation_t.mode.set}
     QueryConsolidation& set_mode(ConsolidationMode v) {
         mode = v;
         return *this;
     }
     /// @brief The consolidation mode
     /// @return ``zenoh::ConsolidationMode`` value
+    // tags{cpp.consolidation_mode.get_mode, c.z_query_consolidation_t.mode.get}
     ConsolidationMode get_mode() const { return mode; }
 
     /// @name Operators
@@ -1045,21 +1134,25 @@ struct QueryConsolidation : Copyable<::z_query_consolidation_t> {
     /// @brief Equality operator
     /// @param v the other ``QueryConsolidation`` to compare with
     /// @return true if the two values are equal (have the same consolidation mode)
+    // tags{cpp.consolidation_mode.eq}
     bool operator==(const QueryConsolidation& v) const { return get_mode() == v.get_mode(); }
 
     /// @brief Inequality operator
     /// @param v the other ``QueryConsolidation`` to compare with
     /// @return true if the two values are not equal (have different consolidation mode)
+    // tags{cpp.consolidation_mode.ne}
     bool operator!=(const QueryConsolidation& v) const { return !operator==(v); }
 };
 
 /// Options passed to the get operation
+// tags{cpp.get_options, c.z_get_options_t}
 struct GetOptions : public Copyable<::z_get_options_t> {
     using Copyable::Copyable;
 
     /// @name Constructors
 
     /// @brief Create a new default ``GetOptions`` value
+    // tags{cpp.get_options.create.default, c.z_get_options_default}
     GetOptions() : Copyable(::z_get_options_default()) {}
 
     /// @name Methods
@@ -1067,6 +1160,7 @@ struct GetOptions : public Copyable<::z_get_options_t> {
     /// @brief Set the target of the get operation
     /// @param v ``zenoh::QueryTarget`` value
     /// @return reference to the structure itself
+    // tags{cpp.get_options.set_target, c.z_get_options_t.target.set}
     GetOptions& set_target(QueryTarget v) {
         target = v;
         return *this;
@@ -1075,6 +1169,7 @@ struct GetOptions : public Copyable<::z_get_options_t> {
     /// @brief Set the consolidation mode to apply on replies of get operation
     /// @param v ``QueryConsolidation`` value
     /// @return reference to the structure itself
+    // tags{cpp.get_options.set_consolidation, c.z_get_options_t.consolidation.set}
     GetOptions& set_consolidation(z::QueryConsolidation v) {
         consolidation = v;
         return *this;
@@ -1083,6 +1178,7 @@ struct GetOptions : public Copyable<::z_get_options_t> {
     /// @brief Set an optional value to attach to the query
     /// @param v ``Value`` value
     /// @return reference to the structure itself
+    // tags{cpp.get_options.set_value, c.z_get_options_t.value.set}
     GetOptions& set_value(z::Value v) {
         value = v;
         return *this;
@@ -1090,16 +1186,19 @@ struct GetOptions : public Copyable<::z_get_options_t> {
 
     /// @brief The target of the get operation
     /// @return ``zenoh::QueryTarget`` value
+    // tags{cpp.get_options.get_target, c.z_get_options_t.target.get}
     QueryTarget get_target() const { return target; }
 
     /// @brief The consolidation mode to apply on replies of get operation
     /// @return ``QueryConsolidation`` value
+    // tags{cpp.get_options.get_consolidation, c.z_get_options_t.consolidation.get}
     const z::QueryConsolidation& get_consolidation() const {
         return static_cast<const z::QueryConsolidation&>(consolidation);
     }
 
     /// @brief The optional value to attach to the query
     /// @return ``Value`` value
+    // tags{cpp.get_options.get_value, c.z_get_options_t.value.get}
     const z::Value& get_value() const { return static_cast<const z::Value&>(value); }
 
 #ifdef __ZENOHCXX_ZENOHC
@@ -1107,6 +1206,7 @@ struct GetOptions : public Copyable<::z_get_options_t> {
     /// @param v timeout in milliseconds. 0 means default query timeout from zenoh configuration.
     /// @return reference to the structure itself
     /// @note zenoh-c only
+    // tags{cpp.get_options.set_timeout_ms, c.z_get_options_t.timeout_ms.set}
     GetOptions& set_timeout_ms(uint64_t ms) {
         timeout_ms = ms;
         return *this;
@@ -1115,15 +1215,18 @@ struct GetOptions : public Copyable<::z_get_options_t> {
     /// @brief The timeout for the query operation
     /// @return timeout in milliseconds. 0 means default query timeout from zenoh configuration.
     /// @note zenoh-c only
+    // tags{cpp.get_options.get_timeout_ms, c.z_get_options_t.timeout_ms.get}
     uint64_t get_timeout_ms() const { return timeout_ms; }
 
     /// @brief Get the attachment
     /// @return ``zenoh::AttachmentView`` value
+    // tags{cpp.get_options.get_attachment, c.z_get_options_t.attachment.get}
     const z::AttachmentView& get_attachment() const { return static_cast<const z::AttachmentView&>(attachment); }
 
     /// @brief Set the attachment
     /// @param a the ``zenoh::AttachmentView`` value
     /// @return reference to the structure itself
+    // tags{cpp.get_options.set_attachment, c.z_get_options_t.attachment.set}
     GetOptions& set_attachment(const z::AttachmentView& a) {
         attachment = a;
         return *this;
@@ -1136,6 +1239,7 @@ struct GetOptions : public Copyable<::z_get_options_t> {
     /// @param v the other ``GetOptions`` to compare with
     /// @return true if the two values are equal (have the same target, consolidation mode and
     /// optional value)
+    // tags{cpp.get_options.eq}
     bool operator==(const GetOptions& v) const {
         return get_target() == v.get_target() && get_consolidation() == v.get_consolidation() &&
                get_value() == v.get_value()
@@ -1149,27 +1253,32 @@ struct GetOptions : public Copyable<::z_get_options_t> {
     /// @param v the other ``GetOptions`` to compare with
     /// @return true if the two values are not equal (have different target, consolidation mode or
     /// optional value)
+    // tags{cpp.get_options.ne}
     bool operator!=(const GetOptions& v) const { return !operator==(v); }
 };
 
 /// Options passed to the put operation
+// tags{cpp.put_options, c.z_put_options_t}
 struct PutOptions : public Copyable<::z_put_options_t> {
     using Copyable::Copyable;
 
     /// @name Constructors
 
     /// @brief Create a new default ``PutOptions`` value
+    // tags{cpp.put_options.create.default, c.z_put_options_default}
     PutOptions() : Copyable(::z_put_options_default()) {}
 
     /// @name Methods
 
     /// @brief Get the encoding of the payload
     /// @return ``zenoh::Encoding`` value
+    // tags{cpp.put_options.get_encoding, c.z_put_options_t.encoding.get}
     const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
 
     /// @brief Set the encoding for the payload
     /// @param e ``zenoh::Encoding`` value
     /// @return reference to the structure itself
+    // tags{cpp.put_options.set_encoding, c.z_put_options_t.encoding.set}
     PutOptions& set_encoding(z::Encoding e) {
         encoding = e;
         return *this;
@@ -1177,11 +1286,13 @@ struct PutOptions : public Copyable<::z_put_options_t> {
 
     /// @brief Get the congestion control mode
     /// @return ``zenoh::CongestionControl`` value
+    // tags{cpp.put_options.get_congestion_control, c.z_put_options_t.congestion_control.get}
     CongestionControl get_congestion_control() const { return congestion_control; }
 
     /// @brief Set the congestion control mode
     /// @param v ``zenoh::CongestionControl`` value
     /// @return reference to the structure itself
+    // tags{cpp.put_options.set_congestion_control, c.z_put_options_t.congestion_control.set}
     PutOptions& set_congestion_control(CongestionControl v) {
         congestion_control = v;
         return *this;
@@ -1189,11 +1300,13 @@ struct PutOptions : public Copyable<::z_put_options_t> {
 
     /// @brief Get the priority of the operation
     /// @return ``zenoh::Priority`` value
+    // tags{cpp.put_options.get_priority, c.z_put_options_t.priority.get}
     Priority get_priority() const { return priority; }
 
     /// @brief Set the priority of the operation
     /// @param v ``zenoh::Priority`` value
     /// @return reference to the structure itself
+    // tags{cpp.put_options.set_priority, c.z_put_options_t.priority.set}
     PutOptions& set_priority(Priority v) {
         priority = v;
         return *this;
@@ -1202,11 +1315,13 @@ struct PutOptions : public Copyable<::z_put_options_t> {
 #ifdef __ZENOHCXX_ZENOHC
     /// @brief Get the attachment
     /// @return ``zenoh::AttachmentView`` value
+    // tags{cpp.put_options.get_attachment, c.z_put_options_t.attachment.get}
     const z::AttachmentView& get_attachment() const { return static_cast<const z::AttachmentView&>(attachment); }
 
     /// @brief Set the attachment
     /// @param a the ``zenoh::AttachmentView`` value
     /// @return reference to the structure itself
+    // tags{cpp.put_options.set_attachment, c.z_put_options_t.attachment.set}
     PutOptions& set_attachment(const z::AttachmentView& a) {
         attachment = a;
         return *this;
@@ -1219,6 +1334,7 @@ struct PutOptions : public Copyable<::z_put_options_t> {
     /// @param v the other ``PutOptions`` to compare with
     /// @return true if the two values are equal (have the same priority, congestion control mode
     /// and encoding)
+    // tags{cpp.put_options.eq}
     bool operator==(const PutOptions& v) const {
         return get_priority() == v.get_priority() && get_congestion_control() == v.get_congestion_control() &&
                get_encoding() == v.get_encoding();
@@ -1228,27 +1344,32 @@ struct PutOptions : public Copyable<::z_put_options_t> {
     /// @param v the other ``PutOptions`` to compare with
     /// @return true if the two values are not equal (have different priority, congestion control
     /// mode or encoding)
+    // tags{cpp.put_options.ne}
     bool operator!=(const PutOptions& v) const { return !operator==(v); }
 };
 
 /// Options passed to the delete operation
+// tags{cpp.delete_options, c.z_delete_options_t}
 struct DeleteOptions : public Copyable<::z_delete_options_t> {
     using Copyable::Copyable;
 
     /// @name Constructors
 
     /// @brief Create a new default ``DeleteOptions`` value
+    // tags{cpp.delete_options.create.default, c.z_delete_options_default}
     DeleteOptions() : Copyable(::z_delete_options_default()) {}
 
     /// @name Methods
 
     /// @brief Get the congestion control mode
     /// @return ``zenoh::CongestionControl`` value
+    // tags{cpp.delete_options.get_congestion_control, c.z_delete_options_t.congestion_control.get}
     CongestionControl get_congestion_control() const { return congestion_control; }
 
     /// @brief Set the congestion control mode
     /// @param v ``zenoh::CongestionControl`` value
     /// @return reference to the structure itself
+    // tags{cpp.delete_options.set_congestion_control, c.z_delete_options_t.congestion_control.set}
     DeleteOptions& set_congestion_control(CongestionControl v) {
         congestion_control = v;
         return *this;
@@ -1256,6 +1377,7 @@ struct DeleteOptions : public Copyable<::z_delete_options_t> {
 
     /// @brief Get the priority of the operation
     /// @return ``zenoh::Priority`` value
+    // tags{cpp.delete_options.get_priority, c.z_delete_options_t.priority.get}
     Priority get_priority() const { return priority; }
 
     /// @brief Set the priority of the operation
