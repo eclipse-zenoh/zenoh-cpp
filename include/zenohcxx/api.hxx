@@ -1383,6 +1383,7 @@ struct DeleteOptions : public Copyable<::z_delete_options_t> {
     /// @brief Set the priority of the operation
     /// @param v ``zenoh::Priority`` value
     /// @return reference to the structure itself
+    // tags{cpp.delete_options.set_priority, c.z_delete_options_t.priority.set}
     DeleteOptions& set_priority(Priority v) {
         priority = v;
         return *this;
@@ -1393,6 +1394,7 @@ struct DeleteOptions : public Copyable<::z_delete_options_t> {
     /// @brief Equality operator
     /// @param v the other ``DeleteOptions`` to compare with
     /// @return true if the two values are equal (have the same priority and congestion control)
+    // tags{cpp.delete_options.eq}
     bool operator==(const DeleteOptions& v) const {
         return get_priority() == v.get_priority() && get_congestion_control() == v.get_congestion_control();
     }
@@ -1400,27 +1402,32 @@ struct DeleteOptions : public Copyable<::z_delete_options_t> {
     /// @brief Inequality operator
     /// @param v the other ``DeleteOptions`` to compare with
     /// @return true if the two values are not equal (have different priority or congestion control)
+    // tags{cpp.delete_options.ne}
     bool operator!=(const DeleteOptions& v) const { return !operator==(v); }
 };
 
 /// Options passed to the ``Query::reply`` operation
+// tags{cpp.query_reply_options, c.z_query_reply_options_t}
 struct QueryReplyOptions : public Copyable<::z_query_reply_options_t> {
     using Copyable::Copyable;
 
     /// @name Constructors
 
     /// @brief Create a new default ``QueryReplyOptions`` value
+    // tags{cpp.query_reply_options.create.default, c.z_query_reply_options_default}
     QueryReplyOptions() : Copyable(::z_query_reply_options_default()) {}
 
     /// @name Methods
 
     /// @brief Get the encoding of the payload
     /// @return ``zenoh::Encoding`` value
+    // tags{cpp.query_reply_options.get_encoding, c.z_query_reply_options_t.encoding.get}
     const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
 
     /// @brief Set the encoding for the payload
     /// @param e ``zenoh::Encoding`` value
     /// @return reference to the structure itself
+    // tags{cpp.query_reply_options.set_encoding, c.z_query_reply_options_t.encoding.set}
     QueryReplyOptions& set_encoding(z::Encoding e) {
         encoding = e;
         return *this;
@@ -1429,11 +1436,13 @@ struct QueryReplyOptions : public Copyable<::z_query_reply_options_t> {
 #ifdef __ZENOHCXX_ZENOHC
     /// @brief Get the attachment
     /// @return ``zenoh::AttachmentView`` value
+    // tags{cpp.query_reply_options.get_attachment, c.z_query_reply_options_t.attachment.get}
     const z::AttachmentView& get_attachment() const { return static_cast<const z::AttachmentView&>(attachment); }
 
     /// @brief Set the attachment
     /// @param a the ``zenoh::AttachmentView`` value
     /// @return reference to the structure itself
+    // tags{cpp.query_reply_options.set_attachment, c.z_query_reply_options_t.attachment.set}
     QueryReplyOptions& set_attachment(const z::AttachmentView& a) {
         attachment = a;
         return *this;
@@ -1445,15 +1454,18 @@ struct QueryReplyOptions : public Copyable<::z_query_reply_options_t> {
     /// @brief Equality operator
     /// @param v the other ``QueryReplyOptions`` to compare with
     /// @return true if the two values are equal (have the same encoding)
+    // tags{cpp.query_reply_options.eq}
     bool operator==(const QueryReplyOptions& v) const { return get_encoding() == v.get_encoding(); }
 
     /// @brief Inequality operator
     /// @param v the other ``QueryReplyOptions`` to compare with
     /// @return true if the two values are not equal (have different encoding)
+    // tags{cpp.query_reply_options.ne}
     bool operator!=(const QueryReplyOptions& v) const { return !operator==(v); }
 };
 
 /// The query to be answered by a ``Queryable``
+// tags{cpp.query, c.z_query_t}
 class Query : public Copyable<::z_query_t> {
    public:
     using Copyable::Copyable;
@@ -1462,20 +1474,24 @@ class Query : public Copyable<::z_query_t> {
 
     /// @brief Get the key expression of the query
     /// @return ``zenoh::KeyExprView`` value
+    // tags{cpp.query.get_keyexpr, c.z_query_t.keyexpr}
     z::KeyExprView get_keyexpr() const { return z::KeyExprView(::z_query_keyexpr(this)); }
 
     /// @brief Get a query's <a href=https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>value
     /// selector</a>
     /// @return ``zenoh::BytesView`` value
+    // tags{cpp.query.get_parameters, c.z_query_parameters}
     z::BytesView get_parameters() const { return z::BytesView(::z_query_parameters(this)); }
 
     /// @brief Get the value of the query
     /// @return ``zenoh::Value`` value
+    // tags{cpp.query.get_value, c.z_query_value}
     z::Value get_value() const { return z::Value(::z_query_value(this)); }
 
 #ifdef __ZENOHCXX_ZENOHC
     /// @brief Get the attachment of the query
     /// @return ``zenoh::AttachmentView`` value
+    // tags{cpp.query.get_attachment, c.z_query_t.attachment}
     z::AttachmentView get_attachment() const { return z::AttachmentView(::z_query_attachment(this)); }
 #endif  // ifdef __ZENOHCXX_ZENOHC
 
@@ -1489,6 +1505,7 @@ class Query : public Copyable<::z_query_t> {
     /// @param options the ``QueryReplyOptions`` to be used for the reply
     /// @param error the ``zenoh::ErrNo`` error code
     /// @return true if the reply was sent successfully
+    // tags{cpp.query.reply, c.z_query_reply}
     bool reply(z::KeyExprView key, const z::BytesView& payload, const z::QueryReplyOptions& options,
                ErrNo& error) const;
 
@@ -1497,6 +1514,7 @@ class Query : public Copyable<::z_query_t> {
     /// @param payload the ``BytesView`` with payload to be sent
     /// @param options the ``QueryReplyOptions`` to be used for the reply
     /// @return true if the reply was sent successfully
+    // tags{cpp.query.reply, c.z_query_reply}
     bool reply(z::KeyExprView key, const z::BytesView& payload, const z::QueryReplyOptions& options) const;
 
     /// @brief Send reply to the query
@@ -1504,12 +1522,14 @@ class Query : public Copyable<::z_query_t> {
     /// @param payload the ``BytesView`` with payload to be sent
     /// @param error the ``zenoh::ErrNo`` error code
     /// @return true if the reply was sent successfully
+    // tags{cpp.query.reply, c.z_query_reply}
     bool reply(z::KeyExprView key, const z::BytesView& payload, ErrNo& error) const;
 
     /// @brief Send reply to the query
     /// @param key the ``KeyExprView`` of the queryable
     /// @param payload the ``BytesView`` with payload to be sent
     /// @return true if the reply was sent successfully
+    // tags{cpp.query.reply, c.z_query_reply}
     bool reply(z::KeyExprView key, const z::BytesView& payload) const;
 
    private:
@@ -1518,12 +1538,14 @@ class Query : public Copyable<::z_query_t> {
 };
 
 /// Options to be passed when declaring a ``Queryable``
+// tags{cpp.queryable_options, c.z_queryable_options_t}
 struct QueryableOptions : public Copyable<::z_queryable_options_t> {
     using Copyable::Copyable;
 
     /// @name Constructors
 
     /// @brief Create a new default ``QueryableOptions`` value
+    // tags{cpp.queryable_options.create.default, c.z_queryable_options_default}
     QueryableOptions() : Copyable(::z_queryable_options_default()) {}
 
     /// @name Methods
@@ -1532,11 +1554,13 @@ struct QueryableOptions : public Copyable<::z_queryable_options_t> {
     /// A queryable is defined as complete if it can serve any query “completely” related to the key expression on which
     /// it serves. The querier will not benefit from extra information from any other queryable.
     /// @return true if the queryable is complete
+    // tags{cpp.queryable_options.get_complete, c.z_queryable_options_t.complete.get}
     bool get_complete() const { return complete; }
 
     /// @brief Set the completeness of the queryable
     /// @param v true if the queryable is complete
     /// @return reference to the structure itself
+    // tags{cpp.queryable_options.set_complete, c.z_queryable_options_t.complete.set}
     QueryableOptions& set_complete(bool v) {
         complete = v;
         return *this;
@@ -1547,32 +1571,38 @@ struct QueryableOptions : public Copyable<::z_queryable_options_t> {
     /// @brief Equality operator
     /// @param v the other ``QueryableOptions`` to compare with
     /// @return true if the two values are equal (have the same completeness)
+    // tags{cpp.queryable_options.eq}
     bool operator==(const QueryableOptions& v) const { return get_complete() == v.get_complete(); }
 
     /// @brief Inequality operator
     /// @param v the other ``QueryableOptions`` to compare with
     /// @return true if the two values are not equal (have different completeness)
+    // tags{cpp.queryable_options.ne}
     bool operator!=(const QueryableOptions& v) const { return !operator==(v); }
 };
 
 /// Options to be passed when declaring a ``'Subscriber``
+// tags{cpp.subscriber_options, c.z_subscriber_options_t}
 struct SubscriberOptions : public Copyable<::z_subscriber_options_t> {
     using Copyable::Copyable;
 
     /// @name Constructors
 
     /// @brief Create a new default ``SubscriberOptions`` value
+    // tags{cpp.subscriber_options.create.default, c.z_subscriber_options_default}
     SubscriberOptions() : Copyable(::z_subscriber_options_default()) {}
 
     /// @name Methods
 
     /// @brief Get the reliability of the subscriber
     /// @return ``zenoh::Reliability`` value
+    // tags{cpp.subscriber_options.get_reliability, c.z_subscriber_options_t.reliability.get}
     Reliability get_reliability() const { return reliability; }
 
     /// @brief Set the reliability of the subscriber
     /// @param v the ``zenoh::Reliability`` value
     /// @return reference to the structure itself
+    // tags{cpp.subscriber_options.set_reliability, c.z_subscriber_options_t.reliability.set}
     SubscriberOptions& set_reliability(Reliability v) {
         reliability = v;
         return *this;
@@ -1583,32 +1613,38 @@ struct SubscriberOptions : public Copyable<::z_subscriber_options_t> {
     /// @brief Equality operator
     /// @param v the other ``SubscriberOptions`` to compare with
     /// @return true if the two values are equal (have the same reliability)
+    // tags{cpp.subscriber_options.eq}
     bool operator==(const SubscriberOptions& v) const { return get_reliability() == v.get_reliability(); }
 
     /// @brief Inequality operator
     /// @param v the other ``SubscriberOptions`` to compare with
     /// @return true if the two values are not equal (have different reliability)
+    // tags{cpp.subscriber_options.ne}
     bool operator!=(const SubscriberOptions& v) const { return !operator==(v); }
 };
 
 /// Options to be passed when declaring a ``PullSubscriber``
+// tags{cpp.pull_subscriber_options, c.z_pull_subscriber_options_t}
 struct PullSubscriberOptions : public Copyable<::z_pull_subscriber_options_t> {
     using Copyable::Copyable;
 
     /// @name Constructors
 
     /// @brief Create a new default ``PullSubscriberOptions`` value
+    // tags{cpp.pull_subscriber_options.create.default, c.z_pull_subscriber_options_default}
     PullSubscriberOptions() : Copyable(::z_pull_subscriber_options_default()) {}
 
     /// @name Methods
 
     /// @brief Get the reliability of the pull subscriber
     /// @return ``zenoh::Reliability`` value
+    // tags{cpp.pull_subscriber_options.get_reliability, c.z_pull_subscriber_options_t.reliability.get}
     Reliability get_reliability() const { return reliability; }
 
     /// @brief Set the reliability of the pull subscriber
     /// @param v the ``zenoh::Reliability`` value
     /// @return reference to the structure itself
+    // tags{cpp.pull_subscriber_options.set_reliability, c.z_pull_subscriber_options_t.reliability.set}
     PullSubscriberOptions& set_reliability(Reliability v) {
         reliability = v;
         return *this;
@@ -1619,32 +1655,38 @@ struct PullSubscriberOptions : public Copyable<::z_pull_subscriber_options_t> {
     /// @brief Equality operator
     /// @param v the other ``PullSubscriberOptions`` to compare with
     /// @return true if the two values are equal (have the same reliability)
+    // tags{cpp.pull_subscriber_options.eq}
     bool operator==(const PullSubscriberOptions& v) const { return get_reliability() == v.get_reliability(); }
 
     /// @brief Inequality operator
     /// @param v the other ``PullSubscriberOptions`` to compare with
     /// @return true if the two values are not equal (have different reliability)
+    // tags{cpp.pull_subscriber_options.ne}
     bool operator!=(const PullSubscriberOptions& v) const { return !operator==(v); }
 };
 
 /// Options to be passed when declaring a ``Publisher``
+// tags{cpp.publisher_options, c.z_publisher_options_t}
 struct PublisherOptions : public Copyable<::z_publisher_options_t> {
     using Copyable::Copyable;
 
     /// @name Constructors
 
     /// @brief Create a new default ``PublisherOptions`` value
+    // tags{cpp.publisher_options.create.default, c.z_publisher_options_default}
     PublisherOptions() : Copyable(::z_publisher_options_default()) {}
 
     /// @name Methods
 
     /// @brief Get the congestion control of the publisher
     /// @return ``zenoh::CongestionControl`` value
+    // tags{cpp.publisher_options.get_congestion_control, c.z_publisher_options_t.congestion_control.get}
     CongestionControl get_congestion_control() const { return congestion_control; }
 
     /// @brief Set the congestion control of the publisher
     /// @param v the ``zenoh::CongestionControl`` value
     /// @return reference to the structure itself
+    // tags{cpp.publisher_options.set_congestion_control, c.z_publisher_options_t.congestion_control.set}
     PublisherOptions& set_congestion_control(CongestionControl v) {
         congestion_control = v;
         return *this;
@@ -1652,11 +1694,13 @@ struct PublisherOptions : public Copyable<::z_publisher_options_t> {
 
     /// @brief Get the priority of the publisher
     /// @return ``zenoh::Priority`` value
+    // tags{cpp.publisher_options.get_priority, c.z_publisher_options_t.priority.get}
     Priority get_priority() const { return priority; }
 
     /// @brief Set the priority of the publisher
     /// @param v the ``zenoh::Priority`` value
     /// @return reference to the structure itself
+    // tags{cpp.publisher_options.set_priority, c.z_publisher_options_t.priority.set}
     PublisherOptions& set_priority(Priority v) {
         priority = v;
         return *this;
@@ -1667,6 +1711,7 @@ struct PublisherOptions : public Copyable<::z_publisher_options_t> {
     /// @brief Equality operator
     /// @param v the other ``PublisherOptions`` to compare with
     /// @return true if the two values are equal (have the same congestion control and priority)
+    // tags{cpp.publisher_options.eq}
     bool operator==(const PublisherOptions& v) const {
         return get_priority() == v.get_priority() && get_congestion_control() == v.get_congestion_control();
     }
@@ -1674,27 +1719,32 @@ struct PublisherOptions : public Copyable<::z_publisher_options_t> {
     /// @brief Inequality operator
     /// @param v the other ``PublisherOptions`` to compare with
     /// @return true if the two values are not equal (have different congestion control or priority)
+    // tags{cpp.publisher_options.ne}
     bool operator!=(const PublisherOptions& v) const { return !operator==(v); }
 };
 
 /// Options to be passed to ``Publisher::put`` operation
+// tags{cpp.publisher_put_options, c.z_publisher_put_options_t}
 struct PublisherPutOptions : public Copyable<::z_publisher_put_options_t> {
     using Copyable::Copyable;
 
     /// @name Constructors
 
     /// @brief Create a new default ``PublisherPutOptions`` value
+    // tags{cpp.publisher_put_options.create.default, c.z_publisher_put_options_default}
     PublisherPutOptions() : Copyable(::z_publisher_put_options_default()) {}
 
     /// @name Methods
 
     /// @brief Get the encoding of the publisher
     /// @return ``zenoh::Encoding`` value
+    // tags{cpp.publisher_put_options.get_encoding, c.z_publisher_put_options_t.encoding.get}
     const z::Encoding& get_encoding() const { return static_cast<const z::Encoding&>(encoding); }
 
     /// @brief Set the encoding of the publisher
     /// @param e the ``zenoh::Encoding`` value
     /// @return reference to the structure itself
+    // tags{cpp.publisher_put_options.set_encoding, c.z_publisher_put_options_t.encoding.set}
     PublisherPutOptions& set_encoding(z::Encoding e) {
         encoding = e;
         return *this;
@@ -1703,11 +1753,13 @@ struct PublisherPutOptions : public Copyable<::z_publisher_put_options_t> {
 #ifdef __ZENOHCXX_ZENOHC
     /// @brief Get the attachment
     /// @return ``zenoh::AttachmentView`` value
+    // tags{cpp.publisher_put_options.get_attachment, c.z_publisher_put_options_t.attachment.get}
     const z::AttachmentView& get_attachment() const { return static_cast<const z::AttachmentView&>(attachment); }
 
     /// @brief Set the attachment
     /// @param a the ``zenoh::AttachmentView`` value
     /// @return reference to the structure itself
+    // tags{cpp.publisher_put_options.set_attachment, c.z_publisher_put_options_t.attachment.set}
     PublisherPutOptions& set_attachment(const z::AttachmentView& a) {
         attachment = a;
         return *this;
@@ -1719,20 +1771,24 @@ struct PublisherPutOptions : public Copyable<::z_publisher_put_options_t> {
     /// @brief Equality operator
     /// @param v the other ``PublisherPutOptions`` to compare with
     /// @return true if the two values are equal (have the same encoding)
+    // tags{cpp.publisher_put_options.eq}
     bool operator==(const PublisherPutOptions& v) const { return get_encoding() == v.get_encoding(); }
 
     /// @brief Inequality operator
     /// @param v the other ``PublisherPutOptions`` to compare with
     /// @return true if the two values are not equal (have different encoding)
+    // tags{cpp.publisher_put_options.ne}
     bool operator!=(const PublisherPutOptions& v) const { return !operator==(v); }
 };
 
 /// Options to be passed to delete operation of a publisher
+// tags{cpp.publisher_delete_options, c.z_publisher_delete_options_t}
 struct PublisherDeleteOptions : public Copyable<::z_publisher_delete_options_t> {
     using Copyable::Copyable;
 
     /// @name Constructors
 
+    // tags{cpp.publisher_delete_options.create.default, c.z_publisher_delete_options_default}
     PublisherDeleteOptions() : Copyable(::z_publisher_delete_options_default()) {}
 
     /// @name Operators
@@ -1740,17 +1796,20 @@ struct PublisherDeleteOptions : public Copyable<::z_publisher_delete_options_t> 
     /// @brief Equality operator
     /// @param v the other ``PublisherDeleteOptions`` to compare with
     /// @return true if the two values are equal
+    // tags{cpp.publisher_delete_options.eq}
     bool operator==(const z::PublisherOptions&) const { return true; }
 
     /// @brief Inequality operator
     /// @param v the other ``PublisherDeleteOptions`` to compare with
     /// @return true if the two values are not equal
+    // tags{cpp.publisher_delete_options.ne}
     bool operator!=(const z::PublisherOptions& v) const { return !operator==(v); }
 };
 
 /// Owned key expression.
 /// See details about key expression syntax in the <a
 /// href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Key%20Expressions.md"> Key Expressions RFC</a>.
+// tags{cpp.key_expr, c.z_owned_keyexpr_t}
 class KeyExpr : public Owned<::z_owned_keyexpr_t> {
    public:
     using Owned::Owned;
@@ -1758,68 +1817,84 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @name Constructors
 
     /// @brief Create an uninitialized instance
+    // tags{cpp.key_expr.create.empty}
     explicit KeyExpr(nullptr_t) : Owned(nullptr) {}
 
     /// @brief Create a new instance from a null-terminated string
+    // tags{cpp.key_expr.create.from_const_pchar, c.z_keyexpr_new}
     explicit KeyExpr(const char* name) : Owned(::z_keyexpr_new(name)) {}
 
     /// @name Methods
 
     /// @brief Get the key expression value
     /// @return ``KeyExprView`` referencing the key expression value in the object
+    // tags{cpp.key_expr.as_keyexpr_view}
     z::KeyExprView as_keyexpr_view() const { return z::KeyExprView(loan()); }
 
     /// @brief Get the key expression value
     /// @return ``BytesView`` referencing the key expression value in the object
+    // tags{cpp.key_expr.as_bytes}
     z::BytesView as_bytes() const { return as_keyexpr_view().as_bytes(); }
 
     /// @brief Get the key expression value
     /// @return ``std::string_view`` referencing the key expression value in the object
+    // tags{cpp.key_expr.as_string_view}
     std::string_view as_string_view() const { return as_keyexpr_view().as_string_view(); }
 
     /// @name Operators
 
     /// @brief Get the key expression value
     /// @return ``KeyExprView`` referencing the key expression value in the object
+    // tags{cpp.key_expr.as_keyexpr_view}
     operator z::KeyExprView() const { return as_keyexpr_view(); }
 
     /// @brief Equality operator
     /// @param v the ``std::string_view`` to compare with
     /// @return true if the key expression is equal to the string
+    // tags{cpp.key_expr.eq.string_view}
     bool operator==(const std::string_view& v) { return as_string_view() == v; }
 
 #ifdef __ZENOHCXX_ZENOHC
     /// @brief see ``zenoh::keyexpr_concat``
     /// @note zenoh-c only
+    // tags{cpp.key_expr.concat, c.z_keyexpr_concat}
     z::KeyExpr concat(const std::string_view& s) const;
 
     /// @brief see ``zenoh::keyexpr_join``
     /// @note zenoh-c only
+    // tags{cpp.key_expr.join, c.z_keyexpr_join}
     z::KeyExpr join(const z::KeyExprView& v) const;
 
     /// @brief see ``zenoh::keyexpr_equals``
+    // tags{cpp.key_expr.equals, c.z_keyexpr_equals}
     bool equals(const z::KeyExprView& v) const;
 
     /// @brief see ``zenoh::keyexpr_includes``
+    // tags{cpp.key_expr.includes, c.z_keyexpr_includes}
     bool includes(const z::KeyExprView& v) const;
 
     /// @brief see ``zenoh::keyexpr_intersects``
+    // tags{cpp.key_expr.intersects, c.z_keyexpr_intersects}
     bool intersects(const z::KeyExprView& v) const;
 #endif
 
     /// @brief see ``zenoh::keyexpr_equals``
+    // tags{cpp.key_expr.equals, c.z_keyexpr_equals}
     bool equals(const z::KeyExprView& v, ErrNo& error) const;
 
     /// @brief see ``zenoh::keyexpr_includes``
+    // tags{cpp.key_expr.includes, c.z_keyexpr_includes}
     bool includes(const z::KeyExprView& v, ErrNo& error) const;
 
     /// @brief see ``zenoh::keyexpr_intersects``
+    // tags{cpp.key_expr.intersects, c.z_keyexpr_intersects}
     bool intersects(const z::KeyExprView& v, ErrNo& error) const;
 };
 
 class ScoutingConfig;
 
 /// Zenoh config
+// tags{cpp.config, c.z_owned_config_t}
 class Config : public Owned<::z_owned_config_t> {
    public:
     using Owned::Owned;
@@ -1827,17 +1902,20 @@ class Config : public Owned<::z_owned_config_t> {
     /// @name Constructors
 
     /// @brief Create the default configuration
+    // tags{cpp.config.create.default, c.z_config_default}
     Config() : Owned(::z_config_default()) {}
 #ifdef __ZENOHCXX_ZENOHC
     /// @brief Get config parameter by the string key
     /// @param key the key
     /// @return the ``Str`` value of the config parameter
     /// @note zenoh-c only
+    // tags{cpp.config.get, c.zc_config_get}
     z::Str get(const char* key) const { return z::Str(::zc_config_get(loan(), key)); }
 
     /// @brief Get the whole config as a JSON string
     /// @return the JSON string in ``Str``
     /// @note zenoh-c only
+    // tags{cpp.config.to_string, c.zc_config_to_string}
     z::Str to_string() const { return z::Str(::zc_config_to_string(loan())); }
 
     /// @brief Insert a config parameter by the string key
@@ -1845,6 +1923,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @param value the JSON string value
     /// @return true if the parameter was inserted
     /// @note zenoh-c only
+    // tags{cpp.config.insert_json, c.zc_config_insert_json}
     bool insert_json(const char* key, const char* value) { return ::zc_config_insert_json(loan(), key, value) == 0; }
 #endif
 #ifdef __ZENOHCXX_ZENOHPICO
@@ -1852,6 +1931,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @param key the key
     /// @return pointer to the null-terminated string value of the config parameter
     /// @note zenoh-pico only
+    // tags{cpp.config.get, c.zp_config_get}
     const char* get(uint8_t key) const { return ::zp_config_get(loan(), key); }
 
     /// @brief Insert a config parameter by it's numeric ID
@@ -1859,6 +1939,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @param value the null-terminated string value
     /// @return true if the parameter was inserted
     /// @note zenoh-pico only
+    // tags{cpp.config.insert, c.zp_config_insert}
     bool insert(uint8_t key, const char* value);
 
     /// @brief Insert a config parameter by it's numeric ID
@@ -1867,10 +1948,12 @@ class Config : public Owned<::z_owned_config_t> {
     /// @param error the error code
     /// @return true if the parameter was inserted
     /// @note zenoh-pico only
+    // tags{cpp.config.insert, c.zp_config_insert}
     bool insert(uint8_t key, const char* value, ErrNo& error);
 #endif
     /// @brief Create ``ScoutingConfig`` from the config
     /// @return the ``ScoutingConfig`` object
+    // tags{cpp.config.create_scouting_config, c.z_scouting_config_from}
     z::ScoutingConfig create_scouting_config();
 };
 
@@ -1879,34 +1962,40 @@ class Config : public Owned<::z_owned_config_t> {
 /// @brief Create the default configuration for "peer" mode
 /// @return the ``Config`` object
 /// @note zenoh-c only
+// tags{cpp.config_peer, c.z_config_peer}
 inline z::Config config_peer() { return z::Config(::z_config_peer()); }
 
 /// @brief Create the configuration from the JSON file
 /// @param path path to the file
 /// @return the ``Config`` object
 /// @note zenoh-c only
+// tags{cpp.config_from_file, c.zc_config_from_file}
 std::variant<z::Config, ErrorMessage> config_from_file(const char* path);
 
 /// @brief Create the configuration from the JSON string
 /// @param s the JSON string
 /// @return the ``Config`` object
 /// @note zenoh-c only
+// tags{cpp.config_from_str, c.zc_config_from_str}
 std::variant<z::Config, ErrorMessage> config_from_str(const char* s);
 
 /// @brief Create the configuration for "client" mode
 /// @param peers the array of peers
 /// @return the ``Config`` object
 /// @note zenoh-c only
+// tags{cpp.config_client, c.z_config_client}
 std::variant<z::Config, ErrorMessage> config_client(const z::StrArrayView& peers);
 
 /// @brief Create the configuration for "client" mode
 /// @param peers the array of peers
 /// @return the ``Config`` object
 /// @note zenoh-c only
+// tags{cpp.config_client, c.z_config_client}
 std::variant<z::Config, ErrorMessage> config_client(const std::initializer_list<const char*>& peers);
 #endif
 
 /// An owned reply from queryable to ``Session::get`` operation
+// tags{cpp.reply, c.z_owned_reply_t}
 class Reply : public Owned<::z_owned_reply_t> {
    public:
     using Owned::Owned;
@@ -1915,10 +2004,12 @@ class Reply : public Owned<::z_owned_reply_t> {
 
     /// @brief Check if the reply is OK
     /// @return true if the reply is OK
+    // tags{cpp.reply.is_ok, c.z_reply_is_ok}
     bool is_ok() const { return ::z_reply_is_ok(&_0); }
 
     /// @brief Get the reply value
     /// @return the ``Sample`` value of the reply if reply is OK, otherwise ``zenoh::ErrorMessage``
+    // tags{cpp.reply.get, c.z_reply_ok, c.z_reply_err}
     std::variant<z::Sample, ErrorMessage> get() const {
         if (is_ok()) {
             return z::Sample{::z_reply_ok(&_0)};
@@ -1930,6 +2021,7 @@ class Reply : public Owned<::z_owned_reply_t> {
 
 /// An owned zenoh subscriber. Destroying subscriber cancels the subscription
 /// Constructed by ``Session::declare_subscriber`` method
+// tags{cpp.subscriber, c.z_owned_subscriber_t}
 class Subscriber : public Owned<::z_owned_subscriber_t> {
    public:
     using Owned::Owned;
@@ -1937,12 +2029,14 @@ class Subscriber : public Owned<::z_owned_subscriber_t> {
 #ifdef __ZENOHCXX_ZENOHC
     /// @brief Get the key expression of the subscriber
     /// @return ``zenoh::KeyExpr`` value
+    // tags{cpp.subscriber.get_keyexpr, c.z_subscriber_keyexpr}
     z::KeyExpr get_keyexpr() const { return ::z_subscriber_keyexpr(loan()); }
 #endif
 };
 
 /// An owned zenoh pull subscriber. Destroying the subscriber cancels the subscription.
 /// Constructed by ``Session::declare_pull_subscriber`` method
+// tags{cpp.pull_subscriber, c.z_owned_pull_subscriber_t}
 class PullSubscriber : public Owned<::z_owned_pull_subscriber_t> {
    public:
     using Owned::Owned;
@@ -1951,11 +2045,13 @@ class PullSubscriber : public Owned<::z_owned_pull_subscriber_t> {
 
     /// @brief Pull the next sample
     /// @return true if the sample was pulled, false otherwise
+    // tags{cpp.pull_subscriber.pull, c.z_subscriber_pull}
     bool pull() { return ::z_subscriber_pull(loan()) == 0; }
 
     /// @brief Pull the next sample
     /// @param error the error code
     /// @return true if the sample was pulled, false otherwise
+    // tags{cpp.pull_subscriber.pull, c.z_subscriber_pull}
     bool pull(ErrNo& error) {
         error = ::z_subscriber_pull(loan());
         return error == 0;
@@ -1963,12 +2059,14 @@ class PullSubscriber : public Owned<::z_owned_pull_subscriber_t> {
 };
 
 /// An owned zenoh queryable. Constructed by ``Session::declare_queryable`` method
+// tags{cpp.queryable, c.z_owned_queryable_t}
 class Queryable : public Owned<::z_owned_queryable_t> {
    public:
     using Owned::Owned;
 };
 
 /// An owned zenoh publisher. Constructed by ``Session::declare_publisher`` method
+// tags{cpp.publisher, c.z_owned_publisher_t}
 class Publisher : public Owned<::z_owned_publisher_t> {
    public:
     using Owned::Owned;
@@ -1980,48 +2078,57 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     /// @param options ``PublisherPutOptions``
     /// @param error the error code ``zenoh::ErrNo``
     /// @return true if the payload was published, false otherwise
+    // tags{cpp.publisher.put, c.z_publisher_put}
     bool put(const z::BytesView& payload, const z::PublisherPutOptions& options, ErrNo& error);
 
     /// @brief Publish the payload
     /// @param payload ``Payload`` to publish
     /// @param error the error code ``zenoh::ErrNo``
     /// @return true if the payload was published, false otherwise
+    // tags{cpp.publisher.put, c.z_publisher_put}
     bool put(const z::BytesView& payload, ErrNo& error);
 
     /// @brief Publish the payload
     /// @param payload ``Payload`` to publish
     /// @param options ``PublisherPutOptions``
     /// @return true if the payload was published, false otherwise
+    // tags{cpp.publisher.put, c.z_publisher_put}
     bool put(const z::BytesView& payload, const z::PublisherPutOptions& options);
 
     /// @brief Publish the payload
     /// @param payload ``Payload`` to publish
     /// @return true if the payload was published, false otherwise
+    // tags{cpp.publisher.put, c.z_publisher_put}
     bool put(const z::BytesView& payload);
 
     /// @brief Undeclare the resource
     /// @param options ``PublisherDeleteOptions``
     /// @param error the error code ``zenoh::ErrNo``
     /// @return true if the request was sent, false otherwise
+    // tags{cpp.publisher.delete, c.z_publisher_delete}
     bool delete_resource(const z::PublisherDeleteOptions& options, ErrNo& error);
 
     /// @brief Undeclare the resource
     /// @param error the error code ``zenoh::ErrNo``
     /// @return true if the request was sent, false otherwise
+    // tags{cpp.publisher.delete, c.z_publisher_delete}
     bool delete_resource(ErrNo& error);
 
     /// @brief Undeclare the resource
     /// @param options ``PublisherDeleteOptions``
     /// @return true if the request was sent, false otherwise
+    // tags{cpp.publisher.delete, c.z_publisher_delete}
     bool delete_resource(const z::PublisherDeleteOptions& options);
 
     /// @brief Send a delete request
     /// @return true if the request was sent, false otherwise
+    // tags{cpp.publisher.delete, c.z_publisher_delete}
     bool delete_resource();
 
 #ifdef __ZENOHCXX_ZENOHC
     /// @brief Get the key expression of the publisher
     /// @return ``zenoh::KeyExpr`` value
+    // tags{cpp.publisher.get_keyexpr, c.z_publisher_keyexpr}
     z::KeyExpr get_keyexpr() const { return ::z_publisher_keyexpr(loan()); }
 #endif
 
@@ -2032,6 +2139,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     /// @param error the error code ``zenoh::ErrNo``
     /// @return true if the payload was published, false otherwise
     /// @note zenoh-c only
+    // tags{cpp.publisher.put_owned, c.zc_publisher_put_owned}
     bool put_owned(z::Payload&& payload, const z::PublisherPutOptions& options, ErrNo& error);
 
     /// @brief Publish the payload got from ``ShmBuf`` or from ``Sample``
@@ -2039,6 +2147,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     /// @param error the error code ``zenoh::ErrNo``
     /// @return true if the payload was published, false otherwise
     /// @note zenoh-c only
+    // tags{cpp.publisher.put_owned, c.zc_publisher_put_owned}
     bool put_owned(z::Payload&& payload, ErrNo& error);
 
     /// @brief Publish the payload got from ``ShmBuf`` or from ``Sample``
@@ -2046,12 +2155,14 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     /// @param options ``PublisherPutOptions``
     /// @return true if the payload was published, false otherwise
     /// @note zenoh-c only
+    // tags{cpp.publisher.put_owned, c.zc_publisher_put_owned}
     bool put_owned(z::Payload&& payload, const z::PublisherPutOptions& options);
 
     /// @brief Publish the payload got from ``ShmBuf`` or from ``Sample``
     /// @param payload ``Payload`` to publish
     /// @return true if the payload was published, false otherwise
     /// @note zenoh-c only
+    // tags{cpp.publisher.put_owned, c.zc_publisher_put_owned}
     bool put_owned(z::Payload&& payload);
 #endif
 
@@ -2064,6 +2175,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
 };
 
 /// A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with scout operation
+// tags{cpp.hello, c.z_owned_hello_t}
 class Hello : public Owned<::z_owned_hello_t> {
    public:
     using Owned::Owned;
@@ -2072,6 +2184,7 @@ class Hello : public Owned<::z_owned_hello_t> {
 
     /// @brief Get the content of the hello message
     /// @return the content of the hello message as ``HelloView``
+    // tags{cpp.hello.as_hello_view}
     operator z::HelloView() const { return z::HelloView(loan()); }
 };
 
@@ -2093,6 +2206,7 @@ typedef ClosureMoveParam<::z_owned_closure_hello_t, ::z_owned_hello_t, z::Hello>
 
 /// @brief Configuration for a ``zenoh::scout`` operation. This configuration can be created by
 /// ``Config::create_scouting_config`` method.
+// tags{cpp.scouting_config, c.z_owned_scouting_config_t}
 class ScoutingConfig : public Owned<::z_owned_scouting_config_t> {
    public:
     using Owned::Owned;
@@ -2100,6 +2214,7 @@ class ScoutingConfig : public Owned<::z_owned_scouting_config_t> {
     /// @name Constructors
 
     /// @brief Create a default ``ScoutingConfig``
+    // tags{cpp.scouting_config.create.default, c.z_scouting_config_default}
     ScoutingConfig() : Owned(::z_scouting_config_default()) {}
 };
 
@@ -2108,12 +2223,14 @@ class ScoutingConfig : public Owned<::z_owned_scouting_config_t> {
 /// @param callback ``zenoh::ClosureHello`` to process received ``Hello``s
 /// @param error ``zenoh:::ErrNo`` to store the error code
 /// @return true if the scout operation was successful, false otherwise
+// tags{cpp.scout, c.z_scout}
 bool scout(z::ScoutingConfig&& config, z::ClosureHello&& callback, ErrNo& error);
 
 /// @brief Scout for zenoh entities in the network
 /// @param config ``ScoutingConfig`` to use
 /// @param callback ``zenoh::ClosureHello`` to process received ``Hello``s
 /// @return true if the scout operation was successful, false otherwise
+// tags{cpp.scout, c.z_scout}
 bool scout(z::ScoutingConfig&& config, z::ClosureHello&& callback);
 
 class Session;
@@ -2125,9 +2242,11 @@ class Session;
 /// ``Session::start_lease_task`` or methods ``Session::read``, ``Session::send_keep_alive`` and
 /// ``Session::send_join`` should be called in loop.
 /// @return a ``Session`` if the session was successfully created, an ``zenoh::ErrorMessage`` otherwise
+// tags{cpp.open, c.z_open}
 std::variant<z::Session, z::ErrorMessage> open(z::Config&& config, bool start_background_tasks = true);
 
 /// Main zenoh session class.
+// tags{cpp.session, c.z_owned_session_t}
 class Session : public Owned<::z_owned_session_t> {
    public:
     using Owned::Owned;
@@ -2155,27 +2274,32 @@ class Session : public Owned<::z_owned_session_t> {
     /// This is possible in zenoh-c only where ``Session`` is a reference counted object.
     /// @return a new ``Session`` instance
     /// @note zenoh-c only
+    // tags{cpp.session_rcinc, c.zc_session_rcinc}
     Session rcinc() { return Session(::zc_session_rcinc(loan())); }
 #endif
 
     /// @brief Get the unique identifier of the zenoh node associated to this ``Session``
     /// @return the unique identifier ``Id``
+    // tags{cpp.session.info_zinf, c.z_info_zid}
     z::Id info_zid() const { return ::z_info_zid(loan()); }
 
     /// @brief Create ``KeyExpr`` instance with numeric id registered in ``Session`` routing tables
     /// @param keyexpr ``KeyExprView`` representing string key expression
     /// @return ``KeyExpr`` instance
+    // tags{cpp.session.declare_keyexpr, c.z_declare_keyexpr}
     z::KeyExpr declare_keyexpr(const z::KeyExprView& keyexpr);
 
     /// @brief Remove ``KeyExpr`` instance from ``Session`` and drop ``KeyExpr`` instance
     /// @param keyexpr ``KeyExpr`` instance to drop
     /// @param error ``zenoh::ErrNo`` to store the error code
     /// @return true if the ``KeyExpr`` instance was successfully removed, false otherwise
+    // tags{cpp.session.undeclare_keyexpr, c.z_undeclare_keyexpr}
     bool undeclare_keyexpr(z::KeyExpr&& keyexpr, ErrNo& error);
 
     /// @brief Remove ``KeyExpr`` instance from ``Session`` and drop ``KeyExpr`` instance
     /// @param keyexpr ``KeyExpr`` instance to drop
     /// @return true if the ``KeyExpr`` instance was successfully removed, false otherwise
+    // tags{cpp.session.undeclare_keyexpr, c.z_undeclare_keyexpr}
     bool undeclare_keyexpr(z::KeyExpr&& keyexpr);
 
     /// @brief Query data from the matching queryables in the system. Replies are provided through a callback function.
@@ -2185,6 +2309,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param options ``GetOptions`` query options
     /// @param error ``zenoh::ErrNo`` to store the error code
     /// @return true if the query operation was successful, false otherwise
+    // tags{cpp.session.get, c.z_get}
     bool get(z::KeyExprView keyexpr, const char* parameters, z::ClosureReply&& callback, const z::GetOptions& options,
              ErrNo& error);
 
@@ -2194,6 +2319,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param callback ``zenoh::ClosureReply`` callback for process ``Reply``s
     /// @param options ``GetOptions`` query options
     /// @return true if the query operation was successful, false otherwise
+    // tags{cpp.session.get, c.z_get}
     bool get(z::KeyExprView keyexpr, const char* parameters, z::ClosureReply&& callback, const z::GetOptions& options);
 
     /// @brief Query data from the matching queryables in the system.
@@ -2202,6 +2328,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param callback ``zenoh::ClosureReply`` callback for process ``Reply``s
     /// @param error ``zenoh::ErrNo`` to store the error code
     /// @return true if the query operation was successful, false otherwise
+    // tags{cpp.session.get, c.z_get}
     bool get(z::KeyExprView keyexpr, const char* parameters, z::ClosureReply&& callback, ErrNo& error);
 
     /// @brief Query data from the matching queryables in the system.
@@ -2209,6 +2336,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param parameters the null-terminated string of query parameters
     /// @param callback ``zenoh::ClosureReply`` callback for process ``Reply``s
     /// @return true if the query operation was successful, false otherwise
+    // tags{cpp.session.get, c.z_get}
     bool get(z::KeyExprView keyexpr, const char* parameters, z::ClosureReply&& callback);
 
     /// @brief Publish data to the matching subscribers in the system. Equal to ``Publisher::put``
@@ -2217,6 +2345,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param options ``PutOptions`` put options
     /// @param error ``zenoh::ErrNo`` to store the error code
     /// @return true if the publish operation was successful, false otherwise
+    // tags{cpp.session.put, c.z_put}
     bool put(z::KeyExprView keyexpr, const z::BytesView& payload, const z::PutOptions& options, ErrNo& error);
 
     /// @brief Publish data to the matching subscribers in the system. Equal to ``Publisher::put``
@@ -2224,6 +2353,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param payload ``BytesView`` the data to publish
     /// @param options ``PutOptions`` put options
     /// @return true if the publish operation was successful, false otherwise
+    // tags{cpp.session.put, c.z_put}
     bool put(z::KeyExprView keyexpr, const z::BytesView& payload, const z::PutOptions& options);
 
     /// @brief Publish data to the matching subscribers in the system. Equal to ``Publisher::put``
@@ -2231,12 +2361,14 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param payload ``BytesView`` the data to publish
     /// @param error ``zenoh::ErrNo`` to store the error code
     /// @return true if the publish operation was successful, false otherwise
+    // tags{cpp.session.put, c.z_put}
     bool put(z::KeyExprView keyexpr, const z::BytesView& payload, ErrNo& error);
 
     /// @brief Publish data to the matching subscribers in the system. Equal to ``Publisher::put``
     /// @param keyexpr ``KeyExprView`` the key expression to put the data
     /// @param payload ``BytesView`` the data to publish
     /// @return true if the publish operation was successful, false otherwise
+    // tags{cpp.session.put, c.z_put}
     bool put(z::KeyExprView keyexpr, const z::BytesView& payload);
 
     /// @brief Undeclare a resource. Equal to ``Publisher::delete_resource``
@@ -2244,23 +2376,27 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param options ``DeleteOptions`` delete options
     /// @param error ``zenoh::ErrNo`` to store the error code
     /// @return true if the undeclare operation was successful, false otherwise
+    // tags{cpp.session.delete_resource, c.z_delete_resource}
     bool delete_resource(z::KeyExprView keyexpr, const z::DeleteOptions& options, ErrNo& error);
 
     /// @brief Undeclare a resource. Equal to ``Publisher::delete_resource``
     /// @param keyexpr ``KeyExprView`` the key expression to delete the resource
     /// @param options ``DeleteOptions`` delete options
     /// @return true if the undeclare operation was successful, false otherwise
+    // tags{cpp.session.delete_resource, c.z_delete_resource}
     bool delete_resource(z::KeyExprView keyexpr, const z::DeleteOptions& options);
 
     /// @brief Undeclare a resource. Equal to ``Publisher::delete_resource``
     /// @param keyexpr ``KeyExprView`` the key expression to delete the resource
     /// @param error ``zenoh::ErrNo`` to store the error code
     /// @return true if the undeclare operation was successful, false otherwise
+    // tags{cpp.session.delete_resource, c.z_delete_resource}
     bool delete_resource(z::KeyExprView keyexpr, ErrNo& error);
 
     /// @brief Undeclare a resource.
     /// @param keyexpr ``KeyExprView`` the key expression to delete the resource
     /// @return true if the undeclare operation was successful, false otherwise
+    // tags{cpp.session.delete_resource, c.z_delete_resource}
     bool delete_resource(z::KeyExprView keyexpr);
 
 #ifdef __ZENOHCXX_ZENOHC
@@ -2271,6 +2407,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param error ``zenoh::ErrNo`` to store the error code
     /// @return true if the publish operation was successful, false otherwise
     /// @note zenoh-c only
+    // tags{cpp.session.put_owned, c.zc_put_owned}
     bool put_owned(z::KeyExprView keyexpr, z::Payload&& payload, const z::PutOptions& options, ErrNo& error);
 
     /// @brief Publish data to the matching subscribers in the system. Equal to ``Publisher::put_owned``
@@ -2279,6 +2416,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param options ``PutOptions`` put options
     /// @return true if the publish operation was successful, false otherwise
     /// @note zenoh-c only
+    // tags{cpp.session.put_owned, c.zc_put_owned}
     bool put_owned(z::KeyExprView keyexpr, z::Payload&& payload, const z::PutOptions& options);
 
     /// @brief Publish data to the matching subscribers in the system. Equal to ``Publisher::put_owned``
@@ -2287,6 +2425,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param error ``zenoh::ErrNo`` to store the error code
     /// @return true if the publish operation was successful, false otherwise
     /// @note zenoh-c only
+    // tags{cpp.session.put_owned, c.zc_put_owned}
     bool put_owned(z::KeyExprView keyexpr, z::Payload&& payload, ErrNo& error);
 
     /// @brief Publish data to the matching subscribers in the system. Equal to ``Publisher::put_owned``
@@ -2294,6 +2433,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param payload ``Payload`` the data to publish
     /// @return true if the publish operation was successful, false otherwise
     /// @note zenoh-c only
+    // tags{cpp.session.put_owned, c.zc_put_owned}
     bool put_owned(z::KeyExprView keyexpr, z::Payload&& payload);
 #endif
 
@@ -2302,6 +2442,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param callback ``zenoh::ClosureQuery`` the callback to handle ``Query`` requests
     /// @param options ``QueryableOptions`` queryable options
     /// @return a ``Queryable`` object if the declaration was successful, an ``zenoh::ErrorMessage`` otherwise
+    // tags{cpp.session.declare_queryable, c.z_declare_queryable}
     std::variant<z::Queryable, ErrorMessage> declare_queryable(z::KeyExprView keyexpr, z::ClosureQuery&& callback,
                                                                const z::QueryableOptions& options);
 
@@ -2309,6 +2450,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param keyexpr ``KeyExprView`` the key expression to match the ``Session::get`` requests
     /// @param callback ``zenoh::ClosureQuery`` the callback to handle ``Query`` requests
     /// @return a ``Queryable`` object if the declaration was successful, an ``zenoh::ErrorMessage`` otherwise
+    // tags{cpp.session.declare_queryable, c.z_declare_queryable}
     std::variant<z::Queryable, ErrorMessage> declare_queryable(z::KeyExprView keyexpr, z::ClosureQuery&& callback);
 
     /// @brief Create a ``Subscriber`` object to receive data from matching ``Publisher`` objects or from
@@ -2317,6 +2459,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param callback ``zenoh::ClosureSample`` the callback to handle the received ``Sample`` objects
     /// @param options ``SubscriberOptions`` subscriber options
     /// @return a ``Subscriber`` object if the declaration was successful, an ``zenoh::ErrorMessage`` otherwise
+    // tags{cpp.session.declare_subscriber, c.z_declare_subscriber}
     std::variant<z::Subscriber, ErrorMessage> declare_subscriber(z::KeyExprView keyexpr, z::ClosureSample&& callback,
                                                                  const z::SubscriberOptions& options);
 
@@ -2325,6 +2468,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param keyexpr ``KeyExprView`` the key expression to match the publishers
     /// @param callback ``zenoh::ClosureSample`` the callback to handle the received ``Sample`` objects
     /// @return a ``Subscriber`` object if the declaration was successful, an ``zenoh::ErrorMessage`` otherwise
+    // tags{cpp.session.declare_subscriber, c.z_declare_subscriber}
     std::variant<z::Subscriber, ErrorMessage> declare_subscriber(z::KeyExprView keyexpr, z::ClosureSample&& callback);
 
     /// @brief Create a ``PullSubscriber`` object to receive data from matching ``Publisher`` objects or from
@@ -2333,6 +2477,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param callback ``zenoh::ClosureSample`` the callback to handle the received ``Sample`` objects
     /// @param options ``PullSubscriberOptions`` pull subscriber options
     /// @return a ``PullSubscriber`` object if the declaration was successful, an ``zenoh::ErrorMessage`` otherwise
+    // tags{cpp.session.declare_pull_subscriber, c.z_declare_pull_subscriber}
     std::variant<z::PullSubscriber, ErrorMessage> declare_pull_subscriber(z::KeyExprView keyexpr,
                                                                           z::ClosureSample&& callback,
                                                                           const z::PullSubscriberOptions& options);
@@ -2342,6 +2487,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param keyexpr ``KeyExprView`` the key expression to match the publishers
     /// @param callback ``zenoh::ClosureSample`` the callback to handle the received ``Sample`` objects
     /// @return a ``PullSubscriber`` object if the declaration was successful, an ``zenoh::ErrorMessage`` otherwise
+    // tags{cpp.session.declare_pull_subscriber, c.z_declare_pull_subscriber}
     std::variant<z::PullSubscriber, ErrorMessage> declare_pull_subscriber(z::KeyExprView keyexpr,
                                                                           z::ClosureSample&& callback);
 
@@ -2349,12 +2495,14 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param keyexpr ``KeyExprView`` the key expression to match the subscribers
     /// @param options ``PublisherOptions`` publisher options
     /// @return a ``Publisher`` object if the declaration was successful, an ``zenoh::ErrorMessage`` otherwise
+    // tags{cpp.session.declare_publisher, c.z_declare_publisher}
     std::variant<z::Publisher, ErrorMessage> declare_publisher(z::KeyExprView keyexpr,
                                                                const z::PublisherOptions& options);
 
     /// @brief Create a ``Publisher`` object to publish data to matching ``Subscriber`` and ``PullSubscriber`` objects
     /// @param keyexpr ``KeyExprView`` the key expression to match the subscribers
     /// @return a ``Publisher`` object if the declaration was successful, an ``zenoh::ErrorMessage`` otherwise
+    // tags{cpp.session.declare_publisher, c.z_declare_publisher}
     std::variant<z::Publisher, ErrorMessage> declare_publisher(z::KeyExprView keyexpr);
 
     /// @brief Fetches the Zenoh IDs of all connected routers.
@@ -2362,12 +2510,14 @@ class Session : public Owned<::z_owned_session_t> {
     /// guaranteed to never be called concurrently, and is guaranteed to be dropped before this function exits.
     /// @param error ``zenoh::ErrNo`` the error code
     /// @return true if the operation was successful, false otherwise
+    // tags{cpp.session.info_routers_zid, c.z_info_routers_zid}
     bool info_routers_zid(z::ClosureZid&& callback, ErrNo& error);
 
     /// @brief Fetches the Zenoh IDs of all connected routers.
     /// @param callback ``zenoh::ClosureZid`` the callback to handle the received ``Id`` objects. Callback is
     /// guaranteed to never be called concurrently, and is guaranteed to be dropped before this function exits.
     /// @return true if the operation was successful, false otherwise
+    // tags{cpp.session.info_routers_zid, c.z_info_routers_zid}
     bool info_routers_zid(z::ClosureZid&& callback);
 
     /// @brief Fetches the Zenoh IDs of all connected peers.
@@ -2375,12 +2525,14 @@ class Session : public Owned<::z_owned_session_t> {
     /// guaranteed to never be called concurrently, and is guaranteed to be dropped before this function exits.
     /// @param error ``zenoh::ErrNo`` the error code
     /// @return true if the operation was successful, false otherwise
+    // tags{cpp.session.info_peers_zid, c.z_info_peers_zid}
     bool info_peers_zid(z::ClosureZid&& callback, ErrNo& error);
 
     /// @brief Fetches the Zenoh IDs of all connected peers.
     /// @param callback ``zenoh::ClosureZid`` the callback to handle the received ``Id`` objects. Callback is
     /// guaranteed to never be called concurrently, and is guaranteed to be dropped before this function exits.
     /// @return true if the operation was successful, false otherwise
+    // tags{cpp.session.info_peers_zid, c.z_info_peers_zid}
     bool info_peers_zid(z::ClosureZid&& callback);
 
 #ifdef __ZENOHCXX_ZENOHPICO
@@ -2388,23 +2540,27 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Start a separate task to read from the network and process the messages as soon as they are received.
     /// @return true if the operation was successful, false otherwise
     /// @note zenoh-pico only
+    // tags{cpp.session.start_read_task, c.zp_start_read_task}
     bool start_read_task();
 
     /// @brief Start a separate task to read from the network and process the messages as soon as they are received.
     /// @param error ``zenoh::ErrNo`` the error code
     /// @return true if the operation was successful, false otherwise
     /// @note zenoh-pico only
+    // tags{cpp.session.start_read_task, c.zp_start_read_task}
     bool start_read_task(ErrNo& error);
 
     /// @brief Stop the read task
     /// @return true if the operation was successful, false otherwise
     /// @note zenoh-pico only
+    // tags{cpp.session.stop_read_task, c.zp_stop_read_task}
     bool stop_read_task();
 
     /// @brief Stop the read task
     /// @param error ``zenoh::ErrNo`` the error code
     /// @return true if the operation was successful, false otherwise
     /// @note zenoh-pico only
+    // tags{cpp.session.stop_read_task, c.zp_stop_read_task}
     bool stop_read_task(ErrNo& error);
 
     /// @brief Start a separate task to handle the session lease.  This task will send KeepAlive messages when needed
@@ -2412,6 +2568,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// periodically sends the Join messages.
     /// @return true if the operation was successful, false otherwise
     /// @note zenoh-pico only
+    // tags{cpp.session.start_lease_task, c.zp_start_lease_task}
     bool start_lease_task();
 
     /// @brief Start a separate task to handle the session lease. This task will send KeepAlive messages when needed
@@ -2420,23 +2577,27 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param error ``zenoh::ErrNo`` the error code
     /// @return true if the operation was successful, false otherwise
     /// @note zenoh-pico only
+    // tags{cpp.session.start_lease_task, c.zp_start_lease_task}
     bool start_lease_task(ErrNo& error);
 
     /// @brief Stop the lease task
     /// @return true if the operation was successful, false otherwise
     /// @note zenoh-pico only
+    // tags{cpp.session.stop_lease_task, c.zp_stop_lease_task}
     bool stop_lease_task();
 
     /// @brief Stop the lease task
     /// @param error ``zenoh::ErrNo`` the error code
     /// @return true if the operation was successful, false otherwise
     /// @note zenoh-pico only
+    // tags{cpp.session.stop_lease_task, c.zp_stop_lease_task}
     bool stop_lease_task(ErrNo& error);
 
     /// @brief Triggers a single execution of reading procedure from the network and processes of any received the
     /// message
     /// @return true if the operation was successful, false otherwise
     /// @note zenoh-pico only
+    // tags{cpp.session.read, c.zp_read}
     bool read();
 
     /// @brief Triggers a single execution of reading procedure from the network and processes of any received the
@@ -2444,26 +2605,31 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param error ``zenoh::ErrNo`` the error code
     /// @return true if the operation was successful, false otherwise
     /// @note zenoh-pico only
+    // tags{cpp.session.read, c.zp_read}
     bool read(ErrNo& error);
 
     /// @brief Triggers a single execution of keep alive procedure. It will send KeepAlive messages when needed and
     /// will close the session when the lease is expired.
     /// @return true if the leasing procedure was executed successfully, false otherwise.
+    // tags{cpp.session.send_keep_alive, c.zp_send_keep_alive}
     bool send_keep_alive();
 
     /// @brief Triggers a single execution of keep alive procedure. It will send KeepAlive messages when needed and
     /// will close the session when the lease is expired.
     /// @param error ``zenoh::ErrNo`` the error code
     /// @return true if the leasing procedure was executed successfully, false otherwise.
+    // tags{cpp.session.send_keep_alive, c.zp_send_keep_alive}
     bool send_keep_alive(ErrNo& error);
 
     /// @brief Triggers a single execution of join procedure: send the Join message
     /// @return true if the join procedure was executed successfully, false otherwise.
+    // tags{cpp.session.send_join, c.zp_send_join}
     bool send_join();
 
     /// @brief Triggers a single execution of join procedure: send the Join message
     /// @param error ``zenoh::ErrNo`` the error code
     /// @return true if the join procedure was executed successfully, false otherwise.
+    // tags{cpp.session.send_join, c.zp_send_join}
     bool send_join(ErrNo& error);
 #endif
 
@@ -2473,6 +2639,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param s ``std::string_view`` representing a key expression
     /// @return Newly allocated key expression ``zenoh::KeyExpr``
     /// @note zenoh-c only
+    // tags{cpp.session.keyexpr.concat, c.z_keyexpr_concat}
     z::KeyExpr keyexpr_concat(const z::KeyExprView& k, const std::string_view& s);
 
     /// @brief Join two key expressions, inserting a separator between them
@@ -2480,6 +2647,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param b Key expressio
     /// @return Newly allocated key expression ``zenoh::KeyExpr``
     /// @note zenoh-c only
+    // tags{cpp.session.keyexpr.join, c.z_keyexpr_join}
     z::KeyExpr keyexpr_join(const z::KeyExprView& a, const z::KeyExprView& b);
 #endif
 
@@ -2489,12 +2657,14 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param error Error code returned by ``::z_keyexpr_equals`` (value < -1 if any of the key expressions is not
     /// valid)
     /// @return true the key expressions are equal
+    // tags{cpp.session.keyexpr.equals, c.z_keyexpr_equals}
     bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error);
 
     /// @brief Checks if the two key expressions are equal, resolving them if necessary
     /// @param a Key expression
     /// @param b Key expression
     /// @return true the key expressions are equal
+    // tags{cpp.session.keyexpr.equals, c.z_keyexpr_equals}
     bool keyexpr_equals(const z::KeyExprView& a, const z::KeyExprView& b);
 
     /// @brief Checks if the key expression "a" includes expression "b", resolving them if necessary.
@@ -2504,6 +2674,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param error Error code returned by ``::z_keyexpr_includes`` (value < -1 if any of the key expressions is not
     /// valid)
     /// @return true the key expression includes the other key expression
+    // tags{cpp.session.keyexpr.includes, c.z_keyexpr_includes}
     bool keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error);
 
     /// @brief Checks if the key expression "a" includes key expression "b", resolving them if necessary.
@@ -2511,6 +2682,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param a Key expression
     /// @param b Key expression
     /// @return true the key expression includes the other key expression
+    // tags{cpp.session.keyexpr.includes, c.z_keyexpr_includes}
     bool keyexpr_includes(const z::KeyExprView& a, const z::KeyExprView& b);
 
     /// @brief Checks if the key expression intersects with another key expression, resolving them if necessaRY.
@@ -2521,6 +2693,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param error Error code returned by ``::z_keyexpr_intersects`` (value < -1 if any of the key expressions is not
     /// valid)
     /// @return true the key expression intersects with the other key expression
+    // tags{cpp.session.keyexpr.intersects, c.z_keyexpr_intersects}
     bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b, ErrNo& error);
 
     /// @brief Checks if the key expression intersects with another key expression, resolving them if necessaRY.
@@ -2529,6 +2702,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param a Key expression
     /// @param b Key expression
     /// @return true the key expression intersects with the other key expression
+    // tags{cpp.session.keyexpr.intersects, c.z_keyexpr_intersects}
     bool keyexpr_intersects(const z::KeyExprView& a, const z::KeyExprView& b);
 
    private:
@@ -2581,6 +2755,7 @@ class ClosureReplyChannelRecv
 /// dropped and all replies have been consumed, at which point it will return an invalidated ``zenoh::Reply`` and so
 /// will further calls.
 /// @note zenoh-c only
+// tags{cpp.reply_fifo_new, c.zc_reply_fifo_new}
 inline std::pair<z::ClosureReplyChannelSend, z::ClosureReplyChannelRecv> reply_fifo_new(uintptr_t bound) {
     auto channel = ::zc_reply_fifo_new(bound);
     return {std::move(channel.send), std::move(channel.recv)};
@@ -2595,6 +2770,7 @@ inline std::pair<z::ClosureReplyChannelSend, z::ClosureReplyChannelRecv> reply_f
 /// dropped and all replies have been consumed, at which point it will return an invalidated ``zenoh::Reply`` and so
 /// will further calls.
 /// @note zenoh-c only
+// tags{cpp.reply_non_blocking_fifo_new, c.zc_reply_non_blocking_fifo_new}
 inline std::pair<z::ClosureReplyChannelSend, z::ClosureReplyChannelRecv> reply_non_blocking_fifo_new(uintptr_t bound) {
     auto channel = ::zc_reply_non_blocking_fifo_new(bound);
     return {std::move(channel.send), std::move(channel.recv)};
