@@ -2009,7 +2009,8 @@ class Reply : public Owned<::z_owned_reply_t> {
 
     /// @brief Get the reply value
     /// @return the ``Sample`` value of the reply if reply is OK, otherwise ``zenoh::ErrorMessage``
-    // tags{cpp.reply.get, c.z_reply_ok, c.z_reply_err}
+    // tags{cpp.reply.get.sample, c.z_reply_ok}
+    // tags{cpp.reply.get.error, c.z_reply_err}
     std::variant<z::Sample, ErrorMessage> get() const {
         if (is_ok()) {
             return z::Sample{::z_reply_ok(&_0)};
