@@ -870,7 +870,7 @@ class Payload : public Owned<::zc_owned_payload_t> {
 
     /// @brief Access the data in the payload buffer
     /// @return ``BytesView`` object representing the data in the payload buffer
-    // tags{cpp.payload.get_payload, api.buffer.read}
+    // tags{cpp.payload.get_payload}
     const z::BytesView& get_payload() const { return static_cast<const z::BytesView&>(_0.payload); }
 };
 
