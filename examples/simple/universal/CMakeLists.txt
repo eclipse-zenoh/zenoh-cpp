@@ -20,9 +20,9 @@ endif()
 #
 # 3. Use FetchContent:
 include(FetchContent)
-FetchContent_declare(zenohpico_backend GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-pico")
+FetchContent_declare(zenohpico_backend GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-pico" GIT_TAG main)
 FetchContent_MakeAvailable(zenohpico_backend)
-FetchContent_declare(zenohc_backend GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c")
+FetchContent_declare(zenohc_backend GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c" GIT_TAG main)
 FetchContent_MakeAvailable(zenohc_backend)
 FetchContent_declare(cpp_wrapper GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp" GIT_TAG main)
 FetchContent_MakeAvailable(cpp_wrapper)
