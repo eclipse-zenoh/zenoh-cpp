@@ -1,9 +1,11 @@
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/../version.txt version)
+
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     # Settings when 'examples' is the root projet
     cmake_minimum_required(VERSION 3.16)
     project(
         zenohcxx
-        VERSION 0.11.0.0
+        VERSION ${version}
         DESCRIPTION "C++ bindings for Zenoh"
         HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-cpp"
         LANGUAGES C CXX

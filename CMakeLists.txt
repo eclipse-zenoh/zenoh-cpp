@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
+
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/version.txt version)
+
 project(
 	zenohcxx
-	VERSION 0.11.0.0
+	VERSION ${version}
 	DESCRIPTION "C++ bindings for Zenoh"
 	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-cpp"
 	LANGUAGES C CXX
