@@ -40,7 +40,7 @@ jobs:
         with:
           repo: ${{ github.repository }}
           live-run: ${{ inputs.live-run || false }}
-          # NOTE(fuzzypixelz): When the version is undefined (e.g. on schedule
+          # FIXME(fuzzypixelz): When the version is undefined (e.g. on schedule
           # events) we cannot use git-describe as CMake doesn't support it.
           # However, we still need some placeholder version to test that the
           # version can be reliably bumped.
@@ -117,7 +117,5 @@ jobs:
           live-run: ${{ inputs.live-run || false }}
           version: ${{ needs.tag.outputs.version }}
           branch: ${{ needs.tag.outputs.branch }}
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-          ssh-passphrase: ${{ secrets.SSH_PASSPHRASE }}
           github-token: ${{ secrets.BOT_TOKEN_WORKFLOW }}
           archive-patterns: '.*\.zip'
