@@ -3,7 +3,7 @@
 set -xeo pipefail
 
 # Release number
-readonly version=${VERSION:-''}
+readonly version=${VERSION:?input VERSION is required}
 # Git actor name
 readonly git_user_name=${GIT_USER_NAME:?input GIT_USER_NAME is required}
 # Git actor email
@@ -15,16 +15,11 @@ export GIT_COMMITTER_NAME=$git_user_name
 export GIT_COMMITTER_EMAIL=$git_user_email
 
 # Bump CMake project version
-if [[ "$version" == '' ]]; then
-  # If no version has been specified, infer it using git-describe
-  printf '%s' "$(git describe)" > version.txt
-else
-  printf '%s' "$version" > version.txt
-fi
+printf '%s' "$version" > version.txt
 
 git commit version.txt -m "chore: Bump version to $version"
 git tag --force "$version" -m "v$version"
 git log -10
 git show-ref --tags
 git push origin
-git push --force origin"$version"
+git push --force origin "$version"
