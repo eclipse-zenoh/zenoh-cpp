@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.16)
 
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/version.txt version)
 
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/zenoh-c-branch.txt zenoh_c_branch)
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/zenoh-pico-branch.txt zenoh_pico_branch)
+
 project(
 	zenohcxx
 	VERSION ${version}
@@ -16,8 +19,8 @@ include(helpers)
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 	enable_testing()
 	set_default_build_type(Release)
-	configure_include_project(ZENOHCXX_ZENOHPICO zenohpico zenohpico "../zenoh-pico" zenohpico "https://github.com/eclipse-zenoh/zenoh-pico" "main")
-	configure_include_project(ZENOHCXX_ZENOHC zenohc zenohc::lib "../zenoh-c" zenohc "https://github.com/eclipse-zenoh/zenoh-c" "main")
+	configure_include_project(ZENOHCXX_ZENOHPICO zenohpico zenohpico "../zenoh-pico" zenohpico "https://github.com/eclipse-zenoh/zenoh-pico" ${zenoh_pico_branch})
+	configure_include_project(ZENOHCXX_ZENOHC zenohc zenohc::lib "../zenoh-c" zenohc "https://github.com/eclipse-zenoh/zenoh-c" ${zenoh_c_branch})
 endif()
 
 #

@@ -26,6 +26,14 @@ on:
         type: string
         description: Release number
         required: false
+      zenoh-c-version:
+        type: string
+        description: Release number of zenoh-c
+        required: false
+      zenoh-pico-version:
+        type: string
+        description: Release number of zenoh-pico
+        required: false
 
 jobs:
   tag:
@@ -56,6 +64,9 @@ jobs:
         run: bash ci/scripts/bump-and-tag.bash
         env:
           VERSION: ${{ steps.create-release-branch.outputs.version }}
+          BRANCH: ${{ steps.create-release-branch.outputs.branch }}
+          ZENOH_C_BRANCH: ${{ inputs.zenoh-c-version && format('release/{0}', inputs.zenoh-c-version) || '' }}
+          ZENOH_PICO_BRANCH: ${{ inputs.zenoh-pico-version && format('release/{0}', inputs.zenoh-pico-version) || '' }}
           GIT_USER_NAME: eclipse-zenoh-bot
           GIT_USER_EMAIL: eclipse-zenoh-bot@users.noreply.github.com
 
