@@ -37,6 +37,11 @@ int _main(int argc, char **argv) {
     std::vector<char> payload(len, 1);
 
     Config config;
+#ifdef ZENOHCXX_ZENOHC
+    if (configfile) {
+        config = expect(config_from_file(configfile));
+    }
+#endif
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
