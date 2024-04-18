@@ -77,13 +77,9 @@ int _main(int argc, char **argv) {
     std::cout << "Subscriber on '" << subscriber.get_keyexpr().as_string_view() << "' declared" << std::endl;
 #endif
 
-    printf("Enter 'q' to quit...\n");
-    int c = 0;
-    while (c != 'q') {
-        c = getchar();
-        if (c == -1) {
-            sleep(1);
-        }
+    printf("Press CTRL-C to quit...\n");
+    while (1) {
+        sleep(1);
     }
 
     return 0;

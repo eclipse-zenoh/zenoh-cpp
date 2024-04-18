@@ -19,6 +19,7 @@
 #include <unistd.h>
 #endif
 #include <iostream>
+#include <limits>
 
 #include "../getargs.h"
 #include "zenoh.hxx"
@@ -75,15 +76,11 @@ int _main(int argc, char **argv) {
     printf("Declaring Subscriber on '%s'...\n", expr);
     auto subscriber = expect<PullSubscriber>(session.declare_pull_subscriber(keyexpr, data_handler));
 
-    printf("Press <enter> to pull data...\n");
-    int c = 0;
-    while (c != 'q') {
-        c = getchar();
-        if (c == -1) {
-            sleep(1);
-        } else {
-            subscriber.pull();
-        }
+    printf("Press CTRL-C to quit...\n");
+    for (int idx = 0; idx < std::numeric_limits<int>::max(); ++idx) {
+        sleep(1);
+        printf("[%4d] Pulling...\n", idx);
+        subscriber.pull();
     }
 
     return 0;
