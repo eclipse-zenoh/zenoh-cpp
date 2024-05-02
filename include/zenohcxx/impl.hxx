@@ -185,7 +185,8 @@ inline bool z::Query::reply(z::KeyExprView key, const z::BytesView& payload) con
 }
 inline bool z::Query::reply_impl(z::KeyExprView key, const z::BytesView& payload, const QueryReplyOptions* options,
                                  ErrNo& error) const {
-    error = ::z_query_reply(this, key, payload.start, payload.len, options);
+    auto loaned = loan();
+    error = ::z_query_reply(&loaned, key, payload.start, payload.len, options);
     return error == 0;
 }
 

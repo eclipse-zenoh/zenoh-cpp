@@ -1293,29 +1293,41 @@ struct QueryReplyOptions : public Copyable<::z_query_reply_options_t> {
 };
 
 /// The query to be answered by a ``Queryable``
-class Query : public Copyable<::z_query_t> {
+class Query : public Owned<::z_owned_query_t> {
    public:
-    using Copyable::Copyable;
+    using Owned::Owned;
 
     /// @name Methods
 
     /// @brief Get the key expression of the query
     /// @return ``zenoh::KeyExprView`` value
-    z::KeyExprView get_keyexpr() const { return z::KeyExprView(::z_query_keyexpr(this)); }
+    z::KeyExprView get_keyexpr() const {
+        auto loaned = loan();
+        return z::KeyExprView(::z_query_keyexpr(&loaned));
+    }
 
     /// @brief Get a query's <a href=https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>value
     /// selector</a>
     /// @return ``zenoh::BytesView`` value
-    z::BytesView get_parameters() const { return z::BytesView(::z_query_parameters(this)); }
+    z::BytesView get_parameters() const {
+        auto loaned = loan();
+        return z::BytesView(::z_query_parameters(&loaned));
+    }
 
     /// @brief Get the value of the query
     /// @return ``zenoh::Value`` value
-    z::Value get_value() const { return z::Value(::z_query_value(this)); }
+    z::Value get_value() const {
+        auto loaned = loan();
+        return z::Value(::z_query_value(&loaned));
+    }
 
 #ifdef __ZENOHCXX_ZENOHC
     /// @brief Get the attachment of the query
     /// @return ``zenoh::AttachmentView`` value
-    z::AttachmentView get_attachment() const { return z::AttachmentView(::z_query_attachment(this)); }
+    z::AttachmentView get_attachment() const {
+        auto loaned = loan();
+        return z::AttachmentView(::z_query_attachment(&loaned));
+    }
 #endif  // ifdef __ZENOHCXX_ZENOHC
 
     /// @brief Send reply to the query
@@ -1918,7 +1930,7 @@ class Hello : public Owned<::z_owned_hello_t> {
 typedef ClosureMoveParam<::z_owned_closure_reply_t, ::z_owned_reply_t, z::Reply> ClosureReply;
 
 /// @brief Callback type passed to ``Session::declare_queryable`` to process received ``Query``s
-typedef ClosureConstRefParam<::z_owned_closure_query_t, ::z_query_t, z::Query> ClosureQuery;
+typedef ClosureMoveParam<::z_owned_closure_query_t, ::z_owned_query_t, z::Query> ClosureQuery;
 
 /// @brief Callback type passed to ``Session::declare_subscriber`` to process received ``Sample``s
 typedef ClosureConstRefParam<::z_owned_closure_sample_t, ::z_sample_t, z::Sample> ClosureSample;
