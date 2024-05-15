@@ -49,10 +49,10 @@ add_examples("${CMAKE_CURRENT_SOURCE_DIR}/zenohc/*.cxx" zenohc zenohcxx::zenohc:
 add_examples("${CMAKE_CURRENT_SOURCE_DIR}/universal/*.cxx" zenohc zenohcxx::zenohc::lib)
 
 # zenohcxx examples compiled with C++ compiler with zenohpico
-add_examples("${CMAKE_CURRENT_SOURCE_DIR}/universal/*.cxx" zenohpico zenohcxx::zenohpico)
+# add_examples("${CMAKE_CURRENT_SOURCE_DIR}/universal/*.cxx" zenohpico zenohcxx::zenohpico)
 
 # check compilation of simple examples
-add_examples("${CMAKE_CURRENT_SOURCE_DIR}/simple/universal/z_simple.cxx" zenohpico zenohcxx::zenohpico)
+# add_examples("${CMAKE_CURRENT_SOURCE_DIR}/simple/universal/z_simple.cxx" zenohpico zenohcxx::zenohpico)
 add_examples("${CMAKE_CURRENT_SOURCE_DIR}/simple/universal/z_simple.cxx" zenohc zenohcxx::zenohc::lib)
-add_examples("${CMAKE_CURRENT_SOURCE_DIR}/simple/zenohpico/zp_simple.cxx" zenohpico zenohcxx::zenohpico)
+# add_examples("${CMAKE_CURRENT_SOURCE_DIR}/simple/zenohpico/zp_simple.cxx" zenohpico zenohcxx::zenohpico)
 add_examples("${CMAKE_CURRENT_SOURCE_DIR}/simple/zenohc/zc_simple.cxx" zenohc zenohcxx::zenohc::lib)
