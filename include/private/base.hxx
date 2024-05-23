@@ -13,21 +13,31 @@
 
 #pragma once
 
-#include <functional>
-#include <iomanip>
-#include <iostream>
-#include <optional>
+#include "zenohc.hxx"
+#include <stdexcept>
 #include <string>
-#include <string_view>
-#include <type_traits>
-#include <utility>
-#include <variant>
-#include <vector>
 
-#include "assert.h"
-#include "string.h"
+namespace zenoh {
 
-namespace zenohcxx {
+/// Error code returned by Zenoh API
+typedef ::z_error_t ZError;
+
+/// @brief Zenoh-specific Exception
+class ZException : public std::runtime_error {
+public:
+    ZError e;
+    ZException(const std::string& message, ZError err)
+        :std::runtime_error(message + "(Error code: " + std::to_string(err) + " )"), e(err) {
+    }
+};
+
+#define __ZENOH_ERROR_CHECK(err, err_ptr, message)         \
+    if (err_ptr == nullptr) {                              \
+        ZError __ze = err;                                 \
+        if (__ze != Z_OK) throw ZException(message, __ze); \
+    } else {                                               \
+        *err_ptr = err;                                    \
+    }
 
 //
 // Template base classes implementing common functionality
@@ -36,92 +46,86 @@ namespace zenohcxx {
 /// Base type for C++ wrappers of Zenoh copyable structures, like GetOptions, PutOptions, etc.
 /// @tparam ZC_COPYABLE_TYPE - zenoh-c structure type ::z_XXX_t
 template <typename ZC_COPYABLE_TYPE>
-struct Copyable : public ZC_COPYABLE_TYPE {
-   public:
+class Copyable {
+protected:
+    typedef ZC_COPYABLE_TYPE InnerType;
+    InnerType _0;
+    
+    InnerType& inner() { return this->_0; }
+    const InnerType& inner() const { return this->_0; }
+public:
     /// @name Constructors
-
-    /// Default constructor is deleted
-    Copyable() = delete;  // May be overloaded in derived structs with corresponding z_XXX_default function
-    /// Copying is allowed
-    Copyable(const Copyable&) = default;
     /// Construct from wrapped zenoh-c / zenoh-pico structure
-    Copyable(ZC_COPYABLE_TYPE v) : ZC_COPYABLE_TYPE(v) {}
+    Copyable(const InnerType& v) : InnerType(v) {}
+    explicit operator const ZC_COPYABLE_TYPE&() const { return inner(); }
+    explicit operator ZC_COPYABLE_TYPE&() { return inner(); }
 };
 
 /// Base type for C++ wrappers of Zenoh owned structures
 /// @tparam ZC_OWNED_TYPE - zenoh-c owned type ::z_owned_XXX_t
 template <typename ZC_OWNED_TYPE>
 class Owned {
-   public:
+protected:
+    typedef typename z_owned_to_loaned_type_t<ZC_OWNED_TYPE>::type LoanedType;
+    typedef ZC_OWNED_TYPE OwnedType;
+public:
     /// @name Constructors
-
-    /// Default constructor is deleted
-    Owned() = delete;  // May be overloaded in derived structs with corresponding z_XXX_default function
-    /// Copy assignmment is not allowed
-    Owned& operator=(const Owned& v) = delete;
-    /// Copy constructor is deleted
-    Owned(const Owned& v) = delete;
-    /// Creationg from non-constant pointer to structure is allowed. Ownership is taken, source structure is
-    /// emptied. Creation of null owned object is also allowed by passing nullptr to constructor
-    Owned(ZC_OWNED_TYPE* pv) {
+    /// @brief Construct from owned zenoh-c struct.
+    /// @param pv Pointer to valid owned zenoh-c struct. The ownership is transferred
+    /// to the constructed object.
+    Owned(OwnedType* pv) {
         if (pv) {
             _0 = *pv;
             ::z_null(*pv);
         } else
             ::z_null(_0);
     }
-    /// Move constructor from wrapped value
-    Owned(ZC_OWNED_TYPE&& v) : _0(v) { ::z_null(v); }
     /// Move constructor from other object
-    Owned(Owned&& v) : Owned(std::move(v._0)) {}
+    Owned(Owned&& v) : Owned(&v._0) {}
     /// Move assignment from other object
-    Owned&& operator=(Owned&& v) {
+    Owned& operator=(Owned&& v) {
         if (this != &v) {
-            drop();
+            ::z_drop(::z_move(this->_0));
             _0 = v._0;
             ::z_null(v._0);
         }
-        return std::move(*this);
+        return this;
     }
     /// Destructor drops owned value using z_drop from zenoh API
-    ~Owned() { ::z_drop(&_0); }
+    ~Owned() { ::z_drop(::z_move(_0)); }
 
     /// @name Methods
 
-    /// Explicit drop. Makes the object null
-    void drop() { ::z_drop(&_0); }
-    /// Take zenoh structure and leave Owned object null
-    ZC_OWNED_TYPE take() {
+    /// Take out zenoh structure and leave owned object in a null state.
+    OwnedType take() && {
         auto r = _0;
         ::z_null(_0);
         return r;
     }
-    /// Replace value with zenoh structure, dropping old value
-    void put(ZC_OWNED_TYPE& v) {
-        ::z_drop(&_0);
-        _0 = v;
-        ::z_null(v);
-    }
     /// Check object validity uzing zenoh API
-    bool check() const { return ::z_check(_0); }
+    explicit operator bool() const { return ::z_check(_0); }
 
-    /// @brief Get zenoh-c loan structure ``z_XXX_t`` associated with owned object ``z_owned_XXX_t``
-    /// if the corresponding zenoh-c function ``z_loan`` is defined
-    /// @return zenoh-c loan structure ``z_XXX_t``
-    template <typename ZC_LOAN_TYPE = decltype(::z_loan(*static_cast<const ZC_OWNED_TYPE*>(nullptr)))>
-    ZC_LOAN_TYPE loan() const {
-        return ::z_loan(_0);
+    explicit operator const LoanedType*() const { return loan(); }
+    explicit operator LoanedType*() { return loan(); }
+
+protected:
+    OwnedType _0;
+
+    const LoanedType* loan() const { return ::z_loan(_0); }
+    LoanedType* loan() { return ::z_loan_mut(_0); }
+};
+
+template<class F, class R, class ...Args>
+class Closure {
+    typename std::conditional<std::is_lvalue_reference<F>, F, std::remove_reference<F>>::type func;
+public:
+    Closure(F&& f)
+        : func(std::forward<F>(f))
+    {}
+
+    R operator()(Args... args) {
+        return f(std::forward<Args>(args)...);
     }
-
-    /// @name Operators
-
-    /// Get read/write direct access to wrapped zenoh structure
-    explicit operator ZC_OWNED_TYPE&() { return _0; }
-    /// Get read only direct access to wrapped zenoh structure
-    explicit operator const ZC_OWNED_TYPE&() const { return _0; }
-
-   protected:
-    ZC_OWNED_TYPE _0;
 };
 
 /// @brief Base type for C++ wrappers of Zenoh closures with const pointer parameter
@@ -272,7 +276,6 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
     ZC_CLOSURE_TYPE wrap_call(C&& on_call, D&& on_drop) {
         typedef std::conditional_t<std::is_lvalue_reference_v<decltype(on_call)>, C&, C> SC;
         typedef std::conditional_t<std::is_lvalue_reference_v<decltype(on_drop)>, D&, D> SD;
-        // std::cout << "SC = " << type_name<SC>() << " SD = " << type_name<SD>() << std::endl;
         auto context = new std::pair<SC, SD>{std::forward<C>(on_call), std::forward<D>(on_drop)};
         auto call = [](ZC_PARAM* pvalue, void* ctx) -> ZC_RETVAL {
             auto pair = static_cast<std::pair<SC, SD>*>(ctx);
@@ -287,4 +290,4 @@ class ClosureMoveParam : public Owned<ZC_CLOSURE_TYPE> {
     }
 };
 
-}  // namespace zenohcxx
+}  // namespace zenoh
