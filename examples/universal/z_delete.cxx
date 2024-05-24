@@ -29,18 +29,18 @@ using namespace zenoh;
 int _main(int argc, char **argv) {
     const char *keyexpr = default_keyexpr;
     const char *locator = nullptr;
-    const char *configfile = nullptr;
+    const char *config_file = nullptr;
     getargs(argc, argv, {}, {{"key expression", &keyexpr}, {"locator", &locator}}
 #ifdef ZENOHCXX_ZENOHC
             ,
-            {{"-c", {"config file", &configfile}}}
+            {{"-c", {"config file", &config_file}}}
 #endif
     );
 
     Config config;
 #ifdef ZENOHCXX_ZENOHC
-    if (configfile) {
-        config = expect(config_from_file(configfile));
+    if (config_file) {
+        config = Config::from_file(config_file);
     }
 #endif
 
@@ -60,21 +60,18 @@ int _main(int argc, char **argv) {
         }
     }
 
-    printf("Opening session...\n");
-    auto session = expect<Session>(open(std::move(config)));
+    std::cout << "Opening session...\n";
+    auto session = Session::open(std::move(config));
 
-    printf("Deleting resources matching '%s'...\n", keyexpr);
-    ErrNo error;
-    if (!session.delete_resource(keyexpr, error)) {
-        std::cout << "Delete failed with error " << error << std::endl;
-    }
+    std::cout << "Deleting resources matching '" << keyexpr << "'...\n";
+    session.delete_resource(KeyExpr(keyexpr));
     return 0;
 }
 
 int main(int argc, char **argv) {
     try {
         _main(argc, argv);
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    } catch (ZException e) {
+        std::cout << "Received an error :" << e.what() << "\n";
     }
 }

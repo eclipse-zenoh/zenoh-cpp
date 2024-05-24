@@ -17,8 +17,8 @@
 #include <condition_variable>
 #include <iostream>
 
-#include "zenohc.hxx"
-using namespace zenohc;
+#include "zenoh.hxx"
+using namespace zenoh;
 
 //
 // Copyright (c) 2022 ZettaScale Technology
@@ -48,7 +48,7 @@ using namespace zenohc;
 #endif
 
 #define N 10
-
+/*
 int _main(int argc, char **argv) {
     const char *keyexpr = "demo/example/zenoh-cpp-pub-shm";
     const char *value = "Pub from CPP!";
@@ -91,11 +91,11 @@ int _main(int argc, char **argv) {
     }
     return 0;
 }
-
+*/
 int main(int argc, char **argv) {
-    try {
+   /* try {
         _main(argc, argv);
     } catch (ErrorMessage e) {
         std::cout << "Received an error :" << e.as_string_view() << "\n";
-    }
+    }*/
 }

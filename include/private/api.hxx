@@ -117,8 +117,6 @@ void init_logger();
 /// @brief A representation a Zenoh ID.
 ///
 /// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
-///
-/// See also: \ref operator_id_out "operator<<(std::ostream& os, const z::Id& id)"
 struct Id : public Copyable<::z_id_t> {
     using Copyable::Copyable;
 
@@ -131,13 +129,6 @@ struct Id : public Copyable<::z_id_t> {
     /// Returns the byte sequence of the ID
     const std::array<uint8_t, 16>& bytes() const { return *reinterpret_cast<const std::array<uint8_t, 16>*>(&_0.id); }
 };
-/// \anchor operator_id_out
-///
-/// @brief Output operator for Id
-/// @param os the output stream
-/// @param id reference to the Id
-/// @return the output stream
-std::ostream& operator<<(std::ostream& os, const Id& id);
 
 /// ``Hello`` message returned by a zenoh entity as a reply to a "scout"
 /// message.
@@ -184,7 +175,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param key_expr String representing key expression
     /// @param autocanonize If true the key_expr will be autocanonized, prior to constructing key expression
     /// @param err If not null the error code will be written to this location, otherwise exception will be thrown in case of error.
-    explicit KeyExpr(std::string_view key_expr, bool autocanonize = true, ZError* err = nullptr) 
+    KeyExpr(std::string_view key_expr, bool autocanonize = true, ZError* err = nullptr) 
         : Owned(nullptr) {
         if (autocanonize) {
             size_t s = key_expr.size();
@@ -356,7 +347,7 @@ public:
     ///
     /// @tparam T Type to deserialize into
     template<class T>
-    T deserialize(ZError* err) const {
+    T deserialize(ZError* err = nullptr) const {
         return zenoh::serde::deserialize<T>(*this, err);
     }
 
@@ -414,6 +405,7 @@ public:
 ///
 /// A sample is the value associated to a given resource at a given point in time.
 class Sample : public Owned<::z_owned_sample_t> {
+public:
     using Owned::Owned;
 
     /// @name Methods
@@ -428,7 +420,7 @@ class Sample : public Owned<::z_owned_sample_t> {
 
     /// @brief The encoding of the data of this data sample
     /// @return ``Encoding`` object
-    decltype(auto) get_encoding() const { return detail::as_owned_cpp_obj<Sample>(::z_sample_encoding(this->loan())); }
+    decltype(auto) get_encoding() const { return detail::as_owned_cpp_obj<Encoding>(::z_sample_encoding(this->loan())); }
 
     /// @brief The kind of this data sample (PUT or DELETE)
     /// @return ``zenoh::SampleKind`` value
@@ -464,6 +456,7 @@ class Sample : public Owned<::z_owned_sample_t> {
 
 /// A zenoh value. Contans refrence to data and it's encoding
 class Value : public Owned<::z_owned_value_t> {
+public:
     using Owned::Owned;
     /// @name Methods
 
@@ -538,10 +531,13 @@ public:
         Encoding encoding = Encoding(nullptr);
         /// @brief An optional attachment to this reply.
         Bytes attachment = Bytes(nullptr);
+
+        /// @brief Returns default option settings
+        static ReplyOptions create_default() { return {}; }
     };
 
     /// @brief Send reply to a query
-    ::z_error_t reply(const KeyExpr& key_expr, Bytes&& payload, ReplyOptions&& options = {}) const {
+    ::z_error_t reply(const KeyExpr& key_expr, Bytes&& payload, ReplyOptions&& options = ReplyOptions::create_default()) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_query_reply_options_t opts = {
             .attachment = detail::as_owned_c_ptr(options.attachment),
@@ -549,7 +545,7 @@ public:
         };
 
         return ::z_query_reply(
-            this->loan(), static_cast<const ::z_loaned_keyexpr_t*>(key_expr), payload_ptr, &opts
+            this->loan(), detail::loan(key_expr), payload_ptr, &opts
         );
     }
 
@@ -557,10 +553,13 @@ public:
     struct ReplyErrOptions {
         /// @brief An optional encoding of the reply error payload
         Encoding encoding = Encoding(nullptr);
+
+        /// @brief Returns default option settings
+        static ReplyErrOptions create_default() { return {}; }
     };
 
     /// @brief Send error to a query
-    ::z_error_t reply_err(const KeyExpr& key_expr, Bytes&& payload, ReplyErrOptions&& options = {}) {
+    ::z_error_t reply_err(Bytes&& payload, ReplyErrOptions&& options = ReplyErrOptions::create_default()) {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_query_reply_err_options_t opts = {
             .encoding = detail::as_owned_c_ptr(options.encoding)
@@ -766,11 +765,17 @@ public:
         Encoding encoding = Encoding(nullptr);
         /// @brief The attachment to attach to the publication.
         Bytes attachment = Bytes(nullptr);
+
+        /// @brief Returns default option settings
+        static PutOptions create_default() { return {}; }
     };
 
     /// Options to be passed to delete operation of a publisher
     struct DeleteOptions {
         uint8_t __dummy;
+
+        /// @brief Returns default option settings
+        static DeleteOptions create_default() { return {}; }
     };
 
     /// @name Methods
@@ -779,7 +784,7 @@ public:
     /// @param payload ``Payload`` to publish
     /// @param options Optional values passed to put operation
     /// @return 0 in case of success, negative error code otherwise
-    ZError put(Bytes&& payload, PutOptions&& options = {}) {
+    ZError put(Bytes&& payload, PutOptions&& options = PutOptions::create_default()) {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_publisher_put_options_t opts = {
             .attachment = detail::as_owned_c_ptr(options.attachment),
@@ -791,9 +796,9 @@ public:
     /// @brief Undeclare the resource associated with the publisher key expression
     /// @param options Optional values to pass to delete operation
     /// @return 0 in case of success, negative error code otherwise
-    ZError delete_resource(DeleteOptions&& options = {}) {
+    ZError delete_resource(DeleteOptions&& options = DeleteOptions::create_default()) {
         ::z_publisher_delete_options_t opts {
-            .__dummy = 0
+            .__dummy = options.__dummy
         };
         return ::z_publisher_delete(this->loan(), &opts);
     }
@@ -861,13 +866,13 @@ struct ZIdClosure {
 
 template<class F>
 struct HelloClosure {
-    static void all(const ::z_loaned_sample_t* hello, void* context) {
+    static void call(const ::z_loaned_hello_t* hello, void* context) {
         auto f = reinterpret_cast<Closure<F, void, const Hello&>*>(context);
-        (*f)(detail::as_copyable_cpp_obj<Sample>(hello));
+        (*f)(detail::as_owned_cpp_obj<Hello>(hello));
     }
 
     static void drop(void* context) {
-        auto f = reinterpret_cast<Closure<Hello, void, const Hello&>*>(context);
+        auto f = reinterpret_cast<Closure<F, void, const Hello&>*>(context);
         delete f;
     }
 };
@@ -890,15 +895,15 @@ public:
     /// @return Reply. Might return invalid reply in case of Non-blocking channel if there are no replies available.
     /// In this case is is possible to verify whether the channel is still active (and might receive more replies in the future)
     /// by calling  ``ReplyFifoChannel::is_active()``.
-    Reply next_reply() {
+    Reply get_next_reply() {
         Reply r(nullptr);
-        res = ::z_call(this->_0, detail::as_owned_c_ptr(r));
+        bool res = ::z_call(this->loan(), detail::as_owned_c_ptr(r));
         if constexpr (C == FifoChannelType::NonBlocking) {
-            active = res;
+            active = static_cast<bool>(r) || !res;
         } else {
             active = static_cast<bool>(r);
         }
-        return res;
+        return r;
     }
 
     /// @brief Verifies if channel is still active.
@@ -945,7 +950,7 @@ public:
     KeyExpr declare_keyexpr(const KeyExpr& key_expr, ZError* err = nullptr) const {
         KeyExpr k(nullptr);
         __ZENOH_ERROR_CHECK(
-            ::z_declare_keyexpr(detail::as_owned_c_ptr(k), this->loan(), static_cast<const ::z_loaned_keyexpr_t*>(key_expr)),
+            ::z_declare_keyexpr(detail::as_owned_c_ptr(k), this->loan(), detail::loan(key_expr)),
             err,
             std::string("Failed to declare key expression: ").append(k.as_string_view())
         );
@@ -973,6 +978,9 @@ public:
         Bytes attachment = Bytes(nullptr);
         /// @brief The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
         uint64_t timeout_ms = 0;
+
+        /// @brief Returns default option settings
+        static GetOptions create_default() { return {}; }
     };
 
     /// @brief Query data from the matching queryables in the system. Replies are provided through a callback function.
@@ -982,9 +990,11 @@ public:
     /// @param options ``GetOptions`` query options
     /// @return 0 in case of success, negative error code otherwise
     template<class F>
-    ZError get(const KeyExpr& key_expr, const std::string& parameters, F&& callback, GetOptions&& options = {}) const {
+    ZError get(
+        const KeyExpr& key_expr, const std::string& parameters, F&& callback, GetOptions&& options = GetOptions::create_default()
+    ) const {
         static_assert(
-            std::is_invocable_r<F, void, const Reply&>::value,
+            std::is_invocable_r<void, F, const Reply&>::value,
             "Callback should be callable with the following signature void callback(const zenoh::Reply& reply)"
         );
         ::z_owned_closure_reply_t c_closure;
@@ -996,9 +1006,9 @@ public:
             .encoding = detail::as_owned_c_ptr(options.encoding),
             .payload = detail::as_owned_c_ptr(options.payload),
             .attachment = detail::as_owned_c_ptr(options.attachment),
-            .timeout = options.timeout
+            .timeout_ms = options.timeout_ms
         };
-        return ::z_get(this->loan(), static_cast<const ::z_loaned_keyexpr_t*>(key_expr), parameters.c_str(), ::z_move(c_closure), &opts);
+        return ::z_get(this->loan(), detail::loan(key_expr), parameters.c_str(), ::z_move(c_closure), &opts);
     }
 
     /// @brief Query data from the matching queryables in the system. Replies are provided through a channel.
@@ -1008,14 +1018,16 @@ public:
     /// @param options ``GetOptions`` query options
     /// @return Reply fifo channel
     template<FifoChannelType C>
-    ReplyFifoChannel<C> get_reply_fifo_channel(const KeyExpr& key_expr, const std::string& parameters, size_t bound, GetOptions&& options = {}, ZError* err = nullptr) const {
+    ReplyFifoChannel<C> get_reply_fifo_channel(
+        const KeyExpr& key_expr, const std::string& parameters, size_t bound, GetOptions&& options = GetOptions::create_default(), ZError* err = nullptr
+    ) const {
         ::z_owned_reply_channel_t reply_channel;
         if constexpr (C == FifoChannelType::Blocking) {
             ::zc_reply_fifo_new(&reply_channel, bound);
         } else {
             ::zc_reply_non_blocking_fifo_new(&reply_channel, bound);
         }
-        ReplyFifoChannel recv(&reply_channel.recv);
+        ReplyFifoChannel<C> recv(&reply_channel.recv);
         ::z_get_options_t opts = {
             .target = options.target,
             .consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation),
@@ -1024,7 +1036,7 @@ public:
             .attachment = detail::as_owned_c_ptr(options.attachment),
             .timeout_ms = options.timeout_ms
         };
-        ZError res = ::z_get(this->loan(), static_cast<const ::z_loaned_keyexpr_t*>(key_expr), parameters.c_str(), ::z_move(reply_channel.send), &opts);
+        ZError res = ::z_get(this->loan(), detail::loan(key_expr), parameters.c_str(), ::z_move(reply_channel.send), &opts);
         __ZENOH_ERROR_CHECK(
             res,
             err,
@@ -1041,19 +1053,22 @@ public:
         CongestionControl congestion_control = CongestionControl::Z_CONGESTION_CONTROL_DROP;
         /// @brief Whether Zenoh will NOT wait to batch delete message with others to reduce the bandwith.
         bool is_express = false;
+
+        /// @brief Returns default option settings
+        static DeleteOptions create_default() { return {}; }
     };
 
     /// @brief Undeclare a resource. Equal to ``Publisher::delete_resource``
     /// @param key_expr ``KeyExprView`` the key expression to delete the resource
     /// @param options ``DeleteOptions`` delete options
     /// @return 0 in case of success, negative error code otherwise
-    ZError delete_resource(const KeyExpr& key_expr, DeleteOptions&& options = {}) const {
+    ZError delete_resource(const KeyExpr& key_expr, DeleteOptions&& options = DeleteOptions::create_default()) const {
         ::z_delete_options_t opts = {
             .priority = options.priority,
             .congestion_control = options.congestion_control,
             .is_express = options.is_express
         };
-        return ::z_delete(this->loan(), static_cast<const ::z_loaned_keyexpr_t*>(key_expr), &opts);
+        return ::z_delete(this->loan(), detail::loan(key_expr), &opts);
     }
 
     /// Options passed to the put operation
@@ -1068,6 +1083,9 @@ public:
         Encoding encoding = Encoding(nullptr);
         /// An optional attachment to the message.
         Bytes attachment = Bytes(nullptr);
+
+        /// @brief Returns default option settings
+        static PutOptions create_default() { return {}; }
     };
 
     /// @brief Publish data to the matching subscribers in the system. Equal to ``Publisher::put_owned``
@@ -1075,7 +1093,7 @@ public:
     /// @param payload The data to publish
     /// @param options Options to pass to put operation
     /// @return 0 in case of success, negative error code otherwise
-    ZError put(const KeyExpr& key_expr, Bytes&& payload, PutOptions&& options = {}) const {
+    ZError put(const KeyExpr& key_expr, Bytes&& payload, PutOptions&& options = PutOptions::create_default()) const {
         ::z_put_options_t opts = {
             .priority = options.priority,
             .congestion_control = options.congestion_control,
@@ -1085,13 +1103,16 @@ public:
         };
 
         auto payload_ptr = detail::as_owned_c_ptr(payload);
-        return ::z_put(this->loan(), static_cast<const ::z_loaned_keyexpr_t*>(key_expr), payload_ptr, &opts);
+        return ::z_put(this->loan(), detail::loan(key_expr), payload_ptr, &opts);
     }
 
     /// Options to be passed when declaring a ``Queryable``
     struct QueryableOptions {
         /// @brief The completeness of the Queryable.
         bool complete = false;
+
+        /// @brief Returns default option settings
+        static QueryableOptions create_default() { return {}; }
     };
 
     /// @brief Create a ``Queryable`` object to answer to ``Session::get`` requests
@@ -1100,9 +1121,11 @@ public:
     /// @param options Options passed to queryable declaration
     /// @return a ``Queryable`` object
     template<class F>
-    Queryable declare_queryable(const KeyExpr& key_expr, F&& callback, QueryableOptions&& options = {}, ZError* err = nullptr) const {
+    Queryable declare_queryable(
+        const KeyExpr& key_expr, F&& callback, QueryableOptions&& options = QueryableOptions::create_default(), ZError* err = nullptr
+    ) const {
         static_assert(
-            std::is_invocable_r<F, void, const Query&>::value,
+            std::is_invocable_r<void, F, const Query&>::value,
             "Callback should be callable with the following signature void callback(const zenoh::Query& query)"
         );
         ::z_owned_closure_query_t c_closure;
@@ -1113,7 +1136,7 @@ public:
         };
         Queryable q(nullptr);
         ZError res =  ::z_declare_queryable(
-            detail::as_owned_c_ptr(q), this->loan(), static_cast<const ::z_loaned_keyexpr_t*>(key_expr), ::z_move(c_closure), &opts
+            detail::as_owned_c_ptr(q), this->loan(), detail::loan(key_expr), ::z_move(c_closure), &opts
         );
         __ZENOH_ERROR_CHECK(res, err, "Failed to declare Queryable");
         return q;
@@ -1122,6 +1145,9 @@ public:
     struct SubscriberOptions {
         /// @brief The subscription reliability.
         Reliability reliability = Reliability::Z_RELIABILITY_BEST_EFFORT;
+
+        /// @brief Returns default option settings
+        static SubscriberOptions create_default() { return {}; }
     };
 
     /// @brief Create a ``Subscriber`` object to receive data from matching ``Publisher`` objects or from
@@ -1131,20 +1157,22 @@ public:
     /// @param options Options to pass to subscriber declaration
     /// @return a ``Subscriber`` object
     template<class F>
-    Subscriber declare_subscriber(const KeyExpr& key_expr, F&& callback, SubscriberOptions&& options = {}, ZError *err = nullptr) const {
+    Subscriber declare_subscriber(
+        const KeyExpr& key_expr, F&& callback, SubscriberOptions&& options = SubscriberOptions::create_default(), ZError *err = nullptr
+    ) const {
         static_assert(
-            std::is_invocable_r<F, void, const Sample&>::value,
+            std::is_invocable_r<void, F, const Sample&>::value,
             "Callback should be callable with the following signature void callback(const zenoh::Sample& sample)"
         );
-        ::z_owned_closure_query_t c_closure;
+        ::z_owned_closure_sample_t c_closure;
         auto closure = new Closure<F, void, const Sample&>(std::forward<F>(callback));
         ::z_closure(&c_closure, &detail::SampleClosure<F>::call, &detail::SampleClosure<F>::drop, reinterpret_cast<void*>(closure));
         ::z_subscriber_options_t opts = {
-            .reliability = options.complete
+            .reliability = options.reliability
         };
         Subscriber s(nullptr);
         ZError res =  ::z_declare_subscriber(
-            detail::as_owned_c_ptr(s), this->loan(), static_cast<const ::z_loaned_keyexpr_t*>(key_expr), ::z_move(c_closure), &opts
+            detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr), ::z_move(c_closure), &opts
         );
         __ZENOH_ERROR_CHECK(res, err, "Failed to declare Subscriber");
         return s;
@@ -1157,6 +1185,8 @@ public:
         Priority priority;
         /// @brief If true, Zenoh will not wait to batch this message with others to reduce the bandwith
         bool is_express;
+        /// @brief Returns default option settings
+        static PublisherOptions create_default() { return {}; }
     };
 
     /// @brief Create a ``Publisher`` object to publish data to matching ``Subscriber`` and ``PullSubscriber`` objects
@@ -1171,7 +1201,7 @@ public:
         };
         Publisher p(nullptr);
         ZError res =  ::z_declare_publisher(
-            detail::as_owned_c_ptr(p), this->loan(), static_cast<const ::z_loaned_keyexpr_t*>(key_expr), &opts
+            detail::as_owned_c_ptr(p), this->loan(), detail::loan(key_expr), &opts
         );
         __ZENOH_ERROR_CHECK(res, err, "Failed to declare Publisher");
         return p;
@@ -1180,8 +1210,8 @@ public:
     /// @brief Fetches the Zenoh IDs of all connected routers.
     std::vector<Id> get_routers_z_id(ZError* err = nullptr) const {
         std::vector<Id> out;
-        auto f = [&out](const z_id_t& z_id) {
-            out.push_back(Id(z_id));
+        auto f = [&out](const Id& z_id) {
+            out.push_back(z_id);
         };
         ::z_owned_closure_zid_t c_closure;
         auto closure = new Closure<decltype(f), void, const Id&>(std::forward<decltype(f)>(f));
@@ -1197,8 +1227,8 @@ public:
     /// @brief Fetches the Zenoh IDs of all connected routers.
     std::vector<Id> get_peers_z_id(ZError* err = nullptr) const {
         std::vector<Id> out;
-        auto f = [&out](const z_id_t& z_id) {
-            out.push_back(Id(z_id));
+        auto f = [&out](const Id& z_id) {
+            out.push_back(z_id);
         };
         ::z_owned_closure_zid_t c_closure;
         auto closure = new Closure<decltype(f), void, const Id&>(std::forward<decltype(f)>(f));
@@ -1294,6 +1324,17 @@ public:
     /// @return true if the join procedure was executed successfully, false otherwise.
     bool send_join(ZError* error = nullptr);
 #endif
+
+    /// @brief Create a ``Session`` with the given ``Config``
+    /// @param config ``Config`` to use
+    /// @param start_background_tasks for zenoh-pico only. If true, start background threads which handles the network
+    /// traffic. If false, the threads should be called manually with ``Session::start_read_task`` and
+    /// ``Session::start_lease_task`` or methods ``Session::read``, ``Session::send_keep_alive`` and
+    /// ``Session::send_join`` should be called in loop.
+    /// @return a ``Session`` if the session was successfully created, an ``zenoh::ErrorMessage`` otherwise
+    static Session open(Config&& config, ZError* err = nullptr) {
+        return Session(std::move(config), err);
+    }
 };
 
 struct ScoutOptions {
@@ -1301,6 +1342,8 @@ struct ScoutOptions {
     size_t timeout_ms = 1000;
     /// Type of entities to scout for.
     WhatAmI what = WhatAmI::Z_WHATAMI_ROUTER_PEER;
+    /// @brief Returns default option settings
+    static ScoutOptions create_default() { return {}; }
 };
 
 /// @brief Scout for zenoh entities in the network
@@ -1308,32 +1351,23 @@ struct ScoutOptions {
 /// @param callback The callback to process received ``Hello``messages
 /// @return 0 in case of success, negative error code otherwise
 template<class F>
-ZError scout(Config&& config, F&& callback, ScoutOptions&& options = {}) {
+ZError scout(Config&& config, F&& callback, ScoutOptions&& options = ScoutOptions::create_default()) {
     static_assert(
-        std::is_invocable_r<F, void, const Sample&>::value,
+        std::is_invocable_r<void, F, const Sample&>::value,
         "Callback should be callable with the following signature void callback(const zenoh::Hello& hello)"
     );
-    ::z_owned_closure_query_t c_closure;
+    ::z_owned_closure_hello_t c_closure;
     auto closure = new Closure<F, void, const Hello&>(std::forward<F>(callback));
     ::z_closure(&c_closure, &detail::HelloClosure<F>::call, &detail::HelloClosure<F>::drop, reinterpret_cast<void*>(closure));
     ::z_scout_options_t opts = {
-        .zc_timeout_ms = options.timeout,
+        .zc_timeout_ms = options.timeout_ms,
         .zc_what = options.what
     };
 
-    return ::z_scout(detail::as_owned_c_ptr(config), this->loan(), ::z_move(c_closure), &opts);
+    return ::z_scout(detail::as_owned_c_ptr(config), ::z_move(c_closure), &opts);
 }
 
 
-/// @brief Create a ``Session`` with the given ``Config``
-/// @param config ``Config`` to use
-/// @param start_background_tasks for zenoh-pico only. If true, start background threads which handles the network
-/// traffic. If false, the threads should be called manually with ``Session::start_read_task`` and
-/// ``Session::start_lease_task`` or methods ``Session::read``, ``Session::send_keep_alive`` and
-/// ``Session::send_join`` should be called in loop.
-/// @return a ``Session`` if the session was successfully created, an ``zenoh::ErrorMessage`` otherwise
-Session open(Config&& config, ZError* err = nullptr) {
-    return Session(std::move(config), err);
-}
+
 
 }

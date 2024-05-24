@@ -21,24 +21,25 @@
 
 #include "../getargs.h"
 #include "zenoh.hxx"
+#include "serde.hxx"
 using namespace zenoh;
 
 int _main(int argc, char **argv) {
     const char *expr = "demo/example/**";
     const char *value = nullptr;
     const char *locator = nullptr;
-    const char *configfile = nullptr;
+    const char *config_file = nullptr;
     getargs(argc, argv, {}, {{"key expression", &expr}, {"value", &value}, {"locator", &locator}}
 #ifdef ZENOHCXX_ZENOHC
             ,
-            {{"-c", {"config file", &configfile}}}
+            {{"-c", {"config file", &config_file}}}
 #endif
     );
 
     Config config;
 #ifdef ZENOHCXX_ZENOHC
-    if (configfile) {
-        config = expect(config_from_file(configfile));
+    if (config_file) {
+        config = Config::from_file(config_file);
     }
 #endif
 
@@ -58,31 +59,24 @@ int _main(int argc, char **argv) {
         }
     }
 
-    KeyExprView keyexpr(expr);
-    if (!keyexpr.check()) {
-        printf("%s is not a valid key expression", expr);
-        exit(-1);
-    }
+    KeyExpr keyexpr(expr);
 
-    printf("Opening session...\n");
-    auto session = expect<Session>(open(std::move(config)));
+    std::cout << "Opening session...\n";
+    auto session = Session::open(std::move(config));
 
     std::cout << "Sending Query '" << expr << "'...\n";
-    GetOptions opts;
-    opts.set_target(Z_QUERY_TARGET_ALL);
-    opts.set_value(value);
 
     std::mutex m;
     std::condition_variable done_signal;
     bool done = false;
 
-    auto on_reply = [](Reply &&reply) {
-        auto result = reply.get();
-        if (auto sample = std::get_if<Sample>(&result)) {
-            std::cout << "Received ('" << sample->get_keyexpr().as_string_view() << "' : '"
-                      << sample->get_payload().as_string_view() << "')\n";
-        } else if (auto error = std::get_if<ErrorMessage>(&result)) {
-            std::cout << "Received an error :" << error->as_string_view() << "\n";
+    auto on_reply = [](const Reply &reply) {
+        if (reply.is_ok()) {
+            const auto& sample = reply.get_ok();
+            std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
+                      << sample.get_payload().deserialize<std::string>() << "')\n";
+        } else {
+            std::cout << "Received an error :" << reply.get_err().get_payload().deserialize<std::string>() << "\n";
         }
     };
 
@@ -92,7 +86,9 @@ int _main(int argc, char **argv) {
         done_signal.notify_all();
     };
 
-    session.get(keyexpr, "", {on_reply, on_done}, opts);
+    auto closure = make_scoped_closure(std::move(on_reply), std::move(on_done));
+
+    session.get(keyexpr, "", make_scoped_closure(std::move(on_reply), std::move(on_done)), {.target = Z_QUERY_TARGET_ALL});
 
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });
@@ -103,7 +99,7 @@ int _main(int argc, char **argv) {
 int main(int argc, char **argv) {
     try {
         _main(argc, argv);
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    } catch (ZException e) {
+        std::cout << "Received an error :" << e.what() << "\n";
     }
 }

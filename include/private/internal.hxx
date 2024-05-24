@@ -22,18 +22,18 @@ OwnedType* as_owned_c_ptr(Owned<OwnedType>& o) {
 }
 
 template<class OwnedType>
-OwnedType* as_owned_c_ptr(const Owned<OwnedType>& o) {
-    return reinterpret_cast<OwnedType*>(&o);
+const OwnedType* as_owned_c_ptr(const Owned<OwnedType>& o) {
+    return reinterpret_cast<const OwnedType*>(&o);
 }
 
 template<class OwnedType>
 auto loan(const OwnedType& o) { 
-    return ::z_loan(as_owned_ptr(o)); 
+    return ::z_loan(*as_owned_c_ptr(o)); 
 }
 
 template<class OwnedType>
 auto loan(OwnedType& o) { 
-    return ::z_loan_mut(as_owned_ptr(o)); 
+    return ::z_loan_mut(*as_owned_ptr(o)); 
 }
 
 #if defined(ZENOHCXX_ZENOHPICO)
@@ -56,7 +56,6 @@ const auto& as_owned_cpp_obj(const LoanedType* l) {
 
 template<class T, class CopyableType>
 const auto& as_copyable_cpp_obj(const CopyableType* c) {
-    typedef typename z_loaned_to_owned_type_t<LoanedType>::type OwnedType;
     static_assert(sizeof(T) == sizeof(CopyableType) &&  alignof(T) == alignof(CopyableType),
         "Copyable and Target classes must have the same layout");
     static_assert(std::is_base_of_v<zenoh::Copyable<CopyableType>, T>,

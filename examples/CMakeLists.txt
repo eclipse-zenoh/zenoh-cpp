@@ -21,7 +21,7 @@ endif()
 add_custom_target(examples_zenohc)
 add_custom_target(examples_zenohpico)
 add_dependencies(examples examples_zenohc)
-add_dependencies(examples examples_zenohpico)
+# add_dependencies(examples examples_zenohpico)
 
 function(add_example file mode lib)
 	get_filename_component(filename ${file} NAME_WE)
