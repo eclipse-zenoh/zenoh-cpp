@@ -33,7 +33,7 @@ auto loan(const OwnedType& o) {
 
 template<class OwnedType>
 auto loan(OwnedType& o) { 
-    return ::z_loan_mut(*as_owned_ptr(o)); 
+    return ::z_loan_mut(*as_owned_c_ptr(o)); 
 }
 
 #if defined(ZENOHCXX_ZENOHPICO)

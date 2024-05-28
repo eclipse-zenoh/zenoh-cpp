@@ -20,7 +20,6 @@
 
 
 #include "zenoh.hxx"
-#include "serde.hxx"
 using namespace zenoh;
 using namespace std::chrono_literals;
 
@@ -58,7 +57,7 @@ int _main(int argc, char **argv) {
         }
         const auto& sample = reply.get_ok();
         std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
-                  << serde::deserialize<std::string>(sample.get_payload())<< "')\n";
+                  << sample.get_payload().deserialize<std::string>() << "')\n";
     }
     std::cout << std::endl;
 

@@ -21,7 +21,6 @@
 
 #include "../getargs.h"
 #include "zenoh.hxx"
-#include "serde.hxx"
 using namespace zenoh;
 
 int _main(int argc, char **argv) {
@@ -85,8 +84,6 @@ int _main(int argc, char **argv) {
         done = true;
         done_signal.notify_all();
     };
-
-    auto closure = make_scoped_closure(std::move(on_reply), std::move(on_done));
 
     session.get(keyexpr, "", make_scoped_closure(std::move(on_reply), std::move(on_done)), {.target = Z_QUERY_TARGET_ALL});
 

@@ -29,19 +29,19 @@ const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-pico-pub";
 int _main(int argc, char **argv) {
     const char *keyexpr = default_keyexpr;
     const char *locator = nullptr;
-    const char *configfile = nullptr;
+    const char *config_file = nullptr;
 
     getargs(argc, argv, {}, {{"key expression", &keyexpr}, {"locator", &locator}}
 #ifdef ZENOHCXX_ZENOHC
             ,
-            {{"-c", {"config file", &configfile}}}
+            {{"-c", {"config file", &config_file}}}
 #endif
     );
 
     Config config;
 #ifdef ZENOHCXX_ZENOHC
-    if (configfile) {
-        config = expect(config_from_file(configfile));
+    if (config_file) {
+        config = Config::from_file(config_file);
     }
 #endif
 
@@ -61,13 +61,13 @@ int _main(int argc, char **argv) {
         }
     }
 
-    printf("Opening session...\n");
-    auto session = expect<Session>(open(std::move(config)));
+    std::cout << "Opening session...\n";
+    auto session = Session::open(std::move(config));
 
-    printf("Declaring Publisher on '%s'...\n", keyexpr);
-    auto pub = expect<Publisher>(session.declare_publisher(keyexpr));
+    std::cout << "Declaring Publisher on " << keyexpr << "...\n";
+    auto pub = session.declare_publisher(KeyExpr(keyexpr));
 
-    printf("Deleting...");
+    std::cout << "Deleting...";
     pub.delete_resource();
 
     return 0;
@@ -76,7 +76,7 @@ int _main(int argc, char **argv) {
 int main(int argc, char **argv) {
     try {
         _main(argc, argv);
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    } catch (ZException e) {
+        std::cout << "Received an error :" << e.what() << "\n";
     }
 }

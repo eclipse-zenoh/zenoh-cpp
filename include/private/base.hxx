@@ -171,7 +171,7 @@ public:
 
 template<class F, class D>
 class ScopedClosure : public detail::AutoClosure<F, decltype(std::function(std::declval<F>()))> {
-    typename std::conditional_t<std::is_lvalue_reference_v<D>, F, std::remove_reference_t<D>> drop;
+    typename std::conditional_t<std::is_lvalue_reference_v<D>, D, std::remove_reference_t<D>> drop;
     typedef detail::AutoClosure<F, decltype(std::function(std::declval<F>()))> Base;
 public:
     ScopedClosure(F&& f, D&& d)

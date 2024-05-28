@@ -12,4 +12,6 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
+//#define ZENOHCXX_ZENOHC
+
 #include "private/api.hxx"

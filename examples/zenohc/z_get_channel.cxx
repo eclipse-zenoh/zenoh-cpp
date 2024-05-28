@@ -17,7 +17,6 @@
 #include <iostream>
 
 #include "zenoh.hxx"
-#include "serde.hxx"
 using namespace zenoh;
 
 int _main(int argc, char **argv) {
@@ -48,7 +47,7 @@ int _main(int argc, char **argv) {
     for (auto reply = replies.get_next_reply(); replies.is_active() && reply; reply = replies.get_next_reply()) {
         const auto& sample = reply.get_ok();
         std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
-                  << serde::deserialize<std::string>(sample.get_payload())<< "')\n";
+                  << sample.get_payload().deserialize<std::string>() << "')\n";
     }
 
     return 0;

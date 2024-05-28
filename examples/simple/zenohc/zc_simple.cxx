@@ -14,11 +14,10 @@
 
 #include <iostream>
 #include "zenoh.hxx"
-#include "serde.hxx"
 using namespace zenoh;
 
 int main(int, char **) {
     Config config;
     auto session = Session::open(std::move(config));
-    session.put(KeyExpr("demo/example/simple"), serde::serialize("Simple!"));
+    session.put(KeyExpr("demo/example/simple"), Bytes::serialize("Simple!"));
 }

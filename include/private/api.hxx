@@ -19,6 +19,9 @@
 
 #include "base.hxx"
 #include "internal.hxx"
+#include "serde.hxx"
+#include <iomanip>
+#include <sstream>
 #include <cstddef>
 #include <cstdint>
 
@@ -130,9 +133,17 @@ struct Id : public Copyable<::z_id_t> {
     const std::array<uint8_t, 16>& bytes() const { return *reinterpret_cast<const std::array<uint8_t, 16>*>(&_0.id); }
 };
 
+inline std::ostream& operator<<(std::ostream& os, const Id& id) {
+    auto id_ptr = reinterpret_cast<const::z_id_t*>(&id)->id;
+    for (size_t i = 0; id_ptr[i] != 0 && i < 16; i++)
+        os << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(id_ptr[i]);
+    return os;
+}
+
 /// ``Hello`` message returned by a zenoh entity as a reply to a "scout"
 /// message.
 class Hello : public Owned<::z_owned_hello_t> {
+public:
     using Owned::Owned;
 
     /// @name Methods
@@ -262,6 +273,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
 };
 
 class Encoding : public Owned<::z_owned_encoding_t> {
+public:
     using Owned::Owned;
 
     /// @name Constructors
@@ -304,103 +316,6 @@ struct Timestamp : Copyable<::z_timestamp_t> {
     Id get_id() const { return ::z_timestamp_id(&this->inner()); }
 };
 
-class Bytes;
-
-namespace serde {
-    template<class T>
-    Bytes serialize(T data);
-
-    template<class T>
-    T deserialize(const Bytes& b, ZError* err = nullptr);
-}
-
-/// @brief A Zenoh serialized data representation
-class Bytes : public Owned<::z_owned_bytes_t> {
-public:
-    using Owned::Owned;
-
-    /// @name Methods
-     
-
-    /// @brief Constructs a shallow copy of this data
-    Bytes clone() const {
-        Bytes b(nullptr);
-        ::z_bytes_clone(this->loan(), &b._0);
-        return b; 
-    }
-
-    /// @brief Get number of bytes in the pyload.
-    size_t size() const {
-        return ::z_bytes_len(this->loan());
-    }
-
-    /// @brief Serialize specified type.
-    ///
-    /// @tparam T Type to serialize
-    /// @param data Instance of T to serialize
-    template<class T>
-    Bytes serialize(T data) const {
-        return zenoh::serde::serialize(data);
-    }
-
-    /// @brief Deserialize into specified type.
-    ///
-    /// @tparam T Type to deserialize into
-    template<class T>
-    T deserialize(ZError* err = nullptr) const {
-        return zenoh::serde::deserialize<T>(*this, err);
-    }
-
-    class BytesReader : public Owned<::z_owned_bytes_reader_t> {
-    public:
-        using Owned::Owned;
-
-        size_t read(uint8_t* buf, size_t len) {
-            return ::z_bytes_reader_read(this->loan(), buf, len);
-        }
-
-        int64_t position() {
-            return ::z_bytes_reader_tell(this->loan());
-        }
-
-
-        void seek_from_current(int64_t offset, ZError* err = nullptr) {
-            __ZENOH_ERROR_CHECK(
-                ::z_bytes_reader_seek(this->loan(), offset, SEEK_CUR),
-                err,
-                "seek_from_current failed"
-            );
-        }
-
-        void seek_from_start(int64_t offset, ZError* err = nullptr) {
-            __ZENOH_ERROR_CHECK(
-                ::z_bytes_reader_seek(this->loan(), offset, SEEK_SET),
-                err,
-                "seek_from_start failed"
-            );
-        }
-
-        void seek_from_end(int64_t offset, ZError* err = nullptr) {
-            __ZENOH_ERROR_CHECK(
-                ::z_bytes_reader_seek(this->loan(), offset, SEEK_END),
-                err,
-                "seek_from_end failed"
-            );
-        }
-    };
-
-    /// @brief Create data reader
-    /// @return 
-    BytesReader reader() const {
-        ::z_owned_bytes_reader_t br;
-        ::z_bytes_reader_new(&br, this->loan());
-        return BytesReader(&br);
-    }
-};
-
-
-
-
 /// @brief A data sample.
 ///
 /// A sample is the value associated to a given resource at a given point in time.
@@ -425,6 +340,10 @@ public:
     /// @brief The kind of this data sample (PUT or DELETE)
     /// @return ``zenoh::SampleKind`` value
     SampleKind get_kind() const { return ::z_sample_kind(this->loan()); }
+
+    /// @brief Checks if sample contains an attachment
+    /// @return ``True`` if sample contains an attachment
+    bool has_attachment() const { return ::z_sample_attachment(this->loan()) != nullptr; }
 
     /// @brief The attachment of this data sample
     /// @return ``Bytes`` object
@@ -520,6 +439,10 @@ public:
     /// @brief Get the value of the query (payload and encoding)
     /// @return ``Value`` value
     decltype(auto) get_value() const { return detail::as_owned_cpp_obj<Value>(::z_query_value(this->loan())); }
+
+    /// @brief Checks if query contains an attachment
+    /// @return ``True`` if query contains an attachment
+    bool has_attachment() const { return ::z_query_attachment(this->loan()) != nullptr; }
 
     /// @brief Get the attachment of the query
     /// @return Attachment
@@ -840,7 +763,7 @@ struct QueryClosure {
 
 template<class F>
 struct SampleClosure {
-    static void all(const ::z_loaned_sample_t* sample, void* context) {
+    static void call(const ::z_loaned_sample_t* sample, void* context) {
         auto f = reinterpret_cast<Closure<F, void, const Sample&>*>(context);
         (*f)(detail::as_owned_cpp_obj<Sample>(sample));
     }
@@ -1092,8 +1015,7 @@ public:
     /// @param key_expr The key expression to put the data
     /// @param payload The data to publish
     /// @param options Options to pass to put operation
-    /// @return 0 in case of success, negative error code otherwise
-    ZError put(const KeyExpr& key_expr, Bytes&& payload, PutOptions&& options = PutOptions::create_default()) const {
+    void put(const KeyExpr& key_expr, Bytes&& payload, PutOptions&& options = PutOptions::create_default(), ZError* err = nullptr) const {
         ::z_put_options_t opts = {
             .priority = options.priority,
             .congestion_control = options.congestion_control,
@@ -1103,7 +1025,11 @@ public:
         };
 
         auto payload_ptr = detail::as_owned_c_ptr(payload);
-        return ::z_put(this->loan(), detail::loan(key_expr), payload_ptr, &opts);
+        __ZENOH_ERROR_CHECK(
+            ::z_put(this->loan(), detail::loan(key_expr), payload_ptr, &opts),
+            err,
+            "Failed to perform put operation"
+        );
     }
 
     /// Options to be passed when declaring a ``Queryable``
@@ -1193,7 +1119,9 @@ public:
     /// @param key_expr The key expression to match the subscribers
     /// @param options Options passed to publisher declaration
     /// @return a ``Publisher`` object
-    Publisher declare_publisher(const KeyExpr& key_expr, PublisherOptions&& options, ZError* err = nullptr) const {
+    Publisher declare_publisher(
+        const KeyExpr& key_expr, PublisherOptions&& options = PublisherOptions::create_default(), ZError* err = nullptr
+    ) const {
         ::z_publisher_options_t opts = {
             .congestion_control = options.congestion_control,
             .priority = options.priority,
@@ -1353,7 +1281,7 @@ struct ScoutOptions {
 template<class F>
 ZError scout(Config&& config, F&& callback, ScoutOptions&& options = ScoutOptions::create_default()) {
     static_assert(
-        std::is_invocable_r<void, F, const Sample&>::value,
+        std::is_invocable_r<void, F, const Hello&>::value,
         "Callback should be callable with the following signature void callback(const zenoh::Hello& hello)"
     );
     ::z_owned_closure_hello_t c_closure;
