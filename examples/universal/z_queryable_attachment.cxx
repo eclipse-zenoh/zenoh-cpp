@@ -79,7 +79,7 @@ int _main(int argc, char **argv) {
 
     auto on_drop_queryable = []() { std::cout << "Destroying queryable\n"; };
 
-    auto queryable = session.declare_queryable(keyexpr, make_scoped_closure(on_query, on_drop_queryable));
+    auto queryable = session.declare_queryable(keyexpr, on_query, on_drop_queryable);
 
     printf("Press CTRL-C to quit...\n");
     while (true) {

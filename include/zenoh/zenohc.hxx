@@ -1,5 +1,7 @@
 #pragma once
 
+// #define ZENOHCXX_ZENOHC
+
 #if defined(ZENOHCXX_ZENOHPICO) && defined(ZENOHCXX_ZENOHC)
 #error("Only one of ZENOHCXX_ZENOHPICO and ZENOHCXX_ZENOHC should be defined. \
 Explictly include zenohpico.hxx and zenohc.hxx to use both libraies in the same program\

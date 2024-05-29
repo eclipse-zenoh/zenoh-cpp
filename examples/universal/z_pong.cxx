@@ -26,7 +26,7 @@ int _main(int, char **) {
 
     auto pub = session.declare_publisher(KeyExpr("test/pong"));
     auto sub = session.declare_subscriber(
-        KeyExpr("test/ping"), [pub = std::move(pub)](const Sample &sample) mutable { pub.put(sample.get_payload().clone()); });
+        KeyExpr("test/ping"), [pub = std::move(pub)](const Sample &sample) mutable { pub.put(sample.get_payload().clone()); }, closures::none);
     std::cout << "Pong ready, press any key to quit\n";
     std::getchar();
     return 0;

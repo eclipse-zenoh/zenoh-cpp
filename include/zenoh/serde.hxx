@@ -19,6 +19,7 @@
 
 #include "base.hxx"
 #include "internal.hxx"
+#include "closures.hxx"
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
@@ -28,7 +29,22 @@
 
 namespace zenoh {
 
-class ZenohCodec;
+namespace detail::closures {
+extern "C" {
+    inline void _zenoh_encode_iter(z_owned_bytes_t* b, void* context) {
+        IClosure<void, z_owned_bytes_t*>::call_from_context(context, b);
+    }
+}
+
+}
+
+enum class ZenohCodecType {
+    STANDARD,
+    AVOID_COPY
+};
+
+template<ZenohCodecType ZT = ZenohCodecType::STANDARD>
+struct ZenohCodec;
 
 /// @brief A Zenoh serialized data representation
 class Bytes : public Owned<::z_owned_bytes_t> {
@@ -56,33 +72,38 @@ public:
     /// @param data Instance of T to serialize
     /// @param codec Instance of Codec to use
     /// @return Serialized data
-    template<class T, class Codec = ZenohCodec>
+    template<class T, class Codec = ZenohCodec<>>
     static Bytes serialize(T data, Codec codec = Codec()) {
         return codec.serialize(data);
     }
 
-    template<class ForwardIt, class Codec = ZenohCodec> 
+    /// @brief Serializes multiple pieces of data between begin and end iterators.
+    ///
+    /// The data can be later read using Bytes::Iterator provided by Bytes::iter() method.
+    /// @tparam ForwardIt Forward input iterator type
+    /// @tparam Codec Codec type
+    /// @param begin Start of the iterator range
+    /// @param end End of the iterator range
+    /// @param codec Codec instance
+    /// @return Serialized data
+    template<class ForwardIt, class Codec = ZenohCodec<>> 
     static Bytes serialize_from_iter(ForwardIt begin, ForwardIt end, Codec codec = Codec()) {
-        struct BytesEncodeIteratorBody {
-            ForwardIt current;
-            ForwardIt end;
-            Codec codec;
-            static void encode(z_owned_bytes_t* b, void* context) {
-                BytesEncodeIteratorBody* s = reinterpret_cast<BytesEncodeIteratorBody*>(context);
-                if (s->current == s->end) {
-                    ::z_null(b);
-                    return;
-                }
-                *b = Bytes::serialize(*s->current, s->codec).take();
-                s->current++;
+        Bytes out(nullptr);
+        auto f = [current = begin, end, &codec] (z_owned_bytes_t* b) mutable {
+            if (current == end) {
+                ::z_null(b);
+                return;
             }
+            *b = Bytes::serialize(*current, codec).take();
+            current++;
         };
+        using F = decltype(f);
 
-        Bytes b(nullptr);
-        BytesEncodeIteratorBody body = {.current = begin, .end = end , .codec = codec };
+        using ClosureType = typename detail::closures::Closure<F, closures::None, void, z_owned_bytes_t*>;
+        auto closure = ClosureType::into_context(std::forward<F>(f), closures::none);
         
-        ::z_bytes_encode_from_iter(detail::as_owned_c_ptr(b), &BytesEncodeIteratorBody::encode, reinterpret_cast<void*>(&body));
-        return b;
+        ::z_bytes_encode_from_iter(detail::as_owned_c_ptr(out), detail::closures::_zenoh_encode_iter, closure);
+        return out;
     }
 
     /// @brief Deserialize into specified type.
@@ -90,18 +111,18 @@ public:
     /// @tparam T Type to deserialize into
     /// @tparam Codec Codec to use
     /// @return Deserialzied data
-    template<class T, class Codec = ZenohCodec>
+    template<class T, class Codec = ZenohCodec<>>
     T deserialize(ZError* err = nullptr, Codec codec = Codec()) const {
         return codec.template deserialize<T>(*this, err);
     }
 
     class Iterator;
 
-    /// @brief Get iterator to multi-element data.
+    /// @brief Get iterator to multi-element data serialized previously using Bytes::from_iter().
     /// @return Iterator over multiple elements of data
     Iterator iter() const;
 
-    class BytesReader : public Copyable<::z_bytes_reader_t> {
+    class Reader : public Copyable<::z_bytes_reader_t> {
     public:
         using Copyable::Copyable;
 
@@ -140,9 +161,30 @@ public:
     };
 
     /// @brief Create data reader
+    /// @return Reader instance
+    Reader reader() const {
+        return Reader(::z_bytes_get_reader(this->loan()));
+    }
+
+    class Writer : public Owned<::z_owned_bytes_writer_t> {
+    public:
+        using Owned::Owned;
+
+        void write(uint8_t* buf, size_t len, ZError* err = nullptr) {
+            __ZENOH_ERROR_CHECK(
+                ::z_bytes_writer_write(this->loan(), buf, len),
+                err,
+                "Failed to write data"
+            );
+        }
+    };
+
+    /// @brief Create data writer. It is the user responsibility to ensure that there is at most one active writer at a given moment of time for this
     /// @return 
-    BytesReader reader() const {
-        return BytesReader(::z_bytes_get_reader(this->loan()));
+    Writer writer() {
+        Writer w(nullptr);
+        ::z_bytes_get_writer(this->loan(), detail::as_owned_c_ptr(w));
+        return w;
     }
 };
 
@@ -154,6 +196,8 @@ public:
         ::z_bytes_iterator_next(&this->_0, detail::as_owned_c_ptr(b));
         return b;
     }
+
+
 };
 
 Bytes::Iterator Bytes::iter() const {
@@ -229,17 +273,19 @@ struct ZenohDeserializer<std::unordered_map<K, V>> {
 
 }
 
+template<ZenohCodecType ZT>
 struct ZenohCodec {
-    // template<class T>
-    // static Bytes serialize(T t);
-
     static Bytes serialize(std::string_view s) {
         return ZenohCodec::serialize(std::make_pair(reinterpret_cast<const uint8_t*>(s.data()), s.size()));
     }
 
     static Bytes serialize(const std::pair<const uint8_t*, size_t>& s) {
         Bytes b(nullptr);
-        ::z_bytes_encode_from_slice(detail::as_owned_c_ptr(b), s.first, s.second);
+        if constexpr (ZT == ZenohCodecType::AVOID_COPY) {
+            ::z_bytes_encode_from_slice(detail::as_owned_c_ptr(b), s.first, s.second);
+        } else {
+            ::z_bytes_encode_from_slice_copy(detail::as_owned_c_ptr(b), s.first, s.second);
+        }
         return b;
     }
 

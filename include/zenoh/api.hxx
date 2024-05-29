@@ -20,6 +20,7 @@
 #include "base.hxx"
 #include "internal.hxx"
 #include "serde.hxx"
+#include "closures.hxx"
 #include <iomanip>
 #include <sstream>
 #include <cstddef>
@@ -707,7 +708,7 @@ public:
     /// @param payload ``Payload`` to publish
     /// @param options Optional values passed to put operation
     /// @return 0 in case of success, negative error code otherwise
-    ZError put(Bytes&& payload, PutOptions&& options = PutOptions::create_default()) {
+    ZError put(Bytes&& payload, PutOptions&& options = PutOptions::create_default()) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_publisher_put_options_t opts = {
             .attachment = detail::as_owned_c_ptr(options.attachment),
@@ -719,7 +720,7 @@ public:
     /// @brief Undeclare the resource associated with the publisher key expression
     /// @param options Optional values to pass to delete operation
     /// @return 0 in case of success, negative error code otherwise
-    ZError delete_resource(DeleteOptions&& options = DeleteOptions::create_default()) {
+    ZError delete_resource(DeleteOptions&& options = DeleteOptions::create_default()) const {
         ::z_publisher_delete_options_t opts {
             .__dummy = options.__dummy
         };
@@ -734,73 +735,30 @@ public:
 #endif
 };
 
-namespace detail {
-template<class F>
-struct ReplyClosure {
-    static void call(const ::z_loaned_reply_t* reply, void* context) {
-        auto f = reinterpret_cast<Closure<F, void, const Reply&>*>(context);
-        (*f)(detail::as_owned_cpp_obj<Reply>(reply));
+namespace detail::closures {
+extern "C" {
+    inline void _zenoh_on_reply_call(const ::z_loaned_reply_t* reply, void* context) {
+        IClosure<void, const Reply&>::call_from_context(context, detail::as_owned_cpp_obj<Reply>(reply));
     }
 
-    static void drop(void* context) {
-        auto f = reinterpret_cast<Closure<F, void, const Reply&>*>(context);
-        delete f;
-    }
-};
-
-template<class F>
-struct QueryClosure {
-    static void call(const ::z_loaned_query_t* query, void* context) {
-        auto f = reinterpret_cast<Closure<F, void, const Query&>*>(context);
-        (*f)(detail::as_owned_cpp_obj<Query>(query));
+    inline void _zenoh_on_sample_call(const ::z_loaned_sample_t* sample, void* context) {
+        IClosure<void, const Sample&>::call_from_context(context, detail::as_owned_cpp_obj<Sample>(sample));
     }
 
-    static void drop(void* context) {
-        auto f = reinterpret_cast<Closure<F, void, const Query&>*>(context);
-        delete f;
-    }
-};
-
-template<class F>
-struct SampleClosure {
-    static void call(const ::z_loaned_sample_t* sample, void* context) {
-        auto f = reinterpret_cast<Closure<F, void, const Sample&>*>(context);
-        (*f)(detail::as_owned_cpp_obj<Sample>(sample));
+    inline void _zenoh_on_query_call(const ::z_loaned_query_t* query, void* context) {
+        IClosure<void, const Query&>::call_from_context(context, detail::as_owned_cpp_obj<Query>(query));
     }
 
-    static void drop(void* context) {
-        auto f = reinterpret_cast<Closure<F, void, const Sample&>*>(context);
-        delete f;
-    }
-};
-
-template<class F>
-struct ZIdClosure {
-    static void call(const ::z_id_t* z_id, void* context) {
-        auto f = reinterpret_cast<Closure<F, void, const Id&>*>(context);
-        (*f)(detail::as_copyable_cpp_obj<Id>(z_id));
+    inline void _zenoh_on_id_call(const ::z_id_t* z_id, void* context) {
+        IClosure<void, const Id&>::call_from_context(context, detail::as_copyable_cpp_obj<Id>(z_id));
     }
 
-    static void drop(void* context) {
-        auto f = reinterpret_cast<Closure<F, void, const Id&>*>(context);
-        delete f;
+    inline void _zenoh_on_hello_call(const ::z_loaned_hello_t* hello, void* context) {
+        IClosure<void, const Hello&>::call_from_context(context, detail::as_owned_cpp_obj<Hello>(hello));
     }
-};
-
-template<class F>
-struct HelloClosure {
-    static void call(const ::z_loaned_hello_t* hello, void* context) {
-        auto f = reinterpret_cast<Closure<F, void, const Hello&>*>(context);
-        (*f)(detail::as_owned_cpp_obj<Hello>(hello));
-    }
-
-    static void drop(void* context) {
-        auto f = reinterpret_cast<Closure<F, void, const Hello&>*>(context);
-        delete f;
-    }
-};
-
 }
+}
+
 
 enum class FifoChannelType {
     Blocking,
@@ -909,20 +867,26 @@ public:
     /// @brief Query data from the matching queryables in the system. Replies are provided through a callback function.
     /// @param key_expr ``KeyExpr`` the key expression matching resources to query
     /// @param parameters the parameters string in URL format
-    /// @param callback ``zenoh::ClosureReply`` callback to process ``Reply``s
+    /// @param on_reply callback that will be called once for each received reply
+    /// @param on_drop callback that will be called once all replies are received
     /// @param options ``GetOptions`` query options
-    /// @return 0 in case of success, negative error code otherwise
-    template<class F>
-    ZError get(
-        const KeyExpr& key_expr, const std::string& parameters, F&& callback, GetOptions&& options = GetOptions::create_default()
+    template<class C, class D>
+    void get(
+        const KeyExpr& key_expr, const std::string& parameters, C&& on_reply, D&& on_drop, 
+        GetOptions&& options = GetOptions::create_default(), ZError* err = nullptr
     ) const {
         static_assert(
-            std::is_invocable_r<void, F, const Reply&>::value,
-            "Callback should be callable with the following signature void callback(const zenoh::Reply& reply)"
+            std::is_invocable_r<void, C, const Reply&>::value,
+            "on_reply should be callable with the following signature: void on_reply(const zenoh::Reply& reply)"
+        );
+        static_assert(
+            std::is_invocable_r<void, D>::value,
+            "on_drop should be callable with the following signature: void on_drop()"
         );
         ::z_owned_closure_reply_t c_closure;
-        auto closure = new Closure<F, void, const Reply&>(std::forward<F>(callback));
-        ::z_closure(&c_closure, &detail::ReplyClosure<F>::call, &detail::ReplyClosure<F>::drop, reinterpret_cast<void*>(closure));
+        using ClosureType = typename detail::closures::Closure<C, D, void, const Reply&>;
+        auto closure = ClosureType::into_context(std::forward<C>(on_reply), std::forward<D>(on_drop));
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_reply_call, detail::closures::_zenoh_on_drop, closure);
         ::z_get_options_t opts = {
             .target = options.target,
             .consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation),
@@ -931,7 +895,11 @@ public:
             .attachment = detail::as_owned_c_ptr(options.attachment),
             .timeout_ms = options.timeout_ms
         };
-        return ::z_get(this->loan(), detail::loan(key_expr), parameters.c_str(), ::z_move(c_closure), &opts);
+        __ZENOH_ERROR_CHECK(
+            ::z_get(this->loan(), detail::loan(key_expr), parameters.c_str(), ::z_move(c_closure), &opts),
+            err,
+            "Failed to perform get operation"
+        );
     }
 
     /// @brief Query data from the matching queryables in the system. Replies are provided through a channel.
@@ -1043,20 +1011,26 @@ public:
 
     /// @brief Create a ``Queryable`` object to answer to ``Session::get`` requests
     /// @param key_expr The key expression to match the ``Session::get`` requests
-    /// @param callback The callback to handle ``Query`` requests
+    /// @param on_query The callback to handle ``Query`` requests. Will be called once for each query
+    /// @param on_drop The drop callback. Will be called once, when ``Queryable`` is destroyed or undeclared
     /// @param options Options passed to queryable declaration
     /// @return a ``Queryable`` object
-    template<class F>
+    template<class C, class D>
     Queryable declare_queryable(
-        const KeyExpr& key_expr, F&& callback, QueryableOptions&& options = QueryableOptions::create_default(), ZError* err = nullptr
+        const KeyExpr& key_expr, C&& on_query, D&& on_drop, QueryableOptions&& options = QueryableOptions::create_default(), ZError* err = nullptr
     ) const {
         static_assert(
-            std::is_invocable_r<void, F, const Query&>::value,
-            "Callback should be callable with the following signature void callback(const zenoh::Query& query)"
+            std::is_invocable_r<void, C, const Query&>::value,
+            "on_query should be callable with the following signature: void on_query(const zenoh::Query& query)"
+        );
+        static_assert(
+            std::is_invocable_r<void, D>::value,
+            "on_drop should be callable with the following signature: void on_drop()"
         );
         ::z_owned_closure_query_t c_closure;
-        auto closure = new Closure<F, void, const Query&>(std::forward<F>(callback));
-        ::z_closure(&c_closure, &detail::QueryClosure<F>::call, &detail::QueryClosure<F>::drop, reinterpret_cast<void*>(closure));
+        using ClosureType = typename detail::closures::Closure<C, D, void, const Query&>;
+        auto closure = ClosureType::into_context(std::forward<C>(on_query), std::forward<D>(on_drop));
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_query_call, detail::closures::_zenoh_on_drop, closure);
         ::z_queryable_options_t opts = {
             .complete = options.complete
         };
@@ -1079,20 +1053,26 @@ public:
     /// @brief Create a ``Subscriber`` object to receive data from matching ``Publisher`` objects or from
     /// ``Session::put`` and ``Session::delete_resource`` requests
     /// @param key_expr The key expression to match the publishers
-    /// @param callback The callback to handle the received ``Sample`` objects
+    /// @param on_sample The callback that will be called for each received sample
+    /// @param on_drop The callback that will be called once subscriber is destroyed or undeclared
     /// @param options Options to pass to subscriber declaration
     /// @return a ``Subscriber`` object
-    template<class F>
+    template<class C, class D>
     Subscriber declare_subscriber(
-        const KeyExpr& key_expr, F&& callback, SubscriberOptions&& options = SubscriberOptions::create_default(), ZError *err = nullptr
+        const KeyExpr& key_expr, C&& on_sample, D&& on_drop, SubscriberOptions&& options = SubscriberOptions::create_default(), ZError *err = nullptr
     ) const {
         static_assert(
-            std::is_invocable_r<void, F, const Sample&>::value,
-            "Callback should be callable with the following signature void callback(const zenoh::Sample& sample)"
+            std::is_invocable_r<void, C, const Sample&>::value,
+            "on_sample should be callable with the following signature: void on_sample(const zenoh::Sample& sample)"
+        );
+        static_assert(
+            std::is_invocable_r<void, D>::value,
+            "on_drop should be callable with the following signature: void on_drop()"
         );
         ::z_owned_closure_sample_t c_closure;
-        auto closure = new Closure<F, void, const Sample&>(std::forward<F>(callback));
-        ::z_closure(&c_closure, &detail::SampleClosure<F>::call, &detail::SampleClosure<F>::drop, reinterpret_cast<void*>(closure));
+        using ClosureType = typename detail::closures::Closure<C, D, void, const Sample&>;
+        auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
         ::z_subscriber_options_t opts = {
             .reliability = options.reliability
         };
@@ -1141,9 +1121,11 @@ public:
         auto f = [&out](const Id& z_id) {
             out.push_back(z_id);
         };
+        typedef decltype(f) F;
         ::z_owned_closure_zid_t c_closure;
-        auto closure = new Closure<decltype(f), void, const Id&>(std::forward<decltype(f)>(f));
-        ::z_closure(&c_closure, &detail::ZIdClosure<decltype(f)>::call,  &detail::ZIdClosure<decltype(f)>::drop, reinterpret_cast<void*>(closure));
+        using ClosureType = typename detail::closures::Closure<F, closures::None, void, const Id&>;
+        auto closure = ClosureType::into_context(std::forward<F>(f), closures::none);
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_id_call,  detail::closures::_zenoh_on_drop, closure);
         __ZENOH_ERROR_CHECK(
             ::z_info_routers_zid(this->loan(), &c_closure),
             err,
@@ -1158,9 +1140,12 @@ public:
         auto f = [&out](const Id& z_id) {
             out.push_back(z_id);
         };
+        typedef decltype(f) F;
         ::z_owned_closure_zid_t c_closure;
-        auto closure = new Closure<decltype(f), void, const Id&>(std::forward<decltype(f)>(f));
-        ::z_closure(&c_closure, &detail::ZIdClosure<decltype(f)>::call,  &detail::ZIdClosure<decltype(f)>::drop, reinterpret_cast<void*>(closure));
+        auto closure = detail::closures::Closure<F, closures::None, void, const Id&>::into_context(
+            std::forward<F>(f), closures::none
+        );
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_id_call,  detail::closures::_zenoh_on_drop, closure);
         __ZENOH_ERROR_CHECK(
             ::z_info_peers_zid(this->loan(), &c_closure),
             err,
@@ -1276,23 +1261,32 @@ struct ScoutOptions {
 
 /// @brief Scout for zenoh entities in the network
 /// @param config ``ScoutingConfig`` to use
-/// @param callback The callback to process received ``Hello``messages
-/// @return 0 in case of success, negative error code otherwise
-template<class F>
-ZError scout(Config&& config, F&& callback, ScoutOptions&& options = ScoutOptions::create_default()) {
+/// @param on_hello The callback to process each received ``Hello``message
+/// @param on_drop The callback that will be called once all hello ``Hello``messages are received
+template<class C, class D>
+void scout(Config&& config, C&& on_hello, D&& on_drop, ScoutOptions&& options = ScoutOptions::create_default(), ZError* err = nullptr) {
     static_assert(
-        std::is_invocable_r<void, F, const Hello&>::value,
-        "Callback should be callable with the following signature void callback(const zenoh::Hello& hello)"
+        std::is_invocable_r<void, C, const Hello&>::value,
+        "on_hello should be callable with the following signature: void on_hello(const zenoh::Hello& hello)"
+    );
+    static_assert(
+        std::is_invocable_r<void, D>::value,
+        "on_drop should be callable with the following signature: void on_drop()"
     );
     ::z_owned_closure_hello_t c_closure;
-    auto closure = new Closure<F, void, const Hello&>(std::forward<F>(callback));
-    ::z_closure(&c_closure, &detail::HelloClosure<F>::call, &detail::HelloClosure<F>::drop, reinterpret_cast<void*>(closure));
+    using ClosureType = typename detail::closures::Closure<C, D, void, const Hello&>;
+    auto closure = ClosureType::into_context(std::forward<C>(on_hello), std::forward<D>(on_drop));
+    ::z_closure(&c_closure, detail::closures::_zenoh_on_hello_call, detail::closures::_zenoh_on_drop, closure);
     ::z_scout_options_t opts = {
         .zc_timeout_ms = options.timeout_ms,
         .zc_what = options.what
     };
 
-    return ::z_scout(detail::as_owned_c_ptr(config), ::z_move(c_closure), &opts);
+    __ZENOH_ERROR_CHECK(
+        ::z_scout(detail::as_owned_c_ptr(config), ::z_move(c_closure), &opts),
+        err,
+        "Failed to perform scout operation"
+    );
 }
 
 

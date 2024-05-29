@@ -55,7 +55,9 @@ int _main(int argc, char** argv) {
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
-    auto sub = session.declare_subscriber(KeyExpr("test/pong"), [&condvar](const Sample&) mutable { condvar.notify_one(); });
+    auto sub = session.declare_subscriber(KeyExpr("test/pong"), 
+        [&condvar](const Sample&) mutable { condvar.notify_one(); }, closures::none
+    );
     auto pub = session.declare_publisher(KeyExpr("test/ping"));
     std::vector<uint8_t> data(args.size);
     std::unique_lock lock(mutex);

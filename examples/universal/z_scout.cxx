@@ -96,7 +96,7 @@ int _main(int argc, char **argv) {
 
     std::cout << "Scout starting" << std::endl;
 
-    scout(std::move(config), make_scoped_closure(on_hello, on_end_scouting));
+    scout(std::move(config), on_hello, on_end_scouting);
 
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });

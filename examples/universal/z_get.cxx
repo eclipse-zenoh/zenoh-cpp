@@ -85,7 +85,7 @@ int _main(int argc, char **argv) {
         done_signal.notify_all();
     };
 
-    session.get(keyexpr, "", make_scoped_closure(std::move(on_reply), std::move(on_done)), {.target = Z_QUERY_TARGET_ALL});
+    session.get(keyexpr, "", on_reply, on_done, {.target = Z_QUERY_TARGET_ALL});
 
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });

@@ -36,6 +36,13 @@ auto loan(OwnedType& o) {
     return ::z_loan_mut(*as_owned_c_ptr(o)); 
 }
 
+template<class T, class OwnedType>
+auto& to_owned_cpp_ref(const OwnedType* o) {
+    static_assert(sizeof(OwnedType) == sizeof(T) &&  alignof(OwnedType) == alignof(T),
+        "Target and owned classes must have the same layout");
+    return *reinterpret_cast<T*>(o);
+}
+
 #if defined(ZENOHCXX_ZENOHPICO)
 
 #elif defined(ZENOHCXX_ZENOHC)
