@@ -114,7 +114,7 @@ inline std::string_view whatami_as_str(WhatAmI whatami) {
 /// User may set environment variable RUST_LOG to values *debug* | *info* | *warn* | *error* to show diagnostic output
 ///
 /// @note zenoh-c only
-void init_logger();
+inline void init_logger() { ::zc_init_logger(); }
 #endif
 
 
@@ -187,7 +187,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param key_expr String representing key expression
     /// @param autocanonize If true the key_expr will be autocanonized, prior to constructing key expression
     /// @param err If not null the error code will be written to this location, otherwise exception will be thrown in case of error.
-    KeyExpr(std::string_view key_expr, bool autocanonize = true, ZError* err = nullptr) 
+    explicit KeyExpr(std::string_view key_expr, bool autocanonize = true, ZError* err = nullptr) 
         : Owned(nullptr) {
         if (autocanonize) {
             size_t s = key_expr.size();
@@ -218,7 +218,17 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @brief Equality operator
     /// @param other the ``std::string_view`` to compare with
     /// @return true if the key expression is equal to the string
-    bool operator==(std::string_view other) { return as_string_view() == other; }
+    bool operator==(std::string_view other) {
+        if (!(*this)) return false; 
+        return as_string_view() == other; 
+    }
+
+    /// @brief InEquality operator
+    /// @param other the ``std::string_view`` to compare with
+    /// @return false if the key expression is equal to the string
+    bool operator!=(std::string_view other) {
+        return !((*this) == other);
+    }
 
     /// @brief Equality operator
     /// @param other the ``KeyExpr`` to compare with
@@ -230,10 +240,10 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @return false if both key expressions are equal
     bool operator!=(const KeyExpr& other) { return !(*this == other); }
 
-    /// @brief Inclusion operator
+    /// @brief Checks if a given ``KeyExpr`` includes the other.
     /// @param other the ``KeyExpr`` to compare with
     /// @return true if other is included in this.
-    bool operator>(const KeyExpr& other) {
+    bool includes(const KeyExpr& other) {
         return ::z_keyexpr_includes(this->loan(), other.loan());
     }
 
@@ -840,9 +850,12 @@ public:
 
     /// @brief Remove ``KeyExpr`` instance from ``Session`` and drop ``KeyExpr`` instance
     /// @param keyexpr ``KeyExpr`` instance to drop
-    /// @return 0 on success, negative error code otherwise.
-    ZError undeclare_keyexpr(KeyExpr&& key_expr) const {
-        return ::z_undeclare_keyexpr(detail::as_owned_c_ptr(key_expr), this->loan());
+    void undeclare_keyexpr(KeyExpr&& key_expr, ZError* err = nullptr) const {
+        __ZENOH_ERROR_CHECK(
+            ::z_undeclare_keyexpr(detail::as_owned_c_ptr(key_expr), this->loan()),
+            err,
+            "Failed to undeclare key expression"
+        );
     }
 
     /// Options passed to the get operation

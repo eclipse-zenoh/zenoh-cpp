@@ -18,16 +18,16 @@
 #pragma once
 
 #include "base.hxx"
+#include <iostream>
 
 namespace zenoh::detail::closures {
 
 struct IDroppable {
-    virtual void drop() {};
-    virtual ~IDroppable() {
-        drop();
-    }
+    virtual void drop() = 0;
+    virtual ~IDroppable() {};
 
     static void delete_from_context(void* context) {
+        reinterpret_cast<IDroppable*>(context)->drop();
         delete reinterpret_cast<IDroppable*>(context);
     }
 };
@@ -48,8 +48,9 @@ class Closure : public IClosure<R, Args...> {
     typename std::conditional_t<std::is_lvalue_reference_v<C>, C, std::remove_reference_t<C>> _call;
     typename std::conditional_t<std::is_lvalue_reference_v<D>, D, std::remove_reference_t<D>> _drop;
 public:
-    Closure(C&& call, D&& drop)
-        : _call(std::forward<C>(call)), _drop(std::forward<D>(drop))
+    template<class CC, class DD>
+    Closure(CC&& call, DD&& drop)
+        : _call(std::forward<CC>(call)), _drop(std::forward<DD>(drop))
     {}
 
     virtual R call(Args... args) override {
@@ -60,8 +61,9 @@ public:
         return _drop();
     }
 
-    static void* into_context(C&& call, D&& drop) {
-        auto obj = new Closure<C, D, R, Args...>(std::forward<C>(call), std::forward<D>(drop));
+    template<class CC, class DD>
+    static void* into_context(CC&& call, DD&& drop) {
+        auto obj = new Closure<C, D, R, Args...>(std::forward<CC>(call), std::forward<DD>(drop));
         auto d = dynamic_cast<IDroppable*>(obj);
         return reinterpret_cast<void*>(d);
     }
