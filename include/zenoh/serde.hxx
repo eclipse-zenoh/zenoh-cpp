@@ -60,6 +60,12 @@ public:
         return b; 
     }
 
+    /// @brief Constructs an empty data
+    Bytes() 
+        : Bytes(nullptr) {
+        ::z_bytes_empty(detail::as_owned_c_ptr(*this));
+    }
+
     /// @brief Get number of bytes in the pyload.
     size_t size() const {
         return ::z_bytes_len(this->loan());
@@ -112,9 +118,20 @@ public:
     /// @tparam Codec Codec to use
     /// @return Deserialzied data
     template<class T, class Codec = ZenohCodec<>>
-    T deserialize(ZError* err = nullptr, Codec codec = Codec()) const {
+    T deserialize(ZError* err, Codec codec = Codec()) const {
         return codec.template deserialize<T>(*this, err);
     }
+
+    /// @brief Deserialize into specified type.
+    ///
+    /// @tparam T Type to deserialize into
+    /// @tparam Codec Codec to use
+    /// @return Deserialzied data
+    template<class T, class Codec = ZenohCodec<>>
+    T deserialize(Codec codec = Codec()) const {
+        return codec.template deserialize<T>(*this, nullptr);
+    }
+
 
     class Iterator;
 
@@ -170,7 +187,7 @@ public:
     public:
         using Owned::Owned;
 
-        void write(uint8_t* buf, size_t len, ZError* err = nullptr) {
+        void write(const uint8_t* buf, size_t len, ZError* err = nullptr) {
             __ZENOH_ERROR_CHECK(
                 ::z_bytes_writer_write(this->loan(), buf, len),
                 err,
@@ -215,6 +232,7 @@ struct ZenohDeserializer {};
 template<>
 struct ZenohDeserializer<std::string> {
     static std::string deserialize(const Bytes& b, ZError* err = nullptr) {
+        (void)err;
         auto reader = b.reader();
         std::string s(b.size(), '0');
         reader.read(reinterpret_cast<uint8_t*>(s.data()), s.size());
@@ -225,6 +243,7 @@ struct ZenohDeserializer<std::string> {
 template<>
 struct ZenohDeserializer<std::vector<uint8_t>> {
     static std::vector<uint8_t> deserialize(const Bytes& b, ZError* err = nullptr) {
+        (void)err;
         auto reader = b.reader();
         std::vector<uint8_t> v(b.size());
         reader.read(v.data(), b.size());
@@ -279,6 +298,14 @@ struct ZenohCodec {
         return ZenohCodec::serialize(std::make_pair(reinterpret_cast<const uint8_t*>(s.data()), s.size()));
     }
 
+    static Bytes serialize(Bytes&& b) {
+        return std::move(b);
+    }
+
+    static Bytes serialize(const Bytes& b) {
+        return b.clone();
+    }
+
     static Bytes serialize(const std::pair<const uint8_t*, size_t>& s) {
         Bytes b(nullptr);
         if constexpr (ZT == ZenohCodecType::AVOID_COPY) {
@@ -287,6 +314,10 @@ struct ZenohCodec {
             ::z_bytes_encode_from_slice_copy(detail::as_owned_c_ptr(b), s.first, s.second);
         }
         return b;
+    }
+
+    static Bytes serialize(const std::pair<uint8_t*, size_t>& s) {
+        return serialize(std::pair<const uint8_t*, size_t>(s.first, s.second));
     }
 
     static Bytes serialize(const std::vector<uint8_t>& s) {
