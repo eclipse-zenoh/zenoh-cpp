@@ -103,9 +103,9 @@ typedef ::z_whatami_t WhatAmI;
 /// @param whatami the ``c::WhatAmI`` / ``zenohpico::WhatAmI`` value
 /// @return a string representation of the given value
 inline std::string_view whatami_as_str(WhatAmI whatami) {
-    ::z_view_str_t str_out;
+    ::z_view_string_t str_out;
     ::z_whatami_to_str(whatami, &str_out);
-    return std::string_view(::z_str_data(::z_loan(str_out)), ::z_str_len(::z_loan(str_out)));
+    return std::string_view(::z_string_data(::z_loan(str_out)), ::z_string_len(::z_loan(str_out)));
 }
 
 #ifdef ZENOHCXX_ZENOHC
@@ -160,12 +160,12 @@ public:
     /// @brief Get the array of locators of the entity
     /// @return the array of locators of the entity
     std::vector<std::string_view> get_locators() const {
-        ::z_owned_str_array_t out;
+        ::z_owned_string_array_t out;
         ::z_hello_locators(this->loan(), &out);
-        std::vector<std::string_view> locators(::z_str_array_len(::z_loan(out)));
-        for (size_t i = 0; i < ::z_str_array_len(::z_loan(out)); i++) {
-            auto s = ::z_str_array_get(::z_loan(out), i);
-            locators[i] = std::string_view(reinterpret_cast<const char*>(::z_str_data(s)), ::z_str_len(s));
+        std::vector<std::string_view> locators(::z_string_array_len(::z_loan(out)));
+        for (size_t i = 0; i < ::z_string_array_len(::z_loan(out)); i++) {
+            auto s = ::z_string_array_get(::z_loan(out), i);
+            locators[i] = std::string_view(reinterpret_cast<const char*>(::z_string_data(s)), ::z_string_len(s));
         }
         return locators;
     }
@@ -208,9 +208,9 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @name Methods
     /// @brief Get underlying key expression string
     std::string_view as_string_view() const {
-        ::z_view_str_t s;
+        ::z_view_string_t s;
         ::z_keyexpr_to_string(this->loan(), &s);
-        return std::string_view(reinterpret_cast<const char*>(::z_str_data(::z_loan(s))), ::z_str_len(::z_loan(s)));
+        return std::string_view(reinterpret_cast<const char*>(::z_string_data(::z_loan(s))), ::z_string_len(::z_loan(s)));
     }
 
     /// @name Operators
@@ -303,9 +303,9 @@ public:
 
     /// @brief Converts encoding to a string
     std::string as_string() const {
-        ::z_owned_str_t s;
+        ::z_owned_string_t s;
         ::z_encoding_to_string(this->loan(), &s);
-        std::string out = std::string(::z_str_data(::z_loan(s)), ::z_str_len(::z_loan(s)));
+        std::string out = std::string(::z_string_data(::z_loan(s)), ::z_string_len(::z_loan(s)));
         ::z_drop(::z_move(s));
         return out;
     }
@@ -442,9 +442,9 @@ public:
     ///
     /// @return Parameters string
     std::string_view get_parameters() const {
-        ::z_view_str_t p;
+        ::z_view_string_t p;
         ::z_query_parameters(this->loan(), &p);
-        return std::string_view(::z_str_data(::z_loan(p)), ::z_str_len(::z_loan(p))); 
+        return std::string_view(::z_string_data(::z_loan(p)), ::z_string_len(::z_loan(p))); 
     }
 
     /// @brief Get the value of the query (payload and encoding)
@@ -493,7 +493,7 @@ public:
     };
 
     /// @brief Send error to a query
-    ::z_error_t reply_err(Bytes&& payload, ReplyErrOptions&& options = ReplyErrOptions::create_default()) {
+    ::z_error_t reply_err(Bytes&& payload, ReplyErrOptions&& options = ReplyErrOptions::create_default()) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_query_reply_err_options_t opts = {
             .encoding = detail::as_owned_c_ptr(options.encoding)
@@ -524,13 +524,13 @@ public:
     /// @return value of the config parameter
     /// @note zenoh-c only
     std::string get(std::string_view key, ZError* err = nullptr) const {
-        ::z_owned_str_t s;
+        ::z_owned_string_t s;
         __ZENOH_ERROR_CHECK(
             ::zc_config_get_from_substring(this->loan(), key.data(), key.size(), &s),
             err,
             std::string("Failed to get config value for the key: ").append(key)
         );
-        std::string out = std::string(::z_str_data(::z_loan(s)), ::z_str_len(::z_loan(s)));
+        std::string out = std::string(::z_string_data(::z_loan(s)), ::z_string_len(::z_loan(s)));
         ::z_drop(::z_move(s));
         return out;
     }
@@ -539,9 +539,9 @@ public:
     /// @return the JSON string in ``Str``
     /// @note zenoh-c only
     std::string to_string() const { 
-        ::z_owned_str_t s;
+        ::z_owned_string_t s;
         ::zc_config_to_string(this->loan(), &s);
-        std::string out = std::string(::z_str_data(::z_loan(s)), ::z_str_len(::z_loan(s)));
+        std::string out = std::string(::z_string_data(::z_loan(s)), ::z_string_len(::z_loan(s)));
         ::z_drop(::z_move(s));
         return out; 
     }
