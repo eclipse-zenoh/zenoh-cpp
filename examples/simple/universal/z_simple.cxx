@@ -78,8 +78,8 @@ private:
         // use simple little endian encoding
         UintType<sizeof(T)> out = 0;
         for (size_t i = 0; i < sizeof(T); i++) {
-            out = out | buf[sizeof(T) - i - 1];
             out = out << 8;
+            out = out | buf[sizeof(T) - i - 1];
         }
         return reinterpret_cast<const T&>(out);
     }

@@ -147,7 +147,7 @@ public:
             return ::z_bytes_reader_read(&this->_0, buf, len);
         }
 
-        int64_t position() {
+        int64_t tell() {
             return ::z_bytes_reader_tell(&this->_0);
         }
 
@@ -290,6 +290,34 @@ struct ZenohDeserializer<std::unordered_map<K, V>> {
     }
 };
 
+#define __ZENOH_DESERIALIZE_ARITHMETIC(TYPE, EXT) \
+template<> \
+struct ZenohDeserializer<TYPE> { \
+    static TYPE deserialize(const Bytes& b, ZError* err = nullptr) { \
+        TYPE t;\
+        __ZENOH_ERROR_CHECK( \
+            ::z_bytes_decode_into_##EXT(detail::loan(b), &t), \
+            err, \
+            "Failed to deserialize into "#TYPE \
+        ); \
+        return t; \
+    } \
+}; \
+
+__ZENOH_DESERIALIZE_ARITHMETIC(uint8_t, uint8);
+__ZENOH_DESERIALIZE_ARITHMETIC(uint16_t, uint16);
+__ZENOH_DESERIALIZE_ARITHMETIC(uint32_t, uint32);
+__ZENOH_DESERIALIZE_ARITHMETIC(uint64_t, uint64);
+
+__ZENOH_DESERIALIZE_ARITHMETIC(int8_t, int8);
+__ZENOH_DESERIALIZE_ARITHMETIC(int16_t, int16);
+__ZENOH_DESERIALIZE_ARITHMETIC(int32_t, int32);
+__ZENOH_DESERIALIZE_ARITHMETIC(int64_t, int64);
+
+__ZENOH_DESERIALIZE_ARITHMETIC(float, float);
+__ZENOH_DESERIALIZE_ARITHMETIC(double, double);
+
+#undef __ZENOH_DESERIALIZE_ARITHMETIC
 }
 
 template<ZenohCodecType ZT>
@@ -321,9 +349,7 @@ struct ZenohCodec {
     }
 
     static Bytes serialize(const std::vector<uint8_t>& s) {
-        Bytes b(nullptr);
-        ZenohCodec::serialize(std::make_pair<const uint8_t*, size_t>(s.data(), s.size()));
-        return b;
+        return ZenohCodec::serialize(std::make_pair<const uint8_t*, size_t>(s.data(), s.size()));;
     }
 
     template<class T>
@@ -345,11 +371,34 @@ struct ZenohCodec {
         return b;
     }
 
+#define __ZENOH_SERIALIZE_ARITHMETIC(TYPE, EXT) \
+    static Bytes serialize(TYPE t) { \
+        Bytes b(nullptr); \
+        ::z_bytes_encode_from_##EXT(detail::as_owned_c_ptr(b), t); \
+        return b; \
+    } \
+
+    __ZENOH_SERIALIZE_ARITHMETIC(uint8_t, uint8);
+    __ZENOH_SERIALIZE_ARITHMETIC(uint16_t, uint16);
+    __ZENOH_SERIALIZE_ARITHMETIC(uint32_t, uint32);
+    __ZENOH_SERIALIZE_ARITHMETIC(uint64_t, uint64);
+
+    __ZENOH_SERIALIZE_ARITHMETIC(int8_t, int8);
+    __ZENOH_SERIALIZE_ARITHMETIC(int16_t, int16);
+    __ZENOH_SERIALIZE_ARITHMETIC(int32_t, int32);
+    __ZENOH_SERIALIZE_ARITHMETIC(int64_t, int64);
+
+    __ZENOH_SERIALIZE_ARITHMETIC(float, float);
+    __ZENOH_SERIALIZE_ARITHMETIC(double, double);
+#undef __ZENOH_SERIALIZE_ARITHMETIC
+
     template<class T>
     static T deserialize(const Bytes& b, ZError* err = nullptr) {
         return detail::ZenohDeserializer<T>::deserialize(b, err);
     }
 };
+
+
 
 }
 
