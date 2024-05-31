@@ -471,14 +471,16 @@ public:
     };
 
     /// @brief Send reply to a query
-    ::z_error_t reply(const KeyExpr& key_expr, Bytes&& payload, ReplyOptions&& options = ReplyOptions::create_default()) const {
+    void reply(const KeyExpr& key_expr, Bytes&& payload, ReplyOptions&& options = ReplyOptions::create_default(), ZError* err = nullptr) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_query_reply_options_t opts;
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
 
-        return ::z_query_reply(
-            this->loan(), detail::loan(key_expr), payload_ptr, &opts
+        __ZENOH_ERROR_CHECK(
+            ::z_query_reply(this->loan(), detail::loan(key_expr), payload_ptr, &opts),
+            err,
+            "Failed to send reply"
         );
     }
 
@@ -492,13 +494,15 @@ public:
     };
 
     /// @brief Send error to a query
-    ::z_error_t reply_err(Bytes&& payload, ReplyErrOptions&& options = ReplyErrOptions::create_default()) const {
+    void reply_err(Bytes&& payload, ReplyErrOptions&& options = ReplyErrOptions::create_default(), ZError* err = nullptr) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_query_reply_err_options_t opts;
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
 
-        return ::z_query_reply_err(
-            this->loan(), payload_ptr, &opts
+        __ZENOH_ERROR_CHECK(
+            ::z_query_reply_err(this->loan(), payload_ptr, &opts),
+            err,
+            "Failed to send error"
         );
     }
 };
@@ -729,9 +733,8 @@ public:
     /// @param options Optional values to pass to delete operation
     /// @return 0 in case of success, negative error code otherwise
     ZError delete_resource(DeleteOptions&& options = DeleteOptions::create_default()) const {
-        ::z_publisher_delete_options_t opts {
-            .__dummy = options.__dummy
-        };
+        ::z_publisher_delete_options_t opts;
+        opts.__dummy = options.__dummy;
         return ::z_publisher_delete(this->loan(), &opts);
     }
 
@@ -1143,7 +1146,7 @@ public:
         return out;
     }
 
-    /// @brief Fetches the Zenoh IDs of all connected routers.
+    /// @brief Fetches the Zenoh IDs of all connected peers.
     std::vector<Id> get_peers_z_id(ZError* err = nullptr) const {
         std::vector<Id> out;
         auto f = [&out](const Id& z_id) {
@@ -1158,7 +1161,7 @@ public:
         __ZENOH_ERROR_CHECK(
             ::z_info_peers_zid(this->loan(), &c_closure),
             err,
-            "Failed to fetch router Ids"
+            "Failed to fetch peer Ids"
         );
         return out;
     }
