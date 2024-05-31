@@ -474,8 +474,8 @@ public:
     ::z_error_t reply(const KeyExpr& key_expr, Bytes&& payload, ReplyOptions&& options = ReplyOptions::create_default()) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_query_reply_options_t opts = {
-            .attachment = detail::as_owned_c_ptr(options.attachment),
-            .encoding = detail::as_owned_c_ptr(options.encoding)
+            .encoding = detail::as_owned_c_ptr(options.encoding),
+            .attachment = detail::as_owned_c_ptr(options.attachment)
         };
 
         return ::z_query_reply(
@@ -721,8 +721,8 @@ public:
     ZError put(Bytes&& payload, PutOptions&& options = PutOptions::create_default()) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_publisher_put_options_t opts = {
-            .attachment = detail::as_owned_c_ptr(options.attachment),
-            .encoding = detail::as_owned_c_ptr(options.encoding)
+            .encoding = detail::as_owned_c_ptr(options.encoding),
+            .attachment = detail::as_owned_c_ptr(options.attachment)
         };
         return ::z_publisher_put(this->loan(), payload_ptr, &opts);
     }
@@ -903,8 +903,8 @@ public:
         ::z_get_options_t opts = {
             .target = options.target,
             .consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation),
-            .encoding = detail::as_owned_c_ptr(options.encoding),
             .payload = detail::as_owned_c_ptr(options.payload),
+            .encoding = detail::as_owned_c_ptr(options.encoding), 
             .attachment = detail::as_owned_c_ptr(options.attachment),
             .timeout_ms = options.timeout_ms
         };
@@ -935,8 +935,8 @@ public:
         ::z_get_options_t opts = {
             .target = options.target,
             .consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation),
-            .encoding = detail::as_owned_c_ptr(options.encoding),
             .payload = detail::as_owned_c_ptr(options.payload),
+            .encoding = detail::as_owned_c_ptr(options.encoding),
             .attachment = detail::as_owned_c_ptr(options.attachment),
             .timeout_ms = options.timeout_ms
         };
@@ -968,8 +968,8 @@ public:
     /// @return 0 in case of success, negative error code otherwise
     ZError delete_resource(const KeyExpr& key_expr, DeleteOptions&& options = DeleteOptions::create_default()) const {
         ::z_delete_options_t opts = {
-            .priority = options.priority,
             .congestion_control = options.congestion_control,
+            .priority = options.priority,
             .is_express = options.is_express
         };
         return ::z_delete(this->loan(), detail::loan(key_expr), &opts);
@@ -998,10 +998,10 @@ public:
     /// @param options Options to pass to put operation
     void put(const KeyExpr& key_expr, Bytes&& payload, PutOptions&& options = PutOptions::create_default(), ZError* err = nullptr) const {
         ::z_put_options_t opts = {
-            .priority = options.priority,
-            .congestion_control = options.congestion_control,
-            .is_express = options.is_express,
             .encoding = detail::as_owned_c_ptr(options.encoding),
+            .congestion_control = options.congestion_control,
+            .priority = options.priority,
+            .is_express = options.is_express,
             .attachment = detail::as_owned_c_ptr(options.attachment)
         };
 
