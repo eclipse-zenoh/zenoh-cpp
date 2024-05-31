@@ -473,10 +473,9 @@ public:
     /// @brief Send reply to a query
     ::z_error_t reply(const KeyExpr& key_expr, Bytes&& payload, ReplyOptions&& options = ReplyOptions::create_default()) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
-        ::z_query_reply_options_t opts = {
-            .encoding = detail::as_owned_c_ptr(options.encoding),
-            .attachment = detail::as_owned_c_ptr(options.attachment)
-        };
+        ::z_query_reply_options_t opts;
+        opts.encoding = detail::as_owned_c_ptr(options.encoding);
+        opts.attachment = detail::as_owned_c_ptr(options.attachment);
 
         return ::z_query_reply(
             this->loan(), detail::loan(key_expr), payload_ptr, &opts
@@ -495,9 +494,8 @@ public:
     /// @brief Send error to a query
     ::z_error_t reply_err(Bytes&& payload, ReplyErrOptions&& options = ReplyErrOptions::create_default()) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
-        ::z_query_reply_err_options_t opts = {
-            .encoding = detail::as_owned_c_ptr(options.encoding)
-        };
+        ::z_query_reply_err_options_t opts;
+        opts.encoding = detail::as_owned_c_ptr(options.encoding);
 
         return ::z_query_reply_err(
             this->loan(), payload_ptr, &opts
@@ -720,10 +718,10 @@ public:
     /// @return 0 in case of success, negative error code otherwise
     ZError put(Bytes&& payload, PutOptions&& options = PutOptions::create_default()) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
-        ::z_publisher_put_options_t opts = {
-            .encoding = detail::as_owned_c_ptr(options.encoding),
-            .attachment = detail::as_owned_c_ptr(options.attachment)
-        };
+        ::z_publisher_put_options_t opts;
+        opts.encoding = detail::as_owned_c_ptr(options.encoding);
+        opts.attachment = detail::as_owned_c_ptr(options.attachment);
+
         return ::z_publisher_put(this->loan(), payload_ptr, &opts);
     }
 
@@ -900,14 +898,14 @@ public:
         using ClosureType = typename detail::closures::Closure<C, D, void, const Reply&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_reply), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_reply_call, detail::closures::_zenoh_on_drop, closure);
-        ::z_get_options_t opts = {
-            .target = options.target,
-            .consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation),
-            .payload = detail::as_owned_c_ptr(options.payload),
-            .encoding = detail::as_owned_c_ptr(options.encoding), 
-            .attachment = detail::as_owned_c_ptr(options.attachment),
-            .timeout_ms = options.timeout_ms
-        };
+        ::z_get_options_t opts;
+        opts.target = options.target;
+        opts.consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation);
+        opts.payload = detail::as_owned_c_ptr(options.payload);
+        opts.encoding = detail::as_owned_c_ptr(options.encoding);
+        opts.attachment = detail::as_owned_c_ptr(options.attachment);
+        opts.timeout_ms = options.timeout_ms;
+
         __ZENOH_ERROR_CHECK(
             ::z_get(this->loan(), detail::loan(key_expr), parameters.c_str(), ::z_move(c_closure), &opts),
             err,
@@ -932,14 +930,14 @@ public:
             ::zc_reply_non_blocking_fifo_new(&reply_channel, bound);
         }
         ReplyFifoChannel<C> recv(&reply_channel.recv);
-        ::z_get_options_t opts = {
-            .target = options.target,
-            .consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation),
-            .payload = detail::as_owned_c_ptr(options.payload),
-            .encoding = detail::as_owned_c_ptr(options.encoding),
-            .attachment = detail::as_owned_c_ptr(options.attachment),
-            .timeout_ms = options.timeout_ms
-        };
+        ::z_get_options_t opts;
+        opts.target = options.target;
+        opts.consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation);
+        opts.payload = detail::as_owned_c_ptr(options.payload);
+        opts.encoding = detail::as_owned_c_ptr(options.encoding);
+        opts.attachment = detail::as_owned_c_ptr(options.attachment);
+        opts.timeout_ms = options.timeout_ms;
+
         ZError res = ::z_get(this->loan(), detail::loan(key_expr), parameters.c_str(), ::z_move(reply_channel.send), &opts);
         __ZENOH_ERROR_CHECK(
             res,
@@ -967,11 +965,11 @@ public:
     /// @param options ``DeleteOptions`` delete options
     /// @return 0 in case of success, negative error code otherwise
     ZError delete_resource(const KeyExpr& key_expr, DeleteOptions&& options = DeleteOptions::create_default()) const {
-        ::z_delete_options_t opts = {
-            .congestion_control = options.congestion_control,
-            .priority = options.priority,
-            .is_express = options.is_express
-        };
+        ::z_delete_options_t opts;
+        opts.congestion_control = options.congestion_control;
+        opts.priority = options.priority;
+        opts.is_express = options.is_express;
+
         return ::z_delete(this->loan(), detail::loan(key_expr), &opts);
     }
 
@@ -997,13 +995,12 @@ public:
     /// @param payload The data to publish
     /// @param options Options to pass to put operation
     void put(const KeyExpr& key_expr, Bytes&& payload, PutOptions&& options = PutOptions::create_default(), ZError* err = nullptr) const {
-        ::z_put_options_t opts = {
-            .encoding = detail::as_owned_c_ptr(options.encoding),
-            .congestion_control = options.congestion_control,
-            .priority = options.priority,
-            .is_express = options.is_express,
-            .attachment = detail::as_owned_c_ptr(options.attachment)
-        };
+        ::z_put_options_t opts;
+        opts.encoding = detail::as_owned_c_ptr(options.encoding);
+        opts.congestion_control = options.congestion_control;
+        opts.priority = options.priority;
+        opts.is_express = options.is_express;
+        opts.attachment = detail::as_owned_c_ptr(options.attachment);
 
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         __ZENOH_ERROR_CHECK(
@@ -1044,9 +1041,9 @@ public:
         using ClosureType = typename detail::closures::Closure<C, D, void, const Query&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_query), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_query_call, detail::closures::_zenoh_on_drop, closure);
-        ::z_queryable_options_t opts = {
-            .complete = options.complete
-        };
+        ::z_queryable_options_t opts;
+        opts.complete = options.complete;
+
         Queryable q(nullptr);
         ZError res =  ::z_declare_queryable(
             detail::as_owned_c_ptr(q), this->loan(), detail::loan(key_expr), ::z_move(c_closure), &opts
@@ -1086,9 +1083,8 @@ public:
         using ClosureType = typename detail::closures::Closure<C, D, void, const Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
-        ::z_subscriber_options_t opts = {
-            .reliability = options.reliability
-        };
+        ::z_subscriber_options_t opts;
+        opts.reliability = options.reliability;
         Subscriber s(nullptr);
         ZError res =  ::z_declare_subscriber(
             detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr), ::z_move(c_closure), &opts
@@ -1115,11 +1111,11 @@ public:
     Publisher declare_publisher(
         const KeyExpr& key_expr, PublisherOptions&& options = PublisherOptions::create_default(), ZError* err = nullptr
     ) const {
-        ::z_publisher_options_t opts = {
-            .congestion_control = options.congestion_control,
-            .priority = options.priority,
-            .is_express = options.is_express
-        };
+        ::z_publisher_options_t opts;
+        opts.congestion_control = options.congestion_control;
+        opts.priority = options.priority;
+        opts.is_express = options.is_express;
+
         Publisher p(nullptr);
         ZError res =  ::z_declare_publisher(
             detail::as_owned_c_ptr(p), this->loan(), detail::loan(key_expr), &opts
@@ -1290,10 +1286,9 @@ void scout(Config&& config, C&& on_hello, D&& on_drop, ScoutOptions&& options = 
     using ClosureType = typename detail::closures::Closure<C, D, void, const Hello&>;
     auto closure = ClosureType::into_context(std::forward<C>(on_hello), std::forward<D>(on_drop));
     ::z_closure(&c_closure, detail::closures::_zenoh_on_hello_call, detail::closures::_zenoh_on_drop, closure);
-    ::z_scout_options_t opts = {
-        .zc_timeout_ms = options.timeout_ms,
-        .zc_what = options.what
-    };
+    ::z_scout_options_t opts;
+    opts.zc_timeout_ms = options.timeout_ms;
+    opts.zc_what = options.what;
 
     __ZENOH_ERROR_CHECK(
         ::z_scout(detail::as_owned_c_ptr(config), ::z_move(c_closure), &opts),
