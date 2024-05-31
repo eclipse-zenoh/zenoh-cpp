@@ -16,6 +16,7 @@
 #include <condition_variable>
 #include <iostream>
 #include <mutex>
+#include <cstring>
 
 #include "zenoh.hxx"
 using namespace zenoh;
