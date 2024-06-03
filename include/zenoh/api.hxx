@@ -209,7 +209,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @brief Get underlying key expression string
     std::string_view as_string_view() const {
         ::z_view_string_t s;
-        ::z_keyexpr_to_string(this->loan(), &s);
+        ::z_keyexpr_as_view_string(this->loan(), &s);
         return std::string_view(reinterpret_cast<const char*>(::z_string_data(::z_loan(s))), ::z_string_len(::z_loan(s)));
     }
 
