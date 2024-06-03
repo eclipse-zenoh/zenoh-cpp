@@ -220,7 +220,10 @@ CustomStruct CustomCodec::deserialize<CustomStruct>(const Bytes& b, ZError* err)
 }
 
 void serde_custom() {
-    CustomStruct s = {.d = 0.5, .u = 500, .s = "abcd"};
+    CustomStruct s;
+    s.d = 0.5;
+    s.u = 500;
+    s.s = "abcd";
     auto b = Bytes::serialize(s, CustomCodec());
     CustomStruct out = b.deserialize<CustomStruct>(CustomCodec());
     assert(s.d == out.d);
