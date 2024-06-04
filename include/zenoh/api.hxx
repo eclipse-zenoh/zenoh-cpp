@@ -25,6 +25,7 @@
 #include <sstream>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 
 namespace zenoh {
 

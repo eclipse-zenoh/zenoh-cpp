@@ -14,6 +14,7 @@
 
 #include "base.hxx"
 #include <functional>
+#include <optional>
 namespace zenoh::detail {
 
 template<class OwnedType>
