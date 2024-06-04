@@ -13,29 +13,22 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <thread>
 
 #include <condition_variable>
 #include <iostream>
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include <windows.h>
-#else
-#include <unistd.h>
-#define Sleep(x) usleep(x * 1000)
-#endif
 
-#include "zenohc.hxx"
-using namespace zenohc;
+
+#include "zenoh.hxx"
+using namespace zenoh;
+using namespace std::chrono_literals;
 
 int _main(int argc, char **argv) {
     const char *expr = "demo/example/**";
     if (argc > 1) {
         expr = argv[1];
     }
-    KeyExprView keyexpr(expr);
-    if (!keyexpr.check()) {
-        printf("%s is not a valid key expression", expr);
-        exit(-1);
-    }
+    KeyExpr keyexpr(expr);
     Config config;
     if (argc > 2) {
         if (!config.insert_json(Z_CONFIG_CONNECT_KEY, argv[2])) {
@@ -48,25 +41,23 @@ int _main(int argc, char **argv) {
     }
 
     printf("Opening session...\n");
-    auto session = expect<Session>(open(std::move(config)));
+    auto session = Session::open(std::move(config));
 
     std::cout << "Sending Query '" << expr << "'...\n";
-    GetOptions opts;
-    opts.set_target(Z_QUERY_TARGET_ALL);
 
-    auto [send, recv] = reply_non_blocking_fifo_new(16);
-    session.get(keyexpr, "", std::move(send), opts);
+    auto replies = session.get_reply_fifo_channel<FifoChannelType::NonBlocking>(
+        keyexpr, "", 16, {.target = QueryTarget::Z_QUERY_TARGET_ALL}
+    );
 
-    Reply reply(nullptr);
-    for (bool call_success = recv(reply); !call_success || reply.check(); call_success = recv(reply)) {
-        if (!call_success) {
+    for (auto reply = replies.get_next_reply(); replies.is_active(); reply = replies.get_next_reply()) {
+        if (!reply) {
             std::cout << ".";
-            Sleep(1);
+            std::this_thread::sleep_for(1s);
             continue;
         }
-        auto sample = expect<Sample>(reply.get());
-        std::cout << "\nReceived ('" << sample.get_keyexpr().as_string_view() << "' : '"
-                  << sample.get_payload().as_string_view() << "')";
+        const auto& sample = reply.get_ok();
+        std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
+                  << sample.get_payload().deserialize<std::string>() << "')\n";
     }
     std::cout << std::endl;
 
@@ -76,7 +67,7 @@ int _main(int argc, char **argv) {
 int main(int argc, char **argv) {
     try {
         _main(argc, argv);
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    } catch (ZException e) {
+        std::cout << "Received an error :" << e.what() << "\n";
     }
 }

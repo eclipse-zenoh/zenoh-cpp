@@ -11,16 +11,13 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-#include <iostream>
 
-//
-// C++ wrapper for zenoh-c
-//
-#include "zenohc.hxx"
-using namespace zenohc;
+#include <iostream>
+#include "zenoh.hxx"
+using namespace zenoh;
 
 int main(int, char **) {
     Config config;
-    auto session = expect<Session>(open(std::move(config)));
-    session.put("demo/example/simple", "Simple!");
+    auto session = Session::open(std::move(config));
+    session.put(KeyExpr("demo/example/simple"), Bytes::serialize("Simple!"));
 }

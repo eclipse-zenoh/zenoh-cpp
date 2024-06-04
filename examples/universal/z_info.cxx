@@ -18,24 +18,20 @@
 #include "zenoh.hxx"
 using namespace zenoh;
 
-void print_zid(const Id& id) {
-    std::cout << id << std::endl;
-}
-
 int _main(int argc, char** argv) {
     const char* locator = nullptr;
-    const char* configfile = nullptr;
+    const char* config_file = nullptr;
     getargs(argc, argv, {}, {{"locator", &locator}}
 #ifdef ZENOHCXX_ZENOHC
             ,
-            {{"-c", {"config file", &configfile}}}
+            {{"-c", {"config file", &config_file}}}
 #endif
     );
 
     Config config;
 #ifdef ZENOHCXX_ZENOHC
-    if (configfile) {
-        config = expect(config_from_file(configfile));
+    if (config_file) {
+        config = Config::from_file(config_file);
     }
 #endif
 
@@ -55,25 +51,27 @@ int _main(int argc, char** argv) {
         }
     }
 
-    printf("Opening session...\n");
-    auto session = expect<Session>(open(std::move(config)));
+    std::cout << "Opening session...\n";
+    auto session = Session::open(std::move(config));
 
-    auto self_id = session.info_zid();
-    printf("own id: ");
-    print_zid(self_id);
+    std::cout << "own id: " << session.get_zid() << std::endl;;
 
-    printf("routers ids:\n");
-    session.info_routers_zid(print_zid);
+    std::cout << "routers ids:\n";
+    for (const auto zid: session.get_routers_z_id()) {
+        std::cout << zid << "\n";
+    }
 
-    printf("peers ids:\n");
-    session.info_peers_zid(print_zid);
+    std::cout << "peers ids:\n";
+    for (const auto zid: session.get_peers_z_id()) {
+        std::cout << zid << "\n";
+    }
     return 0;
 }
 
 int main(int argc, char** argv) {
     try {
         return _main(argc, argv);
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    } catch (ZException e) {
+        std::cout << "Received an error :" << e.what() << "\n";
     }
 }
