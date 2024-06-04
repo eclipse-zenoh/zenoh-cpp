@@ -484,7 +484,7 @@ public:
         );
     }
 
-    /// @brief Options passed to the ``Query::reply_err`` operation
+    /// @brief Options passed to the ``Query::reply_err()`` operation
     struct ReplyErrOptions {
         /// @brief An optional encoding of the reply error payload
         std::optional<Encoding> encoding = {};
