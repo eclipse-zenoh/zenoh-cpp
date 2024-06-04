@@ -462,9 +462,9 @@ public:
     /// Options passed to the ``Query::reply`` operation
     struct ReplyOptions {
         /// @brief An optional encoding of this reply payload and/or attachment
-        Encoding encoding = Encoding(nullptr);
+        std::optional<Encoding> encoding = {};
         /// @brief An optional attachment to this reply.
-        Bytes attachment = Bytes(nullptr);
+        std::optional<Bytes> attachment = {};
 
         /// @brief Returns default option settings
         static ReplyOptions create_default() { return {}; }
@@ -487,7 +487,7 @@ public:
     /// Options passed to the ``Query::reply_err`` operation
     struct ReplyErrOptions {
         /// @brief An optional encoding of the reply error payload
-        Encoding encoding = Encoding(nullptr);
+        std::optional<Encoding> encoding = {};
 
         /// @brief Returns default option settings
         static ReplyErrOptions create_default() { return {}; }
@@ -698,9 +698,9 @@ public:
     /// Options to be passed to ``Publisher::put`` operation
     struct PutOptions {
         /// @brief The encoding of the data to publish.
-        Encoding encoding = Encoding(nullptr);
+        std::optional<Encoding> encoding =  {};
         /// @brief The attachment to attach to the publication.
-        Bytes attachment = Bytes(nullptr);
+        std::optional<Bytes> attachment = {};
 
         /// @brief Returns default option settings
         static PutOptions create_default() { return {}; }
@@ -866,11 +866,11 @@ public:
         /// @brief The replies consolidation strategy to apply on replies to the query.
         QueryConsolidation consolidation = QueryConsolidation();
         /// @brief An optional payload of the query.
-        Bytes payload = Bytes(nullptr);
+        std::optional<Bytes> payload = {};
         /// @brief  An optional encoding of the query payload and/or attachment.
-        Encoding encoding = Encoding(nullptr);
+        std::optional<Encoding> encoding = {};
         /// An optional attachment to the query.
-        Bytes attachment = Bytes(nullptr);
+        std::optional<Bytes> attachment = {};
         /// @brief The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
         uint64_t timeout_ms = 0;
 
@@ -985,9 +985,9 @@ public:
         /// @brief Whether Zenoh will NOT wait to batch this message with others to reduce the bandwith.
         bool is_express = false;
         /// @brief  An optional encoding of the message payload and/or attachment.
-        Encoding encoding = Encoding(nullptr);
+        std::optional<Encoding> encoding = {};
         /// An optional attachment to the message.
-        Bytes attachment = Bytes(nullptr);
+        std::optional<Bytes> attachment = {};
 
         /// @brief Returns default option settings
         static PutOptions create_default() { return {}; }

@@ -26,6 +26,16 @@ const OwnedType* as_owned_c_ptr(const Owned<OwnedType>& o) {
     return reinterpret_cast<const OwnedType*>(&o);
 }
 
+template<class OwnedCppObj>
+auto* as_owned_c_ptr(std::optional<OwnedCppObj>& o) {
+    return  o.has_value() ? as_owned_c_ptr(o.value()) : nullptr;
+}
+
+template<class OwnedCppObj>
+const auto* as_owned_c_ptr(const std::optional<OwnedCppObj>& o) {
+    return  o.has_value() ? as_owned_c_ptr(o.value()) : nullptr;
+}
+
 template<class OwnedType>
 auto loan(const OwnedType& o) { 
     return ::z_loan(*as_owned_c_ptr(o)); 
