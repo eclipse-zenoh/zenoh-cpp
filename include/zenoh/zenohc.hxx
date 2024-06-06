@@ -1,6 +1,6 @@
 #pragma once
 
-// #define ZENOHCXX_ZENOHC
+//#define ZENOHCXX_ZENOHC
 
 #if defined(ZENOHCXX_ZENOHPICO) && defined(ZENOHCXX_ZENOHC)
 #error("Only one of ZENOHCXX_ZENOHPICO and ZENOHCXX_ZENOHC should be defined. \

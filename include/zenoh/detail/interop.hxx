@@ -12,9 +12,9 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 #pragma once
 
-#include "base.hxx"
-#include <functional>
+#include "../api/base.hxx"
 #include <optional>
+
 namespace zenoh::detail {
 
 template<class OwnedType>

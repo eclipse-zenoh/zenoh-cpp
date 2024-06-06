@@ -13,9 +13,11 @@
 
 #pragma once
 
-#include "zenohc.hxx"
+#include "../zenohc.hxx"
 #include <stdexcept>
 #include <string>
+#include <cstddef>
+#include <cstdint>
 
 namespace zenoh {
 

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2023 ZettaScale Technology
+// Copyright (c) 2024 ZettaScale Technology
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -11,15 +11,13 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-//
-// This file contains structures and classes API without implementations
-//
-
 #pragma once
 
 #include "base.hxx"
-#include "internal.hxx"
+#include "../detail/interop.hxx"
+#include "../detail/closures.hxx"
 #include "closures.hxx"
+
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
