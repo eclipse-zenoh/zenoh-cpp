@@ -14,6 +14,7 @@
 
 #include "base.hxx"
 #include <functional>
+#include <optional>
 namespace zenoh::detail {
 
 template<class OwnedType>
@@ -24,6 +25,16 @@ OwnedType* as_owned_c_ptr(Owned<OwnedType>& o) {
 template<class OwnedType>
 const OwnedType* as_owned_c_ptr(const Owned<OwnedType>& o) {
     return reinterpret_cast<const OwnedType*>(&o);
+}
+
+template<class OwnedCppObj>
+auto* as_owned_c_ptr(std::optional<OwnedCppObj>& o) {
+    return  o.has_value() ? as_owned_c_ptr(o.value()) : nullptr;
+}
+
+template<class OwnedCppObj>
+const auto* as_owned_c_ptr(const std::optional<OwnedCppObj>& o) {
+    return  o.has_value() ? as_owned_c_ptr(o.value()) : nullptr;
 }
 
 template<class OwnedType>

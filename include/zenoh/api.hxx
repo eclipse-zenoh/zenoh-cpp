@@ -25,6 +25,7 @@
 #include <sstream>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 
 namespace zenoh {
 
@@ -459,12 +460,12 @@ public:
     /// @return Attachment
     decltype(auto) get_attachment() const { return detail::as_owned_cpp_obj<Bytes>(::z_query_attachment(this->loan())); }
 
-    /// Options passed to the ``Query::reply`` operation
+    /// @brief Options passed to the ``Query::reply`` operation
     struct ReplyOptions {
         /// @brief An optional encoding of this reply payload and/or attachment
-        Encoding encoding = Encoding(nullptr);
+        std::optional<Encoding> encoding = {};
         /// @brief An optional attachment to this reply.
-        Bytes attachment = Bytes(nullptr);
+        std::optional<Bytes> attachment = {};
 
         /// @brief Returns default option settings
         static ReplyOptions create_default() { return {}; }
@@ -484,10 +485,10 @@ public:
         );
     }
 
-    /// Options passed to the ``Query::reply_err`` operation
+    /// @brief Options passed to the ``Query::reply_err()`` operation
     struct ReplyErrOptions {
         /// @brief An optional encoding of the reply error payload
-        Encoding encoding = Encoding(nullptr);
+        std::optional<Encoding> encoding = {};
 
         /// @brief Returns default option settings
         static ReplyErrOptions create_default() { return {}; }
@@ -695,18 +696,18 @@ class Publisher : public Owned<::z_owned_publisher_t> {
 public:
     using Owned::Owned;
 
-    /// Options to be passed to ``Publisher::put`` operation
+    /// @brief Options to be passed to ``Publisher::put()`` operation
     struct PutOptions {
         /// @brief The encoding of the data to publish.
-        Encoding encoding = Encoding(nullptr);
+        std::optional<Encoding> encoding =  {};
         /// @brief The attachment to attach to the publication.
-        Bytes attachment = Bytes(nullptr);
+        std::optional<Bytes> attachment = {};
 
         /// @brief Returns default option settings
         static PutOptions create_default() { return {}; }
     };
 
-    /// Options to be passed to delete operation of a publisher
+    /// @brief Options to be passed to ``Publisher::delete_resource()`` operation
     struct DeleteOptions {
         uint8_t __dummy;
 
@@ -859,18 +860,18 @@ public:
         );
     }
 
-    /// Options passed to the get operation
+    /// @brief Options passed to the ``get()`` operation
     struct GetOptions {
         /// @brief The Queryables that should be target of the query.
         QueryTarget target = QueryTarget::Z_QUERY_TARGET_ALL;
         /// @brief The replies consolidation strategy to apply on replies to the query.
         QueryConsolidation consolidation = QueryConsolidation();
         /// @brief An optional payload of the query.
-        Bytes payload = Bytes(nullptr);
+        std::optional<Bytes> payload = {};
         /// @brief  An optional encoding of the query payload and/or attachment.
-        Encoding encoding = Encoding(nullptr);
-        /// An optional attachment to the query.
-        Bytes attachment = Bytes(nullptr);
+        std::optional<Encoding> encoding = {};
+        /// @brief An optional attachment to the query.
+        std::optional<Bytes> attachment = {};
         /// @brief The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
         uint64_t timeout_ms = 0;
 
@@ -950,7 +951,7 @@ public:
         if (res != Z_OK) std::move(recv).take();
         return recv;
     }
-    /// Options to be passed to delete operation
+    /// @brief Options to be passed to ``delete_resource()`` operation
     struct DeleteOptions {
         /// @brief The priority of the delete message.
         Priority priority = Priority::Z_PRIORITY_DATA;
@@ -976,7 +977,7 @@ public:
         return ::z_delete(this->loan(), detail::loan(key_expr), &opts);
     }
 
-    /// Options passed to the put operation
+    /// @brief Options passed to the ``put()`` operation
     struct PutOptions {
         /// @brief The priority of this message.
         Priority priority = Priority::Z_PRIORITY_DATA;
@@ -985,9 +986,9 @@ public:
         /// @brief Whether Zenoh will NOT wait to batch this message with others to reduce the bandwith.
         bool is_express = false;
         /// @brief  An optional encoding of the message payload and/or attachment.
-        Encoding encoding = Encoding(nullptr);
-        /// An optional attachment to the message.
-        Bytes attachment = Bytes(nullptr);
+        std::optional<Encoding> encoding = {};
+        /// @brief An optional attachment to the message.
+        std::optional<Bytes> attachment = {};
 
         /// @brief Returns default option settings
         static PutOptions create_default() { return {}; }
@@ -1013,7 +1014,7 @@ public:
         );
     }
 
-    /// Options to be passed when declaring a ``Queryable``
+    /// @brief Options to be passed when declaring a ``Queryable``
     struct QueryableOptions {
         /// @brief The completeness of the Queryable.
         bool complete = false;
@@ -1055,6 +1056,7 @@ public:
         return q;
     }
 
+    /// @brief Options to be passed when declaring a ``Subscriber``
     struct SubscriberOptions {
         /// @brief The subscription reliability.
         Reliability reliability = Reliability::Z_RELIABILITY_BEST_EFFORT;
@@ -1096,6 +1098,7 @@ public:
         return s;
     }
 
+    /// @brief Options to be passed when declaring a ``Publisher``
     struct PublisherOptions {
         /// @brief The congestion control to apply when routing messages from this publisher.
         CongestionControl congestion_control;
@@ -1104,6 +1107,7 @@ public:
         /// @brief If true, Zenoh will not wait to batch this message with others to reduce the bandwith
         bool is_express;
         /// @brief Returns default option settings
+
         static PublisherOptions create_default() { return {}; }
     };
 
@@ -1262,11 +1266,13 @@ public:
     }
 };
 
+/// @brief Options to be passed to ``scout()`` operation
 struct ScoutOptions {
-    /// The maximum duration in ms the scouting can take.
+    /// @brief The maximum duration in ms the scouting can take.
     size_t timeout_ms = 1000;
-    /// Type of entities to scout for.
+    /// @brief Type of entities to scout for.
     WhatAmI what = WhatAmI::Z_WHATAMI_ROUTER_PEER;
+
     /// @brief Returns default option settings
     static ScoutOptions create_default() { return {}; }
 };
