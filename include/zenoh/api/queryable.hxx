@@ -30,7 +30,6 @@ public:
         :QueryableBase(std::move(queryable)), _handler(std::move(handler)) {
     }
 
-    Handler& handler() { return _handler; }
     const Handler& handler() const { return _handler; };
 };
 

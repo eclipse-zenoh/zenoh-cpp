@@ -172,7 +172,7 @@ public:
             err,
             "Failed to perform get operation"
         );
-        if (res != Z_OK) std::move(cb_handler_pair.second).take();
+        if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
         return std::move(cb_handler_pair.second);
     }
     /// @brief Options to be passed to ``delete_resource()`` operation
@@ -309,12 +309,12 @@ public:
         z_queryable_options_default(&opts);
         opts.complete = options.complete;
 
-        Queryable<void> q(nullptr);
+        QueryableBase q(nullptr);
         ZError res =  ::z_declare_queryable(
             detail::as_owned_c_ptr(q), this->loan(), detail::loan(key_expr), ::z_move(cb_handler_pair.first), &opts
         );
         __ZENOH_ERROR_CHECK(res, err, "Failed to declare Queryable");
-        if (res != Z_OK) std::move(cb_handler_pair.second).take();
+        if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
         return Queryable<typename Channel::template HandlerType<Query>>(std::move(q), std::move(cb_handler_pair.second));
     }
 
@@ -329,13 +329,14 @@ public:
 
     /// @brief Create a ``Subscriber`` object to receive data from matching ``Publisher`` objects or from
     /// ``Session::put`` and ``Session::delete_resource`` requests
+    /// @tparam Channel the type of channel used to create stream of data.
     /// @param key_expr The key expression to match the publishers
     /// @param on_sample The callback that will be called for each received sample
     /// @param on_drop The callback that will be called once subscriber is destroyed or undeclared
     /// @param options Options to pass to subscriber declaration
     /// @return a ``Subscriber`` object
     template<class C, class D>
-    Subscriber declare_subscriber(
+    Subscriber<void> declare_subscriber(
         const KeyExpr& key_expr, C&& on_sample, D&& on_drop, SubscriberOptions&& options = SubscriberOptions::create_default(), ZError *err = nullptr
     ) const {
         static_assert(
@@ -353,12 +354,36 @@ public:
         ::z_subscriber_options_t opts;
         z_subscriber_options_default(&opts);
         opts.reliability = options.reliability;
-        Subscriber s(nullptr);
+        Subscriber<void> s(nullptr);
         ZError res =  ::z_declare_subscriber(
             detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr), ::z_move(c_closure), &opts
         );
         __ZENOH_ERROR_CHECK(res, err, "Failed to declare Subscriber");
         return s;
+    }
+
+    /// @brief Create a ``Subscriber`` object to receive data from matching ``Publisher`` objects or from
+    /// ``Session::put`` and ``Session::delete_resource`` requests
+    /// @tparam Channel the type of channel used to create stream of data.
+    /// @param key_expr The key expression to match the publishers
+    /// @param channel An instance of channel
+    /// @param options Options to pass to subscriber declaration
+    /// @return a ``Subscriber`` object
+    template<class Channel>
+    Subscriber<typename Channel::template HandlerType<Sample>> declare_subscriber(
+        const KeyExpr& key_expr, Channel channel, SubscriberOptions&& options = SubscriberOptions::create_default(), ZError *err = nullptr
+    ) const {
+        auto cb_handler_pair = channel.template into_cb_handler_pair<Sample>();
+        ::z_subscriber_options_t opts;
+        z_subscriber_options_default(&opts);
+        opts.reliability = options.reliability;
+        SubscriberBase s(nullptr);
+        ZError res =  ::z_declare_subscriber(
+            detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr), ::z_move(cb_handler_pair.first), &opts
+        );
+        __ZENOH_ERROR_CHECK(res, err, "Failed to declare Subscriber");
+        if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
+        return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s), std::move(cb_handler_pair.second));
     }
 
     /// @brief Options to be passed when declaring a ``Publisher``

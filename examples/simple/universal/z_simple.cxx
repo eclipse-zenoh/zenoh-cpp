@@ -136,7 +136,7 @@ public:
     }
 
 private:
-    Subscriber _sub;
+    Subscriber<void> _sub;
     void on_receive(const Sample& sample) { 
         CustomStruct s = sample.get_payload().deserialize<CustomStruct>(CustomCodec());
         std::cout << "Received: " << "{" << s.u << ", " << s.d << ", " << s.s  << "}\n"; 

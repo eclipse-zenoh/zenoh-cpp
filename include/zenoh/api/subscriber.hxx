@@ -18,9 +18,8 @@
 #include "keyexpr.hxx"
 
 namespace zenoh {
-/// An Zenoh subscriber. Destroying subscriber cancels the subscription
-/// Constructed by ``Session::declare_subscriber`` method
-class Subscriber : public Owned<::z_owned_subscriber_t> {
+
+class SubscriberBase : public Owned<::z_owned_subscriber_t> {
 public:
     using Owned::Owned;
 
@@ -31,4 +30,25 @@ public:
     }
 #endif
 };
+
+/// An Zenoh subscriber. Destroying subscriber cancels the subscription
+/// Constructed by ``Session::declare_subscriber`` method
+template<class Handler>
+class Subscriber: public SubscriberBase {
+    Handler _handler;
+public:
+    Subscriber(SubscriberBase subscriber, Handler handler)
+        :SubscriberBase(std::move(subscriber)), _handler(std::move(handler)) {
+    }
+
+    const Handler& handler() const { return _handler; };
+};
+
+template<>
+class Subscriber<void> :public SubscriberBase {
+public:
+    using SubscriberBase::SubscriberBase;
+};
+
+
 }
