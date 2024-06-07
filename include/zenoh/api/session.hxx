@@ -267,7 +267,7 @@ public:
     /// @param options Options passed to queryable declaration
     /// @return a ``Queryable`` object
     template<class C, class D>
-    Queryable declare_queryable(
+    Queryable<void> declare_queryable(
         const KeyExpr& key_expr, C&& on_query, D&& on_drop, QueryableOptions&& options = QueryableOptions::create_default(), ZError* err = nullptr
     ) const {
         static_assert(
@@ -286,12 +286,36 @@ public:
         z_queryable_options_default(&opts);
         opts.complete = options.complete;
 
-        Queryable q(nullptr);
+        Queryable<void> q(nullptr);
         ZError res =  ::z_declare_queryable(
             detail::as_owned_c_ptr(q), this->loan(), detail::loan(key_expr), ::z_move(c_closure), &opts
         );
         __ZENOH_ERROR_CHECK(res, err, "Failed to declare Queryable");
         return q;
+    }
+
+    /// @brief Create a ``Queryable`` object to answer to ``Session::get`` requests
+    /// @tparam Channel the type of channel used to create stream of data.
+    /// @param key_expr The key expression to match the ``Session::get`` requests
+    /// @param channel An instance of channel
+    /// @param options Options passed to queryable declaration
+    /// @return a ``Queryable`` object
+    template<class Channel>
+    Queryable<typename Channel::template HandlerType<Query>> declare_queryable(
+        const KeyExpr& key_expr, Channel channel, QueryableOptions&& options = QueryableOptions::create_default(), ZError* err = nullptr
+    ) const {
+        auto cb_handler_pair = channel.template into_cb_handler_pair<Query>();
+        ::z_queryable_options_t opts;
+        z_queryable_options_default(&opts);
+        opts.complete = options.complete;
+
+        Queryable<void> q(nullptr);
+        ZError res =  ::z_declare_queryable(
+            detail::as_owned_c_ptr(q), this->loan(), detail::loan(key_expr), ::z_move(cb_handler_pair.first), &opts
+        );
+        __ZENOH_ERROR_CHECK(res, err, "Failed to declare Queryable");
+        if (res != Z_OK) std::move(cb_handler_pair.second).take();
+        return Queryable<typename Channel::template HandlerType<Query>>(std::move(q), std::move(cb_handler_pair.second));
     }
 
     /// @brief Options to be passed when declaring a ``Subscriber``

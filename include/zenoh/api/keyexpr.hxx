@@ -65,7 +65,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @brief Equality operator
     /// @param other the ``std::string_view`` to compare with
     /// @return true if the key expression is equal to the string
-    bool operator==(std::string_view other) {
+    bool operator==(std::string_view other) const {
         if (!(*this)) return false; 
         return as_string_view() == other; 
     }
@@ -73,19 +73,19 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @brief InEquality operator
     /// @param other the ``std::string_view`` to compare with
     /// @return false if the key expression is equal to the string
-    bool operator!=(std::string_view other) {
+    bool operator!=(std::string_view other) const {
         return !((*this) == other);
     }
 
     /// @brief Equality operator
     /// @param other the ``KeyExpr`` to compare with
     /// @return true if both key expressions are equal
-    bool operator==(const KeyExpr& other) { return ::z_keyexpr_equals(this->loan(), other.loan()); }
+    bool operator==(const KeyExpr& other) const { return ::z_keyexpr_equals(this->loan(), other.loan()); }
 
     /// @brief Inequality operator
     /// @param other the ``KeyExpr`` to compare with
     /// @return false if both key expressions are equal
-    bool operator!=(const KeyExpr& other) { return !(*this == other); }
+    bool operator!=(const KeyExpr& other) const { return !(*this == other); }
 
     /// @brief Checks if a given ``KeyExpr`` includes the other.
     /// @param other the ``KeyExpr`` to compare with
