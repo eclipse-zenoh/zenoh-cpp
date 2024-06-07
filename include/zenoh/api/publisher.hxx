@@ -19,6 +19,7 @@
 #include "bytes.hxx"
 #include "encoding.hxx"
 #include "keyexpr.hxx"
+#include "timestamp.hxx"
 
 #include <optional>
 
@@ -31,6 +32,8 @@ public:
 
     /// @brief Options to be passed to ``Publisher::put()`` operation
     struct PutOptions {
+        /// @brief the timestamp of this message
+        std::optional<Timestamp> timestamp = {};
         /// @brief The encoding of the data to publish.
         std::optional<Encoding> encoding =  {};
         /// @brief The attachment to attach to the publication.
@@ -42,7 +45,8 @@ public:
 
     /// @brief Options to be passed to ``Publisher::delete_resource()`` operation
     struct DeleteOptions {
-        uint8_t __dummy;
+        /// @brief the timestamp of this message
+        std::optional<Timestamp> timestamp = {};
 
         /// @brief Returns default option settings
         static DeleteOptions create_default() { return {}; }
@@ -57,8 +61,10 @@ public:
     ZError put(Bytes&& payload, PutOptions&& options = PutOptions::create_default()) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_publisher_put_options_t opts;
+        z_publisher_put_options_default(&opts);
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
+        opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
 
         return ::z_publisher_put(this->loan(), payload_ptr, &opts);
     }
@@ -68,7 +74,8 @@ public:
     /// @return 0 in case of success, negative error code otherwise
     ZError delete_resource(DeleteOptions&& options = DeleteOptions::create_default()) const {
         ::z_publisher_delete_options_t opts;
-        opts.__dummy = options.__dummy;
+        z_publisher_delete_options_default(&opts);
+        opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
         return ::z_publisher_delete(this->loan(), &opts);
     }
 

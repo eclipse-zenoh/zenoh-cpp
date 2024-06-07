@@ -24,13 +24,14 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <unordered_map>
 
 namespace zenoh {
 
 namespace detail::closures {
 extern "C" {
-    inline void _zenoh_encode_iter(z_owned_bytes_t* b, void* context) {
-        IClosure<void, z_owned_bytes_t*>::call_from_context(context, b);
+    inline bool _zenoh_encode_iter(z_owned_bytes_t* b, void* context) {
+        return IClosure<bool, z_owned_bytes_t*>::call_from_context(context, b);
     }
 }
 
@@ -96,14 +97,15 @@ public:
         auto f = [current = begin, end, &codec] (z_owned_bytes_t* b) mutable {
             if (current == end) {
                 ::z_null(b);
-                return;
+                return false;
             }
             *b = Bytes::serialize(*current, codec).take();
             current++;
+            return true;
         };
         using F = decltype(f);
 
-        using ClosureType = typename detail::closures::Closure<F, closures::None, void, z_owned_bytes_t*>;
+        using ClosureType = typename detail::closures::Closure<F, closures::None, bool, z_owned_bytes_t*>;
         auto closure = ClosureType::into_context(std::forward<F>(f), closures::none);
         
         ::z_bytes_encode_from_iter(detail::as_owned_c_ptr(out), detail::closures::_zenoh_encode_iter, closure);

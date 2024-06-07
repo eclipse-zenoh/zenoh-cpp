@@ -24,7 +24,8 @@ namespace zenoh {
     /// @brief A representation a Zenoh ID.
 ///
 /// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
-struct Id : public Copyable<::z_id_t> {
+class Id : public Copyable<::z_id_t> {
+public:
     using Copyable::Copyable;
 
     /// @name Methods

@@ -17,6 +17,26 @@
 
 namespace zenoh::detail {
 
+template<class CopyableType>
+CopyableType* as_copyable_c_ptr(Copyable<CopyableType>& c) {
+    return reinterpret_cast<CopyableType*>(&c);
+}
+
+template<class CopyableType>
+const CopyableType* as_copyable_c_ptr(const Copyable<CopyableType>& c) {
+    return reinterpret_cast<const CopyableType*>(&c);
+}
+
+template<class CopyableCppObj>
+auto* as_copyable_c_ptr(std::optional<CopyableCppObj>& c) {
+    return c.has_value() ? as_copyable_c_ptr(c.value()) : nullptr;
+}
+
+template<class CopyableCppObj>
+const auto* as_copyable_c_ptr(const std::optional<CopyableCppObj>& c) {
+    return c.has_value() ? as_copyable_c_ptr(c.value()) : nullptr;
+}
+
 template<class OwnedType>
 OwnedType* as_owned_c_ptr(Owned<OwnedType>& o) {
     return reinterpret_cast<OwnedType*>(&o);

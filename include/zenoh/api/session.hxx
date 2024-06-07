@@ -130,6 +130,7 @@ public:
         auto closure = ClosureType::into_context(std::forward<C>(on_reply), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_reply_call, detail::closures::_zenoh_on_drop, closure);
         ::z_get_options_t opts;
+        z_get_options_default(&opts);
         opts.target = options.target;
         opts.consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation);
         opts.payload = detail::as_owned_c_ptr(options.payload);
@@ -157,6 +158,7 @@ public:
     ) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Reply>();
         ::z_get_options_t opts;
+        z_get_options_default(&opts);
         opts.target = options.target;
         opts.consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation);
         opts.payload = detail::as_owned_c_ptr(options.payload);
@@ -181,6 +183,8 @@ public:
         CongestionControl congestion_control = CongestionControl::Z_CONGESTION_CONTROL_DROP;
         /// @brief Whether Zenoh will NOT wait to batch delete message with others to reduce the bandwith.
         bool is_express = false;
+        /// @brief the timestamp of this message
+        std::optional<Timestamp> timestamp = {};
 
         /// @brief Returns default option settings
         static DeleteOptions create_default() { return {}; }
@@ -192,6 +196,7 @@ public:
     /// @return 0 in case of success, negative error code otherwise
     ZError delete_resource(const KeyExpr& key_expr, DeleteOptions&& options = DeleteOptions::create_default()) const {
         ::z_delete_options_t opts;
+        z_delete_options_default(&opts);
         opts.congestion_control = options.congestion_control;
         opts.priority = options.priority;
         opts.is_express = options.is_express;
@@ -207,6 +212,12 @@ public:
         CongestionControl congestion_control = CongestionControl::Z_CONGESTION_CONTROL_DROP;
         /// @brief Whether Zenoh will NOT wait to batch this message with others to reduce the bandwith.
         bool is_express = false;
+        #ifdef ZENOHCXX_ZENOHC
+        /// @brief Allowed destination
+        Locality allowed_destination = ::zcu_locality_default();
+        #endif
+        /// @brief the timestamp of this message
+        std::optional<Timestamp> timestamp = {};
         /// @brief  An optional encoding of the message payload and/or attachment.
         std::optional<Encoding> encoding = {};
         /// @brief An optional attachment to the message.
@@ -222,12 +233,16 @@ public:
     /// @param options Options to pass to put operation
     void put(const KeyExpr& key_expr, Bytes&& payload, PutOptions&& options = PutOptions::create_default(), ZError* err = nullptr) const {
         ::z_put_options_t opts;
+        z_put_options_default(&opts);
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
         opts.congestion_control = options.congestion_control;
         opts.priority = options.priority;
         opts.is_express = options.is_express;
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
-
+        opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
+        #ifdef ZENOHCXX_ZENOHC
+        opts.allowed_destination = options.allowed_destination;
+        #endif
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         __ZENOH_ERROR_CHECK(
             ::z_put(this->loan(), detail::loan(key_expr), payload_ptr, &opts),
@@ -268,6 +283,7 @@ public:
         auto closure = ClosureType::into_context(std::forward<C>(on_query), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_query_call, detail::closures::_zenoh_on_drop, closure);
         ::z_queryable_options_t opts;
+        z_queryable_options_default(&opts);
         opts.complete = options.complete;
 
         Queryable q(nullptr);
@@ -311,6 +327,7 @@ public:
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
         ::z_subscriber_options_t opts;
+        z_subscriber_options_default(&opts);
         opts.reliability = options.reliability;
         Subscriber s(nullptr);
         ZError res =  ::z_declare_subscriber(
@@ -328,8 +345,11 @@ public:
         Priority priority;
         /// @brief If true, Zenoh will not wait to batch this message with others to reduce the bandwith
         bool is_express;
+        #ifdef ZENOHCXX_ZENOHC
+        /// @brief Allowed destination
+        Locality allowed_destination = ::zcu_locality_default();
+        #endif
         /// @brief Returns default option settings
-
         static PublisherOptions create_default() { return {}; }
     };
 
@@ -341,9 +361,13 @@ public:
         const KeyExpr& key_expr, PublisherOptions&& options = PublisherOptions::create_default(), ZError* err = nullptr
     ) const {
         ::z_publisher_options_t opts;
+        z_publisher_options_default(&opts);
         opts.congestion_control = options.congestion_control;
         opts.priority = options.priority;
         opts.is_express = options.is_express;
+        #ifdef ZENOHCXX_ZENOHC
+        opts.allowed_destination = options.allowed_destination;
+        #endif
 
         Publisher p(nullptr);
         ZError res =  ::z_declare_publisher(

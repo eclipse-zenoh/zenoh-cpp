@@ -14,14 +14,23 @@
 #pragma once
 #include "base.hxx"
 #include "../zenohc.hxx"
+#include "../detail/interop.hxx"
 #include "id.hxx"
 
 namespace zenoh {
 /// Zenoh <a href=https://zenoh.io/docs/manual/abstractions/#timestamp>Timestamp</a>.
-struct Timestamp : Copyable<::z_timestamp_t> {
+class Timestamp :public Copyable<::z_timestamp_t> {
+public:
     using Copyable::Copyable;
     // TODO: add utility methods to interpret time as mils, seconds, minutes, etc
 
+    /// @name Constructors
+    /// @brief Create Timestamp from Id and npt64 time
+    Timestamp(const Id& id, uint64_t npt64_time)
+        :Copyable({}) {
+        z_timestamp_new(&this->inner(), detail::as_copyable_c_ptr(id), npt64_time);
+    }
+    
     /// @name Methods
 
     /// @brief Get the NPT64 time part of timestamp
@@ -31,6 +40,7 @@ struct Timestamp : Copyable<::z_timestamp_t> {
     /// @brief Get the unique id of the timestamp
     /// @return unique id
     Id get_id() const { return ::z_timestamp_id(&this->inner()); }
+private:
 };
 
 }

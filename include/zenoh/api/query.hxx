@@ -73,6 +73,7 @@ public:
     void reply(const KeyExpr& key_expr, Bytes&& payload, ReplyOptions&& options = ReplyOptions::create_default(), ZError* err = nullptr) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_query_reply_options_t opts;
+        z_query_reply_options_default(&opts);
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
 
@@ -96,6 +97,7 @@ public:
     void reply_err(Bytes&& payload, ReplyErrOptions&& options = ReplyErrOptions::create_default(), ZError* err = nullptr) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_query_reply_err_options_t opts;
+        z_query_reply_err_options_default(&opts);
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
 
         __ZENOH_ERROR_CHECK(
