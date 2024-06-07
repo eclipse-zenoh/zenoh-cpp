@@ -32,39 +32,6 @@
 
 
 namespace zenoh {
-enum class FifoChannelType {
-    Blocking,
-    NonBlocking
-};
-
-
-template<FifoChannelType C>
-class ReplyFifoChannel: public Owned<::z_owned_reply_channel_closure_t> {
-private:
-    bool active = true;
-public:
-    using Owned::Owned;
-    /// @brief Fetches next available reply.
-    /// @return Reply. Might return invalid reply in case of Non-blocking channel if there are no replies available.
-    /// In this case is is possible to verify whether the channel is still active (and might receive more replies in the future)
-    /// by calling  ``ReplyFifoChannel::is_active()``.
-    Reply get_next_reply() {
-        Reply r(nullptr);
-        bool res = ::z_call(this->loan(), detail::as_owned_c_ptr(r));
-        if constexpr (C == FifoChannelType::NonBlocking) {
-            active = static_cast<bool>(r) || !res;
-        } else {
-            active = static_cast<bool>(r);
-        }
-        return r;
-    }
-
-    /// @brief Verifies if channel is still active.
-    /// @return True if channel is still active (i. e. might receive more valid replies in the future). Inactive channel will
-    /// always return an invalid ``Reply`` when calling  ``ReplyFifoChannel::next_reply()`.
-    bool is_active() const { return active; }
-};
-
 /// A Zenoh session.
 class Session : public Owned<::z_owned_session_t> {
 public:
@@ -178,22 +145,17 @@ public:
     }
 
     /// @brief Query data from the matching queryables in the system. Replies are provided through a channel.
-    /// @param key_expr ``KeyExpr`` the key expression matching resources to query
+    /// @tparam Channel the type of channel used to create stream of data.
+    /// @param key_expr the key expression matching resources to query
     /// @param parameters the parameters string in URL format
-    /// @param bound Capacity of the channel, if different from 0, the channel will be bound and apply back-pressure when full
-    /// @param options ``GetOptions`` query options
-    /// @return Reply fifo channel
-    template<FifoChannelType C>
-    ReplyFifoChannel<C> get_reply_fifo_channel(
-        const KeyExpr& key_expr, const std::string& parameters, size_t bound, GetOptions&& options = GetOptions::create_default(), ZError* err = nullptr
+    /// @param channel Channel instance
+    /// @param options query options
+    /// @return Reply handler
+    template<class Channel>
+    typename Channel::template HandlerType<Reply> get(
+        const KeyExpr& key_expr, const std::string& parameters, Channel channel, GetOptions&& options = GetOptions::create_default(), ZError* err = nullptr
     ) const {
-        ::z_owned_reply_channel_t reply_channel;
-        if constexpr (C == FifoChannelType::Blocking) {
-            ::zc_reply_fifo_new(&reply_channel, bound);
-        } else {
-            ::zc_reply_non_blocking_fifo_new(&reply_channel, bound);
-        }
-        ReplyFifoChannel<C> recv(&reply_channel.recv);
+        auto cb_handler_pair = channel.template into_cb_handler_pair<Reply>();
         ::z_get_options_t opts;
         opts.target = options.target;
         opts.consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation);
@@ -202,14 +164,14 @@ public:
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
         opts.timeout_ms = options.timeout_ms;
 
-        ZError res = ::z_get(this->loan(), detail::loan(key_expr), parameters.c_str(), ::z_move(reply_channel.send), &opts);
+        ZError res = ::z_get(this->loan(), detail::loan(key_expr), parameters.c_str(), ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_ERROR_CHECK(
             res,
             err,
             "Failed to perform get operation"
         );
-        if (res != Z_OK) std::move(recv).take();
-        return recv;
+        if (res != Z_OK) std::move(cb_handler_pair.second).take();
+        return std::move(cb_handler_pair.second);
     }
     /// @brief Options to be passed to ``delete_resource()`` operation
     struct DeleteOptions {
