@@ -31,16 +31,21 @@ public:
 #endif
 };
 
-/// An Zenoh subscriber. Destroying subscriber cancels the subscription
+/// A Zenoh subscriber. Destroying subscriber cancels the subscription
 /// Constructed by ``Session::declare_subscriber`` method
 template<class Handler>
 class Subscriber: public SubscriberBase {
     Handler _handler;
 public:
+    /// @name Constructors
+
+    /// @brief Construct from subscriber and handler
     Subscriber(SubscriberBase subscriber, Handler handler)
         :SubscriberBase(std::move(subscriber)), _handler(std::move(handler)) {
     }
 
+    /// @name Methods
+    /// @brief Returns handler to subscriber data stream
     const Handler& handler() const { return _handler; };
 };
 

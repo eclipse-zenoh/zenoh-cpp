@@ -26,10 +26,15 @@ template <class Handler>
 class Queryable: public QueryableBase {
     Handler _handler;
 public:
+    /// @name Constructors
+
+    /// @brief Constructs from queryable and handler
     Queryable(QueryableBase queryable, Handler handler)
         :QueryableBase(std::move(queryable)), _handler(std::move(handler)) {
     }
 
+    /// @name Methods
+    /// @brief Returns handler to queryable data stream
     const Handler& handler() const { return _handler; };
 };
 
