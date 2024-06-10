@@ -21,7 +21,7 @@ public:
     using Owned::Owned;
 };
 
-/// An Zenoh queryable. Constructed by ``Session::declare_queryable`` method
+/// A Zenoh queryable. Constructed by ``Session::declare_queryable`` method
 template <class Handler>
 class Queryable: public QueryableBase {
     Handler _handler;
