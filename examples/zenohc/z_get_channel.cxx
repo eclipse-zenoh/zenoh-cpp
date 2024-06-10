@@ -40,11 +40,11 @@ int _main(int argc, char **argv) {
     auto session = Session::open(std::move(config));
 
     std::cout << "Sending Query '" << expr << "'...\n";
-    auto replies = session.get_reply_fifo_channel<FifoChannelType::Blocking>(
-        keyexpr, "", 16, {.target = QueryTarget::Z_QUERY_TARGET_ALL}
+    auto replies = session.get(
+        keyexpr, "", channels::FifoChannel(16), {.target = QueryTarget::Z_QUERY_TARGET_ALL}
     );
 
-    for (auto reply = replies.get_next_reply(); replies.is_active() && reply; reply = replies.get_next_reply()) {
+    for (auto reply = replies.recv().first; static_cast<bool>(reply); reply = replies.recv().first) {
         const auto& sample = reply.get_ok();
         std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
                   << sample.get_payload().deserialize<std::string>() << "')\n";

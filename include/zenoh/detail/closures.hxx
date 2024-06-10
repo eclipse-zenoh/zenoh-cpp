@@ -17,9 +17,6 @@
 
 #pragma once
 
-#include "base.hxx"
-#include <iostream>
-
 namespace zenoh::detail::closures {
 
 struct IDroppable {
@@ -69,18 +66,4 @@ public:
     }
 };
 
-
-
-/// Ensure that function pointers are defined with extern C linkage
-extern "C" {
-    inline void _zenoh_on_drop(void* context) {
-        IDroppable::delete_from_context(context);
-    }
-}
-
-}
-
-namespace zenoh::closures {
-    inline void none() {};
-    using None = decltype(&none);
 }

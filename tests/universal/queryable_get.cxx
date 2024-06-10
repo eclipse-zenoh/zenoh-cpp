@@ -106,37 +106,44 @@ void queryable_get_channel() {
     size_t queries_processed = 0;
     auto queryable = session1.declare_queryable(
         ke,
-        [&queries](const Query& q) {
-            auto val = q.get_value().get_payload().deserialize<int32_t>();
-            queries.push_back(QueryData{.key = std::string(q.get_keyexpr().as_string_view()), .params = std::string(q.get_parameters()), .payload = val});
-            if (q.get_parameters() == "ok") {
-                q.reply(q.get_keyexpr(), Bytes::serialize(std::to_string(val)));
-            } else {
-                q.reply_err(Bytes::serialize("err"));
-            }
-        },
-        closures::none
+        channels::FifoChannel(3)
     );
     std::this_thread::sleep_for(1s);
 
-    auto replies = session2.get_reply_fifo_channel<FifoChannelType::Blocking>(selector, "ok", 3, {.payload = Bytes::serialize<int32_t>(1) });
-    assert(replies.is_active());
-    auto reply = replies.get_next_reply();
+    auto replies = session2.get(selector, "ok", channels::FifoChannel(3), {.payload = Bytes::serialize<int32_t>(1) });
+    {
+        auto query = queryable.handler().recv().first;
+        assert(static_cast<bool>(query));
+        assert(query.get_keyexpr() == selector);
+        assert(query.get_parameters() == "ok");
+        assert(query.get_value().get_payload().deserialize<int32_t>() == 1);
+        query.reply(query.get_keyexpr(), Bytes::serialize(std::to_string(1)));
+    }
+
+    auto reply = replies.recv().first;
     assert(static_cast<bool>(reply));
     assert(reply.is_ok());
     assert(reply.get_ok().get_payload().deserialize<std::string>() == "1");
     assert(reply.get_ok().get_keyexpr().as_string_view() == "zenoh/test/1");
-    assert(!replies.get_next_reply());
-    assert(!replies.is_active());
 
-    replies = session2.get_reply_fifo_channel<FifoChannelType::Blocking>(selector, "err", 3, {.payload = Bytes::serialize<int32_t>(3) });
-    assert(replies.is_active());
+    reply = replies.recv().first;
+    assert(!replies.recv().first);
+    
+    replies = session2.get(selector, "err", channels::FifoChannel(3), {.payload = Bytes::serialize<int32_t>(3) });
+    {
+        auto query = queryable.handler().recv().first;
+        assert(static_cast<bool>(query));
+        assert(query.get_keyexpr() == selector);
+        assert(query.get_parameters() == "err");
+        assert(query.get_value().get_payload().deserialize<int32_t>() == 3);
+        query.reply_err(Bytes::serialize("err"));
+    }
+
+    reply = replies.recv().first;
     assert(static_cast<bool>(reply));
-    reply = replies.get_next_reply();
     assert(!reply.is_ok());
     assert(reply.get_err().get_payload().deserialize<std::string>() == "err");
-    assert(!replies.get_next_reply());
-    assert(!replies.is_active());
+    assert(!replies.recv().first);
 }
 
 

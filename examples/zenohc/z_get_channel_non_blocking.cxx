@@ -45,11 +45,11 @@ int _main(int argc, char **argv) {
 
     std::cout << "Sending Query '" << expr << "'...\n";
 
-    auto replies = session.get_reply_fifo_channel<FifoChannelType::NonBlocking>(
-        keyexpr, "", 16, {.target = QueryTarget::Z_QUERY_TARGET_ALL}
+    auto replies = session.get(
+        keyexpr, "", channels::FifoChannel(16), {.target = QueryTarget::Z_QUERY_TARGET_ALL}
     );
 
-    for (auto reply = replies.get_next_reply(); replies.is_active(); reply = replies.get_next_reply()) {
+    for (auto [reply, alive] = replies.try_recv(); alive; std::tie(reply, alive) = replies.try_recv()) {
         if (!reply) {
             std::cout << ".";
             std::this_thread::sleep_for(1s);
