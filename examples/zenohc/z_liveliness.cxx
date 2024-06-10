@@ -13,23 +13,31 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <thread>
-
-#include <condition_variable>
+#include <string>
 #include <iostream>
-
+#include <chrono>
+#include <thread>
 
 #include "zenoh.hxx"
 #include "../getargs.h"
+
 using namespace zenoh;
 using namespace std::chrono_literals;
 
+#ifdef ZENOHCXX_ZENOHC
+const char *default_keyexpr = "group1/zenoh-cpp-c";
+#elif ZENOHCXX_ZENOHPICO
+const char *default_keyexpr = "group1/zenoh-cpp-pico";
+#else
+#error "Unknown zenoh backend"
+#endif
 
 int _main(int argc, char **argv) {
-    const char *expr = "demo/example/**";
+    const char *keyexpr = default_keyexpr;
     const char *locator = nullptr;
     const char *config_file = nullptr;
-    getargs(argc, argv, {}, {{"key expression", &expr}, {"locator", &locator}}
+
+    getargs(argc, argv, {}, {{"key expression", &keyexpr}, {"locator", &locator}}
 #ifdef ZENOHCXX_ZENOHC
             ,
             {{"-c", {"config file", &config_file}}}
@@ -58,27 +66,17 @@ int _main(int argc, char **argv) {
             exit(-1);
         }
     }
-    KeyExpr keyexpr(expr);
+
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
-    
-    std::cout << "Sending Query '" << expr << "'...\n";
 
-    auto replies = session.get(
-        keyexpr, "", channels::FifoChannel(16), {.target = QueryTarget::Z_QUERY_TARGET_ALL}
-    );
+    std::cout << "Declaring liveliness token on '" << keyexpr << "'...\n";
+    auto token = session.liveliness_declare_token(KeyExpr(keyexpr));
 
-    for (auto [reply, alive] = replies.try_recv(); alive; std::tie(reply, alive) = replies.try_recv()) {
-        if (!reply) {
-            std::cout << ".";
-            std::this_thread::sleep_for(1s);
-            continue;
-        }
-        const auto& sample = reply.get_ok();
-        std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
-                  << sample.get_payload().deserialize<std::string>() << "')\n";
+    std::cout << "Press CTRL-C to undeclare liveliness token and quit..." << std::endl;
+    while (true) {
+        std::this_thread::sleep_for(1s);
     }
-    std::cout << std::endl;
 
     return 0;
 }

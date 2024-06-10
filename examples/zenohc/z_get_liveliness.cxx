@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2022 ZettaScale Technology
+// Copyright (c) 2024 ZettaScale Technology
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -13,20 +13,15 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <thread>
-
-#include <condition_variable>
+#include <string>
 #include <iostream>
 
-
-#include "zenoh.hxx"
 #include "../getargs.h"
+#include "zenoh.hxx"
 using namespace zenoh;
-using namespace std::chrono_literals;
-
 
 int _main(int argc, char **argv) {
-    const char *expr = "demo/example/**";
+    const char *expr = "group1/**";
     const char *locator = nullptr;
     const char *config_file = nullptr;
     getargs(argc, argv, {}, {{"key expression", &expr}, {"locator", &locator}}
@@ -58,27 +53,23 @@ int _main(int argc, char **argv) {
             exit(-1);
         }
     }
+
     KeyExpr keyexpr(expr);
+
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
-    
-    std::cout << "Sending Query '" << expr << "'...\n";
 
-    auto replies = session.get(
-        keyexpr, "", channels::FifoChannel(16), {.target = QueryTarget::Z_QUERY_TARGET_ALL}
-    );
+    std::cout << "Sending Liveliness Query '" << expr << "'...\n";
+    auto replies = session.liveliness_get(keyexpr, channels::FifoChannel(16));
 
-    for (auto [reply, alive] = replies.try_recv(); alive; std::tie(reply, alive) = replies.try_recv()) {
-        if (!reply) {
-            std::cout << ".";
-            std::this_thread::sleep_for(1s);
-            continue;
+    for (auto reply = replies.recv().first; static_cast<bool>(reply); reply = replies.recv().first) {
+        if (reply.is_ok()) {
+            const auto& sample = reply.get_ok();
+            std::cout << "Alive token ('" << sample.get_keyexpr().as_string_view() << "')\n";
+        } else {
+            std::cout << "Received an error\n";
         }
-        const auto& sample = reply.get_ok();
-        std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
-                  << sample.get_payload().deserialize<std::string>() << "')\n";
     }
-    std::cout << std::endl;
 
     return 0;
 }
