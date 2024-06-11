@@ -11,10 +11,6 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-//
-// This file contains structures and classes API without implementations
-//
-
 #pragma once
 
 #include "../zenohc.hxx"
@@ -26,7 +22,7 @@
 #include "../api/id.hxx"
 #include "../api/hello.hxx"
 
-/// Ensure that function pointers are defined with extern C linkage
+// Ensure that function pointers are defined with extern C linkage
 namespace zenoh::detail::closures {
 extern "C" {
     inline void _zenoh_on_drop(void* context) {
