@@ -60,9 +60,8 @@ int _main(int argc, char **argv) {
     auto on_query = [](const Query &query) {
         const KeyExpr& keyexpr = query.get_keyexpr();
         auto params = query.get_parameters();
-        const Value& query_value = query.get_value();
         std::cout << ">> [Queryable ] Received Query '" << keyexpr.as_string_view() << "?" << params
-                  << "' value = '" << query_value.get_payload().deserialize<std::string>() << "'\n";
+                  << "' value = '" << query.get_payload().deserialize<std::string>() << "'\n";
 
         std::unordered_map<std::string, std::string> attachment_map;
         if (query.has_attachment()) {

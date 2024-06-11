@@ -31,7 +31,6 @@
 #include "api/session.hxx"
 #include "api/subscriber.hxx"
 #include "api/timestamp.hxx"
-#include "api/value.hxx"
 #include "api/channels.hxx"
 
 

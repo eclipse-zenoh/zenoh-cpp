@@ -19,7 +19,7 @@
 #include "enums.hxx"
 #include "keyexpr.hxx"
 #include "bytes.hxx"
-#include "value.hxx"
+#include "encoding.hxx"
 
 #include <string_view>
 #include <optional>
@@ -46,9 +46,13 @@ public:
         return std::string_view(::z_string_data(::z_loan(p)), ::z_string_len(::z_loan(p))); 
     }
 
-    /// @brief Get the value of the query (payload and encoding)
-    /// @return ``Value`` value
-    decltype(auto) get_value() const { return detail::as_owned_cpp_obj<Value>(::z_query_value(this->loan())); }
+    /// @brief Get the payload of the query
+    /// @return ``Bytes`` value
+    decltype(auto) get_payload() const { return detail::as_owned_cpp_obj<Bytes>(::z_query_payload(this->loan())); }
+
+    /// @brief Get the encoding of the query
+    /// @return ``Encoding`` value
+    decltype(auto) get_encoding() const { return detail::as_owned_cpp_obj<Encoding>(::z_query_encoding(this->loan())); }
 
     /// @brief Checks if query contains an attachment
     /// @return ``True`` if query contains an attachment
