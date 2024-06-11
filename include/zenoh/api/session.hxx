@@ -27,6 +27,8 @@
 #include "query_consolidation.hxx"
 #include "closures.hxx"
 
+#include "liveliness.hxx"
+
 #include <optional>
 
 
@@ -559,5 +561,177 @@ public:
     static Session open(Config&& config, ZError* err = nullptr) {
         return Session(std::move(config), err);
     }
+
+
+#ifdef ZENOHCXX_ZENOHC
+    /// @brief Options to pass to ``Session::liveliness_declare_token()``
+    struct LivelinessDeclarationOptions {
+    protected:
+        uint8_t _dummy = 0;
+    public:
+        static LivelinessDeclarationOptions create_default() { return {}; }
+    };
+
+    /// Declares a liveliness token on the network.
+    ///
+    /// Liveliness token subscribers on an intersecting key expression will receive a PUT sample when connectivity
+    /// is achieved, and a DELETE sample if it's lost.
+    ///
+    /// @param key_expr: A keyexpr to declare a liveliess token for.
+    /// @param options: Liveliness token declaration properties.
+    LivelinessToken liveliness_declare_token(
+        const KeyExpr& key_expr, 
+        LivelinessDeclarationOptions&& options = LivelinessDeclarationOptions::create_default(),
+        ZError* err = nullptr
+    ) {
+        LivelinessToken t(nullptr);
+        ::zc_liveliness_declaration_options_t opts;
+        zc_liveliness_declaration_options_default(&opts);
+        (void)options;
+        __ZENOH_ERROR_CHECK(
+            ::zc_liveliness_declare_token(detail::as_owned_c_ptr(t), this->loan(), detail::loan(key_expr), &opts),
+            err,
+            "Failed to perform liveliness_declare_token operation"
+        );
+        return t;
+    }
+
+    /// @brief Options to pass to ``Session::liveliness_declare_subscriber()``
+    struct LivelinessSubscriberOptions {
+    protected:
+        uint8_t _dummy = 0;
+    public:
+        static LivelinessSubscriberOptions create_default() { return {}; }
+    };
+
+
+    /// @brief Declares a subscriber on liveliness tokens that intersect `key_expr`
+    /// @tparam Channel the type of channel used to create stream of data.
+    /// @param key_expr  The key expression to subscribe to.
+    /// @param on_sample The callback function that will be called each time a liveliness token status is changed.
+    /// @param on_drop The callback that will be called once subscriber is destroyed or undeclared.
+    /// @param options Options to pass to subscriber declaration.
+    /// @return a ``Subscriber`` object
+    template<class C, class D>
+    Subscriber<void> liveliness_declare_subscriber(
+        const KeyExpr& key_expr, C&& on_sample, D&& on_drop, LivelinessSubscriberOptions&& options = LivelinessSubscriberOptions::create_default(), ZError *err = nullptr
+    ) const {
+        static_assert(
+            std::is_invocable_r<void, C, const Sample&>::value,
+            "on_sample should be callable with the following signature: void on_sample(const zenoh::Sample& sample)"
+        );
+        static_assert(
+            std::is_invocable_r<void, D>::value,
+            "on_drop should be callable with the following signature: void on_drop()"
+        );
+        ::z_owned_closure_sample_t c_closure;
+        using ClosureType = typename detail::closures::Closure<C, D, void, const Sample&>;
+        auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
+        ::zc_liveliness_subscriber_options_t opts;
+        zc_liveliness_subscriber_options_default(&opts);
+        (void)options;
+        Subscriber<void> s(nullptr);
+        ZError res =  ::zc_liveliness_declare_subscriber(
+            detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr), ::z_move(c_closure), &opts
+        );
+        __ZENOH_ERROR_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
+        return s;
+    }
+
+    /// @brief Declare a subscriber on liveliness tokens that intersect `key_expr`
+    /// @tparam Channel the type of channel used to create stream of data
+    /// @param key_expr The key expression to subscribe to
+    /// @param channel An instance of channel
+    /// @param options Options to pass to subscriber declaration
+    /// @return a ``Subscriber`` object
+    template<class Channel>
+    Subscriber<typename Channel::template HandlerType<Sample>> liveliness_declare_subscriber(
+        const KeyExpr& key_expr, Channel channel, LivelinessSubscriberOptions&& options = LivelinessSubscriberOptions::create_default(), ZError *err = nullptr
+    ) const {
+        auto cb_handler_pair = channel.template into_cb_handler_pair<Sample>();
+        ::zc_liveliness_subscriber_options_t opts;
+        zc_liveliness_subscriber_options_default(&opts);
+        (void)options;
+        SubscriberBase s(nullptr);
+        ZError res =  ::zc_liveliness_declare_subscriber(
+            detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr), ::z_move(cb_handler_pair.first), &opts
+        );
+        __ZENOH_ERROR_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
+        if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
+        return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s), std::move(cb_handler_pair.second));
+    }
+
+
+    /// @brief Options to pass to ``Session::liveliness_get()``
+    struct LivelinessGetOptions {
+        /// @brief The timeout for the query in milliseconds.
+        uint32_t timeout_ms = 10000;
+
+        /// @brief Returns default option settings
+        static LivelinessGetOptions create_default() { return {}; }
+    };
+    
+
+    /// @brief Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
+    ///
+    /// @param session: The Zenoh session.
+    /// @param key_expr: The key expression to query liveliness tokens for.
+    /// @param callback: The callback function that will be called for each received reply.
+    /// @param options: Additional options for the liveliness get operation.
+    template<class C, class D>
+    void liveliness_get(
+        const KeyExpr& key_expr, C&& on_reply, D&& on_drop, 
+        LivelinessGetOptions&& options = LivelinessGetOptions::create_default(), ZError* err = nullptr
+    ) const {
+        static_assert(
+            std::is_invocable_r<void, C, const Reply&>::value,
+            "on_reply should be callable with the following signature: void on_reply(const zenoh::Reply& reply)"
+        );
+        static_assert(
+            std::is_invocable_r<void, D>::value,
+            "on_drop should be callable with the following signature: void on_drop()"
+        );
+        ::z_owned_closure_reply_t c_closure;
+        using ClosureType = typename detail::closures::Closure<C, D, void, const Reply&>;
+        auto closure = ClosureType::into_context(std::forward<C>(on_reply), std::forward<D>(on_drop));
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_reply_call, detail::closures::_zenoh_on_drop, closure);
+        ::zc_liveliness_get_options_t opts;
+        zc_liveliness_get_options_default(&opts);
+        opts.timeout_ms = options.timeout_ms;
+
+        __ZENOH_ERROR_CHECK(
+            ::zc_liveliness_get(this->loan(), detail::loan(key_expr), ::z_move(c_closure), &opts),
+            err,
+            "Failed to perform liveliness_get operation"
+        );
+    }
+
+    /// @brief Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
+    /// @tparam Channel the type of channel used to create stream of data.
+    /// @param key_expr The key expression to query liveliness tokens for.
+    /// @param channel Channel instance
+    /// @param options  Additional options for the liveliness get operation.
+    /// @return Reply handler
+    template<class Channel>
+    typename Channel::template HandlerType<Reply> liveliness_get(
+        const KeyExpr& key_expr, Channel channel, LivelinessGetOptions&& options = LivelinessGetOptions::create_default(), ZError* err = nullptr
+    ) const {
+        auto cb_handler_pair = channel.template into_cb_handler_pair<Reply>();
+        ::zc_liveliness_get_options_t opts;
+        zc_liveliness_get_options_default(&opts);
+        opts.timeout_ms = options.timeout_ms;
+
+        ZError res = ::zc_liveliness_get(this->loan(), detail::loan(key_expr), ::z_move(cb_handler_pair.first), &opts);
+        __ZENOH_ERROR_CHECK(
+            res,
+            err,
+            "Failed to perform liveliness_get operation"
+        );
+        if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
+        return std::move(cb_handler_pair.second);
+    }
+
+#endif
 };
 }

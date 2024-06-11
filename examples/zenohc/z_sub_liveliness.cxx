@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2022 ZettaScale Technology
+// Copyright (c) 2024 ZettaScale Technology
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -10,25 +10,32 @@
 //
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
+//
 
 #include <stdio.h>
-#include <string.h>
-#include <thread>
-
-#include <condition_variable>
 #include <iostream>
-
+#include <thread>
+#include <chrono>
 
 #include "zenoh.hxx"
 #include "../getargs.h"
+
 using namespace zenoh;
 using namespace std::chrono_literals;
 
+void data_handler(const Sample &sample) {
+    if (sample.get_kind() == Z_SAMPLE_KIND_PUT) {
+        std::cout << ">> [LivelinessSubscriber] New alive token ('" << sample.get_keyexpr().as_string_view() << "')\n";
+    } else if (sample.get_kind() == Z_SAMPLE_KIND_DELETE) {
+        std::cout << ">> [LivelinessSubscriber] Dropped token ('" << sample.get_keyexpr().as_string_view() << "')\n";
+    }
+}
 
 int _main(int argc, char **argv) {
-    const char *expr = "demo/example/**";
+    const char *expr = "group1/**";
     const char *locator = nullptr;
     const char *config_file = nullptr;
+
     getargs(argc, argv, {}, {{"key expression", &expr}, {"locator", &locator}}
 #ifdef ZENOHCXX_ZENOHC
             ,
@@ -58,30 +65,24 @@ int _main(int argc, char **argv) {
             exit(-1);
         }
     }
+
     KeyExpr keyexpr(expr);
-    std::cout << "Opening session...\n";
+
+    std::cout << "Opening session..." << std::endl;
     auto session = Session::open(std::move(config));
-    
-    std::cout << "Sending Query '" << expr << "'...\n";
 
-    auto replies = session.get(
-        keyexpr, "", channels::FifoChannel(16), {.target = QueryTarget::Z_QUERY_TARGET_ALL}
-    );
+    std::cout << "Declaring Liveliness Subscriber on '" << keyexpr.as_string_view() << "'..." << std::endl;
+    auto subscriber = session.liveliness_declare_subscriber(keyexpr, data_handler, closures::none);
 
-    for (auto [reply, alive] = replies.try_recv(); alive; std::tie(reply, alive) = replies.try_recv()) {
-        if (!reply) {
-            std::cout << ".";
-            std::this_thread::sleep_for(1s);
-            continue;
-        }
-        const auto& sample = reply.get_ok();
-        std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
-                  << sample.get_payload().deserialize<std::string>() << "')\n";
+    std::cout << "Press CTRL-C to quit...\n";
+    while (true) {
+        std::this_thread::sleep_for(1s);
     }
-    std::cout << std::endl;
 
     return 0;
 }
+
+
 
 int main(int argc, char **argv) {
     try {
