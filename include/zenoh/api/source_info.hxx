@@ -41,7 +41,8 @@ class EntityGlobalId : public Copyable<::z_entity_global_id_t> {
     uint32_t eid() const { return ::z_entity_global_id_eid(&this->inner()); }
 };
 
-/// @brief Informations on the source of a zenoh.
+
+/// @brief Informations on the Zenoh source.
 class SourceInfo: public Owned<::z_owned_source_info_t> {
 public:
     /// @name Constructors
