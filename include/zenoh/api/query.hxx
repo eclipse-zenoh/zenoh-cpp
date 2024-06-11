@@ -58,11 +58,21 @@ public:
     /// @return Attachment
     decltype(auto) get_attachment() const { return detail::as_owned_cpp_obj<Bytes>(::z_query_attachment(this->loan())); }
 
-    /// @brief Options passed to the ``Query::reply`` operation
+    /// @brief Options passed to the ``Query::reply`` operation.
     struct ReplyOptions {
-        /// @brief An optional encoding of this reply payload and/or attachment
+        /// @brief  An optional encoding of the reply message payload and/or attachment.
         std::optional<Encoding> encoding = {};
-        /// @brief An optional attachment to this reply.
+        /// @brief The priority of this reply message.
+        Priority priority = Priority::Z_PRIORITY_DATA;
+        /// @brief The congestion control to apply when routing this reply message.
+        CongestionControl congestion_control = CongestionControl::Z_CONGESTION_CONTROL_BLOCK;
+        /// @brief Whether Zenoh will NOT wait to batch this reply message with others to reduce the bandwith.
+        bool is_express = false;
+        /// @brief the timestamp of this message.
+        std::optional<Timestamp> timestamp = {};
+        /// @brief The source info of this reply message.
+        std::optional<SourceInfo> source_info = {};
+        /// @brief An optional attachment to this reply message.
         std::optional<Bytes> attachment = {};
 
         /// @brief Returns default option settings
@@ -75,6 +85,11 @@ public:
         ::z_query_reply_options_t opts;
         z_query_reply_options_default(&opts);
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
+        opts.priority = options.priority;
+        opts.congestion_control = options.congestion_control;
+        opts.is_express = options.is_express;
+        opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
+        opts.source_info = detail::as_owned_c_ptr(options.source_info);
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
 
         __ZENOH_ERROR_CHECK(
@@ -103,7 +118,46 @@ public:
         __ZENOH_ERROR_CHECK(
             ::z_query_reply_err(this->loan(), payload_ptr, &opts),
             err,
-            "Failed to send error"
+            "Failed to send reply error"
+        );
+    }
+
+    /// @brief Options passed to the ``Query::reply_del`` operation.
+    struct ReplyDelOptions {
+        /// @brief The priority of this reply message.
+        Priority priority = Priority::Z_PRIORITY_DATA;
+        /// @brief The congestion control to apply when routing this reply message.
+        CongestionControl congestion_control = CongestionControl::Z_CONGESTION_CONTROL_DROP;
+        /// @brief Whether Zenoh will NOT wait to batch this reply message with others to reduce the bandwith.
+        bool is_express = false;
+        /// @brief the timestamp of this message.
+        std::optional<Timestamp> timestamp = {};
+        /// @brief The source info of this reply message.
+        std::optional<SourceInfo> source_info = {};
+        /// @brief An optional attachment to this reply message.
+        std::optional<Bytes> attachment = {};
+
+        /// @brief Returns default option settings.
+        static ReplyDelOptions create_default() { return {}; }
+    };
+
+    /// @brief Send a delete reply to a query.
+    /// @param key_expr: The key of this delete reply.
+    /// @param options: The options of this delete reply.
+    void reply_del(const KeyExpr& key_expr, ReplyDelOptions&& options = ReplyDelOptions::create_default(), ZError* err = nullptr) const {
+        ::z_query_reply_del_options_t opts;
+        z_query_reply_del_options_default(&opts);
+        opts.priority = options.priority;
+        opts.congestion_control = options.congestion_control;
+        opts.is_express = options.is_express;
+        opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
+        opts.source_info = detail::as_owned_c_ptr(options.source_info);
+        opts.attachment = detail::as_owned_c_ptr(options.attachment);
+
+        __ZENOH_ERROR_CHECK(
+            ::z_query_reply_del(this->loan(), detail::loan(key_expr), &opts),
+            err,
+            "Failed to send reply del"
         );
     }
 };
