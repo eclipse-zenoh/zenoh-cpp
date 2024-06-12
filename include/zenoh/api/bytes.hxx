@@ -111,10 +111,9 @@ public:
         using F = decltype(f);
 
         using ClosureType = typename detail::closures::Closure<F, closures::None, bool, z_owned_bytes_t*>;
-        auto closure = ClosureType::into_context(std::forward<F>(f), closures::none);
+        auto closure = ClosureType(std::forward<F>(f), closures::none);
         
-        ::z_bytes_encode_from_iter(detail::as_owned_c_ptr(out), detail::closures::_zenoh_encode_iter, closure);
-        ClosureType::delete_from_context(closure);
+        ::z_bytes_encode_from_iter(detail::as_owned_c_ptr(out), detail::closures::_zenoh_encode_iter, closure.as_context());
         return out;
     }
 
