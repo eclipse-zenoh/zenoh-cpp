@@ -81,6 +81,13 @@ void serde_basic() {
     b = Bytes::serialize(std::make_pair(data.data(), data.size()));
     assert(b.deserialize<std::vector<uint8_t>>() == data);
 
+    // verify that no-copy serialization only forwards a pointer, and thus all data modifications
+    // will likely have visible side effects
+    b = Bytes::serialize(data, ZenohCodec<ZenohCodecType::AVOID_COPY>());
+    data[0] = 100;
+    data[9] = 200;
+    assert(b.deserialize<std::vector<uint8_t>>() == data);
+
     std::string s = "abc";
     b = Bytes::serialize(s);
     assert(b.deserialize<std::string>() == s);
@@ -115,8 +122,8 @@ void serde_iter() {
     auto b = Bytes::serialize_from_iter(data.begin(), data.end());
     auto it = b.iter();
     std::vector<uint8_t> out;
-    for (auto bb = it.next(); static_cast<bool>(bb); bb = it.next()) {
-        out.push_back(bb.deserialize<uint8_t>());
+    for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
+        out.push_back(bb->deserialize<uint8_t>());
     }
     assert(data == out);
 }
@@ -133,6 +140,19 @@ void serde_advanced() {
     };
     b = Bytes::serialize(m);
     assert(b.deserialize<decltype(m)>() == m); 
+
+    std::set<uint8_t> s = {1, 2, 3, 4, 0};
+    b = Bytes::serialize(s);
+    assert(b.deserialize<decltype(s)>() == s); 
+
+    std::map<std::string, std::deque<double>> m2 = {
+        {"a", {0.5, 0.2}},
+        {"b", {-123.45, 0.4}},
+        {"abc", {3.1415926, -1.0} }
+    };
+
+    b = Bytes::serialize(m2);
+    assert(b.deserialize<decltype(m2)>() == m2); 
 }
 
 

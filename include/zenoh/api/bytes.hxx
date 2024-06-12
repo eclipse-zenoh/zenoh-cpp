@@ -20,11 +20,16 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string_view>
 #include <string>
 #include <utility>
 #include <vector>
 #include <unordered_map>
+#include <deque>
+#include <unordered_set>
+#include <map>
+#include <set>
 
 namespace zenoh {
 
@@ -78,7 +83,7 @@ public:
     /// @param codec Instance of Codec to use
     /// @return Serialized data
     template<class T, class Codec = ZenohCodec<>>
-    static Bytes serialize(T data, Codec codec = Codec()) {
+    static Bytes serialize(const T& data, Codec codec = Codec()) {
         return codec.serialize(data);
     }
 
@@ -106,10 +111,9 @@ public:
         using F = decltype(f);
 
         using ClosureType = typename detail::closures::Closure<F, closures::None, bool, z_owned_bytes_t*>;
-        auto closure = ClosureType::into_context(std::forward<F>(f), closures::none);
+        auto closure = ClosureType(std::forward<F>(f), closures::none);
         
-        ::z_bytes_encode_from_iter(detail::as_owned_c_ptr(out), detail::closures::_zenoh_encode_iter, closure);
-        ClosureType::delete_from_context(closure);
+        ::z_bytes_encode_from_iter(detail::as_owned_c_ptr(out), detail::closures::_zenoh_encode_iter, closure.as_context());
         return out;
     }
 
@@ -209,9 +213,11 @@ public:
 class Bytes::Iterator: Copyable<::z_bytes_iterator_t> {
 public:
     using Copyable::Copyable;
-    Bytes next() {
-        Bytes b(nullptr);
-        ::z_bytes_iterator_next(&this->_0, detail::as_owned_c_ptr(b));
+    std::optional<Bytes> next() {
+        std::optional<Bytes> b(std::in_place, nullptr);
+        if (!::z_bytes_iterator_next(&this->_0, detail::as_owned_c_ptr(b.value()))) {
+            b.reset();
+        }
         return b;
     }
 
@@ -241,12 +247,12 @@ struct ZenohDeserializer<std::string> {
     }
 };
 
-template<>
-struct ZenohDeserializer<std::vector<uint8_t>> {
-    static std::vector<uint8_t> deserialize(const Bytes& b, ZError* err = nullptr) {
+template<class Allocator>
+struct ZenohDeserializer<std::vector<uint8_t, Allocator>> {
+    static std::vector<uint8_t, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
         (void)err;
         auto reader = b.reader();
-        std::vector<uint8_t> v(b.size());
+        std::vector<uint8_t, Allocator> v(b.size());
         reader.read(v.data(), b.size());
         return v;
     }
@@ -265,26 +271,78 @@ struct ZenohDeserializer<std::pair<A, B>> {
     }
 };
 
-template<class T>
-struct ZenohDeserializer<std::vector<T>> {
-    static std::vector<T> deserialize(const Bytes& b, ZError* err = nullptr) {
-        std::vector<T> v;
+template<class T, class Allocator>
+struct ZenohDeserializer<std::vector<T, Allocator>> {
+    static std::vector<T, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
+        std::vector<T, Allocator> v;
         auto it = b.iter();
-        for (auto bb = it.next(); static_cast<bool>(bb); bb = it.next()) {
-            v.push_back(bb.deserialize<T>(err));
+        for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
+            v.push_back(bb->deserialize<T>(err));
         }
         
         return v;
     }
 };
 
-template<class K, class V>
-struct ZenohDeserializer<std::unordered_map<K, V>> {
-    static std::unordered_map<K, V> deserialize(const Bytes& b, ZError* err = nullptr) {
-        std::unordered_map<K, V> m;
+template<class T, class Allocator>
+struct ZenohDeserializer<std::deque<T, Allocator>> {
+    static std::deque<T, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
+        std::deque<T, Allocator> v;
         auto it = b.iter();
-        for (auto bb = it.next(); static_cast<bool>(bb); bb = it.next()) {
-            m.insert(bb.deserialize<std::pair<K, V>>(err));
+        for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
+            v.push_back(bb->deserialize<T>(err));
+        }
+        
+        return v;
+    }
+};
+
+template<class K, class H, class E, class Allocator>
+struct ZenohDeserializer<std::unordered_set<K, H, E, Allocator>> {
+    static std::unordered_set<K, H, E, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
+        std::unordered_set<K, H, E, Allocator> s;
+        auto it = b.iter();
+        for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
+            s.insert(bb->deserialize<K>(err));
+        }
+        
+        return s;
+    }
+};
+
+template<class K, class C,  class Allocator>
+struct ZenohDeserializer<std::set<K, C, Allocator>> {
+    static std::set<K, C, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
+        std::set<K, C, Allocator> s;
+        auto it = b.iter();
+        for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
+            s.insert(bb->deserialize<K>(err));
+        }
+        
+        return s;
+    }
+};
+
+template<class K, class V, class H, class E, class Allocator>
+struct ZenohDeserializer<std::unordered_map<K, V, H, E, Allocator>> {
+    static std::unordered_map<K, V, H, E, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
+        std::unordered_map<K, V, H, E, Allocator> m;
+        auto it = b.iter();
+        for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
+            m.insert(bb->deserialize<std::pair<K, V>>(err));
+        }
+        
+        return m;
+    }
+};
+
+template<class K, class V, class C, class Allocator>
+struct ZenohDeserializer<std::map<K, V, C, Allocator>> {
+    static std::map<K, V, C, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
+        std::map<K, V, C, Allocator> m;
+        auto it = b.iter();
+        for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
+            m.insert(bb->deserialize<std::pair<K, V>>(err));
         }
         
         return m;
@@ -349,17 +407,38 @@ struct ZenohCodec {
         return serialize(std::pair<const uint8_t*, size_t>(s.first, s.second));
     }
 
-    static Bytes serialize(const std::vector<uint8_t>& s) {
+    template<class Allocator>
+    static Bytes serialize(const std::vector<uint8_t, Allocator>& s) {
         return ZenohCodec::serialize(std::make_pair<const uint8_t*, size_t>(s.data(), s.size()));;
     }
 
-    template<class T>
-    static Bytes serialize(const std::vector<T>& s) {
+    template<class T, class Allocator>
+    static Bytes serialize(const std::vector<T, Allocator>& s) {
         return Bytes::serialize_from_iter(s.begin(), s.end());
     }
 
-    template<class K, class V>
-    static Bytes serialize(const std::unordered_map<K, V>& s) {
+    template<class T, class Allocator>
+    static Bytes serialize(const std::deque<T, Allocator>& s) {
+        return Bytes::serialize_from_iter(s.begin(), s.end());
+    }
+
+    template<class K, class H, class E, class Allocator>
+    static Bytes serialize(const std::unordered_set<K, H, E, Allocator>& s) {
+        return Bytes::serialize_from_iter(s.begin(), s.end());
+    }
+
+    template<class K, class C, class Allocator>
+    static Bytes serialize(const std::set<K, C, Allocator>& s) {
+        return Bytes::serialize_from_iter(s.begin(), s.end());
+    }
+
+    template<class K, class V, class H, class E, class Allocator>
+    static Bytes serialize(const std::unordered_map<K, V, H, E, Allocator>& s) {
+        return Bytes::serialize_from_iter(s.begin(), s.end());
+    }
+
+    template<class K, class V, class C, class Allocator>
+    static Bytes serialize(const std::map<K, V, C, Allocator>& s) {
         return Bytes::serialize_from_iter(s.begin(), s.end());
     }
 

@@ -57,7 +57,11 @@ public:
     template<class CC, class DD>
     static void* into_context(CC&& call, DD&& drop) {
         auto obj = new Closure<C, D, R, Args...>(std::forward<CC>(call), std::forward<DD>(drop));
-        auto d = static_cast<IDroppable*>(obj);
+        return obj->as_context();
+    }
+
+    void* as_context() {
+        auto d = static_cast<IDroppable*>(this);
         return reinterpret_cast<void*>(d);
     }
 };
