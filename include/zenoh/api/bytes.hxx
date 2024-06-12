@@ -109,6 +109,7 @@ public:
         auto closure = ClosureType::into_context(std::forward<F>(f), closures::none);
         
         ::z_bytes_encode_from_iter(detail::as_owned_c_ptr(out), detail::closures::_zenoh_encode_iter, closure);
+        ClosureType::delete_from_context(closure);
         return out;
     }
 
