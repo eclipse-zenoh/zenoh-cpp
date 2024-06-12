@@ -97,18 +97,5 @@ public:
         return detail::as_owned_cpp_obj<KeyExpr>(::z_publisher_keyexpr(this->loan())); 
     }
 #endif
-
-    /// @brief Sets priority for the publisher.
-    void set_priority(Priority priority) { ::z_publisher_set_priority(this->loan(), priority); }
-
-    /// @brief Sets congestion control for the publisher.
-    void set_congestion_control(CongestionControl congestion_control) {
-        ::z_publisher_set_congestion_control(this->loan(), congestion_control); 
-    }
-
-    /// @brief Sets allowed destination for the publisher.
-    void set_allowed_destination(Locality destination) {
-        ::z_publisher_set_allowed_destination(this->loan(), destination); 
-    }
 };
 }
