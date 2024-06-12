@@ -133,6 +133,19 @@ void serde_advanced() {
     };
     b = Bytes::serialize(m);
     assert(b.deserialize<decltype(m)>() == m); 
+
+    std::set<uint8_t> s = {1, 2, 3, 4, 0};
+    b = Bytes::serialize(s);
+    assert(b.deserialize<decltype(s)>() == s); 
+
+    std::map<std::string, std::deque<double>> m2 = {
+        {"a", {0.5, 0.2}},
+        {"b", {-123.45, 0.4}},
+        {"abc", {3.1415926, -1.0} }
+    };
+
+    b = Bytes::serialize(m2);
+    assert(b.deserialize<decltype(m2)>() == m2); 
 }
 
 
