@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string_view>
 #include <string>
 #include <utility>
@@ -29,6 +30,7 @@
 #include <unordered_set>
 #include <map>
 #include <set>
+#include <iostream>
 
 namespace zenoh {
 
@@ -82,7 +84,7 @@ public:
     /// @param codec Instance of Codec to use
     /// @return Serialized data
     template<class T, class Codec = ZenohCodec<>>
-    static Bytes serialize(T data, Codec codec = Codec()) {
+    static Bytes serialize(const T& data, Codec codec = Codec()) {
         return codec.serialize(data);
     }
 
@@ -113,6 +115,7 @@ public:
         auto closure = ClosureType::into_context(std::forward<F>(f), closures::none);
         
         ::z_bytes_encode_from_iter(detail::as_owned_c_ptr(out), detail::closures::_zenoh_encode_iter, closure);
+        ClosureType::delete_from_context(closure);
         return out;
     }
 
@@ -212,9 +215,11 @@ public:
 class Bytes::Iterator: Copyable<::z_bytes_iterator_t> {
 public:
     using Copyable::Copyable;
-    Bytes next() {
-        Bytes b(nullptr);
-        ::z_bytes_iterator_next(&this->_0, detail::as_owned_c_ptr(b));
+    std::optional<Bytes> next() {
+        std::optional<Bytes> b(std::in_place, nullptr);
+        if (!::z_bytes_iterator_next(&this->_0, detail::as_owned_c_ptr(b.value()))) {
+            b.reset();
+        }
         return b;
     }
 
@@ -273,8 +278,8 @@ struct ZenohDeserializer<std::vector<T, Allocator>> {
     static std::vector<T, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
         std::vector<T, Allocator> v;
         auto it = b.iter();
-        for (auto bb = it.next(); static_cast<bool>(bb); bb = it.next()) {
-            v.push_back(bb.deserialize<T>(err));
+        for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
+            v.push_back(bb->deserialize<T>(err));
         }
         
         return v;
@@ -286,8 +291,8 @@ struct ZenohDeserializer<std::deque<T, Allocator>> {
     static std::deque<T, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
         std::deque<T, Allocator> v;
         auto it = b.iter();
-        for (auto bb = it.next(); static_cast<bool>(bb); bb = it.next()) {
-            v.push_back(bb.deserialize<T>(err));
+        for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
+            v.push_back(bb->deserialize<T>(err));
         }
         
         return v;
@@ -299,8 +304,8 @@ struct ZenohDeserializer<std::unordered_set<K, H, E, Allocator>> {
     static std::unordered_set<K, H, E, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
         std::unordered_set<K, H, E, Allocator> s;
         auto it = b.iter();
-        for (auto bb = it.next(); static_cast<bool>(bb); bb = it.next()) {
-            s.insert(bb.deserialize<K>(err));
+        for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
+            s.insert(bb->deserialize<K>(err));
         }
         
         return s;
@@ -312,8 +317,8 @@ struct ZenohDeserializer<std::set<K, C, Allocator>> {
     static std::set<K, C, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
         std::set<K, C, Allocator> s;
         auto it = b.iter();
-        for (auto bb = it.next(); static_cast<bool>(bb); bb = it.next()) {
-            s.insert(bb.deserialize<K>(err));
+        for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
+            s.insert(bb->deserialize<K>(err));
         }
         
         return s;
@@ -325,8 +330,8 @@ struct ZenohDeserializer<std::unordered_map<K, V, H, E, Allocator>> {
     static std::unordered_map<K, V, H, E, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
         std::unordered_map<K, V, H, E, Allocator> m;
         auto it = b.iter();
-        for (auto bb = it.next(); static_cast<bool>(bb); bb = it.next()) {
-            m.insert(bb.deserialize<std::pair<K, V>>(err));
+        for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
+            m.insert(bb->deserialize<std::pair<K, V>>(err));
         }
         
         return m;
@@ -338,8 +343,8 @@ struct ZenohDeserializer<std::map<K, V, C, Allocator>> {
     static std::map<K, V, C, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
         std::map<K, V, C, Allocator> m;
         auto it = b.iter();
-        for (auto bb = it.next(); static_cast<bool>(bb); bb = it.next()) {
-            m.insert(bb.deserialize<std::pair<K, V>>(err));
+        for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
+            m.insert(bb->deserialize<std::pair<K, V>>(err));
         }
         
         return m;
@@ -393,6 +398,7 @@ struct ZenohCodec {
     static Bytes serialize(const std::pair<const uint8_t*, size_t>& s) {
         Bytes b(nullptr);
         if constexpr (ZT == ZenohCodecType::AVOID_COPY) {
+            std::cout << "NO COPY";
             ::z_bytes_encode_from_slice(detail::as_owned_c_ptr(b), s.first, s.second);
         } else {
             ::z_bytes_encode_from_slice_copy(detail::as_owned_c_ptr(b), s.first, s.second);
