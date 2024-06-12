@@ -11,10 +11,6 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-//
-// This file contains structures and classes API without implementations
-//
-
 #pragma once
 
 namespace zenoh::detail::closures {
@@ -35,7 +31,7 @@ struct IClosure : public IDroppable {
 
     static R call_from_context(void* context, Args... args) {
         IDroppable* d = reinterpret_cast<IDroppable*>(context);
-        return dynamic_cast<IClosure<R, Args...>*>(d)->call(args...);
+        return static_cast<IClosure<R, Args...>*>(d)->call(args...);
     }
 };
 
@@ -61,7 +57,7 @@ public:
     template<class CC, class DD>
     static void* into_context(CC&& call, DD&& drop) {
         auto obj = new Closure<C, D, R, Args...>(std::forward<CC>(call), std::forward<DD>(drop));
-        auto d = dynamic_cast<IDroppable*>(obj);
+        auto d = static_cast<IDroppable*>(obj);
         return reinterpret_cast<void*>(d);
     }
 };
