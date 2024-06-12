@@ -30,7 +30,6 @@
 #include <unordered_set>
 #include <map>
 #include <set>
-#include <iostream>
 
 namespace zenoh {
 
@@ -398,7 +397,6 @@ struct ZenohCodec {
     static Bytes serialize(const std::pair<const uint8_t*, size_t>& s) {
         Bytes b(nullptr);
         if constexpr (ZT == ZenohCodecType::AVOID_COPY) {
-            std::cout << "NO COPY";
             ::z_bytes_encode_from_slice(detail::as_owned_c_ptr(b), s.first, s.second);
         } else {
             ::z_bytes_encode_from_slice_copy(detail::as_owned_c_ptr(b), s.first, s.second);
