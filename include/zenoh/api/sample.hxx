@@ -20,6 +20,7 @@
 #include "bytes.hxx"
 #include "encoding.hxx"
 #include "timestamp.hxx"
+#include "source_info.hxx"
 
 namespace zenoh {
 /// @brief A data sample.
@@ -71,7 +72,12 @@ public:
     /// @return ``CongestionControl``  value
     bool get_express() const { return ::z_sample_express(this->loan()); }
 
-    /// @brief Constructs a shallow copy of this Sample
+    /// @brief The source info of this sample
+    const SourceInfo& get_source_info() const { 
+        return detail::as_owned_cpp_obj<SourceInfo>(::z_sample_source_info(this->loan())); 
+    }
+
+    /// @brief Constructs a shallow copy of this sample
     Sample clone() const {
         Sample s(nullptr);
         ::z_sample_clone(this->loan(), &s._0);

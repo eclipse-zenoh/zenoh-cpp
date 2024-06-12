@@ -89,7 +89,7 @@ public:
         );
     }
 
-    /// @brief Options passed to the ``get()`` operation
+    /// @brief Options passed to the ``get()`` operation.
     struct GetOptions {
         /// @brief The Queryables that should be target of the query.
         QueryTarget target = QueryTarget::Z_QUERY_TARGET_ALL;
@@ -99,12 +99,14 @@ public:
         std::optional<Bytes> payload = {};
         /// @brief  An optional encoding of the query payload and/or attachment.
         std::optional<Encoding> encoding = {};
+        /// @brief The source info for the query.
+        std::optional<SourceInfo> source_info = {};
         /// @brief An optional attachment to the query.
         std::optional<Bytes> attachment = {};
         /// @brief The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
         uint64_t timeout_ms = 0;
 
-        /// @brief Returns default option settings
+        /// @brief Returns default option settings.
         static GetOptions create_default() { return {}; }
     };
 
@@ -137,6 +139,7 @@ public:
         opts.consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation);
         opts.payload = detail::as_owned_c_ptr(options.payload);
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
+        opts.source_info = detail::as_owned_c_ptr(options.source_info);
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
         opts.timeout_ms = options.timeout_ms;
 
@@ -165,6 +168,7 @@ public:
         opts.consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation);
         opts.payload = detail::as_owned_c_ptr(options.payload);
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
+        opts.source_info = detail::as_owned_c_ptr(options.source_info);
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
         opts.timeout_ms = options.timeout_ms;
 
@@ -206,7 +210,7 @@ public:
         return ::z_delete(this->loan(), detail::loan(key_expr), &opts);
     }
 
-    /// @brief Options passed to the ``put()`` operation
+    /// @brief Options passed to the ``put()`` operation.
     struct PutOptions {
         /// @brief The priority of this message.
         Priority priority = Priority::Z_PRIORITY_DATA;
@@ -215,17 +219,19 @@ public:
         /// @brief Whether Zenoh will NOT wait to batch this message with others to reduce the bandwith.
         bool is_express = false;
         #ifdef ZENOHCXX_ZENOHC
-        /// @brief Allowed destination
+        /// @brief Allowed destination.
         Locality allowed_destination = ::zcu_locality_default();
         #endif
-        /// @brief the timestamp of this message
+        /// @brief the timestamp of this message.
         std::optional<Timestamp> timestamp = {};
         /// @brief  An optional encoding of the message payload and/or attachment.
         std::optional<Encoding> encoding = {};
+        /// @brief The source info of this message.
+        std::optional<SourceInfo> source_info = {};
         /// @brief An optional attachment to the message.
         std::optional<Bytes> attachment = {};
 
-        /// @brief Returns default option settings
+        /// @brief Returns default option settings.
         static PutOptions create_default() { return {}; }
     };
 
@@ -240,6 +246,7 @@ public:
         opts.congestion_control = options.congestion_control;
         opts.priority = options.priority;
         opts.is_express = options.is_express;
+        opts.source_info = detail::as_owned_c_ptr(options.source_info);
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
         opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
         #ifdef ZENOHCXX_ZENOHC

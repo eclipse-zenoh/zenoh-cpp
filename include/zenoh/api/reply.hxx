@@ -16,10 +16,26 @@
 #include "base.hxx"
 #include "../detail/interop.hxx"
 #include "sample.hxx"
-#include "value.hxx"
+#include "bytes.hxx"
 
 
 namespace zenoh {
+
+/// @brief Reply error data.
+class ReplyError : public Owned<::z_owned_reply_err_t> {
+public:
+    using Owned::Owned;
+    /// @name Methods
+
+    /// @brief The payload of this error
+    /// @return ``Bytes`` object
+    decltype(auto) get_payload() const { return detail::as_owned_cpp_obj<Bytes>(::z_reply_err_payload(this->loan())); }
+
+    /// @brief The encoding of this error
+    /// @return ``Encoding`` object
+    decltype(auto) get_encoding() const { return detail::as_owned_cpp_obj<Encoding>(::z_reply_err_encoding(this->loan())); }
+};
+
 /// A reply from queryable to ``Session::get`` operation
 class Reply : public Owned<::z_owned_reply_t> {
 public:
@@ -40,13 +56,13 @@ public:
         return detail::as_owned_cpp_obj<Sample>(::z_reply_ok(this->loan()));
     }
 
-    /// @brief Get the reply error. Will throw an exception if ``Reply::is_ok`` returns false.
+    /// @brief Get the reply error. Will throw an exception if ``Reply::is_ok`` returns true.
     /// @return Reply error.
     decltype(auto) get_err() const {
         if (::z_reply_is_ok(this->loan())) {
             throw ZException("Reply error was requested, but reply contains data sample", Z_EINVAL);
         }
-        return detail::as_owned_cpp_obj<Value>(::z_reply_err(this->loan()));
+        return detail::as_owned_cpp_obj<ReplyError>(::z_reply_err(this->loan()));
     }
 };
 
