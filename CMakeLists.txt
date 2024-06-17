@@ -14,6 +14,12 @@ project(
 )
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+#
+# Temporary measure. Ideally zenoh-cpp should work with any variant
+# of zenoh-c build
+#
+set(ZENOHC_BUILD_WITH_SHARED_MEMORY TRUE)
+set(ZENOHC_BUILD_WITH_UNSTABLE_API TRUE)
 include(helpers)
 
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
