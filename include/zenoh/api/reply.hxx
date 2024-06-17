@@ -17,6 +17,7 @@
 #include "../detail/interop.hxx"
 #include "sample.hxx"
 #include "bytes.hxx"
+#include "id.hxx"
 
 
 namespace zenoh {
@@ -63,6 +64,16 @@ public:
             throw ZException("Reply error was requested, but reply contains data sample", Z_EINVAL);
         }
         return detail::as_owned_cpp_obj<ReplyError>(::z_reply_err(this->loan()));
+    }
+
+    /// @brief Get the id of the Zenoh instance that issued this reply.
+    /// @return Zenoh instance id, or an empty optional if the id was not set.
+    std::optional<Id> get_replier_id() const {
+        ::z_id_t z_id;
+        if (::z_reply_replier_id(this->loan(), &z_id)) {
+            return Id(z_id);
+        }
+        return {};
     }
 };
 
