@@ -9,6 +9,10 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 	set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake ${CMAKE_MODULE_PATH})
     include(helpers)
     set_default_build_type(Release)
+	# Temporary measure. Ideally zenoh-cpp should work with any variant
+	# of zenoh-c build
+	set(ZENOHC_BUILD_WITH_SHARED_MEMORY TRUE CACHE BOOL "" FORCE )
+	set(ZENOHC_BUILD_WITH_UNSTABLE_API TRUE CACHE BOOL "" FORCE )
     configure_include_project(ZENOHCXX_ZENOHC zenohc zenohc::lib "../../zenoh-c" zenohc "https://github.com/eclipse-zenoh/zenoh-c" ${zenoh_c_branch})
     configure_include_project(ZENOHPICO zenohpico zenohpico "../../zenoh-pico" zenohc "https://github.com/eclipse-zenoh/zenoh-pico" ${zenoh_pico_branch})
     configure_include_project(ZENOHCXX zenohcxx zenohcxx ".." zenohcxx "https://github.com/eclipse-zenoh/zenoh-cpp" ${zenoh_cpp_branch})
