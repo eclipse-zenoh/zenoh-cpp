@@ -50,25 +50,27 @@ enum class ZenohCodecType {
 template<ZenohCodecType ZT = ZenohCodecType::STANDARD>
 struct ZenohCodec;
 
-/// @brief A Zenoh serialized data representation
+/// @brief A Zenoh serialized data representation.
 class Bytes : public Owned<::z_owned_bytes_t> {
 public:
     using Owned::Owned;
 
-    /// @name Methods
-     
-    /// @brief Constructs a shallow copy of this data
+    /// @name Constructors
+
+    /// @brief Construct a shallow copy of this data.
     Bytes clone() const {
         Bytes b(nullptr);
         ::z_bytes_clone(this->loan(), &b._0);
         return b; 
     }
 
-    /// @brief Constructs an empty data
+    /// @brief Construct an empty data.
     Bytes() 
         : Bytes(nullptr) {
         ::z_bytes_empty(detail::as_owned_c_ptr(*this));
     }
+
+    /// @name Methods
 
     /// @brief Get number of bytes in the pyload.
     size_t size() const {
@@ -77,11 +79,11 @@ public:
 
     /// @brief Serialize specified type.
     ///
-    /// @tparam T Type to serialize
-    /// @tparam Codec Codec to use
-    /// @param data Instance of T to serialize
-    /// @param codec Instance of Codec to use
-    /// @return Serialized data
+    /// @tparam T type to serialize
+    /// @tparam Codec codec to use.
+    /// @param data instance of T to serialize.
+    /// @param codec instance of Codec to use.
+    /// @return serialized data.
     template<class T, class Codec = ZenohCodec<>>
     static Bytes serialize(const T& data, Codec codec = Codec()) {
         return codec.serialize(data);
@@ -90,12 +92,12 @@ public:
     /// @brief Serializes multiple pieces of data between begin and end iterators.
     ///
     /// The data can be later read using Bytes::Iterator provided by Bytes::iter() method.
-    /// @tparam ForwardIt Forward input iterator type
-    /// @tparam Codec Codec type
-    /// @param begin Start of the iterator range
-    /// @param end End of the iterator range
-    /// @param codec Codec instance
-    /// @return Serialized data
+    /// @tparam ForwardIt forward input iterator type
+    /// @tparam Codec codec type.
+    /// @param begin start of the iterator range.
+    /// @param end end of the iterator range.
+    /// @param codec codec instance.
+    /// @return serialized data.
     template<class ForwardIt, class Codec = ZenohCodec<>> 
     static Bytes serialize_from_iter(ForwardIt begin, ForwardIt end, Codec codec = Codec()) {
         Bytes out(nullptr);
@@ -119,9 +121,11 @@ public:
 
     /// @brief Deserialize into specified type.
     ///
-    /// @tparam T Type to deserialize into
-    /// @tparam Codec Codec to use
-    /// @return Deserialzied data
+    /// @tparam T Type to deserialize into.
+    /// @tparam Codec codec to use.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @param codec codec instance.
+    /// @return deserialzied data.
     template<class T, class Codec = ZenohCodec<>>
     T deserialize(ZError* err, Codec codec = Codec()) const {
         return codec.template deserialize<T>(*this, err);
@@ -129,9 +133,9 @@ public:
 
     /// @brief Deserialize into specified type.
     ///
-    /// @tparam T Type to deserialize into
-    /// @tparam Codec Codec to use
-    /// @return Deserialzied data
+    /// @tparam T type to deserialize into.
+    /// @tparam Codec codec to use.
+    /// @return deserialzied data.
     template<class T, class Codec = ZenohCodec<>>
     T deserialize(Codec codec = Codec()) const {
         return codec.template deserialize<T>(*this, nullptr);
@@ -140,23 +144,34 @@ public:
 
     class Iterator;
 
-    /// @brief Get iterator to multi-element data serialized previously using Bytes::from_iter().
-    /// @return Iterator over multiple elements of data
+    /// @brief Get iterator to multi-element data serialized previously using ``Bytes::serialize_from_iter``.
+    /// @return iterator over multiple elements of data.
     Iterator iter() const;
 
+    /// @brief A reader for Zenoh-serialized data.
     class Reader : public Copyable<::z_bytes_reader_t> {
     public:
         using Copyable::Copyable;
 
-        size_t read(uint8_t* buf, size_t len) {
-            return ::z_bytes_reader_read(&this->_0, buf, len);
+        /// @name Methods
+
+        /// @brief Read data into specified destination.
+        /// @param dst buffer where read data is written.
+        /// @param len number of bytes to read.
+        /// @return number of bytes that were read. Might be less than len if there is not enough data.
+        size_t read(uint8_t* dst, size_t len) {
+            return ::z_bytes_reader_read(&this->_0, dst, len);
         }
 
+        /// @brief Return the read position indicator.
+        /// @return read position indicator on success or -1L if failure occurs.
         int64_t tell() {
             return ::z_bytes_reader_tell(&this->_0);
         }
 
-
+        /// @brief Set the `reader` position indicator to the value pointed to by offset, starting from the current position.
+        /// @param offset offset in bytes starting from the current position.
+        /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
         void seek_from_current(int64_t offset, ZError* err = nullptr) {
             __ZENOH_ERROR_CHECK(
                 ::z_bytes_reader_seek(&this->_0, offset, SEEK_CUR),
@@ -165,6 +180,9 @@ public:
             );
         }
 
+        /// @brief Set the `reader` position indicator to the value pointed to by offset, starting from the start of the data.
+        /// @param offset offset in bytes starting from the 0-th byte position.
+        /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
         void seek_from_start(int64_t offset, ZError* err = nullptr) {
             __ZENOH_ERROR_CHECK(
                 ::z_bytes_reader_seek(&this->_0, offset, SEEK_SET),
@@ -173,6 +191,9 @@ public:
             );
         }
 
+        /// @brief Set the `reader` position indicator to the value pointed to by offset with respect to the end of the data.
+        /// @param offset offset in bytes starting from end position.
+        /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
         void seek_from_end(int64_t offset, ZError* err = nullptr) {
             __ZENOH_ERROR_CHECK(
                 ::z_bytes_reader_seek(&this->_0, offset, SEEK_END),
@@ -182,27 +203,37 @@ public:
         }
     };
 
-    /// @brief Create data reader
-    /// @return Reader instance
+    /// @brief Create data reader.
+    /// @return reader instance.
     Reader reader() const {
         return Reader(::z_bytes_get_reader(this->loan()));
     }
 
+    /// @brief A writer for Zenoh-serialized data.
     class Writer : public Owned<::z_owned_bytes_writer_t> {
     public:
         using Owned::Owned;
 
-        void write(const uint8_t* buf, size_t len, ZError* err = nullptr) {
+        /// @name Methods
+
+        /// @brief Copy data from sepcified source into underlying ``Bytes`` instance.
+        /// @param src source to copy data from.
+        /// @param len number of bytes to copy from src to the underlying ``Bytes`` instance.
+        /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+        void write(const uint8_t* src, size_t len, ZError* err = nullptr) {
             __ZENOH_ERROR_CHECK(
-                ::z_bytes_writer_write(this->loan(), buf, len),
+                ::z_bytes_writer_write(this->loan(), src, len),
                 err,
                 "Failed to write data"
             );
         }
     };
 
-    /// @brief Create data writer. It is the user responsibility to ensure that there is at most one active writer at a given moment of time for this
-    /// @return 
+    /// @brief Create data writer. 
+    ///
+    /// It is the user responsibility to ensure that there is at most one active writer at
+    /// a given moment of time for a given ``Bytes`` instance.
+    /// @return writer instance.
     Writer writer() {
         Writer w(nullptr);
         ::z_bytes_get_writer(this->loan(), detail::as_owned_c_ptr(w));
@@ -210,9 +241,15 @@ public:
     }
 };
 
+/// @brief An iterator over multi-element serialized data.
 class Bytes::Iterator: Copyable<::z_bytes_iterator_t> {
 public:
     using Copyable::Copyable;
+
+    /// @name Methods
+
+    /// @brief Return next element of serialized data.
+    /// @return next element of serialized data, if the iterator reached the end, an empty optional will be returned.
     std::optional<Bytes> next() {
         std::optional<Bytes> b(std::in_place, nullptr);
         if (!::z_bytes_iterator_next(&this->_0, detail::as_owned_c_ptr(b.value()))) {

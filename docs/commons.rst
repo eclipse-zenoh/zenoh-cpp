@@ -1,5 +1,5 @@
 ..
-.. Copyright (c) 2023 ZettaScale Technology
+.. Copyright (c) 2024 ZettaScale Technology
 ..
 .. This program and the accompanying materials are made available under the
 .. terms of the Eclipse Public License 2.0 which is available at
@@ -12,8 +12,11 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
+Commonly used types
+===================
+
 Enums
-=====
+-----
 
 Enum types are C++ - style typedefs for corrresponding enums of `zenoh-c`_ / `zenoh-pico`_ C API.
 
@@ -35,4 +38,45 @@ Enum types are C++ - style typedefs for corrresponding enums of `zenoh-c`_ / `ze
 .. doxygenfunction:: whatami_as_str
 
 .. _zenoh-c: https://zenoh-c.readthedocs.io
-.. _zenoh-pico: https://zenoh-pico.readthedocs.io 
+.. _zenoh-pico: https://zenoh-pico.readthedocs.io
+
+Source Info
+-----------
+
+.. doxygenclass:: zenoh::Id
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenfunction:: zenoh::operator<<(std::ostream &os, const Id &id)
+
+.. doxygenclass:: zenoh::EntityGlobalId
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::SourceInfo
+   :members:
+   :membergroups: Constructors Operators Methods
+
+Timestamp
+---------
+.. doxygenclass:: zenoh::Timestamp
+   :members:
+   :membergroups: Constructors Operators Methods
+
+
+Encoding
+--------
+.. doxygenclass:: zenoh::Encoding
+   :members:
+   :membergroups: Constructors Operators Methods
+
+Sample
+------
+.. doxygenclass:: zenoh::Sample
+   :members:
+   :membergroups: Constructors Operators Methods
+
+Logging
+-------
+
+.. doxygenfunction:: init_logger

@@ -18,11 +18,18 @@
 
 #ifdef ZENOHCXX_ZENOHC
 namespace zenoh {
+/// @brief // A liveliness token that can be used to provide the network with information about connectivity to its declarer.
+///
+/// When constructed, a PUT sample will be received by liveliness subscribers on intersecting key expressions.
+///
+/// A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
+/// @note zenoh-c only.
 class LivelinessToken: public Owned<::zc_owned_liveliness_token_t> {
 public:
     using Owned::Owned;
 
     /// Undeclares liveliness token, resetting it to gravestone state.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     void undeclare(ZError* err = nullptr) && {
         __ZENOH_ERROR_CHECK(
             ::zc_liveliness_undeclare_token(detail::as_owned_c_ptr(*this)),

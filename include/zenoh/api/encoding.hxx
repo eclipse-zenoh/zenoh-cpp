@@ -18,16 +18,18 @@
 #include <string>
 
 namespace zenoh {
+
+/// @brief The <a href="https://zenoh.io/docs/manual/abstractions/#encoding"> encoding </a> of Zenoh data.
 class Encoding : public Owned<::z_owned_encoding_t> {
 public:
     using Owned::Owned;
 
     /// @name Constructors
 
-    /// @brief Default encoding
+    /// @brief Construct default encoding.
     Encoding() : Owned(nullptr) {}
 
-    /// @brief Constructs encoding from string
+    /// @brief Construct encoding from string.
     Encoding(std::string_view s, ZError* err = nullptr) : Owned(nullptr) {
         __ZENOH_ERROR_CHECK(
             ::z_encoding_from_substring(&this->_0, s.data(), s.size()),
@@ -36,7 +38,9 @@ public:
         );
     }
 
-    /// @brief Converts encoding to a string
+    /// @name Methods
+
+    /// @brief Get string representation of encoding.
     std::string as_string() const {
         ::z_owned_string_t s;
         ::z_encoding_to_string(this->loan(), &s);

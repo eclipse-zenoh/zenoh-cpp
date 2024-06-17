@@ -17,18 +17,6 @@ Entities
 
 The classes which performs the Zenoh network operations
 
-.. doxygenclass:: zenoh::Publisher
-   :members:
-   :membergroups: Constructors Operators Methods
-   
-.. doxygenclass:: zenoh::Subscriber
-   :members:
-   :membergroups: Constructors Operators Methods
-
-.. doxygenclass:: zenoh::PullSubscriber
-   :members:
-   :membergroups: Constructors Operators Methods
-
 .. doxygenclass:: zenoh::Queryable
    :members:
    :membergroups: Constructors Operators Methods

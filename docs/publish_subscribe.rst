@@ -12,28 +12,14 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-Data
-====
+Publish-Subscribe
+=================
+Classes related to publish-subscribe pattern.
 
-The classes representing the data which is passed to the :doc:`closures`
-
-.. doxygenclass:: zenoh::Hello
+.. doxygenclass:: zenoh::Publisher
    :members:
    :membergroups: Constructors Operators Methods
-
-.. doxygenstruct:: zenoh::HelloView
+   
+.. doxygenclass:: zenoh::Subscriber
    :members:
    :membergroups: Constructors Operators Methods
-
-.. doxygenstruct:: zenoh::Sample
-   :members:
-   :membergroups: Constructors Operators Methods
-
-.. doxygenclass:: zenoh::Query
-   :members:
-   :membergroups: Constructors Operators Methods
-
-.. doxygenclass:: zenoh::Reply
-   :members:
-   :membergroups: Constructors Operators Methods
-

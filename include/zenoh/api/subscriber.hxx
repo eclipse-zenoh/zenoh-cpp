@@ -25,27 +25,33 @@ public:
 
 #ifdef ZENOHCXX_ZENOHC
     /// @brief Get the key expression of the subscriber
+    /// @note zenoh-c only.
     decltype(auto) get_keyexpr() const { 
         return detail::as_owned_cpp_obj<KeyExpr>(::z_subscriber_keyexpr(this->loan())); 
     }
 #endif
 };
 
-/// A Zenoh subscriber. Destroying subscriber cancels the subscription
-/// Constructed by ``Session::declare_subscriber`` method
+/// A Zenoh subscriber. Destroying subscriber cancels the subscription.
+/// Constructed by ``Session::declare_subscriber`` method.
 template<class Handler>
 class Subscriber: public SubscriberBase {
     Handler _handler;
 public:
     /// @name Constructors
 
-    /// @brief Construct from subscriber and handler
+    /// @internal
+    /// @brief Construct from subscriber and handler.
     Subscriber(SubscriberBase subscriber, Handler handler)
         :SubscriberBase(std::move(subscriber)), _handler(std::move(handler)) {
     }
 
     /// @name Methods
-    /// @brief Returns handler to subscriber data stream
+
+#ifdef ZENOHCXX_ZENOHC
+    using SubscriberBase::get_keyexpr;
+#endif
+    /// @brief Return the handler to subscriber data stream.
     const Handler& handler() const { return _handler; };
 };
 

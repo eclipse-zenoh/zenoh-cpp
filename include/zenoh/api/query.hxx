@@ -26,44 +26,54 @@
 
 
 namespace zenoh {
-/// The query to be answered by a ``Queryable``
+/// The query to be answered by a ``Queryable``.
 class Query : public Owned<::z_owned_query_t> {
 public:
     using Owned::Owned;
 
     /// @name Methods
 
-    /// @brief Get the key expression of the query
-    /// @return ``KeyExpr`` value
+    /// @brief Get the key expression of the query.
+    /// @return ``KeyExpr`` of the query.
     decltype(auto) get_keyexpr() const { return detail::as_owned_cpp_obj<KeyExpr>(::z_query_keyexpr(this->loan())); }
 
-    /// @brief Get a query's <a href=https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>parameters</a>
+    /// @brief Get query parameters. See <a href=https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>Selector</a> for more information.
     ///
-    /// @return Parameters string
+    /// @return parameters string.
     std::string_view get_parameters() const {
         ::z_view_string_t p;
         ::z_query_parameters(this->loan(), &p);
         return std::string_view(::z_string_data(::z_loan(p)), ::z_string_len(::z_loan(p))); 
     }
 
-    /// @brief Get the payload of the query
-    /// @return ``Bytes`` value
+    /// @brief Get the payload of the query.
+    /// @return payload of the query.
     decltype(auto) get_payload() const { return detail::as_owned_cpp_obj<Bytes>(::z_query_payload(this->loan())); }
 
-    /// @brief Get the encoding of the query
-    /// @return ``Encoding`` value
+    /// @brief Get the encoding of the query.
+    /// @return encoding of the query.
     decltype(auto) get_encoding() const { return detail::as_owned_cpp_obj<Encoding>(::z_query_encoding(this->loan())); }
 
-    /// @brief Checks if query contains an attachment
-    /// @return ``True`` if query contains an attachment
+    /// @brief Checks if query contains an attachment. Will throw a ZException if ``Reply::has_attachment`` returns ``false``.
+    /// @return ``true`` if query contains an attachment.
     bool has_attachment() const { return ::z_query_attachment(this->loan()) != nullptr; }
 
-    /// @brief Get the attachment of the query
-    /// @return Attachment
-    decltype(auto) get_attachment() const { return detail::as_owned_cpp_obj<Bytes>(::z_query_attachment(this->loan())); }
+    /// @brief Get the attachment of the query.
+    ///
+    /// Will throw a ZException if ``Query::has_attachment`` returns ``false``.
+    /// @return attachment of the query.
+    decltype(auto) get_attachment() const { 
+        auto attachment = ::z_query_attachment(this->loan());
+        if (attachment == nullptr) {
+            throw ZException("Query does not contain an attachment", Z_EINVAL);
+        }
+        return detail::as_owned_cpp_obj<Bytes>(attachment); 
+    }
 
     /// @brief Options passed to the ``Query::reply`` operation.
     struct ReplyOptions {
+        /// @name Fields
+
         /// @brief  An optional encoding of the reply message payload and/or attachment.
         std::optional<Encoding> encoding = {};
         /// @brief The priority of this reply message.
@@ -72,18 +82,22 @@ public:
         CongestionControl congestion_control = CongestionControl::Z_CONGESTION_CONTROL_BLOCK;
         /// @brief Whether Zenoh will NOT wait to batch this reply message with others to reduce the bandwith.
         bool is_express = false;
-        /// @brief the timestamp of this message.
+        /// @brief The timestamp of this message.
         std::optional<Timestamp> timestamp = {};
         /// @brief The source info of this reply message.
         std::optional<SourceInfo> source_info = {};
         /// @brief An optional attachment to this reply message.
         std::optional<Bytes> attachment = {};
 
-        /// @brief Returns default option settings
+        /// @name Methods
+
+        /// @brief Create default option settings.
         static ReplyOptions create_default() { return {}; }
     };
 
-    /// @brief Send reply to a query
+    /// @brief Send reply to a query.
+    /// @param options options to pass to reply operation.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     void reply(const KeyExpr& key_expr, Bytes&& payload, ReplyOptions&& options = ReplyOptions::create_default(), ZError* err = nullptr) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_query_reply_options_t opts;
@@ -103,16 +117,22 @@ public:
         );
     }
 
-    /// @brief Options passed to the ``Query::reply_err()`` operation
+    /// @brief Options passed to the ``Query::reply_err`` operation.
     struct ReplyErrOptions {
+        /// @name Fields.
+
         /// @brief An optional encoding of the reply error payload
         std::optional<Encoding> encoding = {};
 
-        /// @brief Returns default option settings
+        /// @name Methods
+
+        /// @brief Create default option settings.
         static ReplyErrOptions create_default() { return {}; }
     };
 
-    /// @brief Send error to a query
+    /// @brief Send error reply to a query.
+    /// @param options options to pass to reply error operation.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     void reply_err(Bytes&& payload, ReplyErrOptions&& options = ReplyErrOptions::create_default(), ZError* err = nullptr) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_query_reply_err_options_t opts;
@@ -128,6 +148,8 @@ public:
 
     /// @brief Options passed to the ``Query::reply_del`` operation.
     struct ReplyDelOptions {
+        /// @name Fields.
+
         /// @brief The priority of this reply message.
         Priority priority = Priority::Z_PRIORITY_DATA;
         /// @brief The congestion control to apply when routing this reply message.
@@ -141,13 +163,16 @@ public:
         /// @brief An optional attachment to this reply message.
         std::optional<Bytes> attachment = {};
 
-        /// @brief Returns default option settings.
+        /// @name Methods.
+
+        /// @brief Create default option settings.
         static ReplyDelOptions create_default() { return {}; }
     };
 
     /// @brief Send a delete reply to a query.
     /// @param key_expr: The key of this delete reply.
-    /// @param options: The options of this delete reply.
+    /// @param options: The options to pass to reply del operation.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     void reply_del(const KeyExpr& key_expr, ReplyDelOptions&& options = ReplyDelOptions::create_default(), ZError* err = nullptr) const {
         ::z_query_reply_del_options_t opts;
         z_query_reply_del_options_default(&opts);

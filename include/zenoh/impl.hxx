@@ -23,10 +23,6 @@ inline const char* as_cstr(z::WhatAmI whatami) {
                                                      : nullptr;
 }
 
-#ifdef __ZENOHCXX_ZENOHC
-inline void init_logger() { ::zc_init_logger(); }
-#endif
-
 inline ::z_bytes_t z::BytesView::init(const uint8_t* start, size_t len) {
     ::z_bytes_t ret = {len, start
 #ifdef __ZENOHCXX_ZENOHPICO

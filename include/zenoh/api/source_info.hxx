@@ -21,6 +21,7 @@
 
 namespace zenoh {
 
+/// The global unique id of a Zenoh entity.
 class EntityGlobalId : public Copyable<::z_entity_global_id_t> {
     using Copyable::Copyable;
 
@@ -34,10 +35,10 @@ class EntityGlobalId : public Copyable<::z_entity_global_id_t> {
 
     /// @name Methods
 
-    /// Return Zenoh id.
+    /// Get Zenoh id.
     Id id() const { return Id(::z_entity_global_id_zid(&this->inner())); }
 
-    /// Return eid.
+    /// Get eid.
     uint32_t eid() const { return ::z_entity_global_id_eid(&this->inner()); }
 };
 
@@ -45,8 +46,9 @@ class EntityGlobalId : public Copyable<::z_entity_global_id_t> {
 /// @brief Informations on the Zenoh source.
 class SourceInfo: public Owned<::z_owned_source_info_t> {
 public:
-    /// @name Constructors
     using Owned::Owned;
+
+    /// @name Constructors
 
     /// @brief Construct from global id and sequence number.
     SourceInfo(const EntityGlobalId& id, uint64_t sn)
@@ -57,10 +59,10 @@ public:
 
     /// @name Methods
 
-    /// @brief Return the source id.
+    /// @brief Get the source id.
     EntityGlobalId id() const { return EntityGlobalId(::z_source_info_id(this->loan()));}
 
-    /// @brief Return the sequence number of the sample from the given source.
+    /// @brief Get the sequence number of the sample from the given source.
     uint64_t sn() const { return ::z_source_info_sn(this->loan());}
 };
 

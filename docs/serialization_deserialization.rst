@@ -12,22 +12,8 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-
-Closures
-========
-
-The C++ wrappers for zenoh callbacks.  See :doc:`closure_templates` for details of closures API
-
-.. doxygentypedef:: zenoh::ClosureReply
-
-.. doxygentypedef:: zenoh::ClosureQuery
-
-.. doxygentypedef:: zenoh::ClosureSample
-
-.. doxygentypedef:: zenoh::ClosureZid
-
-.. doxygentypedef:: zenoh::ClosureHello
-
-.. doxygenclass:: zenoh::ClosureReplyChannelSend
-
-.. doxygenclass:: zenoh::ClosureReplyChannelRecv
+Serialization/Deserialziation
+=================
+.. doxygenclass:: zenoh::Bytes
+   :members:
+   :membergroups: Constructors Operators Methods

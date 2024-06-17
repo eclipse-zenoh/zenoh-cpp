@@ -19,17 +19,14 @@ API Reference
 .. toctree::
    :maxdepth: 10
 
-   namespaces
-   templates 
-   closure_templates
-   enums
-   generic
+   commons
+   error_handling
    keyexpr
    config
    session
-   entities
-   data
-   closures
-   shm
-   options
+   scouting
+   publish_subscribe
+   query_reply
+   serialization_deserialization
+
    channels

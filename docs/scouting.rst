@@ -12,9 +12,14 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-Configuration
-=============
+Scouting
+========
 
-.. doxygenclass:: zenoh::Config
+.. doxygenfunction:: zenoh::scout
+
+.. doxygenclass:: zenoh::Hello
    :members:
    :membergroups: Constructors Operators Methods
+
+.. doxygenstruct:: zenoh::ScoutOptions
+   :members:

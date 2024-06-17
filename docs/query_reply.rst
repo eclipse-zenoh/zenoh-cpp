@@ -12,9 +12,22 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-Configuration
-=============
+Query-Reply
+===========
+Classes related to query-reply pattern.
 
-.. doxygenclass:: zenoh::Config
+.. doxygenclass:: zenoh::Queryable
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::Query
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::QueryConsolidation
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::Reply
    :members:
    :membergroups: Constructors Operators Methods
