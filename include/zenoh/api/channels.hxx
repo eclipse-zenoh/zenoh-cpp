@@ -87,14 +87,16 @@ namespace detail {
 }
 
 /// @brief A FIFO channel handler
-/// @tparam T Data entry type
+/// @tparam T data entry type
 template<class T>
 class FifoHandler : public Owned<typename detail::FifoHandlerData<T>::handler_type> {
 public:
     using Owned<typename detail::FifoHandlerData<T>::handler_type>::Owned;
 
-    /// @brief Fetches a data entry from the handler's buffer. If buffer is empty will block until new data entry arrives
-    /// @return A pair containing a received data entry (will be in null state if there is no more data in the buffer and the steam is inactive),
+    /// @name Methods
+
+    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will block until new data entry arrives.
+    /// @return a pair containing a received data entry (will be in a gravestone state if there is no more data in the buffer and the stream is inactive),
     /// and a bool flag indicating whether handler's stream is still active, i.e. if there is still possibility to fetch more data in the future. 
     std::pair<T, bool> recv() const {
         std::pair<T, bool> p(nullptr, false);
@@ -102,8 +104,8 @@ public:
         return p;
     }
 
-    /// @brief Fetches a data entry from the handler's buffer. If buffer is empty will immediately return (with data entry in null state). 
-    /// @return A pair containing a received data entry (will be in null state if there is no more data in the buffer),
+    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will immediately return (with data entry in a gravestone state). 
+    /// @return a pair containing a received data entry (will be in null state if there is no more data in the buffer),
     /// and a bool flag indicating whether handler's stream is still active, i.e. if there is still possibility to fetch more data in the future.
     std::pair<T, bool> try_recv() const {
         std::pair<T, bool> p(nullptr, false);
@@ -112,15 +114,17 @@ public:
     }
 };
 
-/// @brief A circular buffer channel handler
-/// @tparam T Data entry type
+/// @brief A circular buffer channel handler.
+/// @tparam T data entry type.
 template<class T>
 class RingHandler : public Owned<typename detail::RingHandlerData<T>::handler_type> {
 public:
     using Owned<typename detail::FifoHandlerData<T>::handler_type>::Owned;
 
-    /// @brief Fetches a data entry from the handler's buffer. If buffer is empty will block until new data entry arrives
-    /// @return A pair containing a received data entry (will be in null state if there is no more data in the buffer and the steam is inactive),
+    /// @name Methods
+    
+    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will block until new data entry arrives
+    /// @return a pair containing a received data entry (will be in gravestone state if there is no more data in the buffer and the stream is inactive),
     /// and a bool flag indicating whether handler's stream is still active, i.e. if there is still possibility to fetch more data in the future. 
     std::pair<T, bool> recv() const {
         std::pair<T, bool> p(nullptr, false);
@@ -128,8 +132,8 @@ public:
         return p;
     }
 
-    /// @brief Fetches a data entry from the handler's buffer. If buffer is empty will immediately return (with data entry in null state). 
-    /// @return A pair containing a received data entry (will be in null state if there is no more data in the buffer),
+    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will immediately return (with data entry in a gravestone state). 
+    /// @return a pair containing a received data entry (will be in null state if there is no more data in the buffer),
     /// and a bool flag indicating whether handler's stream is still active, i.e. if there is still possibility to fetch more data in the future. 
     std::pair<T, bool> try_recv() const {
         std::pair<T, bool> p(nullptr, false);
@@ -138,23 +142,25 @@ public:
     }
 };
 
-/// @brief A FIFO channel
+/// @brief A FIFO channel.
 class FifoChannel {
     size_t _capacity;
 public:
-    /// @brief Constructor
-    /// @param capacity Maximum number of entries in FIFO buffer of the channel. When the buffer is full all
+    /// @brief Constructor.
+    /// @param capacity maximum number of entries in the FIFO buffer of the channel. When the buffer is full all
     /// new incoming entries will be ignored.
     FifoChannel(size_t capacity)
         :_capacity(capacity)
     {}
 
+    /// @brief Channel handler type.
     template<class T>
     using HandlerType = FifoHandler<T>;
 
+    /// @internal
     /// @brief Convert channel into a pair of zenoh callback and handler for the specified type.
-    /// @tparam T Entry Type
-    /// @return A callback-handler pair
+    /// @tparam T entry type.
+    /// @return a callback-handler pair.
     template<class T>
     std::pair<typename detail::FifoHandlerData<T>::closure_type, HandlerType<T>> into_cb_handler_pair() const {
         typename detail::FifoHandlerData<T>::closure_type c_closure;
@@ -164,23 +170,25 @@ public:
     }
 };
 
-/// @brief A circular buffer channel
+/// @brief A circular buffer channel.
 class RingChannel {
     size_t _capacity;
 public:
-    /// @brief Constructor
-    /// @param capacity  Maximum number of entries in circular buffer of the channel. When the buffer is full the older entries
-    /// will be removed to provide space for the new ones
+    /// @brief Constructor.
+    /// @param capacity  maximum number of entries in circular buffer of the channel. When the buffer is full, the older entries
+    /// will be removed to provide room for the new ones.
     RingChannel(size_t capacity)
         :_capacity(capacity)
     {}
 
+    /// @brief Channel handler type.
     template<class T>
     using HandlerType = RingHandler<T>;
 
+    /// @internal
     /// @brief Convert channel into a pair of zenoh callback and handler for the specified type.
-    /// @tparam T Entry Type
-    /// @return A callback-handler pair
+    /// @tparam T entry type.
+    /// @return a callback-handler pair.
     template<class T>
     std::pair<typename detail::RingHandlerData<T>::closure_type, HandlerType<T>> into_cb_handler_pair() const {
         typename detail::RingHandlerData<T>::closure_type c_closure;

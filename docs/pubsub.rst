@@ -27,13 +27,13 @@ Publisher example:
 
    int main(int argc, char **argv) {
       Config config;
-      auto session = expect<Session>(open(std::move(config)));
+      auto session = Session::open(std::move(config));
       // Publish without creating a Publisher object
-      session.put("demo/example/simple", "Simple!");
+      session.put(KeyExpr("demo/example/simple"), Bytes::serialize("Simple!"));
 
       // Publish from a Publisher object
-      auto publisher = expect<Publisher>(session.declare_publisher("demo/example/simple"));
-      publisher.put("Simple!");
+      auto publisher = session.declare_publisher(KeyExpr("demo/example/simple"));
+      publisher.put(Bytes::serialize("Simple!"));
    }
 
 Subscriber example:
@@ -46,12 +46,41 @@ Subscriber example:
 
    int main(int argc, char **argv) {
       Config config;
-      auto session = expect<Session>(open(std::move(config)));
-      auto subscriber = expect<Subscriber>(
-         session.declare_subscriber("demo/example/simple", [](const Sample& sample) {
-            std::cout << "Received: " << sample.get_payload().as_string_view() << std::endl;
-         })
+      auto session = Session::open(std::move(config));
+      auto subscriber = session.declare_subscriber(
+         KeyExpr("demo/example/simple"), 
+         [](const Sample& sample) {
+            std::cout << "Received: " << sample.get_payload().deserialize<std::string>() << std::endl;
+         }
       );
       // Wait for a key press to exit
       char c = getchar();
+   }
+
+Subscriber example with non-blocking stream interface:
+
+.. code-block:: c++
+
+   #include "zenoh.hxx"
+   #include <iostream>
+   #include <thread>
+   #include <chrono>
+   using namespace zenoh;
+   using namespace std::chrono_literals;
+
+   int main(int argc, char **argv) {
+      Config config;
+      auto session = Session::open(std::move(config));
+      auto subscriber = session.declare_subscriber(
+         KeyExpr("demo/example/simple"),
+         channels::FifoChannel(16), // use FIFO buffer to store unprocessed messages 
+      );
+      auto [sample, alive] = subscriber.handler().try_recv();
+      for (; alive; std::tie(sample, alive) = subscriber.handler().try_recv()) {
+         if (!sample) { // no messages in the buffer
+            std::this_thread::sleep_for(1s); // do some other work
+         } else {
+            std::cout << "Received: " << sample.get_payload().deserialize<std::string>() << std::endl;
+         }
+      }
    }

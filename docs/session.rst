@@ -25,10 +25,3 @@ Session
    :members:
    :membergroups: Constructors Operators Methods Fields
 
-Scouting
---------
-
-.. doxygenstruct:: zenoh::ScoutOptions
-   :members:
-
-.. doxygenfunction:: zenoh::scout

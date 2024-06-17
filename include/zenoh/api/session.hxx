@@ -167,7 +167,7 @@ public:
     }
 
     /// @brief Query data from the matching queryables in the system. Replies are provided through a channel.
-    /// @tparam Channel the type of channel used to create stream of data.
+    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or `zenoh::channels::RingChannel`).
     /// @param key_expr the key expression matching resources to query.
     /// @param parameters the parameters string in URL format.
     /// @param channel channel instance.
@@ -336,7 +336,7 @@ public:
     }
 
     /// @brief Create a ``Queryable`` object to answer to ``Session::get`` requests.
-    /// @tparam Channel the type of channel used to create stream of data.
+    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or `zenoh::channels::RingChannel`).
     /// @param key_expr the key expression to match the ``Session::get`` requests.
     /// @param channel an instance of channel.
     /// @param options options passed to queryable declaration.
@@ -374,7 +374,7 @@ public:
 
     /// @brief Create a ``Subscriber`` object to receive data from matching ``Publisher`` objects or from.
     /// ``Session::put`` and ``Session::delete_resource`` requests.
-    /// @tparam Channel the type of channel used to create stream of data.
+    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or `zenoh::channels::RingChannel`).
     /// @param key_expr the key expression to match the publishers.
     /// @param on_sample the callback that will be called for each received sample.
     /// @param on_drop the callback that will be called once subscriber is destroyed or undeclared.
@@ -410,7 +410,7 @@ public:
 
     /// @brief Create a ``Subscriber`` object to receive data from matching ``Publisher`` objects or from.
     /// ``Session::put`` and ``Session::delete_resource`` requests.
-    /// @tparam Channel the type of channel used to create stream of data.
+    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or `zenoh::channels::RingChannel`).
     /// @param key_expr the key expression to match the publishers.
     /// @param channel an instance of channel.
     /// @param options options to pass to subscriber declaration.
@@ -651,7 +651,7 @@ public:
 
 
     /// @brief Declares a subscriber on liveliness tokens that intersect `key_expr`.
-    /// @tparam Channel the type of channel used to create stream of data.
+    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or `zenoh::channels::RingChannel`).
     /// @param key_expr  the key expression to subscribe to.
     /// @param on_sample the callabl that will be called each time a liveliness token status is changed.
     /// @param on_drop the callable that will be called once subscriber is destroyed or undeclared.
@@ -686,7 +686,7 @@ public:
     }
 
     /// @brief Declare a subscriber on liveliness tokens that intersect `key_expr`.
-    /// @tparam Channel the type of channel used to create stream of data.
+    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or `zenoh::channels::RingChannel`).
     /// @param key_expr the key expression to subscribe to.
     /// @param channel an instance of channel.
     /// @param options options to pass to subscriber declaration.
@@ -759,7 +759,7 @@ public:
     }
 
     /// @brief Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
-    /// @tparam Channel the type of channel used to create stream of data.
+    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or `zenoh::channels::RingChannel`).
     /// @param key_expr the key expression to query liveliness tokens for.
     /// @param channel channel instance.
     /// @param options  additional options for the liveliness get operation.

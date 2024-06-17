@@ -13,7 +13,7 @@
 ..
 
 Serialization/Deserialziation
-=================
+=============================
 .. doxygenclass:: zenoh::Bytes
    :members:
    :membergroups: Constructors Operators Methods

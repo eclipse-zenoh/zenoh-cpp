@@ -31,3 +31,7 @@ Classes related to query-reply pattern.
 .. doxygenclass:: zenoh::Reply
    :members:
    :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::ReplyError
+   :members:
+   :membergroups: Constructors Operators Methods

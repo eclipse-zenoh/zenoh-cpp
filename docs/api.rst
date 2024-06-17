@@ -28,5 +28,4 @@ API Reference
    publish_subscribe
    query_reply
    serialization_deserialization
-
    channels
