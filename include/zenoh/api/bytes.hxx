@@ -113,7 +113,7 @@ public:
         using ClosureType = typename detail::closures::Closure<F, closures::None, bool, z_owned_bytes_t*>;
         auto closure = ClosureType(std::forward<F>(f), closures::none);
         
-        ::z_bytes_encode_from_iter(detail::as_owned_c_ptr(out), detail::closures::_zenoh_encode_iter, closure.as_context());
+        ::z_bytes_serialize_from_iter(detail::as_owned_c_ptr(out), detail::closures::_zenoh_encode_iter, closure.as_context());
         return out;
     }
 
@@ -263,7 +263,7 @@ struct ZenohDeserializer<std::pair<A, B>> {
     static std::pair<A, B> deserialize(const Bytes& b, ZError* err = nullptr) {
         zenoh::Bytes ba(nullptr), bb(nullptr);
         __ZENOH_ERROR_CHECK(
-            ::z_bytes_decode_into_pair(detail::loan(b), detail::as_owned_c_ptr(ba), detail::as_owned_c_ptr(bb)),
+            ::z_bytes_deserialize_into_pair(detail::loan(b), detail::as_owned_c_ptr(ba), detail::as_owned_c_ptr(bb)),
             err,
             "Failed to deserialize into std::pair"
         );
@@ -355,7 +355,7 @@ struct ZenohDeserializer<TYPE> { \
     static TYPE deserialize(const Bytes& b, ZError* err = nullptr) { \
         TYPE t;\
         __ZENOH_ERROR_CHECK( \
-            ::z_bytes_decode_into_##EXT(detail::loan(b), &t), \
+            ::z_bytes_deserialize_into_##EXT(detail::loan(b), &t), \
             err, \
             "Failed to deserialize into "#TYPE \
         ); \
@@ -396,9 +396,9 @@ struct ZenohCodec {
     static Bytes serialize(const std::pair<const uint8_t*, size_t>& s) {
         Bytes b(nullptr);
         if constexpr (ZT == ZenohCodecType::AVOID_COPY) {
-            ::z_bytes_encode_from_slice(detail::as_owned_c_ptr(b), s.first, s.second);
+            ::z_bytes_serialize_from_slice(detail::as_owned_c_ptr(b), s.first, s.second);
         } else {
-            ::z_bytes_encode_from_slice_copy(detail::as_owned_c_ptr(b), s.first, s.second);
+            ::z_bytes_serialize_from_slice_copy(detail::as_owned_c_ptr(b), s.first, s.second);
         }
         return b;
     }
@@ -447,14 +447,14 @@ struct ZenohCodec {
         auto ba = ZenohCodec::serialize(s.first);
         auto bb = ZenohCodec::serialize(s.second);
         Bytes b(nullptr);
-        ::z_bytes_encode_from_pair(detail::as_owned_c_ptr(b), ::z_move(*detail::as_owned_c_ptr(ba)), ::z_move(*detail::as_owned_c_ptr(bb)));
+        ::z_bytes_serialize_from_pair(detail::as_owned_c_ptr(b), ::z_move(*detail::as_owned_c_ptr(ba)), ::z_move(*detail::as_owned_c_ptr(bb)));
         return b;
     }
 
 #define __ZENOH_SERIALIZE_ARITHMETIC(TYPE, EXT) \
     static Bytes serialize(TYPE t) { \
         Bytes b(nullptr); \
-        ::z_bytes_encode_from_##EXT(detail::as_owned_c_ptr(b), t); \
+        ::z_bytes_serialize_from_##EXT(detail::as_owned_c_ptr(b), t); \
         return b; \
     } \
 
