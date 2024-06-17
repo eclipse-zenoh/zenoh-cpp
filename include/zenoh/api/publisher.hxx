@@ -97,7 +97,8 @@ public:
         return detail::as_owned_cpp_obj<KeyExpr>(::z_publisher_keyexpr(this->loan())); 
     }
 #endif
-
+    /// @brief Get the id of the publisher.
+    /// @return id of this publisher.
     EntityGlobalId get_id() const {
         return EntityGlobalId(::z_publisher_id(this->loan()));
     }
