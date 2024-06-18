@@ -79,12 +79,13 @@ typedef ::z_priority_t Priority;
 /// - **Z_QUERY_TARGET_ALL_COMPLETE**: A set of complete queryables.
 typedef ::z_query_target_t QueryTarget;
 
+/// @brief Flag indicating type of Zenoh entity.
 typedef ::z_whatami_t WhatAmI;
 
-/// @brief Returns a string representation of the given ``c::WhatAmI``
-/// (or the ``zenohpico::WhatAmI``) value.
-/// @param whatami the ``c::WhatAmI`` / ``zenohpico::WhatAmI`` value
-/// @return a string representation of the given value
+/// @brief Get a human-readable representation of the given ``zenoh::WhatAmI``
+/// flag.
+/// @param whatami the ``zenoh::WhatAmI`` flag.
+/// @return a string representation of the given flag.
 inline std::string_view whatami_as_str(WhatAmI whatami) {
     ::z_view_string_t str_out;
     ::z_whatami_to_str(whatami, &str_out);

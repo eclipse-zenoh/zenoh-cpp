@@ -21,7 +21,7 @@
 #include <iomanip>
 
 namespace zenoh {
-    /// @brief A representation a Zenoh ID.
+/// @brief A representation a Zenoh ID.
 ///
 /// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
 class Id : public Copyable<::z_id_t> {
@@ -30,14 +30,15 @@ public:
 
     /// @name Methods
 
-    /// Checks if the ID is valid
-    /// @return true if the ID is valid
+    /// Check if the ID is valid.
+    /// @return ``true`` if the ID is valid.
     bool is_valid() const { return _0.id[0] != 0; }
 
-    /// Returns the byte sequence of the ID
+    /// Return the byte sequence of the ID.
     const std::array<uint8_t, 16>& bytes() const { return *reinterpret_cast<const std::array<uint8_t, 16>*>(&_0.id); }
 };
 
+/// @brief Print ``Id`` in the hex format.
 inline std::ostream& operator<<(std::ostream& os, const Id& id) {
     auto id_ptr = reinterpret_cast<const::z_id_t*>(&id)->id;
     for (size_t i = 0; id_ptr[i] != 0 && i < 16; i++)

@@ -28,27 +28,27 @@ public:
     using Owned::Owned;
     /// @name Methods
 
-    /// @brief The payload of this error
-    /// @return ``Bytes`` object
+    /// @brief The payload of this error.
+    /// @return Error payload.
     decltype(auto) get_payload() const { return detail::as_owned_cpp_obj<Bytes>(::z_reply_err_payload(this->loan())); }
 
-    /// @brief The encoding of this error
-    /// @return ``Encoding`` object
+    /// @brief The encoding of this error.
+    /// @return Error encoding.
     decltype(auto) get_encoding() const { return detail::as_owned_cpp_obj<Encoding>(::z_reply_err_encoding(this->loan())); }
 };
 
-/// A reply from queryable to ``Session::get`` operation
+/// A reply from queryable to ``Session::get`` operation.
 class Reply : public Owned<::z_owned_reply_t> {
 public:
     using Owned::Owned;
 
     /// @name Methods
 
-    /// @brief Check if the reply is OK
-    /// @return true if the reply is OK, false if contains a error
+    /// @brief Check if the reply is OK (and contains a sample).
+    /// @return ``true`` if the reply is OK, ``false`` if contains a error.
     bool is_ok() const { return ::z_reply_is_ok(this->loan()); }
 
-    /// @brief Get the reply value. Will throw an exception if ``Reply::is_ok`` returns false.
+    /// @brief Get the reply value. Will throw a ZException if ``Reply::is_ok`` returns ``false``.
     /// @return Reply sample.
     decltype(auto) get_ok() const {
         if (!::z_reply_is_ok(this->loan())) {
@@ -57,7 +57,7 @@ public:
         return detail::as_owned_cpp_obj<Sample>(::z_reply_ok(this->loan()));
     }
 
-    /// @brief Get the reply error. Will throw an exception if ``Reply::is_ok`` returns true.
+    /// @brief Get the reply error. Will throw a ZException if ``Reply::is_ok`` returns ``true``.
     /// @return Reply error.
     decltype(auto) get_err() const {
         if (::z_reply_is_ok(this->loan())) {

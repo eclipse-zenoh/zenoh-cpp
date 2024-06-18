@@ -20,7 +20,7 @@ The *zenoh-cpp* library provides a client C++ API for the zenoh network protocol
 
 An introduction to Zenoh and its concepts is available on `zenoh.io`_. Since the zenoh-cpp is a header-only wrapper 
 library over the `zenoh-c`_ and `zenoh-pico`_ C libraries, it can be useful to reference the documentation of these libraries as well.
-The zenoh-c library is C interface to main implementation of zenoh on Rust. So documentation for `zenoh`_ Rust API is also may help.
+The zenoh-c library is C interface to main implementation of zenoh in Rust (see `zenoh`_ Rust API api documentation for more information).
 
 .. toctree::
     :maxdepth: 10

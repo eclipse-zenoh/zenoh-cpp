@@ -32,17 +32,4 @@
 #include "api/subscriber.hxx"
 #include "api/timestamp.hxx"
 #include "api/channels.hxx"
-
-
-namespace zenoh {
-
-#ifdef ZENOHCXX_ZENOHC
-/// @brief Initializes logger
-///
-/// User may set environment variable RUST_LOG to values *debug* | *info* | *warn* | *error* to show diagnostic output
-///
-/// @note zenoh-c only
-inline void init_logger() { ::zc_init_logger(); }
-#endif
-
-}
+#include "api/logging.hxx"

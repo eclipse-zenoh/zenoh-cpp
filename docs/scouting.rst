@@ -12,23 +12,14 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-Entities
+Scouting
 ========
 
-The classes which performs the Zenoh network operations
+.. doxygenfunction:: zenoh::scout
 
-.. doxygenclass:: zenoh::Publisher
-   :members:
-   :membergroups: Constructors Operators Methods
-   
-.. doxygenclass:: zenoh::Subscriber
+.. doxygenclass:: zenoh::Hello
    :members:
    :membergroups: Constructors Operators Methods
 
-.. doxygenclass:: zenoh::PullSubscriber
+.. doxygenstruct:: zenoh::ScoutOptions
    :members:
-   :membergroups: Constructors Operators Methods
-
-.. doxygenclass:: zenoh::Queryable
-   :members:
-   :membergroups: Constructors Operators Methods

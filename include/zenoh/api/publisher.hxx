@@ -26,13 +26,15 @@
 
 
 namespace zenoh {
-/// An Zenoh publisher. Constructed by ``Session::declare_publisher`` method
+/// A Zenoh publisher. Constructed by ``Session::declare_publisher`` method.
 class Publisher : public Owned<::z_owned_publisher_t> {
 public:
     using Owned::Owned;
 
-    /// @brief Options to be passed to ``Publisher::put()`` operation.
+    /// @brief Options to be passed to ``Publisher::put`` operation.
     struct PutOptions {
+        /// @name Fields
+
         /// @brief The encoding of the data to publish.
         std::optional<Encoding> encoding =  {};
         /// @brief the timestamp of this message.
@@ -42,25 +44,27 @@ public:
         /// @brief The attachment to attach to the publication.
         std::optional<Bytes> attachment = {};
 
-        /// @brief Returns default option settings.
+        /// @name Methods
+
+        /// @brief Create default option settings.
         static PutOptions create_default() { return {}; }
     };
 
-    /// @brief Options to be passed to ``Publisher::delete_resource()`` operation
+    /// @brief Options to be passed to ``Publisher::delete_resource`` operation
     struct DeleteOptions {
         /// @brief the timestamp of this message
         std::optional<Timestamp> timestamp = {};
 
-        /// @brief Returns default option settings
+        /// @brief Create default option settings.
         static DeleteOptions create_default() { return {}; }
     };
 
     /// @name Methods
 
-    /// @brief Publish the payload
-    /// @param payload ``Payload`` to publish
-    /// @param options Optional values passed to put operation
-    /// @return 0 in case of success, negative error code otherwise
+    /// @brief Publish a message on publisher key expression.
+    /// @param payload Data to publish.
+    /// @param options Optional values passed to put operation.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     void put(Bytes&& payload, PutOptions&& options = PutOptions::create_default(), ZError* err = nullptr) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_publisher_put_options_t opts;
@@ -77,9 +81,9 @@ public:
         );
     }
 
-    /// @brief Undeclare the resource associated with the publisher key expression
-    /// @param options Optional values to pass to delete operation
-    /// @return 0 in case of success, negative error code otherwise
+    /// @brief Undeclare the resource associated with the publisher key expression.
+    /// @param options Optional values to pass to delete operation.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     void delete_resource(DeleteOptions&& options = DeleteOptions::create_default(), ZError* err = nullptr) const {
         ::z_publisher_delete_options_t opts;
         z_publisher_delete_options_default(&opts);
@@ -93,6 +97,7 @@ public:
 
 #ifdef ZENOHCXX_ZENOHC
     /// @brief Get the key expression of the publisher.
+    /// @note zenoh-c only.
     decltype(auto) get_keyexpr() const { 
         return detail::as_owned_cpp_obj<KeyExpr>(::z_publisher_keyexpr(this->loan())); 
     }

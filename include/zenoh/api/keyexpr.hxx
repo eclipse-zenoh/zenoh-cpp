@@ -19,21 +19,22 @@
 
 namespace zenoh {
 
-/// @brief Owned key expression.
+/// @brief A Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#key-expression"> key expression </a>.
 ///
-/// See details about key expression syntax in the <a
-/// href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Key%20Expressions.md"> Key Expressions RFC</a>.
+/// Key expression can be registered in the `zenoh::Session` object with `zenoh::Session::declare_keyexpr()` method.
+/// The unique id is internally assinged to the key expression string in this case. This allows to reduce bandwith usage when transporting key expressions.
+
 class KeyExpr : public Owned<::z_owned_keyexpr_t> {
    public:
     using Owned::Owned;
 
     /// @name Constructors
 
-    /// @brief Create a new instance from a string
+    /// @brief Create a new instance from a string.
     ///
-    /// @param key_expr String representing key expression
-    /// @param autocanonize If true the key_expr will be autocanonized, prior to constructing key expression
-    /// @param err If not null the error code will be written to this location, otherwise exception will be thrown in case of error.
+    /// @param key_expr String representing key expression.
+    /// @param autocanonize If true the key_expr will be autocanonized, prior to constructing key expression.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     explicit KeyExpr(std::string_view key_expr, bool autocanonize = true, ZError* err = nullptr) 
         : Owned(nullptr) {
         if (autocanonize) {
@@ -53,48 +54,24 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     }
 
     /// @name Methods
-    /// @brief Get underlying key expression string
+    /// @brief Get underlying key expression string.
     std::string_view as_string_view() const {
         ::z_view_string_t s;
         ::z_keyexpr_as_view_string(this->loan(), &s);
         return std::string_view(reinterpret_cast<const char*>(::z_string_data(::z_loan(s))), ::z_string_len(::z_loan(s)));
     }
 
-    /// @name Operators
-
-    /// @brief Equality operator
-    /// @param other the ``std::string_view`` to compare with
-    /// @return true if the key expression is equal to the string
-    bool operator==(std::string_view other) const {
-        if (!(*this)) return false; 
-        return as_string_view() == other; 
-    }
-
-    /// @brief InEquality operator
-    /// @param other the ``std::string_view`` to compare with
-    /// @return false if the key expression is equal to the string
-    bool operator!=(std::string_view other) const {
-        return !((*this) == other);
-    }
-
-    /// @brief Equality operator
+    /// @brief Check if a given ``KeyExpr`` includes the other.
     /// @param other the ``KeyExpr`` to compare with
-    /// @return true if both key expressions are equal
-    bool operator==(const KeyExpr& other) const { return ::z_keyexpr_equals(this->loan(), other.loan()); }
-
-    /// @brief Inequality operator
-    /// @param other the ``KeyExpr`` to compare with
-    /// @return false if both key expressions are equal
-    bool operator!=(const KeyExpr& other) const { return !(*this == other); }
-
-    /// @brief Checks if a given ``KeyExpr`` includes the other.
-    /// @param other the ``KeyExpr`` to compare with
-    /// @return true if other is included in this.
+    /// @return ``true`` if current key expression includes ``other``, i.e. contains every key belonging to the ``other``.
     bool includes(const KeyExpr& other) {
         return ::z_keyexpr_includes(this->loan(), other.loan());
     }
 
-    /// @brief Constructs new key expression by concatenation this with a string.
+    /// @brief Construct new key expression by concatenating the current one with a string.
+    /// @param s A string to concatenate with the key expression.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @return A new key expression.
     KeyExpr concat(std::string_view s, ZError* err = nullptr) const {
         KeyExpr k(nullptr);
         __ZENOH_ERROR_CHECK(
@@ -105,7 +82,9 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
         return k;
     }
 
-    /// @brief Constructs new key expression by joining this with another one
+    /// @brief Construct new key expression by joining it with another one.
+    /// @param other the ``KeyExpr`` to append.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     KeyExpr join(const KeyExpr& other, ZError* err = nullptr) const {
         KeyExpr k(nullptr);
         __ZENOH_ERROR_CHECK(
@@ -116,18 +95,46 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
         return k;
     }
 
-    /// @brief Checks if 2 key expressions intersect
-    /// @return true if there is at least one non-empty key that is contained in both key expressions
+    /// @brief Check if 2 key expressions intersect.
+    ///
+    /// @return true if there is at least one non-empty key that is contained in both key expressions, false otherwise.
     bool intersects(const KeyExpr& other) const { return ::z_keyexpr_intersects(this->loan(), other.loan()); }
 
     typedef ::z_keyexpr_intersection_level_t IntersectionLevel;
 
     IntersectionLevel relation_to(const KeyExpr& other) { return ::z_keyexpr_relation_to(this->loan(), other.loan()); }
 
-    /// @brief Verifies if the string is a canonical key expression
+    /// @brief Check if the string represents a canonical key expression
     static bool is_canon(std::string_view s) {
         return ::z_keyexpr_is_canon(s.data(), s.size()) == Z_OK;
     }
+
+    /// @name Operators
+
+    /// @brief Key expression to string equality relation.
+    /// @param other a string to compare with.
+    /// @return true if the key expression string representation is equal to other, false otherwise.
+    bool operator==(std::string_view other) const {
+        if (!(*this)) return false; 
+        return as_string_view() == other; 
+    }
+
+    /// @brief Key expression to string inequality relation.
+    /// @param other a string to compare with.
+    /// @return false if the key expression string representation is equal to other, true otherwise.
+    bool operator!=(std::string_view other) const {
+        return !((*this) == other);
+    }
+
+    /// @brief Equality relation.
+    /// @param other a key expression to compare with.
+    /// @return true if both key expressions are equal (i.e. they represent the same set of resources), false otherwise.
+    bool operator==(const KeyExpr& other) const { return ::z_keyexpr_equals(this->loan(), other.loan()); }
+
+    /// @brief Inequality relation.
+    /// @param other a key expression to compare with.
+    /// @return false if both key expressions are equal (i.e. they represent the same set of resources), true otherwise.
+    bool operator!=(const KeyExpr& other) const { return !(*this == other); }
 };
 
 }

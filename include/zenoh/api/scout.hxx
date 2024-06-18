@@ -11,21 +11,25 @@
 
 namespace zenoh {
 
-/// @brief Options to be passed to ``scout()`` operation
+/// @brief Options to be passed to ``scout`` operation
 struct ScoutOptions {
+    /// @name Fields
+
     /// @brief The maximum duration in ms the scouting can take.
     size_t timeout_ms = 1000;
     /// @brief Type of entities to scout for.
     WhatAmI what = WhatAmI::Z_WHATAMI_ROUTER_PEER;
 
-    /// @brief Returns default option settings
+    /// @name Methods
+    
+    /// @brief Create default option settings.
     static ScoutOptions create_default() { return {}; }
 };
 
-/// @brief Scout for zenoh entities in the network
-/// @param config ``ScoutingConfig`` to use
-/// @param on_hello The callback to process each received ``Hello``message
-/// @param on_drop The callback that will be called once all hello ``Hello``messages are received
+/// @brief Scout for zenoh entities in the network.
+/// @param config ``ScoutingConfig`` to use.
+/// @param on_hello The callable to process each received ``Hello``message.
+/// @param on_drop The callable that will be called once all ``Hello`` messages are received.
 template<class C, class D>
 void scout(Config&& config, C&& on_hello, D&& on_drop, ScoutOptions&& options = ScoutOptions::create_default(), ZError* err = nullptr) {
     static_assert(

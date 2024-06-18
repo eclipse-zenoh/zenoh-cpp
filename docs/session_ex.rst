@@ -15,8 +15,9 @@
 Session
 =======
 
-The zenoh session is created using the :cpp:func:`zenoh::open` function, 
+The zenoh session is created using the :cpp:func:`zenoh::Session::open` function, 
 consuming the configuration object :cpp:class:`zenoh::Config`.
+Then a string is published on "demo/example/simple" key expression.
 
 .. code-block:: c++
 
@@ -26,11 +27,9 @@ consuming the configuration object :cpp:class:`zenoh::Config`.
    int main(int argc, char **argv) {
       try {
          Config config;
-         // take Session from std::variant
-         auto session = expect<Session>(open(std::move(config)));
-         session.put("demo/example/simple", "Simple!");
-      } catch (ErrorMessage e) {
-         // Exception comes from ``expect``, the zenoh-cpp itself does not throw any exception
-         std::cout << "Received an error :" << e.as_string_view() << "\n";
+         auto session = Session::open(std::move(config));
+         session.put(KeyExpr("demo/example/simple"), Bytes::serialize("Simple!"));
+      } catch (ZException e) {
+         std::cout << "Received an error :" << e.what() << "\n";
       }
    }

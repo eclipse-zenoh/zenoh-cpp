@@ -18,31 +18,32 @@
 
 namespace zenoh {
 
-/// Replies consolidation mode to apply on replies of get operation
-struct QueryConsolidation : Copyable<::z_query_consolidation_t> {
+/// Replies consolidation mode to apply on replies of get operation.
+class QueryConsolidation : public Copyable<::z_query_consolidation_t> {
+public:
     using Copyable::Copyable;
 
     /// @name Constructors
 
-    /// @brief Create a new default ``QueryConsolidation`` value
+    /// @brief Create a new default ``QueryConsolidation`` value.
     QueryConsolidation() : Copyable(::z_query_consolidation_default()) {}
 
-    /// @brief Create a new ``QueryConsolidation`` value with the given consolidation mode
-    /// @param v ``zenoh::ConsolidationMode`` value
+    /// @brief Create a new ``QueryConsolidation`` value with the given consolidation mode.
+    /// @param v ``zenoh::ConsolidationMode`` value.
     QueryConsolidation(ConsolidationMode v) : Copyable({v}) {}
 
     /// @name Methods
 
     /// @name Operators
 
-    /// @brief Equality operator
-    /// @param v the other ``QueryConsolidation`` to compare with
-    /// @return true if the two values are equal (have the same consolidation mode)
-    bool operator==(const QueryConsolidation& v) const { return this->_0.mode == v._0.mode; }
+    /// @brief Equality relation.
+    /// @param other a value to compare with.
+    /// @return ``true`` if the two values are equal (have the same consolidation mode).
+    bool operator==(const QueryConsolidation& other) const { return this->_0.mode == other._0.mode; }
 
-    /// @brief Inequality operator
-    /// @param v the other ``QueryConsolidation`` to compare with
-    /// @return true if the two values are not equal (have different consolidation mode)
-    bool operator!=(const QueryConsolidation& v) const { return !operator==(v); }
+    /// @brief Inequality relation.
+    /// @param other a value to compare with.
+    /// @return ``true`` if the two values are not equal (have different consolidation mode)
+    bool operator!=(const QueryConsolidation& other) const { return !operator==(other); }
 };
 }

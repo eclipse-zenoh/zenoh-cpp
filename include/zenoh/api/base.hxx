@@ -41,7 +41,7 @@ template< class T> inline constexpr bool is_loan_mut_available_v = is_loan_mut_a
 
 }
 
-/// Error code returned by Zenoh API
+/// @brief Error code returned by Zenoh API
 typedef ::z_error_t ZError;
 
 /// @brief Zenoh-specific Exception
@@ -97,7 +97,7 @@ public:
     /// to the constructed object.
     Owned(OwnedType* pv) {
         if (pv) {
-            _0 = *pv;
+            _0 = *pv;/// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
             ::z_null(pv);
         } else
             ::z_null(&this->_0);

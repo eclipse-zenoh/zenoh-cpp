@@ -25,22 +25,24 @@ public:
     // TODO: add utility methods to interpret time as mils, seconds, minutes, etc
 
     /// @name Constructors
-    /// @brief Create Timestamp from Id and npt64 time
-    Timestamp(const Id& id, uint64_t npt64_time)
+
+    /// @brief Create Timestamp from id and NTP64 time.
+    /// @param id unique id associated with timestamp (normally provided by Zenoh router).
+    /// @param ntp64_time time in NTP64 format.
+    Timestamp(const Id& id, uint64_t ntp64_time)
         :Copyable({}) {
-        z_timestamp_new(&this->inner(), detail::as_copyable_c_ptr(id), npt64_time);
+        z_timestamp_new(&this->inner(), detail::as_copyable_c_ptr(id), ntp64_time);
     }
     
     /// @name Methods
 
-    /// @brief Get the NPT64 time part of timestamp
-    /// @return time in NPT64 format.
+    /// @brief Get the NTP64 time part of the timestamp.
+    /// @return time in NTP64 format.
     uint64_t get_time() const { return ::z_timestamp_npt64_time(&this->inner()); }
 
-    /// @brief Get the unique id of the timestamp
-    /// @return unique id
+    /// @brief Get the unique id of the timestamp.
+    /// @return Id associated with this timestamp.
     Id get_id() const { return ::z_timestamp_id(&this->inner()); }
-private:
 };
 
 }

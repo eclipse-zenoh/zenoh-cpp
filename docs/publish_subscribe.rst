@@ -12,19 +12,14 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-Shared memory support
-=====================
+Publish-Subscribe
+=================
+Classes related to publish-subscribe pattern.
 
-The classes for tranferring the data through shared memory if the receiver and transmitter are on the same host
-
-.. doxygenclass:: zenoh::Payload   
+.. doxygenclass:: zenoh::Publisher
    :members:
    :membergroups: Constructors Operators Methods
-
-.. doxygenclass:: zenoh::Shmbuf
-   :members:
-   :membergroups: Constructors Operators Methods
-
-.. doxygenclass:: zenoh::ShmManager
+   
+.. doxygenclass:: zenoh::Subscriber
    :members:
    :membergroups: Constructors Operators Methods

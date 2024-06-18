@@ -32,52 +32,58 @@ public:
 
     /// @name Methods
 
-    /// @brief The resource key of this data sample.
-    /// @return ``KeyExpr`` object representing the resource key
+    /// @brief Get the resource key of this sample.
+    /// @return ``KeyExpr`` object representing the resource key.
     decltype(auto) get_keyexpr() const { return detail::as_owned_cpp_obj<KeyExpr>(::z_sample_keyexpr(this->loan())); }
 
-    /// @brief The data of this data sample
-    /// @return ``Bytes`` object representing the sample payload
+    /// @brief Get the data of this sample.
+    /// @return ``Bytes`` object representing the sample payload.
     decltype(auto) get_payload() const { return detail::as_owned_cpp_obj<Bytes>(::z_sample_payload(this->loan())); }
 
-    /// @brief The encoding of the data of this data sample
-    /// @return ``Encoding`` object
+    /// @brief Get the encoding of the data of this sample.
+    /// @return ``Encoding`` object.
     decltype(auto) get_encoding() const { return detail::as_owned_cpp_obj<Encoding>(::z_sample_encoding(this->loan())); }
 
-    /// @brief The kind of this data sample (PUT or DELETE)
-    /// @return ``zenoh::SampleKind`` value
+    /// @brief Get the kind of this sample.
+    /// @return ``zenoh::SampleKind`` value (PUT or DELETE).
     SampleKind get_kind() const { return ::z_sample_kind(this->loan()); }
 
-    /// @brief Checks if sample contains an attachment
-    /// @return ``True`` if sample contains an attachment
+    /// @brief Check if sample contains an attachment.
+    /// @return ``true`` if sample contains an attachment, ``false`` otherwise.
     bool has_attachment() const { return ::z_sample_attachment(this->loan()) != nullptr; }
 
-    /// @brief The attachment of this data sample
-    /// @return ``Bytes`` object
-    decltype(auto) get_attachment() const { return detail::as_owned_cpp_obj<Bytes>(::z_sample_attachment(this->loan())); }
+    /// @brief Get the attachment of this sample. Will throw a ZException if ``Sample::has_attachment`` returns ``false``.
+    /// @return ``Bytes`` object representing sample attachment.
+    decltype(auto) get_attachment() const {
+        auto attachment = ::z_sample_attachment(this->loan());
+        if (attachment == nullptr) {
+            throw ZException("Sample does not contain an attachment", Z_EINVAL);
+        }
+        return detail::as_owned_cpp_obj<Bytes>(attachment); 
+    }
 
-    /// @brief The timestamp of this data sample
-    /// @return ``Timestamp`` object
+    /// @brief Get the timestamp of this sample.
+    /// @return ``Timestamp`` object.
     decltype(auto) get_timestamp() const { return detail::as_copyable_cpp_obj<Timestamp>(::z_sample_timestamp(this->loan())); }
 
-    /// @brief The priority this data sample was sent with
-    /// @return ``Priority``  value
+    /// @brief Get the priority this sample was sent with.
+    /// @return ``Priority`` value.
     Priority get_priority() const { return ::z_sample_priority(this->loan()); }
 
-    /// @brief The congestion control setting this data sample was sent with
-    /// @return ``CongestionControl``  value
+    /// @brief Get the congestion control setting this sample was sent with.
+    /// @return ``CongestionControl``  value.
     CongestionControl get_congestion_control() const { return ::z_sample_congestion_control(this->loan()); }
 
-    /// @brief The express setting this data sample was sent with
-    /// @return ``CongestionControl``  value
+    /// @brief Get the express setting this sample was sent with.
+    /// @return ``CongestionControl`` value.
     bool get_express() const { return ::z_sample_express(this->loan()); }
 
-    /// @brief The source info of this sample
+    /// @brief Get the source info of this sample.
     const SourceInfo& get_source_info() const { 
         return detail::as_owned_cpp_obj<SourceInfo>(::z_sample_source_info(this->loan())); 
     }
 
-    /// @brief Constructs a shallow copy of this sample
+    /// @brief Construct a shallow copy of this sample.
     Sample clone() const {
         Sample s(nullptr);
         ::z_sample_clone(this->loan(), &s._0);

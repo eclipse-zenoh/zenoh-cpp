@@ -12,20 +12,11 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-Data
-====
+Query-Reply
+===========
+Classes related to query-reply pattern.
 
-The classes representing the data which is passed to the :doc:`closures`
-
-.. doxygenclass:: zenoh::Hello
-   :members:
-   :membergroups: Constructors Operators Methods
-
-.. doxygenstruct:: zenoh::HelloView
-   :members:
-   :membergroups: Constructors Operators Methods
-
-.. doxygenstruct:: zenoh::Sample
+.. doxygenclass:: zenoh::Queryable
    :members:
    :membergroups: Constructors Operators Methods
 
@@ -33,7 +24,14 @@ The classes representing the data which is passed to the :doc:`closures`
    :members:
    :membergroups: Constructors Operators Methods
 
+.. doxygenclass:: zenoh::QueryConsolidation
+   :members:
+   :membergroups: Constructors Operators Methods
+
 .. doxygenclass:: zenoh::Reply
    :members:
    :membergroups: Constructors Operators Methods
 
+.. doxygenclass:: zenoh::ReplyError
+   :members:
+   :membergroups: Constructors Operators Methods

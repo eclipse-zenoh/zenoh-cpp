@@ -29,16 +29,16 @@ public:
 
     /// @name Methods
 
-    /// @brief Get ``Id`` of the entity
-    /// @return ``Id`` of the entity
+    /// @brief Get ``Id`` of the entity.
+    /// @return ``Id`` of the entity.
     Id get_id() const { return ::z_hello_zid(this->loan()); };
 
-    /// @brief Get the ``zenoh::WhatAmI`` of the entity
-    /// @return ``zenoh::WhatAmI`` of the entity
+    /// @brief Get the type of the entity.
+    /// @return ``zenoh::WhatAmI`` of the entity.
     WhatAmI get_whatami() const { return ::z_hello_whatami(this->loan()); }
 
-    /// @brief Get the array of locators of the entity
-    /// @return the array of locators of the entity
+    /// @brief Get the array of locators of the entity.
+    /// @return the array of locators of the entity.
     std::vector<std::string_view> get_locators() const {
         ::z_owned_string_array_t out;
         ::z_hello_locators(this->loan(), &out);
