@@ -709,8 +709,8 @@ struct AttachmentView : public Copyable<::z_attachment_t> {
     AttachmentView(const AttachmentView::IterDriver& _iter_driver)
         : Copyable({static_cast<const void*>(&_iter_driver),
                     [](const void* data, z_attachment_iter_body_t body, void* ctx) -> int8_t {
-                        const IterDriver* _iter_driver = static_cast<const IterDriver*>(data);
-                        return (*_iter_driver)([&body, &ctx](const BytesView& key, const BytesView& value) {
+                        const IterDriver* _iter_driver_ptr = static_cast<const IterDriver*>(data);
+                        return (*_iter_driver_ptr)([&body, &ctx](const BytesView& key, const BytesView& value) {
                             return body(key, value, ctx);
                         });
                     }}) {}
@@ -722,8 +722,8 @@ struct AttachmentView : public Copyable<::z_attachment_t> {
     AttachmentView(const T& pair_container)
         : Copyable({static_cast<const void*>(&pair_container),
                     [](const void* data, z_attachment_iter_body_t body, void* ctx) -> int8_t {
-                        const T* pair_container = static_cast<const T*>(data);
-                        for (const auto& it : *pair_container) {
+                        const T* pair_container_ptr = static_cast<const T*>(data);
+                        for (const auto& it : *pair_container_ptr) {
                             int8_t ret = body(BytesView(it.first), BytesView(it.second), ctx);
                             if (ret) {
                                 return ret;
