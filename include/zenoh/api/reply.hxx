@@ -13,18 +13,17 @@
 
 #pragma once
 
-#include "base.hxx"
 #include "../detail/interop.hxx"
-#include "sample.hxx"
+#include "base.hxx"
 #include "bytes.hxx"
 #include "id.hxx"
-
+#include "sample.hxx"
 
 namespace zenoh {
 
 /// @brief Reply error data.
 class ReplyError : public Owned<::z_owned_reply_err_t> {
-public:
+   public:
     using Owned::Owned;
     /// @name Methods
 
@@ -34,12 +33,14 @@ public:
 
     /// @brief The encoding of this error.
     /// @return Error encoding.
-    decltype(auto) get_encoding() const { return detail::as_owned_cpp_obj<Encoding>(::z_reply_err_encoding(this->loan())); }
+    decltype(auto) get_encoding() const {
+        return detail::as_owned_cpp_obj<Encoding>(::z_reply_err_encoding(this->loan()));
+    }
 };
 
 /// A reply from queryable to ``Session::get`` operation.
 class Reply : public Owned<::z_owned_reply_t> {
-public:
+   public:
     using Owned::Owned;
 
     /// @name Methods
@@ -70,11 +71,11 @@ public:
     /// @return Zenoh instance id, or an empty optional if the id was not set.
     std::optional<Id> get_replier_id() const {
         ::z_id_t z_id;
-        if (::z_reply_replier_id(this->loan(), &z_id)) {
+        if (::zcu_reply_replier_id(this->loan(), &z_id)) {
             return Id(z_id);
         }
         return {};
     }
 };
 
-}
+}  // namespace zenoh
