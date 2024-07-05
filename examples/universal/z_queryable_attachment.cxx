@@ -66,9 +66,9 @@ int _main(int argc, char **argv) {
         std::unordered_map<std::string, std::string> attachment_map;
         if (query.has_attachment()) {
             // reads attachment as a key-value map
-            auto attachment = query.get_attachment().deserialize<std::unordered_map<std::string, std::string>>();
+            attachment_map = query.get_attachment().deserialize<std::unordered_map<std::string, std::string>>();
             for (auto&& [key, value]: attachment_map) {
-                value = "echo " + value;
+                std::cout << "   attachment: " << key << ": '" << value << "'\n";
             }
         }
         query.reply(

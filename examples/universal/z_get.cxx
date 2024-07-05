@@ -25,7 +25,7 @@ using namespace zenoh;
 
 int _main(int argc, char **argv) {
     const char *expr = "demo/example/**";
-    const char *value = nullptr;
+    const char *value = "";
     const char *locator = nullptr;
     const char *config_file = nullptr;
     getargs(argc, argv, {}, {{"key expression", &expr}, {"value", &value}, {"locator", &locator}}
@@ -85,8 +85,6 @@ int _main(int argc, char **argv) {
         done = true;
         done_signal.notify_all();
     };
-
-    session.get(keyexpr, "", on_reply, on_done, {.target = Z_QUERY_TARGET_ALL});
 
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });
