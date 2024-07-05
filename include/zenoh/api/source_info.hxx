@@ -23,16 +23,8 @@ namespace zenoh {
 
 /// The global unique id of a Zenoh entity.
 class EntityGlobalId : public Copyable<::z_entity_global_id_t> {
+public:
     using Copyable::Copyable;
-
-    /// @name Constructors
-
-    /// @brief Create new entity global id.
-    EntityGlobalId(const Id& id, uint32_t eid) 
-        :Copyable({}) {
-        ::z_entity_global_id_new(&this->inner(), detail::as_copyable_c_ptr(id), eid);
-    }
-
     /// @name Methods
 
     /// Get Zenoh id.
