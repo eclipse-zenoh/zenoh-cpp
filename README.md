@@ -170,19 +170,10 @@ Below are the steps to include [zenoh-cpp] into CMake project. See also [example
    target_link_libraries(yourproject PUBLIC zenohcxx::zenohc::static)
    ```
 
-- include the [zenoh.hxx] header and use namespace `zenoh`. Depending on preprocessor setting in library target the correct namespace (`zenohpico` or `zenohc`) is aliased to `zenoh` namespace. This allows to write code compatible with both libraries without changes.
+- include the [zenoh.hxx] header and use namespace `zenoh`.
     ```C++
     #include "zenoh.hxx"
     using namespace zenoh;
-    ```
-    or use headers [zenohc.hxx] or [zenohpico.hxx] directly
-    ```C++
-    #include "zenohc.hxx"
-    using namespace zenohc;
-    ```
-    ```C++
-    #include "zenohpico.hxx"
-    using namespace zenohpico;
     ```
 
 ## Library API
@@ -190,76 +181,7 @@ Below are the steps to include [zenoh-cpp] into CMake project. See also [example
 ### Documentation
 
 The documentation is on [zenoh-cpp.readthedocs.io]. 
-You may also refer directly to [base.hxx] and [api.hxx] which contains all the definitions.
 Instruction how to build documentation locally is at [docs/README.md].
-
-### Conventions
-
-There are three main kinds of wrapper classes / structures provided by [zenoh-cpp]. They are:
-
-#### Structs derived from `Copyable` template:
-
-```C++
-struct PutOptions : public Copyable<::z_put_options_t> {
-    ...
-}
-```
-
-These structures can be freely passed by value. They exacly matches corresponging C-library structures (`z_put_options_t` in this case) and adds some necessary constructors and methods. For example `PutOptions` default constructor calls the zenohc/zenohpico function `z_put_options_default()`.
-
-There are some copyable structures with `View` postfix:
-
-```C++
-struct BytesView : public Copyable<::z_bytes_t> {
-...
-}
-```
-
-Such structures contains pointers to some external data. So they should be cared with caution, as they becoming invalid when their data source is destroyed. The same carefulness is required when handling `std::string_view` from standard library for examlple.
-
-#### Classes derived from `Owned` template
-
-```C++
-class Config : public Owned<::z_owned_config_t> {
-...
-}
-```
-
-Classes which protects corresponding so-called `owned` structures from copying, allowing move semantic only. Corresponding utility functions like `z_check`, `z_null`, `z_drop` are integrated into the `Owned` base template.
-
-#### Closures
-
-It's classes representing [zenoh-c] and [zenoh-pico] callback structures:
-```C++
-typedef ClosureMoveParam<::z_owned_closure_reply_t, ::z_owned_reply_t, Reply> ClosureReply;
-typedef ClosureConstRefParam<::z_owned_closure_query_t, ::z_query_t, Query> ClosureQuery;
-```
-
-They allows to wrap C++ invocable objects (fuctions, lambdas, classes with operator() overloaded) and pass them as callbacks to zenoh.
-
-The `ClosureConstRefParam` types accepts objects, invocable with `const Foo&` parameter. For example
-```C++
-session.declare_subscriber("foo/bar", [](const Sample& sample) { ... });
-```
-or
-```C++
-void on_query(const Query& query) { ... };
-...
-auto queryable = std::get<Queryable>(session.declare_queryable("foo/bar", on_query);
-```
-Instead of `std::get` it makes sense to use `zenoh::expect` here. It is a helper template which takes `std::variant<T,ErrorMessage>` and
-either returns `T` or throws `ErrorMessage`:
-```C++
-auto queryable = expect(session.declare_queryable("foo/bar", on_query));
-```
-
-The `ClosureMoveParam` types accepts types, invocable with `Foo`, `Foo&` or `Foo&&`. Callback may take ownership of the reference parameter passed
-or do nothing and leave to caller to drop it.
-```C++
-session.get("foo/bar", "", [](Reply reply) { ... });
-session.get("foo/bar", "", [](Reply& reply) { ... });
-session.get("foo/bar", "", [](Reply&& reply) { ... });
-```
 
 [rust-lang]: https://www.rust-lang.org
 [zenoh]: https://github.com/eclipse-zenoh/zenoh
@@ -267,10 +189,6 @@ session.get("foo/bar", "", [](Reply&& reply) { ... });
 [zenoh-cpp]: https://github.com/eclipse-zenoh/zenoh-cpp
 [zenoh-pico]: https://github.com/eclipse-zenoh/zenoh-pico
 [zenoh.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenoh.hxx
-[zenohc.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohc.hxx
-[zenohpico.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohpico.hxx
-[api.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohcxx/api.hxx
-[base.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenohcxx/base.hxx
 [add_subdirectory]: https://cmake.org/cmake/help/latest/command/add_subdirectory.html
 [find_package]: https://cmake.org/cmake/help/latest/command/find_package.html
 [FetchContent]: https://cmake.org/cmake/help/latest/module/FetchContent.html
