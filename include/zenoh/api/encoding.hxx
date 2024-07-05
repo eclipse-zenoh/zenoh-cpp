@@ -32,7 +32,7 @@ public:
     /// @brief Construct encoding from string.
     Encoding(std::string_view s, ZError* err = nullptr) : Owned(nullptr) {
         __ZENOH_ERROR_CHECK(
-            ::z_encoding_from_substring(&this->_0, s.data(), s.size()),
+            ::z_encoding_from_substr(&this->_0, s.data(), s.size()),
             err,
             std::string("Failed to create encoding from ").append(s)
         );

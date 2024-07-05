@@ -74,9 +74,6 @@ auto& to_owned_cpp_ref(const OwnedType* o) {
     return *reinterpret_cast<T*>(o);
 }
 
-#if defined(ZENOHCXX_ZENOHPICO)
-
-#elif defined(ZENOHCXX_ZENOHC)
 template<class T, class LoanedType>
 const auto& as_owned_cpp_obj(const LoanedType* l) {
     typedef typename z_loaned_to_owned_type_t<LoanedType>::type OwnedType;
@@ -101,5 +98,5 @@ const auto& as_copyable_cpp_obj(const CopyableType* c) {
     const zenoh::Copyable<CopyableType>* c_cpp = reinterpret_cast<const zenoh::Copyable<CopyableType>*>(c);
     return *reinterpret_cast<const T*>(c_cpp);
 }
-#endif
+
 }

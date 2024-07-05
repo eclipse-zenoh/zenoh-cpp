@@ -66,7 +66,7 @@ int _main(int argc, char **argv) {
     auto pub = session.declare_publisher(KeyExpr(keyexpr), {.congestion_control = Z_CONGESTION_CONTROL_BLOCK});
 
     printf("Press CTRL-C to quit...\n");
-    while (1) pub.put(Bytes::serialize(payload));
+    while (1) pub.put(Bytes::serialize(payload, ZenohCodec<ZenohCodecType::AVOID_COPY>()));
 }
 
 int main(int argc, char **argv) {

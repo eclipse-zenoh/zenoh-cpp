@@ -60,7 +60,7 @@ public:
     /// @brief Construct a shallow copy of this data.
     Bytes clone() const {
         Bytes b(nullptr);
-        ::z_bytes_clone(this->loan(), &b._0);
+        ::z_bytes_clone(&b._0, this->loan());
         return b; 
     }
 

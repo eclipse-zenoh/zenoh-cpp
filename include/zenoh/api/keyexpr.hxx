@@ -40,13 +40,13 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
         if (autocanonize) {
             size_t s = key_expr.size();
             __ZENOH_ERROR_CHECK(
-                ::z_keyexpr_from_substring_autocanonize(&this->_0, key_expr.data(), &s), 
+                ::z_keyexpr_from_substr_autocanonize(&this->_0, key_expr.data(), &s), 
                 err, 
                 std::string("Failed to construct KeyExpr from: ").append(key_expr)
             );
         } else {
             __ZENOH_ERROR_CHECK(
-                ::z_keyexpr_from_substring(&this->_0, key_expr.data(), key_expr.size()),
+                ::z_keyexpr_from_substr(&this->_0, key_expr.data(), key_expr.size()),
                 err,
                 std::string("Failed to construct KeyExpr from: ").append(key_expr)
             );

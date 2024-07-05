@@ -105,7 +105,7 @@ public:
     std::string get(std::string_view key, ZError* err = nullptr) const {
         ::z_owned_string_t s;
         __ZENOH_ERROR_CHECK(
-            ::zc_config_get_from_substring(this->loan(), key.data(), key.size(), &s),
+            ::zc_config_get_from_substr(this->loan(), key.data(), key.size(), &s),
             err,
             std::string("Failed to get config value for the key: ").append(key)
         );
@@ -142,24 +142,30 @@ public:
 #ifdef ZENOHCXX_ZENOHPICO
     /// @brief Get config parameter by it's numeric ID.
     /// @param key the key.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     /// @return pointer to the null-terminated string value of the config parameter.
     /// @note zenoh-pico only.
-    const char* get(uint8_t key) const { return ::zp_config_get(loan(), key); }
+    const char* get(uint8_t key, ZError* err = nullptr) const {
+        const char* c = ::zp_config_get(loan(), key);
+        __ZENOH_ERROR_CHECK(
+            (c == nullptr ? -1 : Z_OK),
+            err,
+            std::string("Failed to get config value for the key: ").append(std::to_string(key))
+        );
+        return c;
+    }
 
     /// @brief Insert a config parameter by it's numeric ID.
     /// @param key the key.
     /// @param value the null-terminated string value.
-    /// @return true if the parameter was inserted, false otherwise.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     /// @note zenoh-pico only.
-    bool insert(uint8_t key, const char* value);
-
-    /// @brief Insert a config parameter by it's numeric ID.
-    /// @param key the key.
-    /// @param value the null-terminated string value.
-    /// @param error the error code.
-    /// @return true if the parameter was inserted.
-    /// @note zenoh-pico only.
-    bool insert(uint8_t key, const char* value, ErrNo& error);
+    void insert(uint8_t key, const char* value, ZError* err = nullptr) {
+        __ZENOH_ERROR_CHECK(zp_config_insert(this->loan(), key, value),
+            err,
+            std::string("Failed to insert '").append(value).append("' for the key '").append(std::to_string(key)).append("' into config")
+        );
+    }
 #endif
 };
 }

@@ -66,7 +66,7 @@ public:
     /// @return a new ``Session`` instance.
     Session clone() const {
         Session s(nullptr);
-        ::zc_session_clone(this->loan(), &s._0);
+        ::zc_session_clone(&s._0, this->loan());
         return s;
     }
 

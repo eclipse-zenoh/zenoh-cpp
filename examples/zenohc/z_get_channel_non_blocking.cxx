@@ -67,7 +67,8 @@ int _main(int argc, char **argv) {
     std::cout << "Sending Query '" << expr << "'...\n";
 
     auto replies = session.get(
-        keyexpr, "", channels::FifoChannel(16), {.target = QueryTarget::Z_QUERY_TARGET_ALL}
+        keyexpr, "", channels::FifoChannel(16), 
+        {.target = QueryTarget::Z_QUERY_TARGET_ALL, .payload = Bytes::serialize("Get from C++")}
     );
 
     for (auto [reply, alive] = replies.try_recv(); alive; std::tie(reply, alive) = replies.try_recv()) {

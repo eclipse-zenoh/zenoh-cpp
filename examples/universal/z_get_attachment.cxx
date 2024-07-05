@@ -25,7 +25,7 @@ using namespace zenoh;
 
 int _main(int argc, char **argv) {
     const char *expr = "demo/example/**";
-    const char *value = nullptr;
+    const char *value = "";
     const char *config_file = nullptr;
     getargs(argc, argv, {}, {{"key expression", &expr}, {"value", &value}}
 #ifdef ZENOHCXX_ZENOHC
@@ -61,7 +61,7 @@ int _main(int argc, char **argv) {
             // we expect attachment in the form of key-value pairs
             auto attachment = sample.get_attachment().deserialize<std::unordered_map<std::string, std::string>>();
             for (auto&& [key, value]: attachment) {
-                  std::cout << "   attachment: " << key << ": '" << value << "'\n";
+                std::cout << "   attachment: " << key << ": '" << value << "'\n";
             }
         } else {
             std::cout << "Received an error :" << reply.get_err().get_payload().deserialize<std::string>() << "\n";
@@ -74,7 +74,12 @@ int _main(int argc, char **argv) {
         done_signal.notify_all();
     };
 
-    session.get(keyexpr, "", on_reply, on_done, {.target = Z_QUERY_TARGET_ALL, .payload = Bytes::serialize(value) });
+    std::unordered_map<std::string, std::string> attachment = {{"Source", "C++"}};
+
+    session.get(
+        keyexpr, "", on_reply, on_done,
+        {.target = Z_QUERY_TARGET_ALL, .payload = Bytes::serialize(value), .attachment = Bytes::serialize(attachment)}
+    );
 
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });
