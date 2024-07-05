@@ -88,7 +88,7 @@ typedef ::z_whatami_t WhatAmI;
 /// @return a string representation of the given flag.
 inline std::string_view whatami_as_str(WhatAmI whatami) {
     ::z_view_string_t str_out;
-    ::z_whatami_to_str(whatami, &str_out);
+    ::z_whatami_to_view_string(whatami, &str_out);
     return std::string_view(::z_string_data(::z_loan(str_out)), ::z_string_len(::z_loan(str_out)));
 }
 

@@ -40,13 +40,21 @@ public:
     /// @brief Get the array of locators of the entity.
     /// @return the array of locators of the entity.
     std::vector<std::string_view> get_locators() const {
+#ifdef ZENOHCXX_ZENOHC
         ::z_owned_string_array_t out;
         ::z_hello_locators(this->loan(), &out);
-        std::vector<std::string_view> locators(::z_string_array_len(::z_loan(out)));
-        for (size_t i = 0; i < ::z_string_array_len(::z_loan(out)); i++) {
-            auto s = ::z_string_array_get(::z_loan(out), i);
+        auto out_loaned = ::z_loan(out);
+#else
+        auto out_loaned = ::z_hello_locators(this->loan());
+#endif
+        std::vector<std::string_view> locators(::z_string_array_len(out_loaned));
+        for (size_t i = 0; i < ::z_string_array_len(out_loaned); i++) {
+            auto s = ::z_string_array_get(out_loaned, i);
             locators[i] = std::string_view(reinterpret_cast<const char*>(::z_string_data(s)), ::z_string_len(s));
         }
+#ifdef ZENOHCXX_ZENOHC
+        z_drop(z_move(out));
+#endif
         return locators;
     }
 };
