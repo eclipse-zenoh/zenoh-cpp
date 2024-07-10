@@ -61,7 +61,7 @@ int _main(int argc, char **argv) {
     std::cout << "Declaring Publisher on '" << keyexpr << "'..." << std::endl;
     auto pub = session.declare_publisher(KeyExpr(keyexpr));
 
-    std::cout << "Publisher on '" << pub.get_keyexpr().as_string_view() << "' declared" << std::endl;
+    std::cout << "Publisher on '" << keyexpr << "' declared" << std::endl;
 
     // allocate attachment map
     std::unordered_map<std::string, std::string> attachment_map = {

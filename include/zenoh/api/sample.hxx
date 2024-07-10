@@ -77,12 +77,12 @@ public:
     /// @brief Get the express setting this sample was sent with.
     /// @return ``CongestionControl`` value.
     bool get_express() const { return ::z_sample_express(this->loan()); }
-
+#ifdef ZENOHCXX_ZENOHC
     /// @brief Get the source info of this sample.
     const SourceInfo& get_source_info() const { 
         return detail::as_owned_cpp_obj<SourceInfo>(::z_sample_source_info(this->loan())); 
     }
-
+#endif
     /// @brief Construct a copy of this sample.
     Sample clone() const {
         Sample s(nullptr);

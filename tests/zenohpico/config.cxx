@@ -12,9 +12,9 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-#include "zenohpico.hxx"
+#include "zenoh.hxx"
 
-using namespace zenohpico;
+using namespace zenoh;
 
 #undef NDEBUG
 #include <assert.h>
@@ -26,7 +26,9 @@ void test_config_default() {
 
 void test_config_insert() {
     Config config;
-    assert(config.insert(Z_CONFIG_USER_KEY, "foo"));
+    ZError err = Z_OK;
+    config.insert(Z_CONFIG_USER_KEY, "foo", &err);
+    assert(err == Z_OK);
     assert(std::string("foo") == config.get(Z_CONFIG_USER_KEY));
 }
 

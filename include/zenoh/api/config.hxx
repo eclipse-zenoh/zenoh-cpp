@@ -30,17 +30,27 @@ public:
     /// @name Constructors
 
     /// @brief Create a default configuration.
-    Config() : Owned(nullptr) {
-        ::z_config_default(&this->_0);
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    Config(ZError* err = nullptr) : Owned(nullptr) {
+        __ZENOH_ERROR_CHECK(
+            ::z_config_default(&this->_0),
+            err,
+            std::string("Failed to create default configuration")
+        );
     }
 
 #ifdef ZENOHCXX_ZENOHC
     /// @brief Create the default configuration for "peer" mode.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     /// @return the ``Config`` object.
     /// @note zenoh-c only.
-    static Config peer() {
+    static Config peer(ZError* err = nullptr) {
         Config c(nullptr) ;
-        ::z_config_peer(&c._0);
+        __ZENOH_ERROR_CHECK(
+            ::z_config_peer(&c._0),
+            err,
+            std::string("Failed to create peer configuration")
+        );
         return c;
     }
 
@@ -87,6 +97,38 @@ public:
         }
         __ZENOH_ERROR_CHECK(
             ::z_config_client(&c._0, p.data(), p.size()),
+            err,
+            "Failed to create client config"
+        );
+        return c;
+    }
+#endif
+
+#ifdef ZENOHCXX_ZENOHPICO
+    /// @brief Create the default configuration for "peer" mode.
+    /// @param locator Multicast address for peer-to-peer communication.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @return the ``Config`` object.
+    /// @note zenoh-pico only.
+    static Config peer(const char* locator, ZError* err = nullptr) {
+        Config c(nullptr) ;
+        __ZENOH_ERROR_CHECK(
+            ::z_config_peer(&c._0, locator),
+            err,
+            "Failed to create client config"
+        );
+        return c;
+    }
+
+    /// @brief Create the configuration for "client" mode.
+    /// @param peer the peer locator to connect to, if null, multicast scouting will be performed.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @return the ``Config`` object.
+    /// @note zenoh-pico only.
+    static Config client(const char* peer, ZError* err = nullptr) {
+        Config c(nullptr) ;
+        __ZENOH_ERROR_CHECK(
+            ::z_config_client(&c._0, peer),
             err,
             "Failed to create client config"
         );

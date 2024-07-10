@@ -38,8 +38,10 @@ void canonize() {
 
     // do not force canoniozation on keyexpr construction
     KeyExpr k_err(non_canon, false, &err);
+#ifdef ZENOHCXX_ZENOHC //Pico does not validate key expressions yet.
     assert(!k_err);
     assert(err < 0);
+#endif
 
     // enforce canonization
     KeyExpr k_ok(non_canon, true, &err);
@@ -116,8 +118,10 @@ int main(int argc, char** argv) {
     includes();
     intersects();
 
+#ifdef ZENOHCXX_ZENOHC
     // Session based tests
     Config config;
     auto session = Session::open(std::move(config));
     declare(session);
+#endif
 }

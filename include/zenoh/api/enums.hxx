@@ -79,8 +79,11 @@ typedef ::z_priority_t Priority;
 /// - **Z_QUERY_TARGET_ALL_COMPLETE**: A set of complete queryables.
 typedef ::z_query_target_t QueryTarget;
 
-/// @brief Flag indicating type of Zenoh entity.
+/// @brief Enum indicating type of Zenoh entity.
 typedef ::z_whatami_t WhatAmI;
+
+/// @brief Flag indicating type of Zenoh entities to scout for.
+typedef ::z_what_t What;
 
 /// @brief Get a human-readable representation of the given ``zenoh::WhatAmI``
 /// flag.

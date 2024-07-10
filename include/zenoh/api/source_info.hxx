@@ -20,7 +20,7 @@
 
 
 namespace zenoh {
-
+#ifdef ZENOHCXX_ZENOHC
 /// The global unique id of a Zenoh entity.
 class EntityGlobalId : public Copyable<::z_entity_global_id_t> {
 public:
@@ -57,5 +57,5 @@ public:
     /// @brief Get the sequence number of the sample from the given source.
     uint64_t sn() const { return ::z_source_info_sn(this->loan());}
 };
-
+#endif
 }
