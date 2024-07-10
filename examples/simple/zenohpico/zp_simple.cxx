@@ -13,14 +13,11 @@
 //
 #include <iostream>
 
-//
-// C++ wrapper for zenoh-pico
-//
-#include "zenohpico.hxx"
-using namespace zenohpico;
+#include "zenoh.hxx"
+using namespace zenoh;
 
 int main(int, char **) {
-    Config config;
-    auto session = expect<Session>(open(std::move(config)));
-    session.put("demo/example/simple", "Simple!");
+    Config config = Config::create_default();
+    auto session = Session::open(std::move(config));
+    session.put(KeyExpr("demo/example/simple"), Bytes::serialize("Simple!"));
 }

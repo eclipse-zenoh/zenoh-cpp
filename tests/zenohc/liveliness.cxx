@@ -26,8 +26,8 @@ using namespace std::chrono_literals;
 void test_liveliness_get() {
     KeyExpr ke("zenoh/liveliness/test/*");
     KeyExpr token_ke("zenoh/liveliness/test/1");
-    auto session1 = Session::open(Config());
-    auto session2 = Session::open(Config());
+    auto session1 = Session::open(Config::create_default());
+    auto session2 = Session::open(Config::create_default());
     auto token = session1.liveliness_declare_token(token_ke);
     std::this_thread::sleep_for(1s);
 
@@ -50,8 +50,8 @@ void test_liveliness_subscriber() {
     KeyExpr ke("zenoh/liveliness/test/*");
     KeyExpr token_ke1("zenoh/liveliness/test/1");
     KeyExpr token_ke2("zenoh/liveliness/test/2");
-    auto session1 = Session::open(Config());
-    auto session2 = Session::open(Config());
+    auto session1 = Session::open(Config::create_default());
+    auto session2 = Session::open(Config::create_default());
 
     std::unordered_set<std::string> put_tokens;
     std::unordered_set<std::string> delete_tokens;

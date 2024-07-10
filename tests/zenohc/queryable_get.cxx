@@ -37,8 +37,8 @@ void queryable_get() {
     std::vector<std::string> replies;
     std::vector<std::string> errors;
     bool queryable_dropped = false;
-    auto session1 = Session::open(Config());
-    auto session2 = Session::open(Config());
+    auto session1 = Session::open(Config::create_default());
+    auto session2 = Session::open(Config::create_default());
     size_t queries_processed = 0;
 
     {
@@ -107,8 +107,8 @@ void queryable_get_channel() {
     KeyExpr ke("zenoh/test/*");
     KeyExpr selector("zenoh/test/1");
     std::vector<QueryData> queries;
-    auto session1 = Session::open(Config());
-    auto session2 = Session::open(Config());
+    auto session1 = Session::open(Config::create_default());
+    auto session2 = Session::open(Config::create_default());
     size_t queries_processed = 0;
     auto queryable = session1.declare_queryable(
         ke,

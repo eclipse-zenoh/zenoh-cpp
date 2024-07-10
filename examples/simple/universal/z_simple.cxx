@@ -146,7 +146,7 @@ private:
 
 int main(int, char**) {
     try {
-        Config config;
+        Config config = Config::create_default();
         auto session = Session::open(std::move(config));
 
         std::string keyexpr = "demo/example/simple";

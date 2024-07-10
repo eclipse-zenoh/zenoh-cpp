@@ -39,8 +39,10 @@ public:
         std::optional<Encoding> encoding =  {};
         /// @brief the timestamp of this message.
         std::optional<Timestamp> timestamp = {};
+#ifdef ZENOHCXX_ZENOHC
         /// @brief The source info of this message.
         std::optional<SourceInfo> source_info = {};
+#endif
         /// @brief The attachment to attach to the publication.
         std::optional<Bytes> attachment = {};
 
@@ -70,7 +72,9 @@ public:
         ::z_publisher_put_options_t opts;
         z_publisher_put_options_default(&opts);
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
+#ifdef ZENOHCXX_ZENOHC
         opts.source_info = detail::as_owned_c_ptr(options.source_info);
+#endif
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
         opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
 
@@ -102,10 +106,12 @@ public:
         return detail::as_owned_cpp_obj<KeyExpr>(::z_publisher_keyexpr(this->loan())); 
     }
 #endif
+#ifdef ZENOHCXX_ZENOHC
     /// @brief Get the id of the publisher.
     /// @return id of this publisher.
     EntityGlobalId get_id() const {
         return EntityGlobalId(::z_publisher_id(this->loan()));
     }
+#endif
 };
 }

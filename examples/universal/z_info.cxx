@@ -28,7 +28,7 @@ int _main(int argc, char** argv) {
 #endif
     );
 
-    Config config;
+    Config config = Config::create_default();
 #ifdef ZENOHCXX_ZENOHC
     if (config_file) {
         config = Config::from_file(config_file);
@@ -55,7 +55,7 @@ int _main(int argc, char** argv) {
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
-    std::cout << "own id: " << session.get_zid() << std::endl;;
+    std::cout << "own id: " << session.get_zid() << std::endl;
 
     std::cout << "routers ids:\n";
     for (const auto zid: session.get_routers_z_id()) {

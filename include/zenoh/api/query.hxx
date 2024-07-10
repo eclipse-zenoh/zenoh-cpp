@@ -84,8 +84,10 @@ public:
         bool is_express = false;
         /// @brief The timestamp of this message.
         std::optional<Timestamp> timestamp = {};
+#ifdef ZENOHCXX_ZENOHC
         /// @brief The source info of this reply message.
         std::optional<SourceInfo> source_info = {};
+#endif
         /// @brief An optional attachment to this reply message.
         std::optional<Bytes> attachment = {};
 
@@ -107,7 +109,9 @@ public:
         opts.congestion_control = options.congestion_control;
         opts.is_express = options.is_express;
         opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
+#ifdef ZENOHCXX_ZENOHC
         opts.source_info = detail::as_owned_c_ptr(options.source_info);
+#endif
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
 
         __ZENOH_ERROR_CHECK(
@@ -130,6 +134,7 @@ public:
         static ReplyErrOptions create_default() { return {}; }
     };
 
+#ifdef ZENOHCXX_ZENOHC
     /// @brief Send error reply to a query.
     /// @param options options to pass to reply error operation.
     /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
@@ -145,7 +150,7 @@ public:
             "Failed to send reply error"
         );
     }
-
+#endif
     /// @brief Options passed to the ``Query::reply_del`` operation.
     struct ReplyDelOptions {
         /// @name Fields.
@@ -158,8 +163,10 @@ public:
         bool is_express = false;
         /// @brief the timestamp of this message.
         std::optional<Timestamp> timestamp = {};
+#ifdef ZENOHCXX_ZENOHC
         /// @brief The source info of this reply message.
         std::optional<SourceInfo> source_info = {};
+#endif
         /// @brief An optional attachment to this reply message.
         std::optional<Bytes> attachment = {};
 
@@ -180,7 +187,9 @@ public:
         opts.congestion_control = options.congestion_control;
         opts.is_express = options.is_express;
         opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
+#ifdef ZENOHCXX_ZENOHC
         opts.source_info = detail::as_owned_c_ptr(options.source_info);
+#endif
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
 
         __ZENOH_ERROR_CHECK(

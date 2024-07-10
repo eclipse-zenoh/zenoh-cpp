@@ -19,7 +19,7 @@
 using namespace zenoh;
 
 int _main(int, char **) {
-    Config config;
+    Config config = Config::create_default();
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));

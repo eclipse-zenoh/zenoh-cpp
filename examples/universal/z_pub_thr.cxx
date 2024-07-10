@@ -36,7 +36,7 @@ int _main(int argc, char **argv) {
     size_t len = atoi(payload_size);
     std::vector<uint8_t> payload(len, 1);
 
-    Config config;
+    Config config = Config::create_default();
 #ifdef ZENOHCXX_ZENOHC
     if (config_file) {
         config = Config::from_file(config_file);

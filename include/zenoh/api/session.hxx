@@ -66,7 +66,7 @@ public:
     /// @return a new ``Session`` instance.
     Session clone() const {
         Session s(nullptr);
-        ::zc_session_clone(&s._0, this->loan());
+        ::z_session_clone(&s._0, this->loan());
         return s;
     }
 
@@ -113,8 +113,10 @@ public:
         std::optional<Bytes> payload = {};
         /// @brief  An optional encoding of the query payload and/or attachment.
         std::optional<Encoding> encoding = {};
+#ifdef ZENOHCXX_ZENOHC
         /// @brief The source info for the query.
         std::optional<SourceInfo> source_info = {};
+#endif
         /// @brief An optional attachment to the query.
         std::optional<Bytes> attachment = {};
         /// @brief The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
@@ -155,7 +157,9 @@ public:
         opts.consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation);
         opts.payload = detail::as_owned_c_ptr(options.payload);
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
+#ifdef ZENOHCXX_ZENOHC
         opts.source_info = detail::as_owned_c_ptr(options.source_info);
+#endif
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
         opts.timeout_ms = options.timeout_ms;
 
@@ -185,7 +189,9 @@ public:
         opts.consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation);
         opts.payload = detail::as_owned_c_ptr(options.payload);
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
+#ifdef ZENOHCXX_ZENOHC
         opts.source_info = detail::as_owned_c_ptr(options.source_info);
+#endif
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
         opts.timeout_ms = options.timeout_ms;
 
@@ -252,8 +258,10 @@ public:
         std::optional<Timestamp> timestamp = {};
         /// @brief  An optional encoding of the message payload and/or attachment.
         std::optional<Encoding> encoding = {};
+#ifdef ZENOHCXX_ZENOHC
         /// @brief The source info of this message.
         std::optional<SourceInfo> source_info = {};
+#endif
         /// @brief An optional attachment to the message.
         std::optional<Bytes> attachment = {};
 
@@ -274,7 +282,9 @@ public:
         opts.congestion_control = options.congestion_control;
         opts.priority = options.priority;
         opts.is_express = options.is_express;
+#ifdef ZENOHCXX_ZENOHC
         opts.source_info = detail::as_owned_c_ptr(options.source_info);
+#endif
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
         opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
         #ifdef ZENOHCXX_ZENOHC

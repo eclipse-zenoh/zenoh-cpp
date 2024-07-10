@@ -18,7 +18,7 @@ struct ScoutOptions {
     /// @brief The maximum duration in ms the scouting can take.
     size_t timeout_ms = 1000;
     /// @brief Type of entities to scout for.
-    WhatAmI what = WhatAmI::Z_WHATAMI_ROUTER_PEER;
+    What what = What::Z_WHAT_ROUTER_PEER;
 
     /// @name Methods
     
@@ -45,8 +45,8 @@ void scout(Config&& config, C&& on_hello, D&& on_drop, ScoutOptions&& options = 
     auto closure = ClosureType::into_context(std::forward<C>(on_hello), std::forward<D>(on_drop));
     ::z_closure(&c_closure, detail::closures::_zenoh_on_hello_call, detail::closures::_zenoh_on_drop, closure);
     ::z_scout_options_t opts;
-    opts.zc_timeout_ms = options.timeout_ms;
-    opts.zc_what = options.what;
+    opts.timeout_ms = options.timeout_ms;
+    opts.what = options.what;
 
     __ZENOH_ERROR_CHECK(
         ::z_scout(detail::as_owned_c_ptr(config), ::z_move(c_closure), &opts),
