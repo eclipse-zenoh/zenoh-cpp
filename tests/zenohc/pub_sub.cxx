@@ -23,8 +23,8 @@ using namespace std::chrono_literals;
 
 void pub_sub() {
     KeyExpr ke("zenoh/test");
-    auto session1 = Session::open(Config());
-    auto session2 = Session::open(Config());
+    auto session1 = Session::open(Config::create_default());
+    auto session2 = Session::open(Config::create_default());
     auto publisher = session1.declare_publisher(ke);
 
     std::this_thread::sleep_for(1s);
@@ -58,8 +58,8 @@ void pub_sub() {
 
 void put_sub() {
     KeyExpr ke("zenoh/test");
-    auto session1 = Session::open(Config());
-    auto session2 = Session::open(Config());
+    auto session1 = Session::open(Config::create_default());
+    auto session2 = Session::open(Config::create_default());
 
     std::this_thread::sleep_for(1s);
 
@@ -89,8 +89,8 @@ void put_sub() {
 
 void put_sub_channels() {
     KeyExpr ke("zenoh/test");
-    auto session1 = Session::open(Config());
-    auto session2 = Session::open(Config());
+    auto session1 = Session::open(Config::create_default());
+    auto session2 = Session::open(Config::create_default());
 
     std::this_thread::sleep_for(1s);
 

@@ -26,7 +26,7 @@ Publisher example:
    using namespace zenoh;
 
    int main(int argc, char **argv) {
-      Config config;
+      Config config = Config::create_default();
       auto session = Session::open(std::move(config));
       // Publish without creating a Publisher object
       session.put(KeyExpr("demo/example/simple"), Bytes::serialize("Simple!"));
@@ -45,7 +45,7 @@ Subscriber example:
    using namespace zenoh;
 
    int main(int argc, char **argv) {
-      Config config;
+      Config config = Config::create_default();
       auto session = Session::open(std::move(config));
       auto subscriber = session.declare_subscriber(
          KeyExpr("demo/example/simple"), 
@@ -69,7 +69,7 @@ Subscriber example with non-blocking stream interface:
    using namespace std::chrono_literals;
 
    int main(int argc, char **argv) {
-      Config config;
+      Config config = Config::create_default();
       auto session = Session::open(std::move(config));
       auto subscriber = session.declare_subscriber(
          KeyExpr("demo/example/simple"),

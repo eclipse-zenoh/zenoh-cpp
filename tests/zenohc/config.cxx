@@ -32,7 +32,7 @@ void test_config_peer() {
 }
 
 void test_config_to_string() {
-    Config config;
+    Config config = Config::create_default();
     auto s = config.to_string();
     assert(s.size() > 0);
     assert(s.find("{\"id\":\"") == 0);

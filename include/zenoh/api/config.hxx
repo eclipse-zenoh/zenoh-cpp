@@ -31,12 +31,14 @@ public:
 
     /// @brief Create a default configuration.
     /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
-    Config(ZError* err = nullptr) : Owned(nullptr) {
+    static Config create_default(ZError* err = nullptr) {
+        Config c(nullptr);
         __ZENOH_ERROR_CHECK(
-            ::z_config_default(&this->_0),
+            ::z_config_default(&c._0),
             err,
             std::string("Failed to create default configuration")
         );
+        return c;
     }
 
 #ifdef ZENOHCXX_ZENOHC

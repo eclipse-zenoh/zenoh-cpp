@@ -28,7 +28,7 @@ Queryable example:
 
    int main(int argc, char **argv) {
       auto queryable_keyexpr = KeyExpr("demo/example/simple");
-      Config config;
+      Config config = Config::create_default();
       auto session = Session::open(std::move(config));
       auto queryable = session.declare_queryable(
             queryable_keyexpr, 
@@ -52,7 +52,7 @@ Also notice that the callback is processed asynchronously, so the client must no
    using namespace zenoh;
 
    int main(int argc, char **argv) {
-      Config config;
+      Config config = Config::create_default();
       auto session = Session::open(std::move(config));
 
       auto on_reply = [](const Reply& reply) {
@@ -89,7 +89,7 @@ Also notice that the callback is processed asynchronously, so the client must no
    using namespace zenoh;
 
    int main(int argc, char **argv) {
-      Config config;
+      Config config = Config::create_default();
       auto session = Session::open(std::move(config));
 
       // Send a query and receive a stream providing replies.

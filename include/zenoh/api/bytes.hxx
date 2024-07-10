@@ -446,7 +446,7 @@ struct ZenohCodec {
 
     template<class Allocator>
     static Bytes serialize(const std::vector<uint8_t, Allocator>& s) {
-        return ZenohCodec::serialize(std::make_pair<const uint8_t*, size_t>(s.data(), s.size()));;
+        return ZenohCodec::serialize(std::make_pair<const uint8_t*, size_t>(s.data(), s.size()));
     }
 
     template<class T, class Allocator>

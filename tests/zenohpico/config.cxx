@@ -20,12 +20,12 @@ using namespace zenoh;
 #include <assert.h>
 
 void test_config_default() {
-    Config config;
+    Config config = Config::create_default();
     assert(config.get(Z_CONFIG_MULTICAST_LOCATOR_KEY) != nullptr);
 }
 
 void test_config_insert() {
-    Config config;
+    Config config = Config::create_default();
     ZError err = Z_OK;
     config.insert(Z_CONFIG_USER_KEY, "foo", &err);
     assert(err == Z_OK);

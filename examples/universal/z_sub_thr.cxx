@@ -74,7 +74,7 @@ int _main(int argc, char **argv) {
 #endif
     );
 
-    Config config;
+    Config config = Config::create_default();
 #ifdef ZENOHCXX_ZENOHC
     if (configfile) {
         config = Config::from_file(configfile);

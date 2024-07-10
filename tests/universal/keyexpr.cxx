@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
 
 #ifdef ZENOHCXX_ZENOHC
     // Session based tests
-    Config config;
+    Config config = Config::create_default();
     auto session = Session::open(std::move(config));
     declare(session);
 #endif
