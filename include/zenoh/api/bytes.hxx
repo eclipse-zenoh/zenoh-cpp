@@ -261,7 +261,7 @@ public:
 
 };
 
-Bytes::Iterator Bytes::iter() const {
+inline Bytes::Iterator Bytes::iter() const {
     return Bytes::Iterator(::z_bytes_get_iterator(this->loan()));
 }
 
