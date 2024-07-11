@@ -39,25 +39,59 @@ class Session : public Owned<::z_owned_session_t> {
 public:
     using Owned::Owned;
 
+    /// @brief Options to be passed when opening a ``Session``.
+    struct SessionOptions {
+        /// @name Fields
+#ifdef ZENOHCXX_ZENOHPICO
+        /// @brief For zenoh-pico only. If true, start background threads which handles the network
+        /// traffic. If false, the threads should be called manually with ``Session::start_read_task`` and
+        /// ``Session::start_lease_task`` or methods ``Session::read``, ``Session::send_keep_alive`` and
+        /// ``Session::send_join`` should be called in loop.
+        bool start_background_tasks = true;
+#endif
+        static SessionOptions create_default() { return {}; }
+    };
+
     /// @name Constructors
 
     /// @brief Create a new Session.
     /// @param config Zenoh session ``Config``.
+    /// @param options Options to pass to session creation operation.
     /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
-    Session(Config&& config, ZError* err = nullptr) : Owned(nullptr) {
+    Session(Config&& config, SessionOptions&& options = SessionOptions::create_default(), ZError* err = nullptr) : Owned(nullptr) {
         __ZENOH_ERROR_CHECK(
             ::z_open(&this->_0, detail::as_owned_c_ptr(config)),
             err,
             "Failed to open session"
         );
+#ifdef ZENOHCXX_ZENOHPICO
+        if (err != nullptr && *err != Z_OK) return;
+        if (options.start_background_tasks) {
+            ZError err_inner;
+            this->start_read_task(&err_inner);
+            if (err_inner == Z_OK) {
+                this->start_lease_task(&err_inner);
+            }
+            if (err_inner == Z_OK) return;
+            ::z_close(&this->_0);
+            __ZENOH_ERROR_CHECK(
+                err_inner,
+                err,
+                "Failed to start background tasks"
+            );
+        }
+#else
+        (void)options;
+#endif
     }
 
     /// @brief A factory method equivalent to a ``Session`` constructor.
     /// @param config Zenoh session ``Config``.
+    /// @param options Options to pass to session creation operation.
     /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     /// @return ``Session`` object. In case of failure it will be return in invalid state.
-    static Session open(Config&& config, ZError* err = nullptr) {
-        return Session(std::move(config), err);
+    static Session open(Config&& config, SessionOptions&& options = SessionOptions::create_default(), ZError* err = nullptr) {
+        return Session(std::move(config), std::move(options), err);
     }
 
     /// @name Methods
@@ -532,87 +566,84 @@ public:
     }
 
 #ifdef ZENOHCXX_ZENOHPICO
-
     /// @brief Start a separate task to read from the network and process the messages as soon as they are received.
-    /// @return true if the operation was successful, false otherwise
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     /// @note zenoh-pico only
-    bool start_read_task();
+    void start_read_task(ZError* err = nullptr) {
+        __ZENOH_ERROR_CHECK(
+            zp_start_read_task(this->loan(), nullptr),
+            err,
+            "Failed to start read task"
+        );
+    }
 
-    /// @brief Start a separate task to read from the network and process the messages as soon as they are received.
-    /// @param error ``zenoh::ErrNo`` the error code
-    /// @return true if the operation was successful, false otherwise
+    /// @brief Stop the read task.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     /// @note zenoh-pico only
-    bool start_read_task(ZError* error = nullptr);
-
-    /// @brief Stop the read task
-    /// @return true if the operation was successful, false otherwise
-    /// @note zenoh-pico only
-    bool stop_read_task();
-
-    /// @brief Stop the read task
-    /// @param error ``zenoh::ErrNo`` the error code
-    /// @return true if the operation was successful, false otherwise
-    /// @note zenoh-pico only
-    bool stop_read_task(ZError* error = nullptr);
+    void stop_read_task(ZError* err = nullptr) {
+        __ZENOH_ERROR_CHECK(
+            zp_stop_read_task(this->loan()),
+            err,
+            "Failed to stop read task"
+        );
+    }
 
     /// @brief Start a separate task to handle the session lease.  This task will send KeepAlive messages when needed
     /// and will close the session when the lease is expired. When operating over a multicast transport, it also
     /// periodically sends the Join messages.
-    /// @return true if the operation was successful, false otherwise
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     /// @note zenoh-pico only
-    bool start_lease_task();
+    void start_lease_task(ZError* err = nullptr) {
+        __ZENOH_ERROR_CHECK(
+            zp_start_lease_task(this->loan(), NULL),
+            err,
+            "Failed to start lease task"
+        ); 
+    }
 
-    /// @brief Start a separate task to handle the session lease. This task will send KeepAlive messages when needed
-    /// and will close the session when the lease is expired. When operating over a multicast transport, it also
-    /// periodically sends the Join messages.
-    /// @param error ``zenoh::ErrNo`` the error code
-    /// @return true if the operation was successful, false otherwise
+    /// @brief Stop the lease task.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     /// @note zenoh-pico only
-    bool start_lease_task(ZError* error = nullptr);
-
-    /// @brief Stop the lease task
-    /// @return true if the operation was successful, false otherwise
-    /// @note zenoh-pico only
-    bool stop_lease_task();
-
-    /// @brief Stop the lease task
-    /// @param error ``zenoh::ErrNo`` the error code
-    /// @return true if the operation was successful, false otherwise
-    /// @note zenoh-pico only
-    bool stop_lease_task(ZError* error = nullptr);
+    void stop_lease_task(ZError* err = nullptr) {
+        __ZENOH_ERROR_CHECK(
+            zp_stop_lease_task(this->loan()),
+            err,
+            "Failed to stop lease task"
+        );
+    }
 
     /// @brief Triggers a single execution of reading procedure from the network and processes of any received the
-    /// message
-    /// @return true if the operation was successful, false otherwise
+    /// message.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     /// @note zenoh-pico only
-    bool read();
-
-    /// @brief Triggers a single execution of reading procedure from the network and processes of any received the
-    /// message
-    /// @param error ``zenoh::ErrNo`` the error code
-    /// @return true if the operation was successful, false otherwise
-    /// @note zenoh-pico only
-    bool read(ZError* error = nullptr);
+    void read(ZError* err = nullptr) {
+        __ZENOH_ERROR_CHECK(
+            zp_read(this->loan(), nullptr),
+            err,
+            "Failed to perform read"
+        );
+    }
 
     /// @brief Triggers a single execution of keep alive procedure. It will send KeepAlive messages when needed and
     /// will close the session when the lease is expired.
-    /// @return true if the leasing procedure was executed successfully, false otherwise.
-    bool send_keep_alive();
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    void send_keep_alive(ZError* err = nullptr) {
+        __ZENOH_ERROR_CHECK(
+            zp_send_keep_alive(this->loan(), nullptr),
+            err,
+            "Failed to perform send_keep_alive"
+        );
+    }
 
-    /// @brief Triggers a single execution of keep alive procedure. It will send KeepAlive messages when needed and
-    /// will close the session when the lease is expired.
-    /// @param error ``zenoh::ErrNo`` the error code
-    /// @return true if the leasing procedure was executed successfully, false otherwise.
-    bool send_keep_alive(ZError* error = nullptr);
-
-    /// @brief Triggers a single execution of join procedure: send the Join message
-    /// @return true if the join procedure was executed successfully, false otherwise.
-    bool send_join();
-
-    /// @brief Triggers a single execution of join procedure: send the Join message
-    /// @param error ``zenoh::ErrNo`` the error code
-    /// @return true if the join procedure was executed successfully, false otherwise.
-    bool send_join(ZError* error = nullptr);
+    /// @brief Triggers a single execution of join procedure: send the Join message.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    void send_join(ZError* err = nullptr) {
+        __ZENOH_ERROR_CHECK(
+            zp_send_join(this->loan(), nullptr),
+            err,
+            "Failed to perform send_join"
+        );
+    }
 #endif
 
 
