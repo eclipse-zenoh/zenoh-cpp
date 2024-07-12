@@ -19,6 +19,7 @@
 #include "../detail/closures_concrete.hxx"
 
 #include "enums.hxx"
+#include "timestamp.hxx"
 #include "config.hxx"
 #include "id.hxx"
 #include "publisher.hxx"
@@ -826,5 +827,16 @@ public:
     }
 
 #endif
+    /// @brief Create Timestamp from session id.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    Timestamp new_timestamp(ZError* err = nullptr){
+        ::z_timestamp_t t;
+        __ZENOH_ERROR_CHECK(
+            z_timestamp_new(&t, this->loan()),
+            err,
+            "Failed to create timestamp"
+        );
+        return Timestamp(t);
+    }
 };
 }
