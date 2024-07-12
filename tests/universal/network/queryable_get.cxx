@@ -155,6 +155,6 @@ void queryable_get_channel() {
 
 
 int main(int argc, char** argv) {
-    queryable_get();       
+    queryable_get();
     queryable_get_channel();
 }

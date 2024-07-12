@@ -22,23 +22,12 @@ namespace zenoh {
 class Timestamp :public Copyable<::z_timestamp_t> {
 public:
     using Copyable::Copyable;
-    // TODO: add utility methods to interpret time as mils, seconds, minutes, etc
-
-    /// @name Constructors
-
-    /// @brief Create Timestamp from id and NTP64 time.
-    /// @param id unique id associated with timestamp (normally provided by Zenoh router).
-    /// @param ntp64_time time in NTP64 format.
-    Timestamp(const Id& id, uint64_t ntp64_time)
-        :Copyable({}) {
-        z_timestamp_new(&this->inner(), detail::as_copyable_c_ptr(id), ntp64_time);
-    }
     
     /// @name Methods
 
     /// @brief Get the NTP64 time part of the timestamp.
     /// @return time in NTP64 format.
-    uint64_t get_time() const { return ::z_timestamp_npt64_time(&this->inner()); }
+    uint64_t get_time() const { return ::z_timestamp_ntp64_time(&this->inner()); }
 
     /// @brief Get the unique id of the timestamp.
     /// @return Id associated with this timestamp.

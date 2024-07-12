@@ -134,7 +134,6 @@ public:
         static ReplyErrOptions create_default() { return {}; }
     };
 
-#ifdef ZENOHCXX_ZENOHC
     /// @brief Send error reply to a query.
     /// @param options options to pass to reply error operation.
     /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
@@ -150,7 +149,7 @@ public:
             "Failed to send reply error"
         );
     }
-#endif
+
     /// @brief Options passed to the ``Query::reply_del`` operation.
     struct ReplyDelOptions {
         /// @name Fields.
