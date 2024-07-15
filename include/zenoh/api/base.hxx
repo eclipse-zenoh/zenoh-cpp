@@ -97,7 +97,7 @@ public:
     /// to the constructed object.
     Owned(OwnedType* pv) {
         if (pv) {
-            _0 = *pv;/// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+            _0 = *pv;
             ::z_null(pv);
         } else
             ::z_null(&this->_0);

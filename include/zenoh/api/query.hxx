@@ -35,7 +35,7 @@ public:
 
     /// @brief Get the key expression of the query.
     /// @return ``KeyExpr`` of the query.
-    decltype(auto) get_keyexpr() const { return detail::as_owned_cpp_obj<KeyExpr>(::z_query_keyexpr(this->loan())); }
+    const KeyExpr& get_keyexpr() const { return detail::as_owned_cpp_obj<KeyExpr>(::z_query_keyexpr(this->loan())); }
 
     /// @brief Get query parameters. See <a href=https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>Selector</a> for more information.
     ///
@@ -48,11 +48,11 @@ public:
 
     /// @brief Get the payload of the query.
     /// @return payload of the query.
-    decltype(auto) get_payload() const { return detail::as_owned_cpp_obj<Bytes>(::z_query_payload(this->loan())); }
+    const Bytes& get_payload() const { return detail::as_owned_cpp_obj<Bytes>(::z_query_payload(this->loan())); }
 
     /// @brief Get the encoding of the query.
     /// @return encoding of the query.
-    decltype(auto) get_encoding() const { return detail::as_owned_cpp_obj<Encoding>(::z_query_encoding(this->loan())); }
+    const Encoding& get_encoding() const { return detail::as_owned_cpp_obj<Encoding>(::z_query_encoding(this->loan())); }
 
     /// @brief Checks if query contains an attachment. Will throw a ZException if ``Reply::has_attachment`` returns ``false``.
     /// @return ``true`` if query contains an attachment.
@@ -62,7 +62,7 @@ public:
     ///
     /// Will throw a ZException if ``Query::has_attachment`` returns ``false``.
     /// @return attachment of the query.
-    decltype(auto) get_attachment() const { 
+    const Bytes& get_attachment() const { 
         auto attachment = ::z_query_attachment(this->loan());
         if (attachment == nullptr) {
             throw ZException("Query does not contain an attachment", Z_EINVAL);

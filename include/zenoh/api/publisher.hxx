@@ -102,7 +102,7 @@ public:
 #ifdef ZENOHCXX_ZENOHC
     /// @brief Get the key expression of the publisher.
     /// @note zenoh-c only.
-    decltype(auto) get_keyexpr() const { 
+    const KeyExpr& get_keyexpr() const { 
         return detail::as_owned_cpp_obj<KeyExpr>(::z_publisher_keyexpr(this->loan())); 
     }
 #endif
