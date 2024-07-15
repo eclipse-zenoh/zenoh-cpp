@@ -30,11 +30,11 @@ public:
 
     /// @brief The payload of this error.
     /// @return Error payload.
-    decltype(auto) get_payload() const { return detail::as_owned_cpp_obj<Bytes>(::z_reply_err_payload(this->loan())); }
+    const Bytes& get_payload() const { return detail::as_owned_cpp_obj<Bytes>(::z_reply_err_payload(this->loan())); }
 
     /// @brief The encoding of this error.
     /// @return Error encoding.
-    decltype(auto) get_encoding() const { return detail::as_owned_cpp_obj<Encoding>(::z_reply_err_encoding(this->loan())); }
+    const Encoding& get_encoding() const { return detail::as_owned_cpp_obj<Encoding>(::z_reply_err_encoding(this->loan())); }
 };
 
 /// A reply from queryable to ``Session::get`` operation.
@@ -48,9 +48,9 @@ public:
     /// @return ``true`` if the reply is OK, ``false`` if contains a error.
     bool is_ok() const { return ::z_reply_is_ok(this->loan()); }
 
-    /// @brief Get the reply value. Will throw a ZException if ``Reply::is_ok`` returns ``false``.
+    /// @brief Get the reply sample. Will throw a ZException if ``Reply::is_ok`` returns ``false``.
     /// @return Reply sample.
-    decltype(auto) get_ok() const {
+    const Sample& get_ok() const {
         if (!::z_reply_is_ok(this->loan())) {
             throw ZException("Reply data sample was requested, but reply contains error", Z_EINVAL);
         }
@@ -59,7 +59,7 @@ public:
 
     /// @brief Get the reply error. Will throw a ZException if ``Reply::is_ok`` returns ``true``.
     /// @return Reply error.
-    decltype(auto) get_err() const {
+    const ReplyError& get_err() const {
         if (::z_reply_is_ok(this->loan())) {
             throw ZException("Reply error was requested, but reply contains data sample", Z_EINVAL);
         }

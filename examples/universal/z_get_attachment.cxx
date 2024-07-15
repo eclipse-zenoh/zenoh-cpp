@@ -54,7 +54,7 @@ int _main(int argc, char **argv) {
 
     auto on_reply = [](const Reply& reply) {
         if (reply.is_ok()) {
-            decltype(auto) sample = reply.get_ok();
+            const Sample& sample = reply.get_ok();
             std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
                       << sample.get_payload().deserialize<std::string>() << "')\n";
             if (!sample.has_attachment()) return;

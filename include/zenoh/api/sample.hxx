@@ -34,15 +34,15 @@ public:
 
     /// @brief Get the resource key of this sample.
     /// @return ``KeyExpr`` object representing the resource key.
-    decltype(auto) get_keyexpr() const { return detail::as_owned_cpp_obj<KeyExpr>(::z_sample_keyexpr(this->loan())); }
+    const KeyExpr& get_keyexpr() const { return detail::as_owned_cpp_obj<KeyExpr>(::z_sample_keyexpr(this->loan())); }
 
     /// @brief Get the data of this sample.
     /// @return ``Bytes`` object representing the sample payload.
-    decltype(auto) get_payload() const { return detail::as_owned_cpp_obj<Bytes>(::z_sample_payload(this->loan())); }
+    const Bytes& get_payload() const { return detail::as_owned_cpp_obj<Bytes>(::z_sample_payload(this->loan())); }
 
     /// @brief Get the encoding of the data of this sample.
     /// @return ``Encoding`` object.
-    decltype(auto) get_encoding() const { return detail::as_owned_cpp_obj<Encoding>(::z_sample_encoding(this->loan())); }
+    const Encoding& get_encoding() const { return detail::as_owned_cpp_obj<Encoding>(::z_sample_encoding(this->loan())); }
 
     /// @brief Get the kind of this sample.
     /// @return ``zenoh::SampleKind`` value (PUT or DELETE).
@@ -54,7 +54,7 @@ public:
 
     /// @brief Get the attachment of this sample. Will throw a ZException if ``Sample::has_attachment`` returns ``false``.
     /// @return ``Bytes`` object representing sample attachment.
-    decltype(auto) get_attachment() const {
+    const Bytes& get_attachment() const {
         auto attachment = ::z_sample_attachment(this->loan());
         if (attachment == nullptr) {
             throw ZException("Sample does not contain an attachment", Z_EINVAL);
@@ -64,7 +64,13 @@ public:
 
     /// @brief Get the timestamp of this sample.
     /// @return ``Timestamp`` object.
-    decltype(auto) get_timestamp() const { return detail::as_copyable_cpp_obj<Timestamp>(::z_sample_timestamp(this->loan())); }
+    std::optional<Timestamp> get_timestamp() const { 
+        const ::z_timestamp_t* t = ::z_sample_timestamp(this->loan());
+        if (t == nullptr) {
+            return {};
+        }
+        return detail::as_copyable_cpp_obj<Timestamp>(t); 
+    }
 
     /// @brief Get the priority this sample was sent with.
     /// @return ``Priority`` value.
