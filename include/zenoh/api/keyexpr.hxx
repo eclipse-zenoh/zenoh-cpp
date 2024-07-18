@@ -99,11 +99,20 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     ///
     /// @return true if there is at least one non-empty key that is contained in both key expressions, false otherwise.
     bool intersects(const KeyExpr& other) const { return ::z_keyexpr_intersects(this->loan(), other.loan()); }
-
+#if defined(UNSTABLE)
+    ///
+    /// Intersection level of 2 key expressions.
+    ///
+    /// Values:
+    /// - **Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT**:  2 key expression do not intersect.
+    /// - **Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS**: 2 key expressions intersect, i.e. there exists at least one key that is included by both.
+    /// - **Z_KEYEXPR_INTERSECTION_LEVEL_INCLUDES**: First key expression is the superset of second one.
+    /// - **Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS**: 2 key expressions are equal.
+    ///
     typedef ::z_keyexpr_intersection_level_t IntersectionLevel;
-
+    /// @brief Returns the relation between `this` and `other` from `this`'s point of view.
     IntersectionLevel relation_to(const KeyExpr& other) { return ::z_keyexpr_relation_to(this->loan(), other.loan()); }
-
+#endif
     /// @brief Check if the string represents a canonical key expression
     static bool is_canon(std::string_view s) {
         return ::z_keyexpr_is_canon(s.data(), s.size()) == Z_OK;

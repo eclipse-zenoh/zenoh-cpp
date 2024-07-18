@@ -20,7 +20,9 @@
 #include "bytes.hxx"
 #include "encoding.hxx"
 #include "timestamp.hxx"
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
 #include "source_info.hxx"
+#endif
 
 namespace zenoh {
 /// @brief A data sample.
@@ -77,7 +79,7 @@ public:
     /// @brief Get the express setting this sample was sent with.
     /// @return ``CongestionControl`` value.
     bool get_express() const { return ::z_sample_express(this->loan()); }
-#ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX) && defined(UNSTABLE)
     /// @brief Get the source info of this sample.
     const SourceInfo& get_source_info() const { 
         return detail::as_owned_cpp_obj<SourceInfo>(::z_sample_source_info(this->loan())); 

@@ -5,12 +5,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "")
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-include(FetchContent)
-
-FetchContent_declare(c_backend GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-pico" GIT_TAG dev/1.0.0)
-FetchContent_MakeAvailable(c_backend)
-FetchContent_declare(cpp_wrapper GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp" GIT_TAG dev/1.0.0)
-FetchContent_MakeAvailable(cpp_wrapper)
+find_package(zenohpico REQUIRED)
+find_package(zenohcxx REQUIRED)
 
 add_executable(zp_simple zp_simple.cxx)
 target_link_libraries(zp_simple PRIVATE zenohcxx::zenohpico)

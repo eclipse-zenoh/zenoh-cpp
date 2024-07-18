@@ -66,6 +66,7 @@ public:
         return detail::as_owned_cpp_obj<ReplyError>(::z_reply_err(this->loan()));
     }
 
+#if defined(UNSTABLE)
     /// @brief Get the id of the Zenoh instance that issued this reply.
     /// @return Zenoh instance id, or an empty optional if the id was not set.
     std::optional<Id> get_replier_id() const {
@@ -75,6 +76,7 @@ public:
         }
         return {};
     }
+    #endif
 };
 
 }
