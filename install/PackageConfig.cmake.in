@@ -29,7 +29,7 @@ target_include_directories(zenohcxx INTERFACE "${_IMPORT_PREFIX}/@CMAKE_INSTALL_
 
 # zenohcxx for zenohpico
 if(TARGET zenohpico::lib)
-	set(ZENOHCXX_BACKEND_FOUND TRUE)
+	set(_ZENOHCXX_BACKEND_FOUND TRUE)
 	message(STATUS "defined lib target zenohcxx::zenohpico for zenohpico::lib")
 	add_library(zenohcxx_zenohpico INTERFACE IMPORTED)
 	target_compile_definitions(zenohcxx_zenohpico INTERFACE ZENOHCXX_ZENOHPICO)

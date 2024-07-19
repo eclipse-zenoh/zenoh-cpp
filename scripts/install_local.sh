@@ -2,7 +2,7 @@
 set -e
 
 if [ "$#" -eq 0 ]; then
-    echo "Usage: build_local PROJECT_PATH INSTALL_PATH [CMAKE_OPTIONS]"
+    echo "Usage: install_local PROJECT_PATH INSTALL_PATH [CMAKE_OPTIONS]"
     exit
 fi
 
@@ -18,3 +18,4 @@ mkdir ./build
 cd ./build
 cmake .. "${@:3}" --install-prefix "$absolute_install_location"
 make
+make install
