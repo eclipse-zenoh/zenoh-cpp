@@ -26,6 +26,7 @@ jobs:
       - name: install zenoh-cpp
         shell: bash
         run: |
+          ls
           ./scripts/install_from_git.sh ~/local
 
       - name: make examples
