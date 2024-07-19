@@ -9,6 +9,6 @@ fi
 
 absolute_install_location=$(cd $1; pwd)
 
-sh $SCRIPT_DIR/build_local.sh $SCRIPT_DIR/../examples/simple/universal $absolute_install_location
-sh $SCRIPT_DIR/build_local.sh $SCRIPT_DIR/../examples/simple/zenohc $absolute_install_location
-sh $SCRIPT_DIR/build_local.sh $SCRIPT_DIR/../examples/simple/zenohpico $absolute_install_location
+bash $SCRIPT_DIR/build_local.sh $SCRIPT_DIR/../examples/simple/universal $absolute_install_location
+bash $SCRIPT_DIR/build_local.sh $SCRIPT_DIR/../examples/simple/zenohc $absolute_install_location
+bash $SCRIPT_DIR/build_local.sh $SCRIPT_DIR/../examples/simple/zenohpico $absolute_install_location
