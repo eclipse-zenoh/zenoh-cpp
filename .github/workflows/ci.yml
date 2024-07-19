@@ -24,14 +24,13 @@ jobs:
       - name: install zenoh-cpp
         shell: bash
         run: |
-          ls
           ./scripts/install_from_git.sh ~/local
 
       - name: make examples
         shell: bash
         run: |
           cd build
-          cmake .. --install-prefix="~/local"
+          cmake .. -DCMAKE_INSTALL_PREFIX=~/local
           cmake --build . --target examples
 
       - name: make stand-alone examples
