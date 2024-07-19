@@ -23,11 +23,14 @@ if(_IMPORT_PREFIX STREQUAL "/")
   set(_IMPORT_PREFIX "")
 endif()
 
+set(_ZENOHCXX_BACKEND_FOUND FALSE)
 add_library(zenohcxx INTERFACE)
 target_include_directories(zenohcxx INTERFACE "${_IMPORT_PREFIX}/@CMAKE_INSTALL_INCLUDEDIR@")
 
 # zenohcxx for zenohpico
 if(TARGET zenohpico::lib)
+	set(add_libraryZENOHCXX_BACKEND_FOUND TRUE)
+	message(STATUS "defined lib target zenohcxx::zenohpico for zenohpico::lib")
 	add_library(zenohcxx_zenohpico INTERFACE IMPORTED)
 	target_compile_definitions(zenohcxx_zenohpico INTERFACE ZENOHCXX_ZENOHPICO)
     target_include_directories(zenohcxx_zenohpico INTERFACE "${_IMPORT_PREFIX}/@CMAKE_INSTALL_INCLUDEDIR@")
@@ -38,6 +41,7 @@ endif()
 
 # zenohcxx for zenohc static/dynamic depending on ZENOHC_LIB_STATIC
 if(TARGET zenohc::lib)
+	set(_ZENOHCXX_BACKEND_FOUND TRUE)
 	message(STATUS "defined lib target zenohcxx::zenohc for zenohc::lib")
 	add_library(zenohcxx_zenohc INTERFACE IMPORTED)
 	target_compile_definitions(zenohcxx_zenohc INTERFACE ZENOHCXX_ZENOHC)
@@ -45,4 +49,8 @@ if(TARGET zenohc::lib)
 	add_dependencies(zenohcxx_zenohc zenohc::lib)
 	target_link_libraries(zenohcxx_zenohc INTERFACE zenohc::lib)
 	add_library(zenohcxx::zenohc ALIAS zenohcxx_zenohc)
+endif()
+
+if(NOT _ZENOHCXX_BACKEND_FOUND)
+	message(FATAL_ERROR "Failed to detect zenoh-cpp backend, you need to have either zenoh-c or zenoh-pico installed" )
 endif()

@@ -67,7 +67,7 @@ endif()
 
 
 add_subdirectory(install)
-add_subdirectory(tests)
 enable_testing()
+add_subdirectory(tests)
 add_subdirectory(examples)
 add_subdirectory(docs)
