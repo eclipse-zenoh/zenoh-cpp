@@ -20,8 +20,6 @@ jobs:
     steps:
       - name: Clone this repository
         uses: actions/checkout@v4
-        with:
-          submodules: true
 
       - name: install zenoh-cpp
         shell: bash
