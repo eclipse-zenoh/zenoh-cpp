@@ -95,14 +95,14 @@ inline std::string_view whatami_as_str(WhatAmI whatami) {
     return std::string_view(::z_string_data(::z_loan(str_out)), ::z_string_len(::z_loan(str_out)));
 }
 
-#ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
 /// The locality of samples to be received by subscribers or targeted by publishers.
 ///
 /// Values:
-/// - **ZCU_LOCALITY_ANY**:  Any.
-/// - **ZCU_LOCALITY_SESSION_LOCAL**: Only from local sessions.
-/// - **ZCU_LOCALITY_SESSION_REMOTE**: Only from remote sessions.
-typedef ::zcu_locality_t Locality;
+/// - **ZC_LOCALITY_ANY**:  Any.
+/// - **ZC_LOCALITY_SESSION_LOCAL**: Only from local sessions.
+/// - **ZC_LOCALITY_SESSION_REMOTE**: Only from remote sessions.
+typedef ::zc_locality_t Locality;
 #endif
 
 }

@@ -20,7 +20,7 @@ The Zenoh C++ API is a C++ bindings for [zenoh-c] and [zenoh-pico] libraries. Th
 but building [zenoh-c] requires [Rust](rust-lang) installed. Please check [here](https://www.rust-lang.org/tools/install) to learn how to install it.
 
 
-C++ bindings are still so the Zenoh team will highly appreciate any help in testing them on various platforms, system architecture, etc. and to report any issue you might encounter. This will help in greatly improving its maturity and robustness.
+C++ bindings are still under active development so the Zenoh team will highly appreciate any help in testing them on various platforms, system architecture, etc. and to report any issue you might encounter. This will help in greatly improving its maturity and robustness.
 
 -------------------------------
 ## How to build and install it
@@ -29,69 +29,61 @@ C++ bindings are still so the Zenoh team will highly appreciate any help in test
 
 To install [zenoh-cpp] do the following steps:
 
-1. Clone the sources
+1. Clone the sources.
 
    ```bash
    git clone https://github.com/eclipse-zenoh/zenoh-cpp.git
    ```
 
-2. Do install.
-   Neither [zenoh-c] nor [zenoh-pico] are required for the installation, but both are neccessary for building tests and examples. So, instead of the main project, it's faster to do install from "install" subproject.
+2. Build and install.
+
+   Neither [zenoh-c] nor [zenoh-pico] backends are required for the installation. But at least one of them is required for usage.
 
    Use option `CMAKE_INSTALL_PREFIX` for specifying installation location. Without this parameter installation is performed to default system location `/usr/local` which requires root privileges.
 
     ```bash
     mkdir build && cd build
-    cmake ../zenoh-cpp/install -DCMAKE_INSTALL_PREFIX=~/.local
+    cmake .. -DCMAKE_INSTALL_PREFIX=~/.local
     cmake --install .
     ```
 
 ## Building and running tests
 
-The [zenoh-cpp] is header-only C++ library that wraps [zenoh-c] and [zenoh-pico] libraries. To make tests and examples it tries to find `zenoh-c` and `zenoh-pico` libraries in the following places:
+By default it is expected that you have [zenoh-c] installed. If you want to build and run tests for [zenoh-pico] backend or for both, please set `ZENOHCXX_ZENOHC` or `ZENOHCXX_ZENOHPICO` Cmake variables to`ON` or `OFF` accordingly.
 
-1. Directories `zenoh-c` and `zenoh-pico` located on the same level as `zenoh-cpp` itself. **WARNING**: If you see building errors, make sure that you don't have obsolete `zenoh-c` or `zenoh-pico` directories nearby
-
-2. Libraries `zenoh-c` and `zenoh-pico` installed to system. **WARNING**: If you see building errors, make sure that no old version of libraries installed to `/usr/local/lib/cmake`
-
-3. Download [zenoh-c] and [zenoh-pico] from GitHub
+To build tests run:
 
 ```bash
-mkdir -p build && cd build
-cmake ../zenoh-cpp
+mkdir build && cd build
+cmake ..  -DCMAKE_INSTALL_PREFIX=~/.local # to build tests only for zenoh-c backend
+cmake .. -DZENOHCXX_ZENOHC=OFF -DZENOHCXX_ZENOHPICO=ON  -DCMAKE_INSTALL_PREFIX=~/.local # to build tests only for zenoh-pico backend
+cmake .. -DZENOHCXX_ZENOHPICO=ON  -DCMAKE_INSTALL_PREFIX=~/.local # to build tests for both backends
 cmake --build . --target tests
 ctest
 ```
 
-Notice that the output of `cmake ../zenoh-cpp` shows where the dependencies were found
+Notice that the output of `cmake ../zenoh-cpp` shows where [zenoh-c] and/or [zenoh-pico] the dependencies were found.
 
 ## Building the Examples
 
 Examples are splitted into two subdirectories. Subdirectory `universal` contains [zenoh-cpp] examples buildable with both [zenoh-c] and [zenoh-pico] backends. The `zenohc` subdirectory contains examples with zenoh-c specific functionality.
 
-The examples can be built in two ways. One is to select `examples` as a build target of the main project:
+By default it is expected that you have [zenoh-c] installed. If you want to build examples for [zenoh-pico] backend or for both, please set `ZENOHCXX_ZENOHC` or `ZENOHCXX_ZENOHPICO` Cmake variables to`ON` or `OFF` accordingly.
+
+To build examples run:
 
 ```bash
-mkdir -p build && cd build
-cmake ../zenoh-cpp
+cmake ..  -DCMAKE_INSTALL_PREFIX=~/.local # to build examples only for zenoh-c backend
+cmake .. -DZENOHCXX_ZENOHC=OFF -DZENOHCXX_ZENOHPICO=ON  -DCMAKE_INSTALL_PREFIX=~/.local # to build examples only for zenoh-pico backend
+cmake .. -DZENOHCXX_ZENOHPICO=ON  -DCMAKE_INSTALL_PREFIX=~/.local # to build examples for both backends
 cmake --build . --target examples
 ```
 
 Examples are placed into `build/examples/zenohc` and `build/examples/zenohpico` directories.
 
-Second way is to build `examples` as a root project, which includes [zenoh-cpp] as subproject
-
-```bash
-mkdir -p build && cd build
-cmake ../zenoh-cpp/examples
-cmake --build .
-```
-
-Examples are placed into `build/zenohc` and `build/zenohpico` directories.
-
 ## Running the examples
 
-Change current directory to the variant you want (`examples/zenohc` or `examples/zenohpico` in the build directory)
+Change current directory to the variant you want (`examples/zenohc` or `examples/zenohpico` in the build directory).
 
 See example sources for command line arguments (key expression, value, router address).
 
@@ -112,7 +104,7 @@ cargo run
 ./z_pub
 ```
 
-The `z_pub` should receive message sent by `z_sub`
+The `z_pub` should receive message sent by `z_sub`.
 
 ### Queryable and Query Example
 ```bash
@@ -123,7 +115,7 @@ The `z_pub` should receive message sent by `z_sub`
 ./z_get
 ```
 
-The `z_get` should receive the data from `z_queryable`
+The `z_get` should receive the data from `z_queryable`.
 
 ### Throughput Examples
 ```bash
@@ -134,49 +126,32 @@ The `z_get` should receive the data from `z_queryable`
 ./z_pub_thr_cpp 1024
 ```
 
-After 30-40 seconds delay the `z_sub_thr` will start to show the throughput measure results
+After 30-40 seconds delay the `z_sub_thr` will start to show the throughput measure results.
 
 ## Library usage
 
 Below are the steps to include [zenoh-cpp] into CMake project. See also [examples/simple](examples/simple) directory for short examples of CMakeLists.txt.
 
 - include [zenoh-c] or [zenoh-pico] into your CMake project **before** dependency on [zenoh-cpp] itself.
-  This is important as the library targets you need (`zenohcxx::zenohpico`, `zenohcxx::zenohc::lib`, `zenohcxx::zenohc::shared` and `zenohcxx::zenohc::static)`
-  are defined only if their backend library
-  targets (`zenohpico`, `zenohc::lib`, `zenohc::shared` and `zenohc::static` are defined)
+  This is important as the library targets you need (`zenohcxx::zenohpico`, `zenohcxx::zenohc::lib`) are defined only if their backend library targets (`zenohpico::lib` and/or `zenohc::lib` are defined)
 
-- include [zenoh-cpp] itself. This can be done with [add_subdirectory], [find_package] or [FetchContent] CMake commands.
+- include [zenoh-cpp] using [find_package] CMake function:
   ```
-  add_subdirectory(../zenoh-cpp)
-  ```
-  ```
+  find_package(zenohc) #if using zenoh-c backend
+  find_package(zenohpico) #if using zenoh-pico backend
   find_package(zenohcxx)
   ```
-  ```
-  FetchContent_Declare(zenohcxx GIT_REPOSITORY https://github.com/eclipse-zenoh/zenoh-cpp GIT_TAG main)
-  FetchContent_MakeAvailable(zenohcxx)
-  ```
-- add dependency on zenoh-cpp to your project in one of these ways:
+- add dependency on zenoh-cpp to your project:
    ```
-   target_link_libraries(yourproject PUBLIC zenohcxx::zenohpico)
-   ```
-   ```
-   target_link_libraries(yourproject PUBLIC zenohcxx::zenohc::lib)
-   ```
-   ```
-   target_link_libraries(yourproject PUBLIC zenohcxx::zenohc::shared)
-   ```
-   ```
-   target_link_libraries(yourproject PUBLIC zenohcxx::zenohc::static)
+   target_link_libraries(yourproject PUBLIC zenohcxx::zenohc) #if using zenoh-c backend
+   target_link_libraries(yourproject PUBLIC zenohcxx::zenohpico) #if using zenoh-pico backend
    ```
 
-- include the [zenoh.hxx] header and use namespace `zenoh`.
+- include the [zenoh.hxx] header. All zenoh functionality is available under the namespace `zenoh`:
     ```C++
     #include "zenoh.hxx"
     using namespace zenoh;
     ```
-
-## Library API
 
 ### Documentation
 

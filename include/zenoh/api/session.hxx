@@ -27,8 +27,9 @@
 #include "queryable.hxx"
 #include "query_consolidation.hxx"
 #include "closures.hxx"
-
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
 #include "liveliness.hxx"
+#endif
 
 #include <optional>
 
@@ -148,7 +149,7 @@ public:
         std::optional<Bytes> payload = {};
         /// @brief  An optional encoding of the query payload and/or attachment.
         std::optional<Encoding> encoding = {};
-#ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         /// @brief The source info for the query.
         std::optional<SourceInfo> source_info = {};
 #endif
@@ -192,7 +193,7 @@ public:
         opts.consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation);
         opts.payload = detail::as_owned_c_ptr(options.payload);
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
-#ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         opts.source_info = detail::as_owned_c_ptr(options.source_info);
 #endif
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
@@ -224,7 +225,7 @@ public:
         opts.consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation);
         opts.payload = detail::as_owned_c_ptr(options.payload);
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
-#ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         opts.source_info = detail::as_owned_c_ptr(options.source_info);
 #endif
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
@@ -244,9 +245,9 @@ public:
         /// @name Fields
 
         /// @brief The priority of the delete message.
-        Priority priority = Priority::Z_PRIORITY_DATA;
+        Priority priority = Z_PRIORITY_DEFAULT;
         /// @brief The congestion control to apply when routing delete message.
-        CongestionControl congestion_control = CongestionControl::Z_CONGESTION_CONTROL_DROP;
+        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
         /// @brief Whether Zenoh will NOT wait to batch delete message with others to reduce the bandwith.
         bool is_express = false;
         /// @brief the timestamp of this message.
@@ -280,20 +281,20 @@ public:
         /// @name Fields
 
         /// @brief The priority of this message.
-        Priority priority = Priority::Z_PRIORITY_DATA;
+        Priority priority = Z_PRIORITY_DEFAULT;
         /// @brief The congestion control to apply when routing this message.
-        CongestionControl congestion_control = CongestionControl::Z_CONGESTION_CONTROL_DROP;
+        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
         /// @brief Whether Zenoh will NOT wait to batch this message with others to reduce the bandwith.
         bool is_express = false;
-        #ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         /// @brief Allowed destination.
-        Locality allowed_destination = ::zcu_locality_default();
-        #endif
+        Locality allowed_destination = ::zc_locality_default();
+#endif
         /// @brief the timestamp of this message.
         std::optional<Timestamp> timestamp = {};
         /// @brief  An optional encoding of the message payload and/or attachment.
         std::optional<Encoding> encoding = {};
-#ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         /// @brief The source info of this message.
         std::optional<SourceInfo> source_info = {};
 #endif
@@ -317,14 +318,14 @@ public:
         opts.congestion_control = options.congestion_control;
         opts.priority = options.priority;
         opts.is_express = options.is_express;
-#ifdef ZENOHCXX_ZENOHC
+#if defined(UNSTABLE)
         opts.source_info = detail::as_owned_c_ptr(options.source_info);
 #endif
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
         opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
-        #ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         opts.allowed_destination = options.allowed_destination;
-        #endif
+#endif
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         __ZENOH_ERROR_CHECK(
             ::z_put(this->loan(), detail::loan(key_expr), payload_ptr, &opts),
@@ -483,15 +484,15 @@ public:
         /// @name Fields
 
         /// @brief The congestion control to apply when routing messages from this publisher.
-        CongestionControl congestion_control;
+        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
         /// @brief The priority of messages from this publisher.
-        Priority priority;
+        Priority priority = Z_PRIORITY_DEFAULT;
         /// @brief If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
-        bool is_express;
-        #ifdef ZENOHCXX_ZENOHC
+        bool is_express = false;
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         /// @brief Allowed destination.
-        Locality allowed_destination = ::zcu_locality_default();
-        #endif
+        Locality allowed_destination = ::zc_locality_default();
+#endif
 
         /// @name Methods
         /// @brief Create default option settings.
@@ -511,9 +512,9 @@ public:
         opts.congestion_control = options.congestion_control;
         opts.priority = options.priority;
         opts.is_express = options.is_express;
-        #ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         opts.allowed_destination = options.allowed_destination;
-        #endif
+#endif
 
         Publisher p(nullptr);
         ZError res =  ::z_declare_publisher(
@@ -648,7 +649,7 @@ public:
 #endif
 
 
-#ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
     /// @brief Options to pass to ``Session::liveliness_declare_token``.
     struct LivelinessDeclarationOptions {
     protected:
