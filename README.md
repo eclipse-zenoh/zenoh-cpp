@@ -36,6 +36,7 @@ To install [zenoh-cpp] do the following steps:
    ```
 
 2. Build and install.
+
    Either [zenoh-c] and/or [zenoh-pico] are required for the installation. By default it is expected that both are installed. If you have only one backend, you can disable the other one by setting `ZENOHCXX_ZENOHC` or `ZENOHCXX_ZENOHPICO` Cmake variables to `OFF`.
 
    Use option `CMAKE_INSTALL_PREFIX` for specifying installation location. Without this parameter installation is performed to default system location `/usr/local` which requires root privileges.
@@ -48,7 +49,7 @@ To install [zenoh-cpp] do the following steps:
 
 ## Building and running tests
 
-After building [zenoh-cpp] as described in [How to build and install it](##How-to-build-and-install-it) run:
+After building [zenoh-cpp] as described in [How to build and install it](#How-to-build-and-install-it) run:
 ```bash
 cmake --build . --target tests
 ctest
@@ -60,7 +61,7 @@ Notice that the output of `cmake ../zenoh-cpp` shows where [zenoh-c] and/or [zen
 
 Examples are splitted into two subdirectories. Subdirectory `universal` contains [zenoh-cpp] examples buildable with both [zenoh-c] and [zenoh-pico] backends. The `zenohc` subdirectory contains examples with zenoh-c specific functionality.
 
-After building [zenoh-cpp] as described in [How to build and install it](##How-to-build-and-install-it) run
+After building [zenoh-cpp] as described in [How to build and install it](#How-to-build-and-install-it) run
 
 ```bash
 cmake --build . --target examples
@@ -70,7 +71,7 @@ Examples are placed into `build/examples/zenohc` and `build/examples/zenohpico` 
 
 ## Running the examples
 
-Change current directory to the variant you want (`examples/zenohc` or `examples/zenohpico` in the build directory)
+Change current directory to the variant you want (`examples/zenohc` or `examples/zenohpico` in the build directory).
 
 See example sources for command line arguments (key expression, value, router address).
 
@@ -91,7 +92,7 @@ cargo run
 ./z_pub
 ```
 
-The `z_pub` should receive message sent by `z_sub`
+The `z_pub` should receive message sent by `z_sub`.
 
 ### Queryable and Query Example
 ```bash
@@ -102,7 +103,7 @@ The `z_pub` should receive message sent by `z_sub`
 ./z_get
 ```
 
-The `z_get` should receive the data from `z_queryable`
+The `z_get` should receive the data from `z_queryable`.
 
 ### Throughput Examples
 ```bash
@@ -113,16 +114,14 @@ The `z_get` should receive the data from `z_queryable`
 ./z_pub_thr_cpp 1024
 ```
 
-After 30-40 seconds delay the `z_sub_thr` will start to show the throughput measure results
+After 30-40 seconds delay the `z_sub_thr` will start to show the throughput measure results.
 
 ## Library usage
 
 Below are the steps to include [zenoh-cpp] into CMake project. See also [examples/simple](examples/simple) directory for short examples of CMakeLists.txt.
 
 - include [zenoh-c] or [zenoh-pico] into your CMake project **before** dependency on [zenoh-cpp] itself.
-  This is important as the library targets you need (`zenohcxx::zenohpico`, `zenohcxx::zenohc::lib`)`
-  are defined only if their backend library
-  targets (`zenohpico::lib` and `zenohc::lib` are defined)
+  This is important as the library targets you need (`zenohcxx::zenohpico`, `zenohcxx::zenohc::lib`) are defined only if their backend library targets (`zenohpico::lib` and/or `zenohc::lib` are defined)
 
 - include [zenoh-cpp] using [find_package] CMake commands.
   ```
@@ -136,13 +135,11 @@ Below are the steps to include [zenoh-cpp] into CMake project. See also [example
    target_link_libraries(yourproject PUBLIC zenohcxx::zenohpico) #if using zenoh-pico backend
    ```
 
-- include the [zenoh.hxx] header and use namespace `zenoh`.
+- include the [zenoh.hxx] header. All zenoh functionality is available under the namespace `zenoh`.
     ```C++
     #include "zenoh.hxx"
     using namespace zenoh;
     ```
-
-## Library API
 
 ### Documentation
 
