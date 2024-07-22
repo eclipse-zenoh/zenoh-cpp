@@ -62,7 +62,7 @@ cmake --build . --target tests
 ctest
 ```
 
-Notice that the output of `cmake ../zenoh-cpp` shows where [zenoh-c] and/or [zenoh-pico] the dependencies were found. Only the set of test corresponding to the found backend(s) will be built and run.
+Notice that the output of `cmake ../zenoh-cpp` shows where [zenoh-c] and/or [zenoh-pico] the dependencies were found.
 
 ## Building the Examples
 
