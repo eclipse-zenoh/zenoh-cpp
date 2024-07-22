@@ -87,7 +87,7 @@ void put_sub() {
     assert(received_messages[1].second == "second");
 }
 
-void put_sub_channels() {
+void put_sub_fifo_channel() {
     KeyExpr ke("zenoh/test");
     auto session1 = Session::open(Config::create_default());
     auto session2 = Session::open(Config::create_default());
@@ -116,10 +116,36 @@ void put_sub_channels() {
     assert(!static_cast<bool>(msg));
 }
 
+void put_sub_ring_channel() {
+    KeyExpr ke("zenoh/test");
+    auto session1 = Session::open(Config::create_default());
+    auto session2 = Session::open(Config::create_default());
+
+    std::this_thread::sleep_for(1s);
+
+    auto subscriber = session2.declare_subscriber(ke, channels::RingChannel(1));
+
+    std::this_thread::sleep_for(1s);
+
+    session1.put(ke, Bytes::serialize("first"));
+    session1.put(ke, Bytes::serialize("second"));
+
+    std::this_thread::sleep_for(1s);
+
+    auto msg = subscriber.handler().recv().first;
+    assert(static_cast<bool>(msg));
+    assert(msg.get_keyexpr() == "zenoh/test");
+    assert(msg.get_payload().deserialize<std::string>() == "second");
+
+    msg = subscriber.handler().try_recv().first;
+    assert(!static_cast<bool>(msg));
+}
+
 
 
 int main(int argc, char** argv) {
     pub_sub();
     put_sub();
-    put_sub_channels();
+    put_sub_fifo_channel();
+    put_sub_ring_channel();
 }
