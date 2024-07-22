@@ -86,6 +86,10 @@ int _main(int argc, char **argv) {
         done_signal.notify_all();
     };
 
+    session.get(
+        keyexpr, "", on_reply, on_done,
+        {.target = Z_QUERY_TARGET_ALL, .payload = Bytes::serialize(value)}
+    );
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });
 
