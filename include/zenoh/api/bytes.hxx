@@ -17,6 +17,9 @@
 #include "../detail/interop.hxx"
 #include "../detail/closures.hxx"
 #include "closures.hxx"
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+#include "shm/buffer/buffer.hxx"
+#endif
 
 #include <cstddef>
 #include <cstdint>
@@ -85,8 +88,8 @@ public:
     /// @param codec instance of Codec to use.
     /// @return serialized data.
     template<class T, class Codec = ZenohCodec<>>
-    static Bytes serialize(const T& data, Codec codec = Codec()) {
-        return codec.serialize(data);
+    static Bytes serialize(T&& data, Codec codec = Codec()) {
+        return codec.serialize(std::forward<T>(data));
     }
 
     /// @brief Serializes multiple pieces of data between begin and end iterators.
@@ -429,6 +432,29 @@ struct ZenohCodec {
     static Bytes serialize(const Bytes& b) {
         return b.clone();
     }
+
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+    static Bytes serialize(ZShm&& shm, ZError* err = nullptr) {
+        Bytes b(nullptr);
+        __ZENOH_ERROR_CHECK(::z_bytes_serialize_from_shm(detail::as_owned_c_ptr(b), detail::as_owned_c_ptr(shm)), err,
+                            "Failed to serialize ZShmMut");
+        return b;
+    }
+
+    static Bytes serialize(const ZShm& shm, ZError* err = nullptr) {
+        Bytes b(nullptr);
+        __ZENOH_ERROR_CHECK(::z_bytes_serialize_from_shm_copy(detail::as_owned_c_ptr(b), detail::loan(shm)), err,
+                            "Failed to serialize ZShmMut");
+        return b;
+    }
+
+    static Bytes serialize(ZShmMut&& shm, ZError* err = nullptr) {
+        Bytes b(nullptr);
+        __ZENOH_ERROR_CHECK(::z_bytes_serialize_from_shm_mut(detail::as_owned_c_ptr(b), detail::as_owned_c_ptr(shm)),
+                            err, "Failed to serialize ZShmMut");
+        return b;
+    }
+#endif
 
     static Bytes serialize(const std::pair<const uint8_t*, size_t>& s) {
         Bytes b(nullptr);

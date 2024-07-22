@@ -27,11 +27,6 @@ endif()
 status_print(project_version)
 
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-	# Temporary measure. Ideally zenoh-cpp should work with any variant
-	# of zenoh-c build
-	set(ZENOHC_BUILD_WITH_SHARED_MEMORY TRUE CACHE BOOL "" FORCE )
-	set(ZENOHC_BUILD_WITH_UNSTABLE_API TRUE CACHE BOOL "" FORCE )
-	#
 	enable_testing()
 	set_default_build_type(Release)
 	configure_include_project(ZENOHCXX_ZENOHPICO zenohpico zenohpico "../zenoh-pico" zenohpico "https://github.com/eclipse-zenoh/zenoh-pico" ${zenoh_pico_branch})

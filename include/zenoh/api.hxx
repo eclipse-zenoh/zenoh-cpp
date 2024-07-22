@@ -33,3 +33,6 @@
 #include "api/timestamp.hxx"
 #include "api/channels.hxx"
 #include "api/logging.hxx"
+#if defined SHARED_MEMORY && defined UNSTABLE
+#include "api/shm/shm.hxx"
+#endif

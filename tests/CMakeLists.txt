@@ -10,6 +10,13 @@ add_dependencies(tests tests_zenohpico)
 configure_file(${PROJECT_SOURCE_DIR}/tests/run_with_router.sh ${CMAKE_CURRENT_BINARY_DIR}/run_with_router.sh COPYONLY)
 
 function(add_test_instance file mode lib option)
+	# Exclude SHM tests if SHM feature is disabled
+	if(NOT(ZENOHC_BUILD_WITH_SHARED_MEMORY AND (ZENOHC_BUILD_WITH_UNSTABLE_API)))
+		if(${file} MATCHES "^.*shm.*$")
+			return()
+		endif()
+	endif()
+
 	set(zenoh_router_branch "dev/1.0.0")
 	get_filename_component(filename ${file} NAME_WE)
 	set(target ${filename}_${mode})

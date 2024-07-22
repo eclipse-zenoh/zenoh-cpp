@@ -14,40 +14,26 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <chrono>
-#include <iostream>
-#include <limits>
-#include <sstream>
-#include <thread>
+#include <vector>
 
 #include "../getargs.h"
 #include "zenoh.hxx"
-
 using namespace zenoh;
-using namespace std::chrono_literals;
-
-#ifdef ZENOHCXX_ZENOHC
-const char *default_value = "Pub from C++ zenoh-c!";
-const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-c-pub";
-#elif ZENOHCXX_ZENOHPICO
-const char *default_value = "Pub from C++ zenoh-pico!";
-const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-pico-pub";
-#else
-#error "Unknown zenoh backend"
-#endif
 
 int _main(int argc, char **argv) {
-    const char *keyexpr = default_keyexpr;
-    const char *value = default_value;
+    const char *keyexpr = "test/thr";
+    const char *payload_size = nullptr;
     const char *locator = nullptr;
     const char *config_file = nullptr;
 
-    getargs(argc, argv, {}, {{"key expression", &keyexpr}, {"value", &value}, {"locator", &locator}}
+    getargs(argc, argv, {{"payload_size", &payload_size}}, {{"locator", &locator}}
 #ifdef ZENOHCXX_ZENOHC
             ,
             {{"-c", {"config file", &config_file}}}
 #endif
     );
+
+    size_t len = atoi(payload_size);
 
     Config config = Config::create_default();
 #ifdef ZENOHCXX_ZENOHC
@@ -55,7 +41,6 @@ int _main(int argc, char **argv) {
         config = Config::from_file(config_file);
     }
 #endif
-
     ZError err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
@@ -73,34 +58,23 @@ int _main(int argc, char **argv) {
         }
     }
 
-    std::cout << "Opening session..." << std::endl;
+    std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
-    std::cout << "Declaring Publisher on '" << keyexpr << "'..." << std::endl;
-    auto pub = session.declare_publisher(KeyExpr(keyexpr));
-
-    std::cout << "Publisher on '" << keyexpr << "' declared" << std::endl;
+    std::cout << "Declaring Publisher on " << keyexpr << "...\n";
+    auto pub = session.declare_publisher(KeyExpr(keyexpr), {.congestion_control = Z_CONGESTION_CONTROL_BLOCK});
 
     std::cout << "Preparing SHM Provider...\n";
-    PosixShmProvider provider(MemoryLayout(65536, AllocAlignment({2})));
+    constexpr auto buffers_count = 4;
+    PosixShmProvider provider(MemoryLayout(buffers_count * len, AllocAlignment({2})));
 
-    std::cout << "Press CTRL-C to quit..." << std::endl;
-    for (int idx = 0; idx < std::numeric_limits<int>::max(); ++idx) {
-        std::this_thread::sleep_for(1s);
-        std::ostringstream ss;
-        ss << "[" << idx << "] " << value;
-        auto s = ss.str();  // in C++20 use .view() instead
-        std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
+    std::cout << "Allocating SHM buffer...\n";
+    auto alloc_result = provider.alloc_gc_defrag_blocking(len, AllocAlignment({0}));
+    ZShmMut &&buf_mut = std::get<ZShmMut>(std::move(alloc_result));
+    ZShm buf(std::move(buf_mut));
 
-        std::cout << "Allocating SHM buffer...\n";
-        const auto len = s.size() + 1;
-        auto alloc_result = provider.alloc_gc_defrag_blocking(len, AllocAlignment({0}));
-        ZShmMut &&buf = std::get<ZShmMut>(std::move(alloc_result));
-        memcpy(buf.data(), s.data(), len);
-
-        pub.put(Bytes::serialize(std::move(buf)), {.encoding = Encoding("text/plain")});
-    }
-    return 0;
+    printf("Press CTRL-C to quit...\n");
+    while (1) pub.put(Bytes::serialize(ZShm(buf), ZenohCodec<ZenohCodecType::AVOID_COPY>()));
 }
 
 int main(int argc, char **argv) {

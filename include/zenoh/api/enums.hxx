@@ -99,10 +99,10 @@ inline std::string_view whatami_as_str(WhatAmI whatami) {
 /// The locality of samples to be received by subscribers or targeted by publishers.
 ///
 /// Values:
-/// - **ZCU_LOCALITY_ANY**:  Any.
-/// - **ZCU_LOCALITY_SESSION_LOCAL**: Only from local sessions.
-/// - **ZCU_LOCALITY_SESSION_REMOTE**: Only from remote sessions.
-typedef ::zcu_locality_t Locality;
+/// - **ZC_LOCALITY_ANY**:  Any.
+/// - **ZC_LOCALITY_SESSION_LOCAL**: Only from local sessions.
+/// - **ZC_LOCALITY_SESSION_REMOTE**: Only from remote sessions.
+typedef ::zc_locality_t Locality;
 #endif
 
 }

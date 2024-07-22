@@ -13,11 +13,12 @@
 
 #pragma once
 
-#include "../zenohc.hxx"
-#include <stdexcept>
-#include <string>
 #include <cstddef>
 #include <cstdint>
+#include <stdexcept>
+#include <string>
+
+#include "../zenohc.hxx"
 
 namespace zenoh {
 
@@ -26,31 +27,31 @@ template <typename T, typename = void>
 struct is_loan_available : std::false_type {};
 
 template <typename T>
-struct is_loan_available<T, std::void_t<decltype(::z_loan(std::declval<const T&>())) >> : std::true_type {};
+struct is_loan_available<T, std::void_t<decltype(::z_loan(std::declval<const T&>()))>> : std::true_type {};
 
-template< class T> inline constexpr bool is_loan_available_v = is_loan_available<T>::value;
-
+template <class T>
+inline constexpr bool is_loan_available_v = is_loan_available<T>::value;
 
 template <typename T, typename = void>
 struct is_loan_mut_available : std::false_type {};
 
 template <typename T>
-struct is_loan_mut_available<T, std::void_t<decltype(::z_loan_mut(std::declval<T&>())) >> : std::true_type {};
+struct is_loan_mut_available<T, std::void_t<decltype(::z_loan_mut(std::declval<T&>()))>> : std::true_type {};
 
-template< class T> inline constexpr bool is_loan_mut_available_v = is_loan_mut_available<T>::value;
+template <class T>
+inline constexpr bool is_loan_mut_available_v = is_loan_mut_available<T>::value;
 
-}
+}  // namespace detail
 
 /// @brief Error code returned by Zenoh API
 typedef ::z_error_t ZError;
 
 /// @brief Zenoh-specific Exception
 class ZException : public std::runtime_error {
-public:
+   public:
     ZError e;
     ZException(const std::string& message, ZError err)
-        :std::runtime_error(message + "(Error code: " + std::to_string(err) + " )"), e(err) {
-    }
+        : std::runtime_error(message + "(Error code: " + std::to_string(err) + " )"), e(err) {}
 };
 
 #define __ZENOH_ERROR_CHECK(err, err_ptr, message)         \
@@ -69,13 +70,14 @@ public:
 /// @tparam ZC_COPYABLE_TYPE - zenoh-c structure type ::z_XXX_t
 template <typename ZC_COPYABLE_TYPE>
 class Copyable {
-protected:
+   protected:
     typedef ZC_COPYABLE_TYPE InnerType;
     InnerType _0;
-    
+
     InnerType& inner() { return this->_0; }
     const InnerType& inner() const { return this->_0; }
-public:
+
+   public:
     /// @name Constructors
     /// Construct from wrapped zenoh-c / zenoh-pico structure
     Copyable(const InnerType& v) : _0(v) {}
@@ -87,10 +89,10 @@ public:
 /// @tparam ZC_OWNED_TYPE - zenoh-c owned type ::z_owned_XXX_t
 template <typename ZC_OWNED_TYPE>
 class Owned {
-protected:
-    typedef typename z_owned_to_loaned_type_t<ZC_OWNED_TYPE>::type LoanedType;
+   protected:
     typedef ZC_OWNED_TYPE OwnedType;
-public:
+
+   public:
     /// @name Constructors
     /// @brief Construct from owned zenoh-c struct.
     /// @param pv Pointer to valid owned zenoh-c struct. The ownership is transferred
@@ -127,16 +129,26 @@ public:
     /// Check object validity uzing zenoh API
     explicit operator bool() const { return ::z_check(_0); }
 
-protected:
+   protected:
     OwnedType _0;
 
-    template<class T = const LoanedType*>
-    typename std::enable_if<detail::is_loan_available_v<ZC_OWNED_TYPE>, T>::type
-    loan() const { return ::z_loan(_0); }
+    template <class OtL = z_owned_to_loaned_type_t<ZC_OWNED_TYPE>,
+              class L = typename OtL::type,  // SFINAE here if no loaned type declared
+              class LAvail = std::enable_if<detail::is_loan_available_v<ZC_OWNED_TYPE>, L>,
+              class T = typename LAvail::type  // SFINAE here if immutable loan is not available
+              >
+    const T* loan() const {
+        return ::z_loan(_0);
+    }
 
-    template<class T = LoanedType*>
-    typename std::enable_if<detail::is_loan_mut_available_v<ZC_OWNED_TYPE>, T>::type
-    loan() { return ::z_loan_mut(_0); }
+    template <class OtL = z_owned_to_loaned_type_t<ZC_OWNED_TYPE>,
+              class L = typename OtL::type,  // SFINAE here if no loaned type declared
+              class LAvail = std::enable_if<detail::is_loan_mut_available_v<ZC_OWNED_TYPE>, L>,
+              class T = typename LAvail::type  // SFINAE here if mutable loan is not available
+              >
+    T* loan() {
+        return ::z_loan_mut(_0);
+    }
 };
 
-}
+}  // namespace zenoh

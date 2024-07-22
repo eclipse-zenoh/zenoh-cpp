@@ -88,6 +88,15 @@ const auto& as_owned_cpp_obj(const LoanedType* l) {
     return *reinterpret_cast<const T*>(o_cpp);
 }
 
+template<class T, class OwnedType>
+auto& as_cpp_obj_mut(OwnedType* o) {
+    static_assert(sizeof(T) == sizeof(OwnedType) &&  alignof(T) == alignof(OwnedType),
+        "Owned and Target classes must have the same layout");
+    static_assert(std::is_base_of_v<zenoh::Owned<OwnedType>, T>,
+        "Target class should be derived from an owned class");
+    zenoh::Owned<OwnedType>* o_cpp = reinterpret_cast<zenoh::Owned<OwnedType>*>(o);
+    return *reinterpret_cast<T*>(o_cpp);
+}
 
 template<class T, class CopyableType>
 const auto& as_copyable_cpp_obj(const CopyableType* c) {
