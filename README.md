@@ -29,7 +29,7 @@ C++ bindings are still under active development so the Zenoh team will highly ap
 
 To install [zenoh-cpp] do the following steps:
 
-1. Clone the sources
+1. Clone the sources.
 
    ```bash
    git clone https://github.com/eclipse-zenoh/zenoh-cpp.git
@@ -61,7 +61,7 @@ Notice that the output of `cmake ../zenoh-cpp` shows where [zenoh-c] and/or [zen
 
 Examples are splitted into two subdirectories. Subdirectory `universal` contains [zenoh-cpp] examples buildable with both [zenoh-c] and [zenoh-pico] backends. The `zenohc` subdirectory contains examples with zenoh-c specific functionality.
 
-After building [zenoh-cpp] as described in [How to build and install it](#How-to-build-and-install-it) run
+After building [zenoh-cpp] as described in [How to build and install it](#How-to-build-and-install-it) run:
 
 ```bash
 cmake --build . --target examples
@@ -123,7 +123,7 @@ Below are the steps to include [zenoh-cpp] into CMake project. See also [example
 - include [zenoh-c] or [zenoh-pico] into your CMake project **before** dependency on [zenoh-cpp] itself.
   This is important as the library targets you need (`zenohcxx::zenohpico`, `zenohcxx::zenohc::lib`) are defined only if their backend library targets (`zenohpico::lib` and/or `zenohc::lib` are defined)
 
-- include [zenoh-cpp] using [find_package] CMake commands.
+- include [zenoh-cpp] using [find_package] CMake function:
   ```
   find_package(zenohc) #if using zenoh-c backend
   find_package(zenohpico) #if using zenoh-pico backend
@@ -135,7 +135,7 @@ Below are the steps to include [zenoh-cpp] into CMake project. See also [example
    target_link_libraries(yourproject PUBLIC zenohcxx::zenohpico) #if using zenoh-pico backend
    ```
 
-- include the [zenoh.hxx] header. All zenoh functionality is available under the namespace `zenoh`.
+- include the [zenoh.hxx] header. All zenoh functionality is available under the namespace `zenoh`:
     ```C++
     #include "zenoh.hxx"
     using namespace zenoh;
