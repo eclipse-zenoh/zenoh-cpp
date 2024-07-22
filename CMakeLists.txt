@@ -27,7 +27,7 @@ endif()
 status_print(project_version)
 
 option(ZENOHCXX_ZENOHC "Build for Zenoh-c target" ON)
-option(ZENOHCXX_ZENOHPICO "Build for Zenoh-pico target" ON)
+option(ZENOHCXX_ZENOHPICO "Build for Zenoh-pico target" OFF)
 
 set_default_build_type(Release)
 

@@ -37,20 +37,27 @@ To install [zenoh-cpp] do the following steps:
 
 2. Build and install.
 
-   Either [zenoh-c] and/or [zenoh-pico] are required for the installation. By default it is expected that both are installed. If you have only one backend, you can disable the other one by setting `ZENOHCXX_ZENOHC` or `ZENOHCXX_ZENOHPICO` Cmake variables to `OFF`.
+   Neither [zenoh-c] nor [zenoh-pico] backends are required for the installation. But at least one of them is required for usage.
 
    Use option `CMAKE_INSTALL_PREFIX` for specifying installation location. Without this parameter installation is performed to default system location `/usr/local` which requires root privileges.
 
     ```bash
     mkdir build && cd build
-    cmake ../zenoh-cpp/install -DCMAKE_INSTALL_PREFIX=~/.local
+    cmake .. -DCMAKE_INSTALL_PREFIX=~/.local
     cmake --install .
     ```
 
 ## Building and running tests
 
-After building [zenoh-cpp] as described in [How to build and install it](#How-to-build-and-install-it) run:
+By default it is expected that you have [zenoh-c] installed. If you want to build and run tests for [zenoh-pico] backend or for both, please set `ZENOHCXX_ZENOHC` or `ZENOHCXX_ZENOHPICO` Cmake variables to`ON` or `OFF` accordingly.
+
+To build tests run:
+
 ```bash
+mkdir build && cd build
+cmake ..  -DCMAKE_INSTALL_PREFIX=~/.local # to build tests only for zenoh-c backend
+cmake .. -DZENOHCXX_ZENOHC=OFF -DZENOHCXX_ZENOHPICO=ON  -DCMAKE_INSTALL_PREFIX=~/.local # to build tests only for zenoh-pico backend
+cmake .. -DZENOHCXX_ZENOHPICO=ON  -DCMAKE_INSTALL_PREFIX=~/.local # to build tests for both backends
 cmake --build . --target tests
 ctest
 ```
@@ -61,9 +68,14 @@ Notice that the output of `cmake ../zenoh-cpp` shows where [zenoh-c] and/or [zen
 
 Examples are splitted into two subdirectories. Subdirectory `universal` contains [zenoh-cpp] examples buildable with both [zenoh-c] and [zenoh-pico] backends. The `zenohc` subdirectory contains examples with zenoh-c specific functionality.
 
-After building [zenoh-cpp] as described in [How to build and install it](#How-to-build-and-install-it) run:
+By default it is expected that you have [zenoh-c] installed. If you want to build examples for [zenoh-pico] backend or for both, please set `ZENOHCXX_ZENOHC` or `ZENOHCXX_ZENOHPICO` Cmake variables to`ON` or `OFF` accordingly.
+
+To build examples run:
 
 ```bash
+cmake ..  -DCMAKE_INSTALL_PREFIX=~/.local # to build examples only for zenoh-c backend
+cmake .. -DZENOHCXX_ZENOHC=OFF -DZENOHCXX_ZENOHPICO=ON  -DCMAKE_INSTALL_PREFIX=~/.local # to build examples only for zenoh-pico backend
+cmake .. -DZENOHCXX_ZENOHPICO=ON  -DCMAKE_INSTALL_PREFIX=~/.local # to build examples for both backends
 cmake --build . --target examples
 ```
 

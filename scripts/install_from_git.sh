@@ -20,6 +20,6 @@ bash $SCRIPT_DIR/install_local.sh $SCRIPT_DIR/../zenoh-pico $absolute_install_lo
 rm -rf ./build
 mkdir ./build
 cd ./build
-cmake .. --install-prefix "$absolute_install_location"
+cmake .. -DZENOHCXX_ZENOHPICO=ON  --install-prefix "$absolute_install_location"
 make
 make install
