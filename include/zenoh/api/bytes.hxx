@@ -55,9 +55,11 @@ class Bytes : public Owned<::z_owned_bytes_t> {
 public:
 
     /// @name Constructors
-    /// Serializes data using default Zenoh codec.
+
+    /// @brief Serializes data using default Zenoh codec.
     template<class T>
     Bytes(T data) :Bytes(Bytes::serialize(std::forward<T>(data))) {}
+    
     /// @brief Construct a shallow copy of this data.
     Bytes clone() const {
         Bytes b;
