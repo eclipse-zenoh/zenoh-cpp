@@ -446,14 +446,14 @@ struct ZenohCodec {
 
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
     static Bytes serialize(ZShm&& shm, ZError* err = nullptr) {
-        Bytes b(nullptr);
+        Bytes b;
         __ZENOH_ERROR_CHECK(::z_bytes_serialize_from_shm(detail::as_owned_c_ptr(b), detail::as_owned_c_ptr(shm)), err,
                             "Failed to serialize ZShm");
         return b;
     }
 
     static Bytes serialize(ZShmMut&& shm, ZError* err = nullptr) {
-        Bytes b(nullptr);
+        Bytes b;
         __ZENOH_ERROR_CHECK(::z_bytes_serialize_from_shm_mut(detail::as_owned_c_ptr(b), detail::as_owned_c_ptr(shm)),
                             err, "Failed to serialize ZShmMut");
         return b;

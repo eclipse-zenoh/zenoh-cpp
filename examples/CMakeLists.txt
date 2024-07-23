@@ -27,7 +27,6 @@ endfunction()
 function(add_examples glob mode lib)
 	file(GLOB files ${glob})
 	foreach(file ${files})
-<<<<<<< HEAD
 		# Exclude SHM examples if SHM feature is disabled
 		if(NOT(ZENOHC_BUILD_WITH_SHARED_MEMORY AND (ZENOHC_BUILD_WITH_UNSTABLE_API)))
 			if(${file} MATCHES "^.*_shm.*$")
@@ -35,13 +34,11 @@ function(add_examples glob mode lib)
 			endif()
 		endif()
 
-=======
 		if(("${mode}" STREQUAL "zenohc") AND (NOT(ZENOHC_BUILD_WITH_UNSTABLE_API)))
 			if(${file} MATCHES ".*liveliness.*$")
 				continue()
 			endif()
 		endif()
->>>>>>> 4772e71e40288d704d48fffddf65d79335e26b68
 		add_example(${file} ${mode} ${lib})
 	endforeach()
 endfunction()

@@ -27,7 +27,7 @@
 #include "liveliness.hxx"
 #include "publisher.hxx"
 #include "query_consolidation.hxx"
-#include "closures.hxx"
+#include "subscriber.hxx"
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
 #include "liveliness.hxx"
 #endif
