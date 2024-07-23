@@ -79,7 +79,7 @@ class ShmClientStorage : public Owned<::z_owned_shm_client_storage_t> {
 
     /// @brief Performs a shallow copy of ShmClientStorage
     ShmClientStorage(const ShmClientStorage& other) : Owned(nullptr) {
-        z_shm_client_storage_new_cloned(&this->_0, other.loan());
+        z_shm_client_storage_clone(&this->_0, other.loan());
     }
 
    private:
