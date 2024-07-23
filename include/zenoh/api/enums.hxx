@@ -95,7 +95,7 @@ inline std::string_view whatami_as_str(WhatAmI whatami) {
     return std::string_view(::z_string_data(::z_loan(str_out)), ::z_string_len(::z_loan(str_out)));
 }
 
-#ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
 /// The locality of samples to be received by subscribers or targeted by publishers.
 ///
 /// Values:

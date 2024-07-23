@@ -17,7 +17,6 @@
 #include "../detail/interop.hxx"
 
 namespace zenoh {
-#ifdef ZENOHCXX_ZENOHC
 /// @brief // A liveliness token that can be used to provide the network with information about connectivity to its declarer.
 ///
 /// When constructed, a PUT sample will be received by liveliness subscribers on intersecting key expressions.
@@ -38,7 +37,6 @@ public:
         );
     }
 };
-#endif
 
 
 }

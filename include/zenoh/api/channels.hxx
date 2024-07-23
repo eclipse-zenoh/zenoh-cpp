@@ -119,16 +119,16 @@ public:
 template<class T>
 class RingHandler : public Owned<typename detail::RingHandlerData<T>::handler_type> {
 public:
-    using Owned<typename detail::FifoHandlerData<T>::handler_type>::Owned;
+    using Owned<typename detail::RingHandlerData<T>::handler_type>::Owned;
 
     /// @name Methods
-    
+
     /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will block until new data entry arrives
     /// @return a pair containing a received data entry (will be in gravestone state if there is no more data in the buffer and the stream is inactive),
     /// and a bool flag indicating whether handler's stream is still active, i.e. if there is still possibility to fetch more data in the future. 
     std::pair<T, bool> recv() const {
         std::pair<T, bool> p(nullptr, false);
-        p.second = ::z_recv(this->_0, zenoh::detail::as_owned_c_ptr(p.first));
+        p.second = ::z_recv(this->loan(), zenoh::detail::as_owned_c_ptr(p.first));
         return p;
     }
 
@@ -137,7 +137,7 @@ public:
     /// and a bool flag indicating whether handler's stream is still active, i.e. if there is still possibility to fetch more data in the future. 
     std::pair<T, bool> try_recv() const {
         std::pair<T, bool> p(nullptr, false);
-        p.second = ::z_try_recv(this->_0, zenoh::detail::as_owned_c_ptr(p.first));
+        p.second = ::z_try_recv(this->loan(), zenoh::detail::as_owned_c_ptr(p.first));
         return p;
     }
 };
@@ -192,7 +192,7 @@ public:
     template<class T>
     std::pair<typename detail::RingHandlerData<T>::closure_type, HandlerType<T>> into_cb_handler_pair() const {
         typename detail::RingHandlerData<T>::closure_type c_closure;
-        FifoHandler<T> h(nullptr);
+        RingHandler<T> h(nullptr);
         detail::RingHandlerData<T>::create_cb_handler_pair(&c_closure, zenoh::detail::as_owned_c_ptr(h), _capacity);
         return {c_closure, std::move(h)};
     }

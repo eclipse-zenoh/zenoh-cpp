@@ -111,8 +111,12 @@ void put_sub(Talloc& alloc) {
     assert(received_messages[1].second == "second");
 }
 
+<<<<<<< HEAD
 template <typename Talloc>
 void put_sub_channels(Talloc& alloc) {
+=======
+void put_sub_fifo_channel() {
+>>>>>>> 4772e71e40288d704d48fffddf65d79335e26b68
     KeyExpr ke("zenoh/test");
     auto session1 = Session::open(Config::create_default());
     auto session2 = Session::open(Config::create_default());
@@ -141,6 +145,7 @@ void put_sub_channels(Talloc& alloc) {
     assert(!static_cast<bool>(msg));
 }
 
+<<<<<<< HEAD
 template <typename Talloc, bool share_alloc = true>
 void test_with_alloc() {
     if constexpr (share_alloc) {
@@ -171,4 +176,38 @@ int main(int argc, char** argv) {
     test_with_alloc<SHMAllocator, false>();
 #endif
     return 0;
+=======
+void put_sub_ring_channel() {
+    KeyExpr ke("zenoh/test");
+    auto session1 = Session::open(Config::create_default());
+    auto session2 = Session::open(Config::create_default());
+
+    std::this_thread::sleep_for(1s);
+
+    auto subscriber = session2.declare_subscriber(ke, channels::RingChannel(1));
+
+    std::this_thread::sleep_for(1s);
+
+    session1.put(ke, Bytes::serialize("first"));
+    session1.put(ke, Bytes::serialize("second"));
+
+    std::this_thread::sleep_for(1s);
+
+    auto msg = subscriber.handler().recv().first;
+    assert(static_cast<bool>(msg));
+    assert(msg.get_keyexpr() == "zenoh/test");
+    assert(msg.get_payload().deserialize<std::string>() == "second");
+
+    msg = subscriber.handler().try_recv().first;
+    assert(!static_cast<bool>(msg));
+}
+
+
+
+int main(int argc, char** argv) {
+    pub_sub();
+    put_sub();
+    put_sub_fifo_channel();
+    put_sub_ring_channel();
+>>>>>>> 4772e71e40288d704d48fffddf65d79335e26b68
 }

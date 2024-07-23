@@ -20,8 +20,9 @@
 #include "encoding.hxx"
 #include "keyexpr.hxx"
 #include "timestamp.hxx"
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
 #include "source_info.hxx"
-
+#endif
 #include <optional>
 
 
@@ -39,7 +40,7 @@ public:
         std::optional<Encoding> encoding =  {};
         /// @brief the timestamp of this message.
         std::optional<Timestamp> timestamp = {};
-#ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         /// @brief The source info of this message.
         std::optional<SourceInfo> source_info = {};
 #endif
@@ -72,7 +73,7 @@ public:
         ::z_publisher_put_options_t opts;
         z_publisher_put_options_default(&opts);
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
-#ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         opts.source_info = detail::as_owned_c_ptr(options.source_info);
 #endif
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
@@ -106,7 +107,7 @@ public:
         return detail::as_owned_cpp_obj<KeyExpr>(::z_publisher_keyexpr(this->loan())); 
     }
 #endif
-#ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
     /// @brief Get the id of the publisher.
     /// @return id of this publisher.
     EntityGlobalId get_id() const {

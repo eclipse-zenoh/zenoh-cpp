@@ -77,14 +77,14 @@ public:
         /// @brief  An optional encoding of the reply message payload and/or attachment.
         std::optional<Encoding> encoding = {};
         /// @brief The priority of this reply message.
-        Priority priority = Priority::Z_PRIORITY_DATA;
+        Priority priority = Z_PRIORITY_DEFAULT;
         /// @brief The congestion control to apply when routing this reply message.
-        CongestionControl congestion_control = CongestionControl::Z_CONGESTION_CONTROL_BLOCK;
+        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
         /// @brief Whether Zenoh will NOT wait to batch this reply message with others to reduce the bandwith.
         bool is_express = false;
         /// @brief The timestamp of this message.
         std::optional<Timestamp> timestamp = {};
-#ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         /// @brief The source info of this reply message.
         std::optional<SourceInfo> source_info = {};
 #endif
@@ -109,7 +109,7 @@ public:
         opts.congestion_control = options.congestion_control;
         opts.is_express = options.is_express;
         opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
-#ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE) 
         opts.source_info = detail::as_owned_c_ptr(options.source_info);
 #endif
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
@@ -155,14 +155,14 @@ public:
         /// @name Fields.
 
         /// @brief The priority of this reply message.
-        Priority priority = Priority::Z_PRIORITY_DATA;
+        Priority priority = Z_PRIORITY_DEFAULT;
         /// @brief The congestion control to apply when routing this reply message.
-        CongestionControl congestion_control = CongestionControl::Z_CONGESTION_CONTROL_BLOCK;
+        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
         /// @brief Whether Zenoh will NOT wait to batch this reply message with others to reduce the bandwith.
         bool is_express = false;
         /// @brief the timestamp of this message.
         std::optional<Timestamp> timestamp = {};
-#ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         /// @brief The source info of this reply message.
         std::optional<SourceInfo> source_info = {};
 #endif
@@ -186,7 +186,7 @@ public:
         opts.congestion_control = options.congestion_control;
         opts.is_express = options.is_express;
         opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
-#ifdef ZENOHCXX_ZENOHC
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         opts.source_info = detail::as_owned_c_ptr(options.source_info);
 #endif
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
