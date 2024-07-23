@@ -18,6 +18,7 @@
 #include <string_view>
 
 namespace zenoh {
+class Session;
 
 /// @brief A Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#key-expression"> key expression </a>.
 ///
@@ -25,9 +26,9 @@ namespace zenoh {
 /// The unique id is internally assinged to the key expression string in this case. This allows to reduce bandwith usage when transporting key expressions.
 
 class KeyExpr : public Owned<::z_owned_keyexpr_t> {
-   public:
-    using Owned::Owned;
-
+    friend Session;
+    KeyExpr() :Owned(nullptr) {};
+public:
     /// @name Constructors
 
     /// @brief Create a new instance from a string.
@@ -53,6 +54,24 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
         }
     }
 
+    /// @brief Create a new instance from a string.
+    ///
+    /// @param key_expr String representing key expression.
+    /// @param autocanonize If true the key_expr will be autocanonized, prior to constructing key expression.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    KeyExpr(const std::string& key_expr, bool autocanonize = true, ZError* err = nullptr)
+        :KeyExpr(static_cast<std::string_view>(key_expr), autocanonize, err) {
+    };
+
+    /// @brief Create a new instance from a null-terminated string.
+    ///
+    /// @param key_expr Null-terminated string representing key expression.
+    /// @param autocanonize If true the key_expr will be autocanonized, prior to constructing key expression.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    KeyExpr(const char* key_expr, bool autocanonize = true, ZError* err = nullptr)
+        :KeyExpr(std::string_view(key_expr), autocanonize, err) {
+    };
+
     /// @name Methods
     /// @brief Get underlying key expression string.
     std::string_view as_string_view() const {
@@ -73,7 +92,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     /// @return A new key expression.
     KeyExpr concat(std::string_view s, ZError* err = nullptr) const {
-        KeyExpr k(nullptr);
+        KeyExpr k;
         __ZENOH_ERROR_CHECK(
             ::z_keyexpr_concat(&k._0, this->loan(), s.data(), s.size()),
             err,
@@ -86,7 +105,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param other the ``KeyExpr`` to append.
     /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     KeyExpr join(const KeyExpr& other, ZError* err = nullptr) const {
-        KeyExpr k(nullptr);
+        KeyExpr k;
         __ZENOH_ERROR_CHECK(
             ::z_keyexpr_join(&k._0, this->loan(), other.loan()),
             err,
@@ -132,6 +151,36 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param other a string to compare with.
     /// @return false if the key expression string representation is equal to other, true otherwise.
     bool operator!=(std::string_view other) const {
+        return !((*this) == other);
+    }
+
+    /// @brief Key expression to string equality relation.
+    /// @param other a string to compare with.
+    /// @return true if the key expression string representation is equal to other, false otherwise.
+    bool operator==(const std::string& other) const {
+        if (!(*this)) return false; 
+        return as_string_view() == other; 
+    }
+
+    /// @brief Key expression to string inequality relation.
+    /// @param other a string to compare with.
+    /// @return false if the key expression string representation is equal to other, true otherwise.
+    bool operator!=(const std::string& other) const {
+        return !((*this) == other);
+    }
+
+    /// @brief Key expression to string equality relation.
+    /// @param other a null-terminated string to compare with.
+    /// @return true if the key expression string representation is equal to other, false otherwise.
+    bool operator==(const char* other) const {
+        if (!(*this)) return false; 
+        return as_string_view() == other; 
+    }
+
+    /// @brief Key expression to string inequality relation.
+    /// @param other a null-terminated string to compare with.
+    /// @return false if the key expression string representation is equal to other, true otherwise.
+    bool operator!=(const char* other) const {
         return !((*this) == other);
     }
 

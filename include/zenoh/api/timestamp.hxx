@@ -31,7 +31,7 @@ public:
 
     /// @brief Get the unique id of the timestamp.
     /// @return Id associated with this timestamp.
-    Id get_id() const { return ::z_timestamp_id(&this->inner()); }
+    Id get_id() const { return Id(::z_timestamp_id(&this->inner())); }
 };
 
 }

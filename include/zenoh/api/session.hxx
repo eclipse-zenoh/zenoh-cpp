@@ -117,7 +117,7 @@ public:
     /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
     /// @return Declared ``KeyExpr`` instance.
     KeyExpr declare_keyexpr(const KeyExpr& key_expr, ZError* err = nullptr) const {
-        KeyExpr k(nullptr);
+        KeyExpr k;
         __ZENOH_ERROR_CHECK(
             ::z_declare_keyexpr(detail::as_owned_c_ptr(k), this->loan(), detail::loan(key_expr)),
             err,
