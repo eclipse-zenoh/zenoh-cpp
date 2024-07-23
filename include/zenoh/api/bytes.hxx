@@ -53,20 +53,21 @@ struct ZenohCodec;
 /// @brief A Zenoh serialized data representation.
 class Bytes : public Owned<::z_owned_bytes_t> {
 public:
-    using Owned::Owned;
 
     /// @name Constructors
-
+    /// Serializes data using default Zenoh codec.
+    template<class T>
+    Bytes(T data) :Bytes(Bytes::serialize(std::forward<T>(data))) {}
     /// @brief Construct a shallow copy of this data.
     Bytes clone() const {
-        Bytes b(nullptr);
+        Bytes b;
         ::z_bytes_clone(&b._0, this->loan());
         return b; 
     }
 
     /// @brief Construct an empty data.
     Bytes() 
-        : Bytes(nullptr) {
+        : Owned(nullptr) {
         ::z_bytes_empty(detail::as_owned_c_ptr(*this));
     }
 
@@ -100,7 +101,7 @@ public:
     /// @return serialized data.
     template<class ForwardIt, class Codec = ZenohCodec<>> 
     static Bytes serialize_from_iter(ForwardIt begin, ForwardIt end, Codec codec = Codec()) {
-        Bytes out(nullptr);
+        Bytes out;
         auto f = [current = begin, end, &codec] (z_owned_bytes_t* b) mutable {
             if (current == end) {
                 ::z_null(b);
@@ -251,7 +252,7 @@ public:
     /// @brief Return next element of serialized data.
     /// @return next element of serialized data, if the iterator reached the end, an empty optional will be returned.
     std::optional<Bytes> next() {
-        std::optional<Bytes> b(std::in_place, nullptr);
+        std::optional<Bytes> b(std::in_place);
         if (!::z_bytes_iterator_next(&this->_0, detail::as_owned_c_ptr(b.value()))) {
             b.reset();
         }
@@ -298,7 +299,7 @@ struct ZenohDeserializer<std::vector<uint8_t, Allocator>> {
 template<class A, class B>
 struct ZenohDeserializer<std::pair<A, B>> {
     static std::pair<A, B> deserialize(const Bytes& b, ZError* err = nullptr) {
-        zenoh::Bytes ba(nullptr), bb(nullptr);
+        zenoh::Bytes ba, bb;
         __ZENOH_ERROR_CHECK(
             ::z_bytes_deserialize_into_pair(detail::loan(b), detail::as_owned_c_ptr(ba), detail::as_owned_c_ptr(bb)),
             err,
@@ -422,6 +423,14 @@ struct ZenohCodec {
         return ZenohCodec::serialize(std::make_pair(reinterpret_cast<const uint8_t*>(s.data()), s.size()));
     }
 
+    static Bytes serialize(const char* s) {
+        return ZenohCodec::serialize(std::string_view(s));
+    }
+
+    static Bytes serialize(const std::string& s) {
+        return ZenohCodec::serialize(static_cast<std::string_view>(s));
+    }
+
     static Bytes serialize(Bytes&& b) {
         return std::move(b);
     }
@@ -431,7 +440,7 @@ struct ZenohCodec {
     }
 
     static Bytes serialize(const std::pair<const uint8_t*, size_t>& s) {
-        Bytes b(nullptr);
+        Bytes b;
         if constexpr (ZT == ZenohCodecType::AVOID_COPY) {
             ::z_bytes_serialize_from_slice(detail::as_owned_c_ptr(b), s.first, s.second);
         } else {
@@ -483,14 +492,14 @@ struct ZenohCodec {
     static Bytes serialize(const std::pair<A, B>& s) {
         auto ba = ZenohCodec::serialize(s.first);
         auto bb = ZenohCodec::serialize(s.second);
-        Bytes b(nullptr);
+        Bytes b;
         ::z_bytes_serialize_from_pair(detail::as_owned_c_ptr(b), ::z_move(*detail::as_owned_c_ptr(ba)), ::z_move(*detail::as_owned_c_ptr(bb)));
         return b;
     }
 
 #define __ZENOH_SERIALIZE_ARITHMETIC(TYPE, EXT) \
     static Bytes serialize(TYPE t) { \
-        Bytes b(nullptr); \
+        Bytes b; \
         ::z_bytes_serialize_from_##EXT(detail::as_owned_c_ptr(b), t); \
         return b; \
     } \

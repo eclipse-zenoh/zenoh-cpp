@@ -78,7 +78,7 @@ protected:
 public:
     /// @name Constructors
     /// Construct from wrapped zenoh-c / zenoh-pico structure
-    Copyable(const InnerType& v) : _0(v) {}
+    explicit Copyable(const InnerType& v) : _0(v) {}
     explicit operator const ZC_COPYABLE_TYPE&() const { return inner(); }
     explicit operator ZC_COPYABLE_TYPE&() { return inner(); }
 };
@@ -95,7 +95,7 @@ public:
     /// @brief Construct from owned zenoh-c struct.
     /// @param pv Pointer to valid owned zenoh-c struct. The ownership is transferred
     /// to the constructed object.
-    Owned(OwnedType* pv) {
+    explicit Owned(OwnedType* pv) {
         if (pv) {
             _0 = *pv;
             ::z_null(pv);

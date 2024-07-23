@@ -19,5 +19,5 @@ using namespace zenoh;
 int main(int, char **) {
     Config config = Config::create_default();
     auto session = Session::open(std::move(config));
-    session.put(KeyExpr("demo/example/simple"), Bytes::serialize("Simple!"));
+    session.put("demo/example/simple", "Simple!");
 }

@@ -31,7 +31,7 @@ public:
 
     /// @brief Get ``Id`` of the entity.
     /// @return ``Id`` of the entity.
-    Id get_id() const { return ::z_hello_zid(this->loan()); };
+    Id get_id() const { return Id(::z_hello_zid(this->loan())); };
 
     /// @brief Get the type of the entity.
     /// @return ``zenoh::WhatAmI`` of the entity.

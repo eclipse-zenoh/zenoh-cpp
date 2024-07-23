@@ -19,9 +19,6 @@ using namespace zenoh;
 
 
 void key_expr() {
-    KeyExpr nul(nullptr);
-    assert(!nul);
-
     KeyExpr foo("FOO");
     assert(static_cast<bool>(foo));
     assert(foo.as_string_view() == "FOO");
@@ -63,8 +60,6 @@ void join() {
 }
 
 void equals() {
-    KeyExpr nul(nullptr);
-
     KeyExpr foo("FOO");
     KeyExpr foo2("FOO");
     KeyExpr bar("BAR");
