@@ -79,8 +79,8 @@ class Publisher : public Owned<::z_owned_publisher_t> {
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
         opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
 
-        __ZENOH_ERROR_CHECK(::z_publisher_put(this->loan(), payload_ptr, &opts), err,
-                            "Failed to perform put operation");
+        __ZENOH_RESULT_CHECK(::z_publisher_put(this->loan(), payload_ptr, &opts), err,
+                             "Failed to perform put operation");
     }
 
     /// @brief Undeclare the resource associated with the publisher key expression.
@@ -91,8 +91,8 @@ class Publisher : public Owned<::z_owned_publisher_t> {
         ::z_publisher_delete_options_t opts;
         z_publisher_delete_options_default(&opts);
         opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
-        __ZENOH_ERROR_CHECK(::z_publisher_delete(this->loan(), &opts), err,
-                            "Failed to perform delete_resource operation");
+        __ZENOH_RESULT_CHECK(::z_publisher_delete(this->loan(), &opts), err,
+                             "Failed to perform delete_resource operation");
     }
 
 #ifdef ZENOHCXX_ZENOHC

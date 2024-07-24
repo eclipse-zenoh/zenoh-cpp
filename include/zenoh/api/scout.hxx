@@ -44,8 +44,8 @@ void scout(Config&& config, C&& on_hello, D&& on_drop, ScoutOptions&& options = 
     opts.timeout_ms = options.timeout_ms;
     opts.what = options.what;
 
-    __ZENOH_ERROR_CHECK(::z_scout(detail::as_owned_c_ptr(config), ::z_move(c_closure), &opts), err,
-                        "Failed to perform scout operation");
+    __ZENOH_RESULT_CHECK(::z_scout(detail::as_owned_c_ptr(config), ::z_move(c_closure), &opts), err,
+                         "Failed to perform scout operation");
 }
 
 }  // namespace zenoh

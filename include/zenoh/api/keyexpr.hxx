@@ -42,11 +42,11 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     explicit KeyExpr(std::string_view key_expr, bool autocanonize = true, ZResult* err = nullptr) : Owned(nullptr) {
         if (autocanonize) {
             size_t s = key_expr.size();
-            __ZENOH_ERROR_CHECK(::z_keyexpr_from_substr_autocanonize(&this->_0, key_expr.data(), &s), err,
-                                std::string("Failed to construct KeyExpr from: ").append(key_expr));
+            __ZENOH_RESULT_CHECK(::z_keyexpr_from_substr_autocanonize(&this->_0, key_expr.data(), &s), err,
+                                 std::string("Failed to construct KeyExpr from: ").append(key_expr));
         } else {
-            __ZENOH_ERROR_CHECK(::z_keyexpr_from_substr(&this->_0, key_expr.data(), key_expr.size()), err,
-                                std::string("Failed to construct KeyExpr from: ").append(key_expr));
+            __ZENOH_RESULT_CHECK(::z_keyexpr_from_substr(&this->_0, key_expr.data(), key_expr.size()), err,
+                                 std::string("Failed to construct KeyExpr from: ").append(key_expr));
         }
     }
 
@@ -90,7 +90,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @return A new key expression.
     KeyExpr concat(std::string_view s, ZResult* err = nullptr) const {
         KeyExpr k;
-        __ZENOH_ERROR_CHECK(
+        __ZENOH_RESULT_CHECK(
             ::z_keyexpr_concat(&k._0, this->loan(), s.data(), s.size()), err,
             std::string("Failed to concatenate KeyExpr: ").append(this->as_string_view()).append(" with ").append(s));
         return k;
@@ -102,11 +102,11 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// thrown in case of error.
     KeyExpr join(const KeyExpr& other, ZResult* err = nullptr) const {
         KeyExpr k;
-        __ZENOH_ERROR_CHECK(::z_keyexpr_join(&k._0, this->loan(), other.loan()), err,
-                            std::string("Failed to join KeyExpr: ")
-                                .append(this->as_string_view())
-                                .append(" with ")
-                                .append(other.as_string_view()));
+        __ZENOH_RESULT_CHECK(::z_keyexpr_join(&k._0, this->loan(), other.loan()), err,
+                             std::string("Failed to join KeyExpr: ")
+                                 .append(this->as_string_view())
+                                 .append(" with ")
+                                 .append(other.as_string_view()));
         return k;
     }
 

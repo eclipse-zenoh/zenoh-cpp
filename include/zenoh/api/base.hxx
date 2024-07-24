@@ -54,7 +54,7 @@ class ZException : public std::runtime_error {
         : std::runtime_error(message + "(Error code: " + std::to_string(err) + " )"), e(err) {}
 };
 
-#define __ZENOH_ERROR_CHECK(err, err_ptr, message)         \
+#define __ZENOH_RESULT_CHECK(err, err_ptr, message)        \
     if (err_ptr == nullptr) {                              \
         ZResult __ze = err;                                \
         if (__ze != Z_OK) throw ZException(message, __ze); \

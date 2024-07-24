@@ -54,8 +54,8 @@ class MemoryLayout : public Owned<::z_owned_memory_layout_t> {
     /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     MemoryLayout(size_t size, AllocAlignment alignment, ZResult* err = nullptr) : Owned(nullptr) {
-        __ZENOH_ERROR_CHECK(::z_memory_layout_new(&this->_0, size, alignment), err,
-                            "Failed to create MemoryLayout: incorrect arguments!");
+        __ZENOH_RESULT_CHECK(::z_memory_layout_new(&this->_0, size, alignment), err,
+                             "Failed to create MemoryLayout: incorrect arguments!");
     }
 
     size_t size() const {

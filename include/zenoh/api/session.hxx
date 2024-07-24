@@ -66,7 +66,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     Session(Config&& config, SessionOptions&& options = SessionOptions::create_default(), ZResult* err = nullptr)
         : Owned(nullptr) {
-        __ZENOH_ERROR_CHECK(::z_open(&this->_0, detail::as_owned_c_ptr(config)), err, "Failed to open session");
+        __ZENOH_RESULT_CHECK(::z_open(&this->_0, detail::as_owned_c_ptr(config)), err, "Failed to open session");
 #ifdef ZENOHCXX_ZENOHPICO
         if (err != nullptr && *err != Z_OK) return;
         if (options.start_background_tasks) {
@@ -77,7 +77,7 @@ class Session : public Owned<::z_owned_session_t> {
             }
             if (err_inner == Z_OK) return;
             ::z_close(&this->_0);
-            __ZENOH_ERROR_CHECK(err_inner, err, "Failed to start background tasks");
+            __ZENOH_RESULT_CHECK(err_inner, err, "Failed to start background tasks");
         }
 #else
         (void)options;
@@ -91,7 +91,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     Session(Config&& config, const ShmClientStorage& shm_storage, ZResult* err = nullptr) : Owned(nullptr) {
-        __ZENOH_ERROR_CHECK(
+        __ZENOH_RESULT_CHECK(
             ::z_open_with_custom_shm_clients(&this->_0, detail::as_owned_c_ptr(config), detail::loan(shm_storage)), err,
             "Failed to open session");
     }
@@ -144,8 +144,8 @@ class Session : public Owned<::z_owned_session_t> {
     /// @return Declared ``KeyExpr`` instance.
     KeyExpr declare_keyexpr(const KeyExpr& key_expr, ZResult* err = nullptr) const {
         KeyExpr k;
-        __ZENOH_ERROR_CHECK(::z_declare_keyexpr(detail::as_owned_c_ptr(k), this->loan(), detail::loan(key_expr)), err,
-                            std::string("Failed to declare key expression: ").append(k.as_string_view()));
+        __ZENOH_RESULT_CHECK(::z_declare_keyexpr(detail::as_owned_c_ptr(k), this->loan(), detail::loan(key_expr)), err,
+                             std::string("Failed to declare key expression: ").append(k.as_string_view()));
         return k;
     }
 
@@ -154,8 +154,8 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @param key_expr ``KeyExpr`` instance to undeclare, that was previously returned by ``Session::declare_keyexpr``.
     void undeclare_keyexpr(KeyExpr&& key_expr, ZResult* err = nullptr) const {
-        __ZENOH_ERROR_CHECK(::z_undeclare_keyexpr(detail::as_owned_c_ptr(key_expr), this->loan()), err,
-                            "Failed to undeclare key expression");
+        __ZENOH_RESULT_CHECK(::z_undeclare_keyexpr(detail::as_owned_c_ptr(key_expr), this->loan()), err,
+                             "Failed to undeclare key expression");
     }
 
     /// @brief Options passed to the ``get`` operation.
@@ -216,7 +216,7 @@ class Session : public Owned<::z_owned_session_t> {
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
         opts.timeout_ms = options.timeout_ms;
 
-        __ZENOH_ERROR_CHECK(
+        __ZENOH_RESULT_CHECK(
             ::z_get(this->loan(), detail::loan(key_expr), parameters.c_str(), ::z_move(c_closure), &opts), err,
             "Failed to perform get operation");
     }
@@ -251,7 +251,7 @@ class Session : public Owned<::z_owned_session_t> {
 
         ZResult res =
             ::z_get(this->loan(), detail::loan(key_expr), parameters.c_str(), ::z_move(cb_handler_pair.first), &opts);
-        __ZENOH_ERROR_CHECK(res, err, "Failed to perform get operation");
+        __ZENOH_RESULT_CHECK(res, err, "Failed to perform get operation");
         if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
         return std::move(cb_handler_pair.second);
     }
@@ -286,8 +286,8 @@ class Session : public Owned<::z_owned_session_t> {
         opts.priority = options.priority;
         opts.is_express = options.is_express;
 
-        __ZENOH_ERROR_CHECK(::z_delete(this->loan(), detail::loan(key_expr), &opts), err,
-                            "Failed to perform delete operation");
+        __ZENOH_RESULT_CHECK(::z_delete(this->loan(), detail::loan(key_expr), &opts), err,
+                             "Failed to perform delete operation");
     }
 
     /// @brief Options passed to the ``Session::put`` operation.
@@ -343,8 +343,8 @@ class Session : public Owned<::z_owned_session_t> {
         opts.allowed_destination = options.allowed_destination;
 #endif
         auto payload_ptr = detail::as_owned_c_ptr(payload);
-        __ZENOH_ERROR_CHECK(::z_put(this->loan(), detail::loan(key_expr), payload_ptr, &opts), err,
-                            "Failed to perform put operation");
+        __ZENOH_RESULT_CHECK(::z_put(this->loan(), detail::loan(key_expr), payload_ptr, &opts), err,
+                             "Failed to perform put operation");
     }
 
     /// @brief Options to be passed when declaring a ``Queryable``
@@ -387,7 +387,7 @@ class Session : public Owned<::z_owned_session_t> {
         Queryable<void> q(nullptr);
         ZResult res = ::z_declare_queryable(detail::as_owned_c_ptr(q), this->loan(), detail::loan(key_expr),
                                             ::z_move(c_closure), &opts);
-        __ZENOH_ERROR_CHECK(res, err, "Failed to declare Queryable");
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Queryable");
         return q;
     }
 
@@ -412,7 +412,7 @@ class Session : public Owned<::z_owned_session_t> {
         QueryableBase q(nullptr);
         ZResult res = ::z_declare_queryable(detail::as_owned_c_ptr(q), this->loan(), detail::loan(key_expr),
                                             ::z_move(cb_handler_pair.first), &opts);
-        __ZENOH_ERROR_CHECK(res, err, "Failed to declare Queryable");
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Queryable");
         if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
         return Queryable<typename Channel::template HandlerType<Query>>(std::move(q),
                                                                         std::move(cb_handler_pair.second));
@@ -460,7 +460,7 @@ class Session : public Owned<::z_owned_session_t> {
         Subscriber<void> s(nullptr);
         ZResult res = ::z_declare_subscriber(detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr),
                                              ::z_move(c_closure), &opts);
-        __ZENOH_ERROR_CHECK(res, err, "Failed to declare Subscriber");
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Subscriber");
         return s;
     }
 
@@ -485,7 +485,7 @@ class Session : public Owned<::z_owned_session_t> {
         SubscriberBase s(nullptr);
         ZResult res = ::z_declare_subscriber(detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr),
                                              ::z_move(cb_handler_pair.first), &opts);
-        __ZENOH_ERROR_CHECK(res, err, "Failed to declare Subscriber");
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Subscriber");
         if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
         return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
                                                                           std::move(cb_handler_pair.second));
@@ -531,7 +531,7 @@ class Session : public Owned<::z_owned_session_t> {
 
         Publisher p(nullptr);
         ZResult res = ::z_declare_publisher(detail::as_owned_c_ptr(p), this->loan(), detail::loan(key_expr), &opts);
-        __ZENOH_ERROR_CHECK(res, err, "Failed to declare Publisher");
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Publisher");
         return p;
     }
 
@@ -548,7 +548,7 @@ class Session : public Owned<::z_owned_session_t> {
         using ClosureType = typename detail::closures::Closure<F, closures::None, void, const Id&>;
         auto closure = ClosureType::into_context(std::forward<F>(f), closures::none);
         ::z_closure(&c_closure, detail::closures::_zenoh_on_id_call, detail::closures::_zenoh_on_drop, closure);
-        __ZENOH_ERROR_CHECK(::z_info_routers_zid(this->loan(), &c_closure), err, "Failed to fetch router Ids");
+        __ZENOH_RESULT_CHECK(::z_info_routers_zid(this->loan(), &c_closure), err, "Failed to fetch router Ids");
         return out;
     }
 
@@ -564,7 +564,7 @@ class Session : public Owned<::z_owned_session_t> {
         auto closure = detail::closures::Closure<F, closures::None, void, const Id&>::into_context(std::forward<F>(f),
                                                                                                    closures::none);
         ::z_closure(&c_closure, detail::closures::_zenoh_on_id_call, detail::closures::_zenoh_on_drop, closure);
-        __ZENOH_ERROR_CHECK(::z_info_peers_zid(this->loan(), &c_closure), err, "Failed to fetch peer Ids");
+        __ZENOH_RESULT_CHECK(::z_info_peers_zid(this->loan(), &c_closure), err, "Failed to fetch peer Ids");
         return out;
     }
 #endif
@@ -575,7 +575,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @note zenoh-pico only
     void start_read_task(ZResult* err = nullptr) {
-        __ZENOH_ERROR_CHECK(zp_start_read_task(this->loan(), nullptr), err, "Failed to start read task");
+        __ZENOH_RESULT_CHECK(zp_start_read_task(this->loan(), nullptr), err, "Failed to start read task");
     }
 
     /// @brief Stop the read task.
@@ -583,7 +583,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @note zenoh-pico only
     void stop_read_task(ZResult* err = nullptr) {
-        __ZENOH_ERROR_CHECK(zp_stop_read_task(this->loan()), err, "Failed to stop read task");
+        __ZENOH_RESULT_CHECK(zp_stop_read_task(this->loan()), err, "Failed to stop read task");
     }
 
     /// @brief Start a separate task to handle the session lease.  This task will send KeepAlive messages when needed
@@ -593,7 +593,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @note zenoh-pico only
     void start_lease_task(ZResult* err = nullptr) {
-        __ZENOH_ERROR_CHECK(zp_start_lease_task(this->loan(), NULL), err, "Failed to start lease task");
+        __ZENOH_RESULT_CHECK(zp_start_lease_task(this->loan(), NULL), err, "Failed to start lease task");
     }
 
     /// @brief Stop the lease task.
@@ -601,7 +601,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @note zenoh-pico only
     void stop_lease_task(ZResult* err = nullptr) {
-        __ZENOH_ERROR_CHECK(zp_stop_lease_task(this->loan()), err, "Failed to stop lease task");
+        __ZENOH_RESULT_CHECK(zp_stop_lease_task(this->loan()), err, "Failed to stop lease task");
     }
 
     /// @brief Triggers a single execution of reading procedure from the network and processes of any received the
@@ -610,7 +610,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @note zenoh-pico only
     void read(ZResult* err = nullptr) {
-        __ZENOH_ERROR_CHECK(zp_read(this->loan(), nullptr), err, "Failed to perform read");
+        __ZENOH_RESULT_CHECK(zp_read(this->loan(), nullptr), err, "Failed to perform read");
     }
 
     /// @brief Triggers a single execution of keep alive procedure. It will send KeepAlive messages when needed and
@@ -618,14 +618,14 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void send_keep_alive(ZResult* err = nullptr) {
-        __ZENOH_ERROR_CHECK(zp_send_keep_alive(this->loan(), nullptr), err, "Failed to perform send_keep_alive");
+        __ZENOH_RESULT_CHECK(zp_send_keep_alive(this->loan(), nullptr), err, "Failed to perform send_keep_alive");
     }
 
     /// @brief Triggers a single execution of join procedure: send the Join message.
     /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void send_join(ZResult* err = nullptr) {
-        __ZENOH_ERROR_CHECK(zp_send_join(this->loan(), nullptr), err, "Failed to perform send_join");
+        __ZENOH_RESULT_CHECK(zp_send_join(this->loan(), nullptr), err, "Failed to perform send_join");
     }
 #endif
 
@@ -657,7 +657,7 @@ class Session : public Owned<::z_owned_session_t> {
         ::zc_liveliness_declaration_options_t opts;
         zc_liveliness_declaration_options_default(&opts);
         (void)options;
-        __ZENOH_ERROR_CHECK(
+        __ZENOH_RESULT_CHECK(
             ::zc_liveliness_declare_token(detail::as_owned_c_ptr(t), this->loan(), detail::loan(key_expr), &opts), err,
             "Failed to perform liveliness_declare_token operation");
         return t;
@@ -702,7 +702,7 @@ class Session : public Owned<::z_owned_session_t> {
         Subscriber<void> s(nullptr);
         ZResult res = ::zc_liveliness_declare_subscriber(detail::as_owned_c_ptr(s), this->loan(),
                                                          detail::loan(key_expr), ::z_move(c_closure), &opts);
-        __ZENOH_ERROR_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
         return s;
     }
 
@@ -727,7 +727,7 @@ class Session : public Owned<::z_owned_session_t> {
         SubscriberBase s(nullptr);
         ZResult res = ::zc_liveliness_declare_subscriber(
             detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr), ::z_move(cb_handler_pair.first), &opts);
-        __ZENOH_ERROR_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
         if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
         return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
                                                                           std::move(cb_handler_pair.second));
@@ -770,8 +770,8 @@ class Session : public Owned<::z_owned_session_t> {
         zc_liveliness_get_options_default(&opts);
         opts.timeout_ms = options.timeout_ms;
 
-        __ZENOH_ERROR_CHECK(::zc_liveliness_get(this->loan(), detail::loan(key_expr), ::z_move(c_closure), &opts), err,
-                            "Failed to perform liveliness_get operation");
+        __ZENOH_RESULT_CHECK(::zc_liveliness_get(this->loan(), detail::loan(key_expr), ::z_move(c_closure), &opts), err,
+                             "Failed to perform liveliness_get operation");
     }
 
     /// @brief Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
@@ -793,7 +793,7 @@ class Session : public Owned<::z_owned_session_t> {
         opts.timeout_ms = options.timeout_ms;
 
         ZResult res = ::zc_liveliness_get(this->loan(), detail::loan(key_expr), ::z_move(cb_handler_pair.first), &opts);
-        __ZENOH_ERROR_CHECK(res, err, "Failed to perform liveliness_get operation");
+        __ZENOH_RESULT_CHECK(res, err, "Failed to perform liveliness_get operation");
         if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
         return std::move(cb_handler_pair.second);
     }
@@ -804,7 +804,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     Timestamp new_timestamp(ZResult* err = nullptr) {
         ::z_timestamp_t t;
-        __ZENOH_ERROR_CHECK(z_timestamp_new(&t, this->loan()), err, "Failed to create timestamp");
+        __ZENOH_RESULT_CHECK(z_timestamp_new(&t, this->loan()), err, "Failed to create timestamp");
         return Timestamp(t);
     }
 };

@@ -31,7 +31,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// thrown in case of error.
     static Config create_default(ZResult* err = nullptr) {
         Config c(nullptr);
-        __ZENOH_ERROR_CHECK(::z_config_default(&c._0), err, std::string("Failed to create default configuration"));
+        __ZENOH_RESULT_CHECK(::z_config_default(&c._0), err, std::string("Failed to create default configuration"));
         return c;
     }
 
@@ -43,7 +43,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @note zenoh-c only.
     static Config peer(ZResult* err = nullptr) {
         Config c(nullptr);
-        __ZENOH_ERROR_CHECK(::z_config_peer(&c._0), err, std::string("Failed to create peer configuration"));
+        __ZENOH_RESULT_CHECK(::z_config_peer(&c._0), err, std::string("Failed to create peer configuration"));
         return c;
     }
 
@@ -55,8 +55,8 @@ class Config : public Owned<::z_owned_config_t> {
     /// @note zenoh-c only.
     static Config from_file(const std::string& path, ZResult* err = nullptr) {
         Config c(nullptr);
-        __ZENOH_ERROR_CHECK(::zc_config_from_file(&c._0, path.data()), err,
-                            std::string("Failed to create config from: ").append(path));
+        __ZENOH_RESULT_CHECK(::zc_config_from_file(&c._0, path.data()), err,
+                             std::string("Failed to create config from: ").append(path));
         return c;
     }
 
@@ -68,8 +68,8 @@ class Config : public Owned<::z_owned_config_t> {
     /// @note zenoh-c only.
     static Config from_str(const std::string& s, ZResult* err = nullptr) {
         Config c(nullptr);
-        __ZENOH_ERROR_CHECK(::zc_config_from_str(&c._0, s.data()), err,
-                            std::string("Failed to create config from: ").append(s));
+        __ZENOH_RESULT_CHECK(::zc_config_from_str(&c._0, s.data()), err,
+                             std::string("Failed to create config from: ").append(s));
         return c;
     }
     /// @brief Create the configuration for "client" mode.
@@ -85,7 +85,7 @@ class Config : public Owned<::z_owned_config_t> {
         for (const auto& peer : peers) {
             p.push_back(peer.c_str());
         }
-        __ZENOH_ERROR_CHECK(::z_config_client(&c._0, p.data(), p.size()), err, "Failed to create client config");
+        __ZENOH_RESULT_CHECK(::z_config_client(&c._0, p.data(), p.size()), err, "Failed to create client config");
         return c;
     }
 #endif
@@ -99,7 +99,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @note zenoh-pico only.
     static Config peer(const char* locator, ZResult* err = nullptr) {
         Config c(nullptr);
-        __ZENOH_ERROR_CHECK(::z_config_peer(&c._0, locator), err, "Failed to create client config");
+        __ZENOH_RESULT_CHECK(::z_config_peer(&c._0, locator), err, "Failed to create client config");
         return c;
     }
 
@@ -111,7 +111,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @note zenoh-pico only.
     static Config client(const char* peer, ZResult* err = nullptr) {
         Config c(nullptr);
-        __ZENOH_ERROR_CHECK(::z_config_client(&c._0, peer), err, "Failed to create client config");
+        __ZENOH_RESULT_CHECK(::z_config_client(&c._0, peer), err, "Failed to create client config");
         return c;
     }
 #endif
@@ -127,8 +127,8 @@ class Config : public Owned<::z_owned_config_t> {
     /// @note zenoh-c only.
     std::string get(std::string_view key, ZResult* err = nullptr) const {
         ::z_owned_string_t s;
-        __ZENOH_ERROR_CHECK(::zc_config_get_from_substr(this->loan(), key.data(), key.size(), &s), err,
-                            std::string("Failed to get config value for the key: ").append(key));
+        __ZENOH_RESULT_CHECK(::zc_config_get_from_substr(this->loan(), key.data(), key.size(), &s), err,
+                             std::string("Failed to get config value for the key: ").append(key));
         std::string out = std::string(::z_string_data(::z_loan(s)), ::z_string_len(::z_loan(s)));
         ::z_drop(::z_move(s));
         return out;
@@ -153,12 +153,12 @@ class Config : public Owned<::z_owned_config_t> {
     /// @return true if the parameter was inserted, false otherwise.
     /// @note zenoh-c only.
     void insert_json(const std::string& key, const std::string& value, ZResult* err = nullptr) {
-        __ZENOH_ERROR_CHECK(::zc_config_insert_json(loan(), key.c_str(), value.c_str()), err,
-                            std::string("Failed to insert '")
-                                .append(value)
-                                .append("' for the key '")
-                                .append(key)
-                                .append("' into config"));
+        __ZENOH_RESULT_CHECK(::zc_config_insert_json(loan(), key.c_str(), value.c_str()), err,
+                             std::string("Failed to insert '")
+                                 .append(value)
+                                 .append("' for the key '")
+                                 .append(key)
+                                 .append("' into config"));
     }
 #endif
 #ifdef ZENOHCXX_ZENOHPICO
@@ -170,8 +170,8 @@ class Config : public Owned<::z_owned_config_t> {
     /// @note zenoh-pico only.
     const char* get(uint8_t key, ZResult* err = nullptr) const {
         const char* c = ::zp_config_get(loan(), key);
-        __ZENOH_ERROR_CHECK((c == nullptr ? -1 : Z_OK), err,
-                            std::string("Failed to get config value for the key: ").append(std::to_string(key)));
+        __ZENOH_RESULT_CHECK((c == nullptr ? -1 : Z_OK), err,
+                             std::string("Failed to get config value for the key: ").append(std::to_string(key)));
         return c;
     }
 
@@ -182,12 +182,12 @@ class Config : public Owned<::z_owned_config_t> {
     /// thrown in case of error.
     /// @note zenoh-pico only.
     void insert(uint8_t key, const char* value, ZResult* err = nullptr) {
-        __ZENOH_ERROR_CHECK(zp_config_insert(this->loan(), key, value), err,
-                            std::string("Failed to insert '")
-                                .append(value)
-                                .append("' for the key '")
-                                .append(std::to_string(key))
-                                .append("' into config"));
+        __ZENOH_RESULT_CHECK(zp_config_insert(this->loan(), key, value), err,
+                             std::string("Failed to insert '")
+                                 .append(value)
+                                 .append("' for the key '")
+                                 .append(std::to_string(key))
+                                 .append("' into config"));
     }
 #endif
 };

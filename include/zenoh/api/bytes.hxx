@@ -169,7 +169,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         /// @param res if not null, the result code will be written to this location, otherwise ZException exception
         /// will be thrown in case of error.
         void seek_from_current(int64_t offset, ZResult* err = nullptr) {
-            __ZENOH_ERROR_CHECK(::z_bytes_reader_seek(&this->_0, offset, SEEK_CUR), err, "seek_from_current failed");
+            __ZENOH_RESULT_CHECK(::z_bytes_reader_seek(&this->_0, offset, SEEK_CUR), err, "seek_from_current failed");
         }
 
         /// @brief Set the `reader` position indicator to the value pointed to by offset, starting from the start of the
@@ -178,7 +178,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         /// @param res if not null, the result code will be written to this location, otherwise ZException exception
         /// will be thrown in case of error.
         void seek_from_start(int64_t offset, ZResult* err = nullptr) {
-            __ZENOH_ERROR_CHECK(::z_bytes_reader_seek(&this->_0, offset, SEEK_SET), err, "seek_from_start failed");
+            __ZENOH_RESULT_CHECK(::z_bytes_reader_seek(&this->_0, offset, SEEK_SET), err, "seek_from_start failed");
         }
 
         /// @brief Set the `reader` position indicator to the value pointed to by offset with respect to the end of the
@@ -187,7 +187,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         /// @param res if not null, the result code will be written to this location, otherwise ZException exception
         /// will be thrown in case of error.
         void seek_from_end(int64_t offset, ZResult* err = nullptr) {
-            __ZENOH_ERROR_CHECK(::z_bytes_reader_seek(&this->_0, offset, SEEK_END), err, "seek_from_end failed");
+            __ZENOH_RESULT_CHECK(::z_bytes_reader_seek(&this->_0, offset, SEEK_END), err, "seek_from_end failed");
         }
     };
 
@@ -208,7 +208,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         /// @param res if not null, the result code will be written to this location, otherwise ZException exception
         /// will be thrown in case of error.
         void write(const uint8_t* src, size_t len, ZResult* err = nullptr) {
-            __ZENOH_ERROR_CHECK(::z_bytes_writer_write(this->loan(), src, len), err, "Failed to write data");
+            __ZENOH_RESULT_CHECK(::z_bytes_writer_write(this->loan(), src, len), err, "Failed to write data");
         }
     };
 
@@ -275,7 +275,7 @@ template <class A, class B>
 struct ZenohDeserializer<std::pair<A, B>> {
     static std::pair<A, B> deserialize(const Bytes& b, ZResult* err = nullptr) {
         zenoh::Bytes ba, bb;
-        __ZENOH_ERROR_CHECK(
+        __ZENOH_RESULT_CHECK(
             ::z_bytes_deserialize_into_pair(detail::loan(b), detail::as_owned_c_ptr(ba), detail::as_owned_c_ptr(bb)),
             err, "Failed to deserialize into std::pair");
         return {ZenohDeserializer<A>::deserialize(ba, err), ZenohDeserializer<B>::deserialize(bb, err)};
@@ -360,15 +360,15 @@ struct ZenohDeserializer<std::map<K, V, C, Allocator>> {
     }
 };
 
-#define __ZENOH_DESERIALIZE_ARITHMETIC(TYPE, EXT)                                           \
-    template <>                                                                             \
-    struct ZenohDeserializer<TYPE> {                                                        \
-        static TYPE deserialize(const Bytes& b, ZResult* err = nullptr) {                   \
-            TYPE t;                                                                         \
-            __ZENOH_ERROR_CHECK(::z_bytes_deserialize_into_##EXT(detail::loan(b), &t), err, \
-                                "Failed to deserialize into " #TYPE);                       \
-            return t;                                                                       \
-        }                                                                                   \
+#define __ZENOH_DESERIALIZE_ARITHMETIC(TYPE, EXT)                                            \
+    template <>                                                                              \
+    struct ZenohDeserializer<TYPE> {                                                         \
+        static TYPE deserialize(const Bytes& b, ZResult* err = nullptr) {                    \
+            TYPE t;                                                                          \
+            __ZENOH_RESULT_CHECK(::z_bytes_deserialize_into_##EXT(detail::loan(b), &t), err, \
+                                 "Failed to deserialize into " #TYPE);                       \
+            return t;                                                                        \
+        }                                                                                    \
     };
 
 __ZENOH_DESERIALIZE_ARITHMETIC(uint8_t, uint8);
@@ -404,15 +404,15 @@ struct ZenohCodec {
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
     static Bytes serialize(ZShm&& shm, ZResult* err = nullptr) {
         Bytes b;
-        __ZENOH_ERROR_CHECK(::z_bytes_serialize_from_shm(detail::as_owned_c_ptr(b), detail::as_owned_c_ptr(shm)), err,
-                            "Failed to serialize ZShm");
+        __ZENOH_RESULT_CHECK(::z_bytes_serialize_from_shm(detail::as_owned_c_ptr(b), detail::as_owned_c_ptr(shm)), err,
+                             "Failed to serialize ZShm");
         return b;
     }
 
     static Bytes serialize(ZShmMut&& shm, ZResult* err = nullptr) {
         Bytes b;
-        __ZENOH_ERROR_CHECK(::z_bytes_serialize_from_shm_mut(detail::as_owned_c_ptr(b), detail::as_owned_c_ptr(shm)),
-                            err, "Failed to serialize ZShmMut");
+        __ZENOH_RESULT_CHECK(::z_bytes_serialize_from_shm_mut(detail::as_owned_c_ptr(b), detail::as_owned_c_ptr(shm)),
+                             err, "Failed to serialize ZShmMut");
         return b;
     }
 #endif

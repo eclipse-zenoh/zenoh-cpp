@@ -118,8 +118,8 @@ class Query : public Owned<::z_owned_query_t> {
 #endif
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
 
-        __ZENOH_ERROR_CHECK(::z_query_reply(this->loan(), detail::loan(key_expr), payload_ptr, &opts), err,
-                            "Failed to send reply");
+        __ZENOH_RESULT_CHECK(::z_query_reply(this->loan(), detail::loan(key_expr), payload_ptr, &opts), err,
+                             "Failed to send reply");
     }
 
     /// @brief Options passed to the ``Query::reply_err`` operation.
@@ -146,7 +146,7 @@ class Query : public Owned<::z_owned_query_t> {
         z_query_reply_err_options_default(&opts);
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
 
-        __ZENOH_ERROR_CHECK(::z_query_reply_err(this->loan(), payload_ptr, &opts), err, "Failed to send reply error");
+        __ZENOH_RESULT_CHECK(::z_query_reply_err(this->loan(), payload_ptr, &opts), err, "Failed to send reply error");
     }
 
     /// @brief Options passed to the ``Query::reply_del`` operation.
@@ -192,8 +192,8 @@ class Query : public Owned<::z_owned_query_t> {
 #endif
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
 
-        __ZENOH_ERROR_CHECK(::z_query_reply_del(this->loan(), detail::loan(key_expr), &opts), err,
-                            "Failed to send reply del");
+        __ZENOH_RESULT_CHECK(::z_query_reply_del(this->loan(), detail::loan(key_expr), &opts), err,
+                             "Failed to send reply del");
     }
 };
 
