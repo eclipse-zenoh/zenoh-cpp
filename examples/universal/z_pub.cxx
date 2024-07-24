@@ -95,7 +95,7 @@ int _main(int argc, char **argv) {
         ss << "[" << idx << "] " << value;
         auto s = ss.str();  // in C++20 use .view() instead
         std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
-        pub.put(s);
+        pub.put(s, options);
     }
     return 0;
 }
