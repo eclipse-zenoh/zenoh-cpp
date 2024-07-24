@@ -13,12 +13,11 @@
 
 #include <stdio.h>
 
+#include <chrono>
 #include <condition_variable>
 #include <iostream>
 #include <mutex>
-
 #include <thread>
-#include <chrono>
 
 #include "../getargs.h"
 #include "zenoh.hxx"
@@ -37,7 +36,7 @@ void printlocators(const std::vector<std::string_view> &locs) {
 void printhello(const Hello &hello) {
     std::cout << "Hello { ";
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
-    std::cout << "pid: " <<  hello.get_id() << ", ";
+    std::cout << "pid: " << hello.get_id() << ", ";
 #endif
     std::cout << "whatami: " << hello.get_whatami();
     std::cout << ", locators: ";
@@ -63,7 +62,7 @@ int _main(int argc, char **argv) {
     }
 #endif
 
-    ZError err;
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
@@ -85,7 +84,7 @@ int _main(int argc, char **argv) {
     std::condition_variable done_signal;
     bool done = false;
 
-    auto on_hello = [&count](const Hello& hello) {
+    auto on_hello = [&count](const Hello &hello) {
         printhello(hello);
         std::cout << std::endl;
         count++;

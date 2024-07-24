@@ -82,8 +82,8 @@ class ShmProvider : public Owned<::z_owned_shm_provider_t> {
         return Converters::from(result);
     }
 
-    ZError alloc_gc_defrag_async(size_t size, AllocAlignment alignment,
-                                 std::unique_ptr<ShmProviderAsyncInterface> receiver) const {
+    ZResult alloc_gc_defrag_async(size_t size, AllocAlignment alignment,
+                                  std::unique_ptr<ShmProviderAsyncInterface> receiver) const {
         auto rcv = receiver.release();
         ::zc_threadsafe_context_t context = {{rcv}, &ShmProviderAsyncInterface::drop};
         return ::z_shm_provider_alloc_gc_defrag_async(&rcv->_result, this->loan(), size, alignment, context,

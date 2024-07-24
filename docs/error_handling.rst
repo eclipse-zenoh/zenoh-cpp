@@ -15,7 +15,7 @@
 Error Handling
 ==============
 
-All failable Zenoh methods accept pointer to zenoh::ZError as an optional argument.
+All failable Zenoh methods accept pointer to zenoh::ZResult as an optional argument.
 If it is not provided (or set to ``nullptr``) a ``zenoh::ZException`` will be thrown in case of failure.
 Otherwise a error code will be written to provided pointer and no exception will be thrown from Zenoh side.
 If corresponding method is expected to return or consume (via ``std::move``) any objects, they will be reset to
@@ -26,4 +26,4 @@ explicit conversion to ``bool``, which will return false).
    :members:
    :membergroups: Constructors Operators Methods
    
-.. doxygentypedef:: zenoh::ZError
+.. doxygentypedef:: zenoh::ZResult

@@ -35,7 +35,7 @@ int _main(int argc, char** argv) {
     }
 #endif
 
-    ZError err;
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
@@ -59,12 +59,12 @@ int _main(int argc, char** argv) {
     std::cout << "own id: " << session.get_zid() << std::endl;
 
     std::cout << "routers ids:\n";
-    for (const auto zid: session.get_routers_z_id()) {
+    for (const auto zid : session.get_routers_z_id()) {
         std::cout << zid << "\n";
     }
 
     std::cout << "peers ids:\n";
-    for (const auto zid: session.get_peers_z_id()) {
+    for (const auto zid : session.get_peers_z_id()) {
         std::cout << zid << "\n";
     }
 #endif

@@ -17,7 +17,6 @@ using namespace zenoh;
 #undef NDEBUG
 #include <assert.h>
 
-
 void key_expr() {
     KeyExpr foo("FOO");
     assert(static_cast<bool>(foo));
@@ -25,7 +24,7 @@ void key_expr() {
 }
 
 void canonize() {
-    ZError err = 0;
+    ZResult err = 0;
     bool res;
     auto non_canon = "a/**/**/c";
     auto canon = "a/**/c";
@@ -35,7 +34,7 @@ void canonize() {
 
     // do not force canoniozation on keyexpr construction
     KeyExpr k_err(non_canon, false, &err);
-#ifdef ZENOHCXX_ZENOHC //Pico does not validate key expressions yet.
+#ifdef ZENOHCXX_ZENOHC  // Pico does not validate key expressions yet.
     assert(!k_err);
     assert(err < 0);
 #endif

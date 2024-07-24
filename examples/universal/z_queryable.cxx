@@ -14,9 +14,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <chrono>
 #include <iostream>
 #include <thread>
-#include <chrono>
 
 #include "../getargs.h"
 #include "zenoh.hxx"
@@ -50,7 +50,7 @@ int _main(int argc, char **argv) {
     }
 #endif
 
-    ZError err;
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
@@ -75,10 +75,10 @@ int _main(int argc, char **argv) {
     std::cout << "Declaring Queryable on '" << expr << "'...\n";
 
     auto on_query = [](const Query &query) {
-        const KeyExpr& keyexpr = query.get_keyexpr();
+        const KeyExpr &keyexpr = query.get_keyexpr();
         auto params = query.get_parameters();
-        std::cout << ">> [Queryable ] Received Query '" << keyexpr.as_string_view() << "?" << params
-                  << "' value = '" << query.get_payload().deserialize<std::string>() << "'\n";
+        std::cout << ">> [Queryable ] Received Query '" << keyexpr.as_string_view() << "?" << params << "' value = '"
+                  << query.get_payload().deserialize<std::string>() << "'\n";
         query.reply(KeyExpr(expr), Bytes::serialize(value), {.encoding = Encoding("text/plain")});
     };
 

@@ -13,11 +13,12 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <string>
-#include <iostream>
 
-#include "zenoh.hxx"
+#include <iostream>
+#include <string>
+
 #include "../getargs.h"
+#include "zenoh.hxx"
 using namespace zenoh;
 
 int _main(int argc, char **argv) {
@@ -37,7 +38,7 @@ int _main(int argc, char **argv) {
         config = Config::from_file(config_file);
     }
 #endif
-    ZError err;
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
@@ -60,13 +61,12 @@ int _main(int argc, char **argv) {
     auto session = Session::open(std::move(config));
 
     std::cout << "Sending Query '" << expr << "'...\n";
-    auto replies = session.get(
-        keyexpr, "", channels::FifoChannel(16), 
-        {.target = QueryTarget::Z_QUERY_TARGET_ALL, .payload = Bytes::serialize("Get from C++")}
-    );
+    auto replies =
+        session.get(keyexpr, "", channels::FifoChannel(16),
+                    {.target = QueryTarget::Z_QUERY_TARGET_ALL, .payload = Bytes::serialize("Get from C++")});
 
     for (auto reply = replies.recv().first; static_cast<bool>(reply); reply = replies.recv().first) {
-        const auto& sample = reply.get_ok();
+        const auto &sample = reply.get_ok();
         std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
                   << sample.get_payload().deserialize<std::string>() << "')\n";
     }

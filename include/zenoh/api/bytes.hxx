@@ -13,9 +13,9 @@
 
 #pragma once
 
-#include "base.hxx"
-#include "../detail/interop.hxx"
 #include "../detail/closures.hxx"
+#include "../detail/interop.hxx"
+#include "base.hxx"
 #include "closures.hxx"
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 #include "shm/buffer/buffer.hxx"
@@ -23,65 +23,56 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <deque>
+#include <map>
 #include <optional>
-#include <string_view>
+#include <set>
 #include <string>
+#include <string_view>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
-#include <unordered_map>
-#include <deque>
-#include <unordered_set>
-#include <map>
-#include <set>
 
 namespace zenoh {
 
 namespace detail::closures {
 extern "C" {
-    inline bool _zenoh_encode_iter(z_owned_bytes_t* b, void* context) {
-        return IClosure<bool, z_owned_bytes_t*>::call_from_context(context, b);
-    }
+inline bool _zenoh_encode_iter(z_owned_bytes_t* b, void* context) {
+    return IClosure<bool, z_owned_bytes_t*>::call_from_context(context, b);
+}
 }
 
-}
+}  // namespace detail::closures
 
-enum class ZenohCodecType {
-    STANDARD,
-    AVOID_COPY
-};
+enum class ZenohCodecType { STANDARD, AVOID_COPY };
 
-template<ZenohCodecType ZT = ZenohCodecType::STANDARD>
+template <ZenohCodecType ZT = ZenohCodecType::STANDARD>
 struct ZenohCodec;
 
 /// @brief A Zenoh serialized data representation.
 class Bytes : public Owned<::z_owned_bytes_t> {
-public:
-
+   public:
     /// @name Constructors
 
     /// @brief Serializes data using default Zenoh codec.
-    template<class T>
-    Bytes(T data) :Bytes(Bytes::serialize(std::forward<T>(data))) {}
-    
+    template <class T>
+    Bytes(T data) : Bytes(Bytes::serialize(std::forward<T>(data))) {}
+
     /// @brief Construct a shallow copy of this data.
     Bytes clone() const {
         Bytes b;
         ::z_bytes_clone(&b._0, this->loan());
-        return b; 
+        return b;
     }
 
     /// @brief Construct an empty data.
-    Bytes() 
-        : Owned(nullptr) {
-        ::z_bytes_empty(detail::as_owned_c_ptr(*this));
-    }
+    Bytes() : Owned(nullptr) { ::z_bytes_empty(detail::as_owned_c_ptr(*this)); }
 
     /// @name Methods
 
     /// @brief Get number of bytes in the pyload.
-    size_t size() const {
-        return ::z_bytes_len(this->loan());
-    }
+    size_t size() const { return ::z_bytes_len(this->loan()); }
 
     /// @brief Serialize specified type.
     ///
@@ -90,7 +81,7 @@ public:
     /// @param data instance of T to serialize.
     /// @param codec instance of Codec to use.
     /// @return serialized data.
-    template<class T, class Codec = ZenohCodec<>>
+    template <class T, class Codec = ZenohCodec<>>
     static Bytes serialize(T&& data, Codec codec = Codec()) {
         return codec.serialize(std::forward<T>(data));
     }
@@ -104,10 +95,10 @@ public:
     /// @param end end of the iterator range.
     /// @param codec codec instance.
     /// @return serialized data.
-    template<class ForwardIt, class Codec = ZenohCodec<>> 
+    template <class ForwardIt, class Codec = ZenohCodec<>>
     static Bytes serialize_from_iter(ForwardIt begin, ForwardIt end, Codec codec = Codec()) {
         Bytes out;
-        auto f = [current = begin, end, &codec] (z_owned_bytes_t* b) mutable {
+        auto f = [current = begin, end, &codec](z_owned_bytes_t* b) mutable {
             if (current == end) {
                 ::z_null(b);
                 return false;
@@ -120,8 +111,9 @@ public:
 
         using ClosureType = typename detail::closures::Closure<F, closures::None, bool, z_owned_bytes_t*>;
         auto closure = ClosureType(std::forward<F>(f), closures::none);
-        
-        ::z_bytes_serialize_from_iter(detail::as_owned_c_ptr(out), detail::closures::_zenoh_encode_iter, closure.as_context());
+
+        ::z_bytes_serialize_from_iter(detail::as_owned_c_ptr(out), detail::closures::_zenoh_encode_iter,
+                                      closure.as_context());
         return out;
     }
 
@@ -129,11 +121,12 @@ public:
     ///
     /// @tparam T Type to deserialize into.
     /// @tparam Codec codec to use.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
     /// @param codec codec instance.
     /// @return deserialzied data.
-    template<class T, class Codec = ZenohCodec<>>
-    T deserialize(ZError* err, Codec codec = Codec()) const {
+    template <class T, class Codec = ZenohCodec<>>
+    T deserialize(ZResult* err, Codec codec = Codec()) const {
         return codec.template deserialize<T>(*this, err);
     }
 
@@ -142,11 +135,10 @@ public:
     /// @tparam T type to deserialize into.
     /// @tparam Codec codec to use.
     /// @return deserialzied data.
-    template<class T, class Codec = ZenohCodec<>>
+    template <class T, class Codec = ZenohCodec<>>
     T deserialize(Codec codec = Codec()) const {
         return codec.template deserialize<T>(*this, nullptr);
     }
-
 
     class Iterator;
 
@@ -156,7 +148,7 @@ public:
 
     /// @brief A reader for Zenoh-serialized data.
     class Reader : public Copyable<::z_bytes_reader_t> {
-    public:
+       public:
         using Copyable::Copyable;
 
         /// @name Methods
@@ -165,59 +157,47 @@ public:
         /// @param dst buffer where read data is written.
         /// @param len number of bytes to read.
         /// @return number of bytes that were read. Might be less than len if there is not enough data.
-        size_t read(uint8_t* dst, size_t len) {
-            return ::z_bytes_reader_read(&this->_0, dst, len);
-        }
+        size_t read(uint8_t* dst, size_t len) { return ::z_bytes_reader_read(&this->_0, dst, len); }
 
         /// @brief Return the read position indicator.
         /// @return read position indicator on success or -1L if failure occurs.
-        int64_t tell() {
-            return ::z_bytes_reader_tell(&this->_0);
-        }
+        int64_t tell() { return ::z_bytes_reader_tell(&this->_0); }
 
-        /// @brief Set the `reader` position indicator to the value pointed to by offset, starting from the current position.
+        /// @brief Set the `reader` position indicator to the value pointed to by offset, starting from the current
+        /// position.
         /// @param offset offset in bytes starting from the current position.
-        /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
-        void seek_from_current(int64_t offset, ZError* err = nullptr) {
-            __ZENOH_ERROR_CHECK(
-                ::z_bytes_reader_seek(&this->_0, offset, SEEK_CUR),
-                err,
-                "seek_from_current failed"
-            );
+        /// @param res if not null, the result code will be written to this location, otherwise ZException exception
+        /// will be thrown in case of error.
+        void seek_from_current(int64_t offset, ZResult* err = nullptr) {
+            __ZENOH_RESULT_CHECK(::z_bytes_reader_seek(&this->_0, offset, SEEK_CUR), err, "seek_from_current failed");
         }
 
-        /// @brief Set the `reader` position indicator to the value pointed to by offset, starting from the start of the data.
+        /// @brief Set the `reader` position indicator to the value pointed to by offset, starting from the start of the
+        /// data.
         /// @param offset offset in bytes starting from the 0-th byte position.
-        /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
-        void seek_from_start(int64_t offset, ZError* err = nullptr) {
-            __ZENOH_ERROR_CHECK(
-                ::z_bytes_reader_seek(&this->_0, offset, SEEK_SET),
-                err,
-                "seek_from_start failed"
-            );
+        /// @param res if not null, the result code will be written to this location, otherwise ZException exception
+        /// will be thrown in case of error.
+        void seek_from_start(int64_t offset, ZResult* err = nullptr) {
+            __ZENOH_RESULT_CHECK(::z_bytes_reader_seek(&this->_0, offset, SEEK_SET), err, "seek_from_start failed");
         }
 
-        /// @brief Set the `reader` position indicator to the value pointed to by offset with respect to the end of the data.
+        /// @brief Set the `reader` position indicator to the value pointed to by offset with respect to the end of the
+        /// data.
         /// @param offset offset in bytes starting from end position.
-        /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
-        void seek_from_end(int64_t offset, ZError* err = nullptr) {
-            __ZENOH_ERROR_CHECK(
-                ::z_bytes_reader_seek(&this->_0, offset, SEEK_END),
-                err,
-                "seek_from_end failed"
-            );
+        /// @param res if not null, the result code will be written to this location, otherwise ZException exception
+        /// will be thrown in case of error.
+        void seek_from_end(int64_t offset, ZResult* err = nullptr) {
+            __ZENOH_RESULT_CHECK(::z_bytes_reader_seek(&this->_0, offset, SEEK_END), err, "seek_from_end failed");
         }
     };
 
     /// @brief Create data reader.
     /// @return reader instance.
-    Reader reader() const {
-        return Reader(::z_bytes_get_reader(this->loan()));
-    }
+    Reader reader() const { return Reader(::z_bytes_get_reader(this->loan())); }
 
     /// @brief A writer for Zenoh-serialized data.
     class Writer : public Owned<::z_owned_bytes_writer_t> {
-    public:
+       public:
         using Owned::Owned;
 
         /// @name Methods
@@ -225,17 +205,14 @@ public:
         /// @brief Copy data from sepcified source into underlying ``Bytes`` instance.
         /// @param src source to copy data from.
         /// @param len number of bytes to copy from src to the underlying ``Bytes`` instance.
-        /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
-        void write(const uint8_t* src, size_t len, ZError* err = nullptr) {
-            __ZENOH_ERROR_CHECK(
-                ::z_bytes_writer_write(this->loan(), src, len),
-                err,
-                "Failed to write data"
-            );
+        /// @param res if not null, the result code will be written to this location, otherwise ZException exception
+        /// will be thrown in case of error.
+        void write(const uint8_t* src, size_t len, ZResult* err = nullptr) {
+            __ZENOH_RESULT_CHECK(::z_bytes_writer_write(this->loan(), src, len), err, "Failed to write data");
         }
     };
 
-    /// @brief Create data writer. 
+    /// @brief Create data writer.
     ///
     /// It is the user responsibility to ensure that there is at most one active writer at
     /// a given moment of time for a given ``Bytes`` instance.
@@ -248,8 +225,8 @@ public:
 };
 
 /// @brief An iterator over multi-element serialized data.
-class Bytes::Iterator: Copyable<::z_bytes_iterator_t> {
-public:
+class Bytes::Iterator : Copyable<::z_bytes_iterator_t> {
+   public:
     using Copyable::Copyable;
 
     /// @name Methods
@@ -263,25 +240,18 @@ public:
         }
         return b;
     }
-
-
 };
 
-inline Bytes::Iterator Bytes::iter() const {
-    return Bytes::Iterator(::z_bytes_get_iterator(this->loan()));
-}
-
-
-
+inline Bytes::Iterator Bytes::iter() const { return Bytes::Iterator(::z_bytes_get_iterator(this->loan())); }
 
 namespace detail {
 
-template<class T> 
+template <class T>
 struct ZenohDeserializer {};
 
-template<>
+template <>
 struct ZenohDeserializer<std::string> {
-    static std::string deserialize(const Bytes& b, ZError* err = nullptr) {
+    static std::string deserialize(const Bytes& b, ZResult* err = nullptr) {
         (void)err;
         auto reader = b.reader();
         std::string s(b.size(), '0');
@@ -290,9 +260,9 @@ struct ZenohDeserializer<std::string> {
     }
 };
 
-template<class Allocator>
+template <class Allocator>
 struct ZenohDeserializer<std::vector<uint8_t, Allocator>> {
-    static std::vector<uint8_t, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
+    static std::vector<uint8_t, Allocator> deserialize(const Bytes& b, ZResult* err = nullptr) {
         (void)err;
         auto reader = b.reader();
         std::vector<uint8_t, Allocator> v(b.size());
@@ -301,110 +271,105 @@ struct ZenohDeserializer<std::vector<uint8_t, Allocator>> {
     }
 };
 
-template<class A, class B>
+template <class A, class B>
 struct ZenohDeserializer<std::pair<A, B>> {
-    static std::pair<A, B> deserialize(const Bytes& b, ZError* err = nullptr) {
+    static std::pair<A, B> deserialize(const Bytes& b, ZResult* err = nullptr) {
         zenoh::Bytes ba, bb;
-        __ZENOH_ERROR_CHECK(
+        __ZENOH_RESULT_CHECK(
             ::z_bytes_deserialize_into_pair(detail::loan(b), detail::as_owned_c_ptr(ba), detail::as_owned_c_ptr(bb)),
-            err,
-            "Failed to deserialize into std::pair"
-        );
+            err, "Failed to deserialize into std::pair");
         return {ZenohDeserializer<A>::deserialize(ba, err), ZenohDeserializer<B>::deserialize(bb, err)};
     }
 };
 
-template<class T, class Allocator>
+template <class T, class Allocator>
 struct ZenohDeserializer<std::vector<T, Allocator>> {
-    static std::vector<T, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
+    static std::vector<T, Allocator> deserialize(const Bytes& b, ZResult* err = nullptr) {
         std::vector<T, Allocator> v;
         auto it = b.iter();
         for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
             v.push_back(bb->deserialize<T>(err));
         }
-        
+
         return v;
     }
 };
 
-template<class T, class Allocator>
+template <class T, class Allocator>
 struct ZenohDeserializer<std::deque<T, Allocator>> {
-    static std::deque<T, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
+    static std::deque<T, Allocator> deserialize(const Bytes& b, ZResult* err = nullptr) {
         std::deque<T, Allocator> v;
         auto it = b.iter();
         for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
             v.push_back(bb->deserialize<T>(err));
         }
-        
+
         return v;
     }
 };
 
-template<class K, class H, class E, class Allocator>
+template <class K, class H, class E, class Allocator>
 struct ZenohDeserializer<std::unordered_set<K, H, E, Allocator>> {
-    static std::unordered_set<K, H, E, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
+    static std::unordered_set<K, H, E, Allocator> deserialize(const Bytes& b, ZResult* err = nullptr) {
         std::unordered_set<K, H, E, Allocator> s;
         auto it = b.iter();
         for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
             s.insert(bb->deserialize<K>(err));
         }
-        
+
         return s;
     }
 };
 
-template<class K, class C,  class Allocator>
+template <class K, class C, class Allocator>
 struct ZenohDeserializer<std::set<K, C, Allocator>> {
-    static std::set<K, C, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
+    static std::set<K, C, Allocator> deserialize(const Bytes& b, ZResult* err = nullptr) {
         std::set<K, C, Allocator> s;
         auto it = b.iter();
         for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
             s.insert(bb->deserialize<K>(err));
         }
-        
+
         return s;
     }
 };
 
-template<class K, class V, class H, class E, class Allocator>
+template <class K, class V, class H, class E, class Allocator>
 struct ZenohDeserializer<std::unordered_map<K, V, H, E, Allocator>> {
-    static std::unordered_map<K, V, H, E, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
+    static std::unordered_map<K, V, H, E, Allocator> deserialize(const Bytes& b, ZResult* err = nullptr) {
         std::unordered_map<K, V, H, E, Allocator> m;
         auto it = b.iter();
         for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
             m.insert(bb->deserialize<std::pair<K, V>>(err));
         }
-        
+
         return m;
     }
 };
 
-template<class K, class V, class C, class Allocator>
+template <class K, class V, class C, class Allocator>
 struct ZenohDeserializer<std::map<K, V, C, Allocator>> {
-    static std::map<K, V, C, Allocator> deserialize(const Bytes& b, ZError* err = nullptr) {
+    static std::map<K, V, C, Allocator> deserialize(const Bytes& b, ZResult* err = nullptr) {
         std::map<K, V, C, Allocator> m;
         auto it = b.iter();
         for (auto bb = it.next(); bb.has_value(); bb = it.next()) {
             m.insert(bb->deserialize<std::pair<K, V>>(err));
         }
-        
+
         return m;
     }
 };
 
-#define __ZENOH_DESERIALIZE_ARITHMETIC(TYPE, EXT) \
-template<> \
-struct ZenohDeserializer<TYPE> { \
-    static TYPE deserialize(const Bytes& b, ZError* err = nullptr) { \
-        TYPE t;\
-        __ZENOH_ERROR_CHECK( \
-            ::z_bytes_deserialize_into_##EXT(detail::loan(b), &t), \
-            err, \
-            "Failed to deserialize into "#TYPE \
-        ); \
-        return t; \
-    } \
-}; \
+#define __ZENOH_DESERIALIZE_ARITHMETIC(TYPE, EXT)                                            \
+    template <>                                                                              \
+    struct ZenohDeserializer<TYPE> {                                                         \
+        static TYPE deserialize(const Bytes& b, ZResult* err = nullptr) {                    \
+            TYPE t;                                                                          \
+            __ZENOH_RESULT_CHECK(::z_bytes_deserialize_into_##EXT(detail::loan(b), &t), err, \
+                                 "Failed to deserialize into " #TYPE);                       \
+            return t;                                                                        \
+        }                                                                                    \
+    };
 
 __ZENOH_DESERIALIZE_ARITHMETIC(uint8_t, uint8);
 __ZENOH_DESERIALIZE_ARITHMETIC(uint16_t, uint16);
@@ -420,42 +385,34 @@ __ZENOH_DESERIALIZE_ARITHMETIC(float, float);
 __ZENOH_DESERIALIZE_ARITHMETIC(double, double);
 
 #undef __ZENOH_DESERIALIZE_ARITHMETIC
-}
+}  // namespace detail
 
-template<ZenohCodecType ZT>
+template <ZenohCodecType ZT>
 struct ZenohCodec {
     static Bytes serialize(std::string_view s) {
         return ZenohCodec::serialize(std::make_pair(reinterpret_cast<const uint8_t*>(s.data()), s.size()));
     }
 
-    static Bytes serialize(const char* s) {
-        return ZenohCodec::serialize(std::string_view(s));
-    }
+    static Bytes serialize(const char* s) { return ZenohCodec::serialize(std::string_view(s)); }
 
-    static Bytes serialize(const std::string& s) {
-        return ZenohCodec::serialize(static_cast<std::string_view>(s));
-    }
+    static Bytes serialize(const std::string& s) { return ZenohCodec::serialize(static_cast<std::string_view>(s)); }
 
-    static Bytes serialize(Bytes&& b) {
-        return std::move(b);
-    }
+    static Bytes serialize(Bytes&& b) { return std::move(b); }
 
-    static Bytes serialize(const Bytes& b) {
-        return b.clone();
-    }
+    static Bytes serialize(const Bytes& b) { return b.clone(); }
 
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-    static Bytes serialize(ZShm&& shm, ZError* err = nullptr) {
+    static Bytes serialize(ZShm&& shm, ZResult* err = nullptr) {
         Bytes b;
-        __ZENOH_ERROR_CHECK(::z_bytes_serialize_from_shm(detail::as_owned_c_ptr(b), detail::as_owned_c_ptr(shm)), err,
-                            "Failed to serialize ZShm");
+        __ZENOH_RESULT_CHECK(::z_bytes_serialize_from_shm(detail::as_owned_c_ptr(b), detail::as_owned_c_ptr(shm)), err,
+                             "Failed to serialize ZShm");
         return b;
     }
 
-    static Bytes serialize(ZShmMut&& shm, ZError* err = nullptr) {
+    static Bytes serialize(ZShmMut&& shm, ZResult* err = nullptr) {
         Bytes b;
-        __ZENOH_ERROR_CHECK(::z_bytes_serialize_from_shm_mut(detail::as_owned_c_ptr(b), detail::as_owned_c_ptr(shm)),
-                            err, "Failed to serialize ZShmMut");
+        __ZENOH_RESULT_CHECK(::z_bytes_serialize_from_shm_mut(detail::as_owned_c_ptr(b), detail::as_owned_c_ptr(shm)),
+                             err, "Failed to serialize ZShmMut");
         return b;
     }
 #endif
@@ -474,56 +431,57 @@ struct ZenohCodec {
         return serialize(std::pair<const uint8_t*, size_t>(s.first, s.second));
     }
 
-    template<class Allocator>
+    template <class Allocator>
     static Bytes serialize(const std::vector<uint8_t, Allocator>& s) {
         return ZenohCodec::serialize(std::make_pair<const uint8_t*, size_t>(s.data(), s.size()));
     }
 
-    template<class T, class Allocator>
+    template <class T, class Allocator>
     static Bytes serialize(const std::vector<T, Allocator>& s) {
         return Bytes::serialize_from_iter(s.begin(), s.end());
     }
 
-    template<class T, class Allocator>
+    template <class T, class Allocator>
     static Bytes serialize(const std::deque<T, Allocator>& s) {
         return Bytes::serialize_from_iter(s.begin(), s.end());
     }
 
-    template<class K, class H, class E, class Allocator>
+    template <class K, class H, class E, class Allocator>
     static Bytes serialize(const std::unordered_set<K, H, E, Allocator>& s) {
         return Bytes::serialize_from_iter(s.begin(), s.end());
     }
 
-    template<class K, class C, class Allocator>
+    template <class K, class C, class Allocator>
     static Bytes serialize(const std::set<K, C, Allocator>& s) {
         return Bytes::serialize_from_iter(s.begin(), s.end());
     }
 
-    template<class K, class V, class H, class E, class Allocator>
+    template <class K, class V, class H, class E, class Allocator>
     static Bytes serialize(const std::unordered_map<K, V, H, E, Allocator>& s) {
         return Bytes::serialize_from_iter(s.begin(), s.end());
     }
 
-    template<class K, class V, class C, class Allocator>
+    template <class K, class V, class C, class Allocator>
     static Bytes serialize(const std::map<K, V, C, Allocator>& s) {
         return Bytes::serialize_from_iter(s.begin(), s.end());
     }
 
-    template<class A, class B>
+    template <class A, class B>
     static Bytes serialize(const std::pair<A, B>& s) {
         auto ba = ZenohCodec::serialize(s.first);
         auto bb = ZenohCodec::serialize(s.second);
         Bytes b;
-        ::z_bytes_serialize_from_pair(detail::as_owned_c_ptr(b), ::z_move(*detail::as_owned_c_ptr(ba)), ::z_move(*detail::as_owned_c_ptr(bb)));
+        ::z_bytes_serialize_from_pair(detail::as_owned_c_ptr(b), ::z_move(*detail::as_owned_c_ptr(ba)),
+                                      ::z_move(*detail::as_owned_c_ptr(bb)));
         return b;
     }
 
-#define __ZENOH_SERIALIZE_ARITHMETIC(TYPE, EXT) \
-    static Bytes serialize(TYPE t) { \
-        Bytes b; \
+#define __ZENOH_SERIALIZE_ARITHMETIC(TYPE, EXT)                       \
+    static Bytes serialize(TYPE t) {                                  \
+        Bytes b;                                                      \
         ::z_bytes_serialize_from_##EXT(detail::as_owned_c_ptr(b), t); \
-        return b; \
-    } \
+        return b;                                                     \
+    }
 
     __ZENOH_SERIALIZE_ARITHMETIC(uint8_t, uint8);
     __ZENOH_SERIALIZE_ARITHMETIC(uint16_t, uint16);
@@ -539,13 +497,10 @@ struct ZenohCodec {
     __ZENOH_SERIALIZE_ARITHMETIC(double, double);
 #undef __ZENOH_SERIALIZE_ARITHMETIC
 
-    template<class T>
-    static T deserialize(const Bytes& b, ZError* err = nullptr) {
+    template <class T>
+    static T deserialize(const Bytes& b, ZResult* err = nullptr) {
         return detail::ZenohDeserializer<T>::deserialize(b, err);
     }
 };
 
-
-
-}
-
+}  // namespace zenoh

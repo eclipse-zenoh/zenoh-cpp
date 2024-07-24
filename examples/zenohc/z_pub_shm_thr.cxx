@@ -41,7 +41,7 @@ int _main(int argc, char **argv) {
         config = Config::from_file(config_file);
     }
 #endif
-    ZError err;
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";

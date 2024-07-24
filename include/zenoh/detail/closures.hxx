@@ -13,6 +13,9 @@
 
 #pragma once
 
+#include <type_traits>
+#include <utility>
+
 namespace zenoh::detail::closures {
 
 struct IDroppable {
@@ -25,7 +28,7 @@ struct IDroppable {
     }
 };
 
-template<class R, class ...Args>
+template <class R, class... Args>
 struct IClosure : public IDroppable {
     virtual R call(Args... args) = 0;
 
@@ -35,26 +38,20 @@ struct IClosure : public IDroppable {
     }
 };
 
-
-template<class C, class D, class R, class ...Args>
+template <class C, class D, class R, class... Args>
 class Closure : public IClosure<R, Args...> {
     typename std::conditional_t<std::is_lvalue_reference_v<C>, C, std::remove_reference_t<C>> _call;
     typename std::conditional_t<std::is_lvalue_reference_v<D>, D, std::remove_reference_t<D>> _drop;
-public:
-    template<class CC, class DD>
-    Closure(CC&& call, DD&& drop)
-        : _call(std::forward<CC>(call)), _drop(std::forward<DD>(drop))
-    {}
 
-    virtual R call(Args... args) override {
-        return _call(std::forward<Args>(args)...);
-    }
+   public:
+    template <class CC, class DD>
+    Closure(CC&& call, DD&& drop) : _call(std::forward<CC>(call)), _drop(std::forward<DD>(drop)) {}
 
-    virtual void drop() override {
-        return _drop();
-    }
+    virtual R call(Args... args) override { return _call(std::forward<Args>(args)...); }
 
-    template<class CC, class DD>
+    virtual void drop() override { return _drop(); }
+
+    template <class CC, class DD>
     static void* into_context(CC&& call, DD&& drop) {
         auto obj = new Closure<C, D, R, Args...>(std::forward<CC>(call), std::forward<DD>(drop));
         return obj->as_context();
@@ -66,4 +63,4 @@ public:
     }
 };
 
-}
+}  // namespace zenoh::detail::closures

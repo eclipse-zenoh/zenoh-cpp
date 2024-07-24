@@ -18,9 +18,9 @@
 // depending on ZENOHCXX_ZENOHPICO or ZENOHCXX_ZENOHC setting
 // and places it to the zenoh namespace
 //
+#include <chrono>
 #include <iostream>
 #include <thread>
-#include <chrono>
 
 #include "zenoh.hxx"
 
@@ -46,22 +46,19 @@ struct CustomCodec {
     }
 
     // deserialize should be a template method
-    template<class T>
-    static T deserialize(const Bytes& b, ZError* err = nullptr);
+    template <class T>
+    static T deserialize(const Bytes& b, ZResult* err = nullptr);
 
-private:
+   private:
     template <std::uint8_t T_numBytes>
-    using UintType =
-        typename std::conditional<T_numBytes == 1, std::uint8_t,
-            typename std::conditional<T_numBytes == 2, std::uint16_t,
-                typename std::conditional<T_numBytes == 3 || T_numBytes == 4, std::uint32_t,
-                    std::uint64_t
-                >::type
-            >::type
-        >::type;
-    
-    template<class T>
-    static  std::enable_if_t<std::is_arithmetic_v<T>, std::array<uint8_t, sizeof(T)>> serialize_arithmetic(T t) {
+    using UintType = typename std::conditional<
+        T_numBytes == 1, std::uint8_t,
+        typename std::conditional<T_numBytes == 2, std::uint16_t,
+                                  typename std::conditional<T_numBytes == 3 || T_numBytes == 4, std::uint32_t,
+                                                            std::uint64_t>::type>::type>::type;
+
+    template <class T>
+    static std::enable_if_t<std::is_arithmetic_v<T>, std::array<uint8_t, sizeof(T)>> serialize_arithmetic(T t) {
         // use simple little endian encoding
         std::array<uint8_t, sizeof(T)> out;
         uint8_t mask = 0b11111111;
@@ -73,7 +70,7 @@ private:
         return out;
     }
 
-    template<class T>
+    template <class T>
     static std::enable_if_t<std::is_arithmetic_v<T>, T> deserialize_arithmetic(const uint8_t* buf) {
         // use simple little endian encoding
         UintType<sizeof(T)> out = 0;
@@ -85,21 +82,21 @@ private:
     }
 };
 
-template<>
-CustomStruct CustomCodec::deserialize<CustomStruct>(const Bytes& b, ZError* err) {
+template <>
+CustomStruct CustomCodec::deserialize<CustomStruct>(const Bytes& b, ZResult* err) {
     CustomStruct out;
-    if (b.size() < 12) { // we should have at least 12 bytes in the payload
+    if (b.size() < 12) {  // we should have at least 12 bytes in the payload
         if (err != nullptr) {
-            *err = -1; 
+            *err = -1;
             return out;
         } else {
             throw std::runtime_error("Insufficient payload size");
         }
     }
-    
+
     std::array<uint8_t, 8> buf;
     auto reader = b.reader();
-    
+
     reader.read(buf.data(), 4);
     out.u = deserialize_arithmetic<uint32_t>(buf.data());
     reader.read(buf.data(), 8);
@@ -110,37 +107,32 @@ CustomStruct CustomCodec::deserialize<CustomStruct>(const Bytes& b, ZError* err)
     return out;
 }
 
-
 class CustomPublisher {
-public:
-    CustomPublisher(Session& session, std::string_view key_expr) 
-        : _pub(session.declare_publisher(KeyExpr(key_expr))) {;
+   public:
+    CustomPublisher(Session& session, std::string_view key_expr) : _pub(session.declare_publisher(KeyExpr(key_expr))) {
+        ;
     }
 
-    void put(const CustomStruct& s) { 
-        _pub.put(Bytes::serialize(s, CustomCodec())); 
-    }
+    void put(const CustomStruct& s) { _pub.put(Bytes::serialize(s, CustomCodec())); }
 
-private:
+   private:
     Publisher _pub;
 };
 
 class CustomSubscriber {
-public:
-    CustomSubscriber(Session& session, std::string_view key_expr) 
-        : _sub(
-            session.declare_subscriber(
-                KeyExpr(key_expr), [this](const Sample& s) { this->on_receive(s); }, closures::none
-            )
-         ) {;
+   public:
+    CustomSubscriber(Session& session, std::string_view key_expr)
+        : _sub(session.declare_subscriber(
+              KeyExpr(key_expr), [this](const Sample& s) { this->on_receive(s); }, closures::none)) {
+        ;
     }
 
-private:
+   private:
     Subscriber<void> _sub;
-    
-    void on_receive(const Sample& sample) { 
+
+    void on_receive(const Sample& sample) {
         CustomStruct s = sample.get_payload().deserialize<CustomStruct>(CustomCodec());
-        std::cout << "Received: " << "{" << s.u << ", " << s.d << ", " << s.s  << "}\n"; 
+        std::cout << "Received: " << "{" << s.u << ", " << s.d << ", " << s.s << "}\n";
     }
 };
 
@@ -154,9 +146,9 @@ int main(int, char**) {
         CustomSubscriber sub(session, keyexpr);
 
         pub.put({0, 0.5, "abc"});
-        std::this_thread::sleep_for(1s); /// wait a bit to receive the message
+        std::this_thread::sleep_for(1s);  /// wait a bit to receive the message
 
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         std::cout << "Error: " << e.what() << std::endl;
     }
 }

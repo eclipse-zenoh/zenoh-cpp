@@ -42,7 +42,7 @@ int _main(int argc, char **argv) {
     }
 #endif
 
-    ZError err;
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
@@ -72,7 +72,7 @@ int _main(int argc, char **argv) {
 
     auto on_reply = [](const Reply &reply) {
         if (reply.is_ok()) {
-            const auto& sample = reply.get_ok();
+            const auto &sample = reply.get_ok();
             std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
                       << sample.get_payload().deserialize<std::string>() << "')\n";
         } else {
@@ -86,10 +86,7 @@ int _main(int argc, char **argv) {
         done_signal.notify_all();
     };
 
-    session.get(
-        keyexpr, "", on_reply, on_done,
-        {.target = Z_QUERY_TARGET_ALL, .payload = Bytes::serialize(value)}
-    );
+    session.get(keyexpr, "", on_reply, on_done, {.target = Z_QUERY_TARGET_ALL, .payload = Bytes::serialize(value)});
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });
 

@@ -13,13 +13,14 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <string>
-#include <iostream>
+
 #include <chrono>
+#include <iostream>
+#include <string>
 #include <thread>
 
-#include "zenoh.hxx"
 #include "../getargs.h"
+#include "zenoh.hxx"
 
 using namespace zenoh;
 using namespace std::chrono_literals;
@@ -51,7 +52,7 @@ int _main(int argc, char **argv) {
     }
 #endif
 
-    ZError err;
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
