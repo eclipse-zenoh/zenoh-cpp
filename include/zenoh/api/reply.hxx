@@ -18,7 +18,7 @@
 #include "sample.hxx"
 #include "bytes.hxx"
 #if defined UNSTABLE
-#include "api/id.hxx"
+#include "id.hxx"
 #endif
 
 

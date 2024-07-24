@@ -16,7 +16,7 @@
 #include "../zenohc.hxx"
 #include "enums.hxx"
 #if defined UNSTABLE
-#include "api/id.hxx"
+#include "id.hxx"
 #endif
 
 #include <string_view>

@@ -16,7 +16,7 @@
 #include "../zenohc.hxx"
 #include "../detail/interop.hxx"
 #if defined UNSTABLE
-#include "api/id.hxx"
+#include "id.hxx"
 #endif
 
 namespace zenoh {

@@ -20,7 +20,7 @@
 #include "../api/reply.hxx"
 #include "../api/query.hxx"
 #if defined UNSTABLE
-#include "api/id.hxx"
+#include "../api/id.hxx"
 #endif
 #include "../api/hello.hxx"
 

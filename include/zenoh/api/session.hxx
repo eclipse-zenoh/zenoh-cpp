@@ -24,7 +24,7 @@
 #include "config.hxx"
 #include "enums.hxx"
 #if defined UNSTABLE
-#include "api/id.hxx"
+#include "id.hxx"
 #endif
 #include "publisher.hxx"
 #include "query_consolidation.hxx"
