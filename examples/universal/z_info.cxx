@@ -55,6 +55,7 @@ int _main(int argc, char** argv) {
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
     std::cout << "own id: " << session.get_zid() << std::endl;
 
     std::cout << "routers ids:\n";
@@ -66,6 +67,7 @@ int _main(int argc, char** argv) {
     for (const auto zid: session.get_peers_z_id()) {
         std::cout << zid << "\n";
     }
+#endif
     return 0;
 }
 

@@ -19,7 +19,9 @@
 #include "api/encoding.hxx"
 #include "api/enums.hxx"
 #include "api/hello.hxx"
+#if defined UNSTABLE
 #include "api/id.hxx"
+#endif
 #include "api/keyexpr.hxx"
 #include "api/publisher.hxx"
 #include "api/query_consolidation.hxx"

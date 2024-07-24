@@ -23,8 +23,9 @@
 #include "timestamp.hxx"
 #include "config.hxx"
 #include "enums.hxx"
-#include "id.hxx"
-#include "liveliness.hxx"
+#if defined UNSTABLE
+#include "api/id.hxx"
+#endif
 #include "publisher.hxx"
 #include "query_consolidation.hxx"
 #include "subscriber.hxx"
@@ -135,9 +136,11 @@ class Session : public Owned<::z_owned_session_t> {
         return s;
     }
 
+#if defined UNSTABLE
     /// @brief Get the unique identifier of the zenoh node associated to this ``Session``.
     /// @return the unique identifier ``Id``.
     Id get_zid() const { return Id(::z_info_zid(this->loan())); }
+#endif
 
     /// @brief Create ``KeyExpr`` instance with numeric id registered in ``Session`` routing tables (to reduce bandwith
     /// usage).
@@ -541,6 +544,7 @@ class Session : public Owned<::z_owned_session_t> {
         return p;
     }
 
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
     /// @brief Fetches the Zenoh IDs of all connected routers.
     /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
@@ -572,6 +576,7 @@ class Session : public Owned<::z_owned_session_t> {
         __ZENOH_ERROR_CHECK(::z_info_peers_zid(this->loan(), &c_closure), err, "Failed to fetch peer Ids");
         return out;
     }
+#endif
 
 #ifdef ZENOHCXX_ZENOHPICO
     /// @brief Start a separate task to read from the network and process the messages as soon as they are received.

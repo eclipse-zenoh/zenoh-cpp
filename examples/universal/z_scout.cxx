@@ -35,8 +35,11 @@ void printlocators(const std::vector<std::string_view> &locs) {
 }
 
 void printhello(const Hello &hello) {
-    std::cout << "Hello { pid: " <<  hello.get_id();
-    std::cout << ", whatami: " << hello.get_whatami();
+    std::cout << "Hello { ";
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+    std::cout << "pid: " <<  hello.get_id() << ", ";
+#endif
+    std::cout << "whatami: " << hello.get_whatami();
     std::cout << ", locators: ";
     printlocators(hello.get_locators());
     std::cout << " }";
