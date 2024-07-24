@@ -12,6 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 #include <stdio.h>
+
 #include <chrono>
 #include <thread>
 
@@ -30,7 +31,7 @@ struct Stats {
     std::chrono::high_resolution_clock::time_point first_start = {};
     std::chrono::high_resolution_clock::time_point end = {};
 
-    void operator()(const Sample&) {
+    void operator()(const Sample &) {
         if (count == 0) {
             start = std::chrono::high_resolution_clock::now();
             if (first_start == std::chrono::high_resolution_clock::time_point()) {
@@ -42,13 +43,14 @@ struct Stats {
         } else {
             finished_rounds++;
             auto elapsed_us =
-                std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count();
+                std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start)
+                    .count();
             std::cout << static_cast<double>(N) * 1000000.0 / static_cast<double>(elapsed_us) << " msg/s\n";
             count = 0;
         }
     }
 
-    void operator()() { 
+    void operator()() {
         end = std::chrono::high_resolution_clock::now();
         print();
     }
@@ -81,7 +83,7 @@ int _main(int argc, char **argv) {
     }
 #endif
 
-    ZError err;
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";

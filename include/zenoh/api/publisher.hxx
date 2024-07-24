@@ -13,11 +13,11 @@
 
 #pragma once
 
-#include "base.hxx"
 #include "../detail/interop.hxx"
-#include "enums.hxx"
+#include "base.hxx"
 #include "bytes.hxx"
 #include "encoding.hxx"
+#include "enums.hxx"
 #include "keyexpr.hxx"
 #include "timestamp.hxx"
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
@@ -25,11 +25,10 @@
 #endif
 #include <optional>
 
-
 namespace zenoh {
 /// A Zenoh publisher. Constructed by ``Session::declare_publisher`` method.
 class Publisher : public Owned<::z_owned_publisher_t> {
-public:
+   public:
     using Owned::Owned;
 
     /// @brief Options to be passed to ``Publisher::put`` operation.
@@ -37,7 +36,7 @@ public:
         /// @name Fields
 
         /// @brief The encoding of the data to publish.
-        std::optional<Encoding> encoding =  {};
+        std::optional<Encoding> encoding = {};
         /// @brief the timestamp of this message.
         std::optional<Timestamp> timestamp = {};
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
@@ -67,8 +66,9 @@ public:
     /// @brief Publish a message on publisher key expression.
     /// @param payload Data to publish.
     /// @param options Optional values passed to put operation.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
-    void put(Bytes&& payload, PutOptions&& options = PutOptions::create_default(), ZError* err = nullptr) const {
+    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void put(Bytes&& payload, PutOptions&& options = PutOptions::create_default(), ZResult* err = nullptr) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_publisher_put_options_t opts;
         z_publisher_put_options_default(&opts);
@@ -79,40 +79,33 @@ public:
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
         opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
 
-        __ZENOH_ERROR_CHECK(
-            ::z_publisher_put(this->loan(), payload_ptr, &opts),
-            err,
-            "Failed to perform put operation"
-        );
+        __ZENOH_ERROR_CHECK(::z_publisher_put(this->loan(), payload_ptr, &opts), err,
+                            "Failed to perform put operation");
     }
 
     /// @brief Undeclare the resource associated with the publisher key expression.
     /// @param options Optional values to pass to delete operation.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
-    void delete_resource(DeleteOptions&& options = DeleteOptions::create_default(), ZError* err = nullptr) const {
+    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void delete_resource(DeleteOptions&& options = DeleteOptions::create_default(), ZResult* err = nullptr) const {
         ::z_publisher_delete_options_t opts;
         z_publisher_delete_options_default(&opts);
         opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
-        __ZENOH_ERROR_CHECK(
-            ::z_publisher_delete(this->loan(), &opts),
-            err,
-            "Failed to perform delete_resource operation"
-        );
+        __ZENOH_ERROR_CHECK(::z_publisher_delete(this->loan(), &opts), err,
+                            "Failed to perform delete_resource operation");
     }
 
 #ifdef ZENOHCXX_ZENOHC
     /// @brief Get the key expression of the publisher.
     /// @note zenoh-c only.
-    const KeyExpr& get_keyexpr() const { 
-        return detail::as_owned_cpp_obj<KeyExpr>(::z_publisher_keyexpr(this->loan())); 
+    const KeyExpr& get_keyexpr() const {
+        return detail::as_owned_cpp_obj<KeyExpr>(::z_publisher_keyexpr(this->loan()));
     }
 #endif
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
     /// @brief Get the id of the publisher.
     /// @return id of this publisher.
-    EntityGlobalId get_id() const {
-        return EntityGlobalId(::z_publisher_id(this->loan()));
-    }
+    EntityGlobalId get_id() const { return EntityGlobalId(::z_publisher_id(this->loan())); }
 #endif
 };
-}
+}  // namespace zenoh

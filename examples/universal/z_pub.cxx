@@ -14,10 +14,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <chrono>
 #include <iostream>
 #include <limits>
 #include <sstream>
-#include <chrono>
 #include <thread>
 
 #include "../getargs.h"
@@ -56,7 +56,7 @@ int _main(int argc, char **argv) {
     }
 #endif
 
-    ZError err;
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
@@ -88,7 +88,7 @@ int _main(int argc, char **argv) {
         ss << "[" << idx << "] " << value;
         auto s = ss.str();  // in C++20 use .view() instead
         std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
-        pub.put(Bytes::serialize(s), {.encoding = Encoding("text/plain") });
+        pub.put(Bytes::serialize(s), {.encoding = Encoding("text/plain")});
     }
     return 0;
 }

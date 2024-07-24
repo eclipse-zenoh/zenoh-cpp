@@ -13,8 +13,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <string>
+
 #include <iostream>
+#include <string>
 
 #include "../getargs.h"
 #include "zenoh.hxx"
@@ -38,7 +39,7 @@ int _main(int argc, char **argv) {
     }
 #endif
 
-    ZError err;
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
@@ -65,7 +66,7 @@ int _main(int argc, char **argv) {
 
     for (auto reply = replies.recv().first; static_cast<bool>(reply); reply = replies.recv().first) {
         if (reply.is_ok()) {
-            const auto& sample = reply.get_ok();
+            const auto &sample = reply.get_ok();
             std::cout << "Alive token ('" << sample.get_keyexpr().as_string_view() << "')\n";
         } else {
             std::cout << "Received an error\n";

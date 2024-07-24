@@ -13,17 +13,15 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <thread>
 
 #include <condition_variable>
 #include <iostream>
+#include <thread>
 
-
-#include "zenoh.hxx"
 #include "../getargs.h"
+#include "zenoh.hxx"
 using namespace zenoh;
 using namespace std::chrono_literals;
-
 
 int _main(int argc, char **argv) {
     const char *expr = "demo/example/**";
@@ -43,7 +41,7 @@ int _main(int argc, char **argv) {
     }
 #endif
 
-    ZError err;
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
@@ -59,17 +57,16 @@ int _main(int argc, char **argv) {
             exit(-1);
         }
     }
-    
+
     KeyExpr keyexpr(expr);
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
-    
+
     std::cout << "Sending Query '" << expr << "'...\n";
 
-    auto replies = session.get(
-        keyexpr, "", channels::FifoChannel(16), 
-        {.target = QueryTarget::Z_QUERY_TARGET_ALL, .payload = Bytes::serialize("Get from C++")}
-    );
+    auto replies =
+        session.get(keyexpr, "", channels::FifoChannel(16),
+                    {.target = QueryTarget::Z_QUERY_TARGET_ALL, .payload = Bytes::serialize("Get from C++")});
 
     for (auto [reply, alive] = replies.try_recv(); alive; std::tie(reply, alive) = replies.try_recv()) {
         if (!reply) {
@@ -77,7 +74,7 @@ int _main(int argc, char **argv) {
             std::this_thread::sleep_for(1s);
             continue;
         }
-        const auto& sample = reply.get_ok();
+        const auto &sample = reply.get_ok();
         std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
                   << sample.get_payload().deserialize<std::string>() << "')\n";
     }

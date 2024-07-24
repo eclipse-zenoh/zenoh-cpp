@@ -53,7 +53,7 @@ class AllocLayout : public Owned<::z_owned_alloc_layout_t> {
     /// @name Constructors
 
     /// @brief Create a new Alloc Layout for SHM Provider.
-    AllocLayout(const ShmProvider& owner_provider, std::size_t size, AllocAlignment alignment, ZError* err = nullptr)
+    AllocLayout(const ShmProvider& owner_provider, std::size_t size, AllocAlignment alignment, ZResult* err = nullptr)
         : Owned(nullptr) {
         __ZENOH_ERROR_CHECK(::z_alloc_layout_new(&this->_0, owner_provider.loan(), size, alignment), err,
                             "Failed to create SHM Alloc Layout");
@@ -89,7 +89,7 @@ class AllocLayout : public Owned<::z_owned_alloc_layout_t> {
         return Converters::from(result);
     }
 
-    ZError alloc_gc_defrag_async(std::unique_ptr<AllocLayoutAsyncInterface> receiver) const {
+    ZResult alloc_gc_defrag_async(std::unique_ptr<AllocLayoutAsyncInterface> receiver) const {
         auto rcv = receiver.release();
         ::zc_threadsafe_context_t context = {{rcv}, &shm::provider::closures::_z_alloc_layout_async_interface_drop_fn};
         return ::z_alloc_layout_threadsafe_alloc_gc_defrag_async(

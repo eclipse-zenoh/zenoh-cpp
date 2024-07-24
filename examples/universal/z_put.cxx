@@ -48,7 +48,7 @@ int _main(int argc, char **argv) {
     }
 #endif
 
-    ZError err;
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
@@ -70,14 +70,11 @@ int _main(int argc, char **argv) {
 
     std::cout << "Putting Data (" << "'" << keyexpr << "': '" << value << "')...\n";
 
-    std::unordered_map<std::string, std::string> attachment_map = {
-        {"serial_number", "123"},
-        {"coordinates", "48.7082,2.1498"}
-    };
+    std::unordered_map<std::string, std::string> attachment_map = {{"serial_number", "123"},
+                                                                   {"coordinates", "48.7082,2.1498"}};
 
-    session.put(
-        KeyExpr(keyexpr), Bytes::serialize(value), {.encoding = Encoding("text/plain"), .attachment = Bytes::serialize(attachment_map) }
-    );
+    session.put(KeyExpr(keyexpr), Bytes::serialize(value),
+                {.encoding = Encoding("text/plain"), .attachment = Bytes::serialize(attachment_map)});
 
     return 0;
 }

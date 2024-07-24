@@ -26,7 +26,7 @@ void test_config_default() {
 
 void test_config_insert() {
     Config config = Config::create_default();
-    ZError err = Z_OK;
+    ZResult err = Z_OK;
     config.insert(Z_CONFIG_USER_KEY, "foo", &err);
     assert(err == Z_OK);
     assert(std::string("foo") == config.get(Z_CONFIG_USER_KEY));

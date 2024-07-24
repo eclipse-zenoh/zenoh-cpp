@@ -18,7 +18,6 @@ using namespace zenoh;
 #undef NDEBUG
 #include <assert.h>
 
-
 void reader_writer() {
     std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     Bytes b;
@@ -31,7 +30,7 @@ void reader_writer() {
     auto reader = b.reader();
     std::vector<uint8_t> out(3);
     assert(reader.read(out.data(), 3) == 3);
-    assert(out == std::vector<uint8_t>(data.begin(), data.begin() +3));
+    assert(out == std::vector<uint8_t>(data.begin(), data.begin() + 3));
     out = std::vector<uint8_t>(7);
     assert(reader.read(out.data(), 10) == 7);
     assert(out == std::vector<uint8_t>(data.begin() + 3, data.end()));
@@ -93,11 +92,11 @@ void serde_basic() {
     assert(b.deserialize<std::string>() == s);
 
 #define __ZENOH_TEST_ARITHMETIC(TYPE, VALUE) \
-{ \
-    TYPE t = VALUE; \
-    Bytes b = Bytes::serialize(t); \
-    assert(b.deserialize<TYPE>() == t); \
-} \
+    {                                        \
+        TYPE t = VALUE;                      \
+        Bytes b = Bytes::serialize(t);       \
+        assert(b.deserialize<TYPE>() == t);  \
+    }
 
     __ZENOH_TEST_ARITHMETIC(uint8_t, 5);
     __ZENOH_TEST_ARITHMETIC(uint16_t, 500);
@@ -131,30 +130,22 @@ void serde_iter() {
 void serde_advanced() {
     std::vector<float> v = {0.1f, 0.2f, 0.3f};
     auto b = Bytes::serialize(v);
-    assert(b.deserialize<decltype(v)>() == v); 
+    assert(b.deserialize<decltype(v)>() == v);
 
-    std::unordered_map<std::string, double> m = {
-        {"a", 0.5},
-        {"b", -123.45},
-        {"abc", 3.1415926}
-    };
+    std::unordered_map<std::string, double> m = {{"a", 0.5}, {"b", -123.45}, {"abc", 3.1415926}};
     b = Bytes::serialize(m);
-    assert(b.deserialize<decltype(m)>() == m); 
+    assert(b.deserialize<decltype(m)>() == m);
 
     std::set<uint8_t> s = {1, 2, 3, 4, 0};
     b = Bytes::serialize(s);
-    assert(b.deserialize<decltype(s)>() == s); 
+    assert(b.deserialize<decltype(s)>() == s);
 
     std::map<std::string, std::deque<double>> m2 = {
-        {"a", {0.5, 0.2}},
-        {"b", {-123.45, 0.4}},
-        {"abc", {3.1415926, -1.0} }
-    };
+        {"a", {0.5, 0.2}}, {"b", {-123.45, 0.4}}, {"abc", {3.1415926, -1.0}}};
 
     b = Bytes::serialize(m2);
-    assert(b.deserialize<decltype(m2)>() == m2); 
+    assert(b.deserialize<decltype(m2)>() == m2);
 }
-
 
 struct CustomStruct {
     uint32_t u = 0;
@@ -175,22 +166,19 @@ struct CustomCodec {
     }
 
     // deserialize should be a template method
-    template<class T>
-    static T deserialize(const Bytes& b, ZError* err = nullptr);
+    template <class T>
+    static T deserialize(const Bytes& b, ZResult* err = nullptr);
 
-private:
+   private:
     template <std::uint8_t T_numBytes>
-    using UintType =
-        typename std::conditional<T_numBytes == 1, std::uint8_t,
-            typename std::conditional<T_numBytes == 2, std::uint16_t,
-                typename std::conditional<T_numBytes == 3 || T_numBytes == 4, std::uint32_t,
-                    std::uint64_t
-                >::type
-            >::type
-        >::type;
-    
-    template<class T>
-    static  std::enable_if_t<std::is_arithmetic_v<T>, std::array<uint8_t, sizeof(T)>> serialize_arithmetic(T t) {
+    using UintType = typename std::conditional<
+        T_numBytes == 1, std::uint8_t,
+        typename std::conditional<T_numBytes == 2, std::uint16_t,
+                                  typename std::conditional<T_numBytes == 3 || T_numBytes == 4, std::uint32_t,
+                                                            std::uint64_t>::type>::type>::type;
+
+    template <class T>
+    static std::enable_if_t<std::is_arithmetic_v<T>, std::array<uint8_t, sizeof(T)>> serialize_arithmetic(T t) {
         // use simple little endian encoding
         std::array<uint8_t, sizeof(T)> out;
         uint8_t mask = 0b11111111u;
@@ -202,7 +190,7 @@ private:
         return out;
     }
 
-    template<class T>
+    template <class T>
     static std::enable_if_t<std::is_arithmetic_v<T>, T> deserialize_arithmetic(const uint8_t* buf) {
         // use simple little endian encoding
         UintType<sizeof(T)> out = 0;
@@ -214,21 +202,21 @@ private:
     }
 };
 
-template<>
-CustomStruct CustomCodec::deserialize<CustomStruct>(const Bytes& b, ZError* err) {
+template <>
+CustomStruct CustomCodec::deserialize<CustomStruct>(const Bytes& b, ZResult* err) {
     CustomStruct out;
-    if (b.size() < 12) { // we should have at least 12 bytes in the payload
+    if (b.size() < 12) {  // we should have at least 12 bytes in the payload
         if (err != nullptr) {
-            *err = -1; 
+            *err = -1;
             return out;
         } else {
             throw std::runtime_error("Insufficient payload size");
         }
     }
-    
+
     std::array<uint8_t, 8> buf;
     auto reader = b.reader();
-    
+
     reader.read(buf.data(), 4);
     out.u = deserialize_arithmetic<uint32_t>(buf.data());
     reader.read(buf.data(), 8);
@@ -250,7 +238,6 @@ void serde_custom() {
     assert(s.u == out.u);
     assert(s.s == out.s);
 }
-
 
 int main(int argc, char** argv) {
     reader_writer();

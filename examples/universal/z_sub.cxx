@@ -12,9 +12,10 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 #include <stdio.h>
+
+#include <chrono>
 #include <iostream>
 #include <thread>
-#include <chrono>
 
 #include "../getargs.h"
 #include "zenoh.hxx"
@@ -35,7 +36,8 @@ const char *kind_to_str(SampleKind kind) {
 
 void data_handler(const Sample &sample) {
     std::cout << ">> [Subscriber] Received " << kind_to_str(sample.get_kind()) << " ('"
-              << sample.get_keyexpr().as_string_view() << "' : '" << sample.get_payload().deserialize<std::string>() << "')\n";
+              << sample.get_keyexpr().as_string_view() << "' : '" << sample.get_payload().deserialize<std::string>()
+              << "')\n";
 }
 
 int _main(int argc, char **argv) {
@@ -57,7 +59,7 @@ int _main(int argc, char **argv) {
     }
 #endif
 
-    ZError err;
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
@@ -92,8 +94,6 @@ int _main(int argc, char **argv) {
 
     return 0;
 }
-
-
 
 int main(int argc, char **argv) {
     try {

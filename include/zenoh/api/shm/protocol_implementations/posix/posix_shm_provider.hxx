@@ -27,9 +27,9 @@ class PosixShmProvider : public ShmProvider {
 
     /// @brief Create a new PosixShmProvider.
     /// @param layout layout for POSIX shared memory segment to be allocated and used by the provider
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    PosixShmProvider(const MemoryLayout& layout, ZError* err = nullptr) : ShmProvider(nullptr) {
+    PosixShmProvider(const MemoryLayout& layout, ZResult* err = nullptr) : ShmProvider(nullptr) {
         __ZENOH_ERROR_CHECK(::z_posix_shm_provider_new(&this->_0, layout.loan()), err,
                             "Failed to create POSIX SHM provider");
     }

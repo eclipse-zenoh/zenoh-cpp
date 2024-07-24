@@ -11,24 +11,22 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-
 #pragma once
 
-#include "base.hxx"
+#include <optional>
+#include <string_view>
+
 #include "../detail/interop.hxx"
-#include "enums.hxx"
-#include "keyexpr.hxx"
+#include "base.hxx"
 #include "bytes.hxx"
 #include "encoding.hxx"
-
-#include <string_view>
-#include <optional>
-
+#include "enums.hxx"
+#include "keyexpr.hxx"
 
 namespace zenoh {
 /// The query to be answered by a ``Queryable``.
 class Query : public Owned<::z_owned_query_t> {
-public:
+   public:
     using Owned::Owned;
 
     /// @name Methods
@@ -37,13 +35,14 @@ public:
     /// @return ``KeyExpr`` of the query.
     const KeyExpr& get_keyexpr() const { return detail::as_owned_cpp_obj<KeyExpr>(::z_query_keyexpr(this->loan())); }
 
-    /// @brief Get query parameters. See <a href=https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>Selector</a> for more information.
+    /// @brief Get query parameters. See <a
+    /// href=https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>Selector</a> for more information.
     ///
     /// @return parameters string.
     std::string_view get_parameters() const {
         ::z_view_string_t p;
         ::z_query_parameters(this->loan(), &p);
-        return std::string_view(::z_string_data(::z_loan(p)), ::z_string_len(::z_loan(p))); 
+        return std::string_view(::z_string_data(::z_loan(p)), ::z_string_len(::z_loan(p)));
     }
 
     /// @brief Get the payload of the query.
@@ -52,9 +51,12 @@ public:
 
     /// @brief Get the encoding of the query.
     /// @return encoding of the query.
-    const Encoding& get_encoding() const { return detail::as_owned_cpp_obj<Encoding>(::z_query_encoding(this->loan())); }
+    const Encoding& get_encoding() const {
+        return detail::as_owned_cpp_obj<Encoding>(::z_query_encoding(this->loan()));
+    }
 
-    /// @brief Checks if query contains an attachment. Will throw a ZException if ``Reply::has_attachment`` returns ``false``.
+    /// @brief Checks if query contains an attachment. Will throw a ZException if ``Reply::has_attachment`` returns
+    /// ``false``.
     /// @return ``true`` if query contains an attachment.
     bool has_attachment() const { return ::z_query_attachment(this->loan()) != nullptr; }
 
@@ -62,12 +64,12 @@ public:
     ///
     /// Will throw a ZException if ``Query::has_attachment`` returns ``false``.
     /// @return attachment of the query.
-    const Bytes& get_attachment() const { 
+    const Bytes& get_attachment() const {
         auto attachment = ::z_query_attachment(this->loan());
         if (attachment == nullptr) {
             throw ZException("Query does not contain an attachment", Z_EINVAL);
         }
-        return detail::as_owned_cpp_obj<Bytes>(attachment); 
+        return detail::as_owned_cpp_obj<Bytes>(attachment);
     }
 
     /// @brief Options passed to the ``Query::reply`` operation.
@@ -99,8 +101,10 @@ public:
 
     /// @brief Send reply to a query.
     /// @param options options to pass to reply operation.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
-    void reply(const KeyExpr& key_expr, Bytes&& payload, ReplyOptions&& options = ReplyOptions::create_default(), ZError* err = nullptr) const {
+    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void reply(const KeyExpr& key_expr, Bytes&& payload, ReplyOptions&& options = ReplyOptions::create_default(),
+               ZResult* err = nullptr) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_query_reply_options_t opts;
         z_query_reply_options_default(&opts);
@@ -109,16 +113,13 @@ public:
         opts.congestion_control = options.congestion_control;
         opts.is_express = options.is_express;
         opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE) 
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         opts.source_info = detail::as_owned_c_ptr(options.source_info);
 #endif
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
 
-        __ZENOH_ERROR_CHECK(
-            ::z_query_reply(this->loan(), detail::loan(key_expr), payload_ptr, &opts),
-            err,
-            "Failed to send reply"
-        );
+        __ZENOH_ERROR_CHECK(::z_query_reply(this->loan(), detail::loan(key_expr), payload_ptr, &opts), err,
+                            "Failed to send reply");
     }
 
     /// @brief Options passed to the ``Query::reply_err`` operation.
@@ -136,18 +137,16 @@ public:
 
     /// @brief Send error reply to a query.
     /// @param options options to pass to reply error operation.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
-    void reply_err(Bytes&& payload, ReplyErrOptions&& options = ReplyErrOptions::create_default(), ZError* err = nullptr) const {
+    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void reply_err(Bytes&& payload, ReplyErrOptions&& options = ReplyErrOptions::create_default(),
+                   ZResult* err = nullptr) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
         ::z_query_reply_err_options_t opts;
         z_query_reply_err_options_default(&opts);
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
 
-        __ZENOH_ERROR_CHECK(
-            ::z_query_reply_err(this->loan(), payload_ptr, &opts),
-            err,
-            "Failed to send reply error"
-        );
+        __ZENOH_ERROR_CHECK(::z_query_reply_err(this->loan(), payload_ptr, &opts), err, "Failed to send reply error");
     }
 
     /// @brief Options passed to the ``Query::reply_del`` operation.
@@ -178,8 +177,10 @@ public:
     /// @brief Send a delete reply to a query.
     /// @param key_expr: The key of this delete reply.
     /// @param options: The options to pass to reply del operation.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
-    void reply_del(const KeyExpr& key_expr, ReplyDelOptions&& options = ReplyDelOptions::create_default(), ZError* err = nullptr) const {
+    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void reply_del(const KeyExpr& key_expr, ReplyDelOptions&& options = ReplyDelOptions::create_default(),
+                   ZResult* err = nullptr) const {
         ::z_query_reply_del_options_t opts;
         z_query_reply_del_options_default(&opts);
         opts.priority = options.priority;
@@ -191,12 +192,9 @@ public:
 #endif
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
 
-        __ZENOH_ERROR_CHECK(
-            ::z_query_reply_del(this->loan(), detail::loan(key_expr), &opts),
-            err,
-            "Failed to send reply del"
-        );
+        __ZENOH_ERROR_CHECK(::z_query_reply_del(this->loan(), detail::loan(key_expr), &opts), err,
+                            "Failed to send reply del");
     }
 };
 
-}
+}  // namespace zenoh

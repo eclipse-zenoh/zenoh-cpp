@@ -12,16 +12,16 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #pragma once
-#include "base.hxx"
-#include "../zenohc.hxx"
-
 #include <string>
+
+#include "../zenohc.hxx"
+#include "base.hxx"
 
 namespace zenoh {
 
 /// @brief The <a href="https://zenoh.io/docs/manual/abstractions/#encoding"> encoding </a> of Zenoh data.
 class Encoding : public Owned<::z_owned_encoding_t> {
-public:
+   public:
     using Owned::Owned;
 
     /// @name Constructors
@@ -30,12 +30,9 @@ public:
     Encoding() : Owned(nullptr) {}
 
     /// @brief Construct encoding from string.
-    Encoding(std::string_view s, ZError* err = nullptr) : Owned(nullptr) {
-        __ZENOH_ERROR_CHECK(
-            ::z_encoding_from_substr(&this->_0, s.data(), s.size()),
-            err,
-            std::string("Failed to create encoding from ").append(s)
-        );
+    Encoding(std::string_view s, ZResult* err = nullptr) : Owned(nullptr) {
+        __ZENOH_ERROR_CHECK(::z_encoding_from_substr(&this->_0, s.data(), s.size()), err,
+                            std::string("Failed to create encoding from ").append(s));
     }
 
     /// @name Methods
@@ -50,4 +47,4 @@ public:
     }
 };
 
-}
+}  // namespace zenoh
