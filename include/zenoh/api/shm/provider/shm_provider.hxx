@@ -114,13 +114,16 @@ class CppShmProvider : public ShmProvider {
     /// @brief Create a new CPP-defined ShmProvider.
     CppShmProvider(ProtocolId id, std::unique_ptr<CppShmProviderBackend> backend) : ShmProvider(nullptr) {
         // init context
-        zc_context_t context = {backend.release(), &shm::provider_backend::closures::del};
+        zc_context_t context = {backend.release(),
+                                &shm::provider_backend::closures::_z_cpp_shm_provider_backend_drop_fn};
 
         // init callbacks
         zc_shm_provider_backend_callbacks_t callbacks = {
-            &shm::provider_backend::closures::alloc_fn, &shm::provider_backend::closures::free_fn,
-            &shm::provider_backend::closures::defragment_fn, &shm::provider_backend::closures::available_fn,
-            &shm::provider_backend::closures::layout_for_fn};
+            &shm::provider_backend::closures::_z_cpp_shm_provider_backend_alloc_fn,
+            &shm::provider_backend::closures::_z_cpp_shm_provider_backend_free_fn,
+            &shm::provider_backend::closures::_z_cpp_shm_provider_backend_defragment_fn,
+            &shm::provider_backend::closures::_z_cpp_shm_provider_backend_available_fn,
+            &shm::provider_backend::closures::_z_cpp_shm_provider_backend_layout_for_fn};
 
         // create provider
         ::z_shm_provider_new(&this->_0, id, context, callbacks);
@@ -129,13 +132,16 @@ class CppShmProvider : public ShmProvider {
     /// @brief Create a new CPP-defined threadsafe ShmProvider.
     CppShmProvider(ProtocolId id, std::unique_ptr<CppShmProviderBackendThreadsafe> backend) : ShmProvider(nullptr) {
         // init context
-        ::zc_threadsafe_context_t context = {backend.release(), &shm::provider_backend::closures::del};
+        ::zc_threadsafe_context_t context = {backend.release(),
+                                             &shm::provider_backend::closures::_z_cpp_shm_provider_backend_drop_fn};
 
         // init callbacks
         ::zc_shm_provider_backend_callbacks_t callbacks = {
-            &shm::provider_backend::closures::alloc_fn, &shm::provider_backend::closures::free_fn,
-            &shm::provider_backend::closures::defragment_fn, &shm::provider_backend::closures::available_fn,
-            &shm::provider_backend::closures::layout_for_fn};
+            &shm::provider_backend::closures::_z_cpp_shm_provider_backend_alloc_fn,
+            &shm::provider_backend::closures::_z_cpp_shm_provider_backend_free_fn,
+            &shm::provider_backend::closures::_z_cpp_shm_provider_backend_defragment_fn,
+            &shm::provider_backend::closures::_z_cpp_shm_provider_backend_available_fn,
+            &shm::provider_backend::closures::_z_cpp_shm_provider_backend_layout_for_fn};
 
         // create provider
         ::z_shm_provider_threadsafe_new(&this->_0, id, context, callbacks);

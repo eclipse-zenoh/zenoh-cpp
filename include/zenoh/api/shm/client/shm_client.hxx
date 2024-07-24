@@ -32,17 +32,17 @@ class CppShmClient {
 // Ensure that function pointers are defined with extern C linkage
 namespace shm::client::closures {
 extern "C" {
-inline bool attach_fn(struct z_shm_segment_t* out_segment, z_segment_id_t id, void* context) {
+inline bool _z_cpp_shm_client_attach_fn(struct z_shm_segment_t* out_segment, z_segment_id_t id, void* context) {
     if (auto segment = static_cast<CppShmClient*>(context)->attach(id)) {
         out_segment->context.context.ptr = segment.release();
-        out_segment->context.delete_fn = &shm::segment::closures::delete_segment_fn;
-        out_segment->callbacks.map_fn = &shm::segment::closures::map_fn;
+        out_segment->context.delete_fn = &shm::segment::closures::_z_cpp_shm_segment_drop_fn;
+        out_segment->callbacks.map_fn = &shm::segment::closures::_z_cpp_shm_segment_map_fn;
         return true;
     }
     return false;
 }
 
-inline void delete_client_fn(void* context) { delete static_cast<CppShmClient*>(context); }
+inline void _z_cpp_shm_client_drop_fn(void* context) { delete static_cast<CppShmClient*>(context); }
 }
 }  // namespace shm::client::closures
 
@@ -57,8 +57,8 @@ class ShmClient : public Owned<::z_owned_shm_client_t> {
 
     /// @brief Create a new CPP-defined ShmClient.
     ShmClient(std::unique_ptr<CppShmClient>&& cpp_interface) : Owned(nullptr) {
-        zc_threadsafe_context_t context = {cpp_interface.release(), &shm::client::closures::delete_client_fn};
-        zc_shm_client_callbacks_t callbacks = {&shm::client::closures::attach_fn};
+        zc_threadsafe_context_t context = {cpp_interface.release(), &shm::client::closures::_z_cpp_shm_client_drop_fn};
+        zc_shm_client_callbacks_t callbacks = {&shm::client::closures::_z_cpp_shm_client_attach_fn};
         z_shm_client_new(&this->_0, context, callbacks);
     }
 };
