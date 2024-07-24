@@ -85,7 +85,7 @@ class ShmProvider : public Owned<::z_owned_shm_provider_t> {
     ZError alloc_gc_defrag_async(size_t size, AllocAlignment alignment,
                                  std::unique_ptr<ShmProviderAsyncInterface> receiver) const {
         auto rcv = receiver.release();
-        ::zc_threadsafe_context_t context = {rcv, &ShmProviderAsyncInterface::drop};
+        ::zc_threadsafe_context_t context = {{rcv}, &ShmProviderAsyncInterface::drop};
         return ::z_shm_provider_alloc_gc_defrag_async(&rcv->_result, this->loan(), size, alignment, context,
                                                       ShmProviderAsyncInterface::result);
     }
@@ -132,7 +132,7 @@ class CppShmProvider : public ShmProvider {
     /// @brief Create a new CPP-defined threadsafe ShmProvider.
     CppShmProvider(ProtocolId id, std::unique_ptr<CppShmProviderBackendThreadsafe> backend) : ShmProvider(nullptr) {
         // init context
-        ::zc_threadsafe_context_t context = {backend.release(),
+        ::zc_threadsafe_context_t context = {{backend.release()},
                                              &shm::provider_backend::closures::_z_cpp_shm_provider_backend_drop_fn};
 
         // init callbacks

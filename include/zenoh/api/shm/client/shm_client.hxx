@@ -57,7 +57,8 @@ class ShmClient : public Owned<::z_owned_shm_client_t> {
 
     /// @brief Create a new CPP-defined ShmClient.
     ShmClient(std::unique_ptr<CppShmClient>&& cpp_interface) : Owned(nullptr) {
-        zc_threadsafe_context_t context = {cpp_interface.release(), &shm::client::closures::_z_cpp_shm_client_drop_fn};
+        zc_threadsafe_context_t context = {{cpp_interface.release()},
+                                           &shm::client::closures::_z_cpp_shm_client_drop_fn};
         zc_shm_client_callbacks_t callbacks = {&shm::client::closures::_z_cpp_shm_client_attach_fn};
         z_shm_client_new(&this->_0, context, callbacks);
     }

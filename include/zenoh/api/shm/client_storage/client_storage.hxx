@@ -49,7 +49,8 @@ class ShmClientStorage : public Owned<::z_owned_shm_client_storage_t> {
                                    std::is_same<typename std::iterator_traits<typename Container::iterator>::value_type,
                                                 std::pair<ProtocolId, ShmClient>>::value>>
     ShmClientStorage(Container&& container, bool add_default_client_set, ZError* err = nullptr)
-        : ShmClientStorage(std::make_move_iterator(container.begin()), std::make_move_iterator(container.end()), err) {}
+        : ShmClientStorage(std::make_move_iterator(container.begin()), std::make_move_iterator(container.end()),
+                           add_default_client_set, err) {}
 
     /// @brief Create ShmClientStorage from a range of SHM clients
     /// @param begin start iterator of SHM clients. ShmClientStorage takes the ownership of the clients.

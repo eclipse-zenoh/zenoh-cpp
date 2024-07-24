@@ -91,7 +91,7 @@ class AllocLayout : public Owned<::z_owned_alloc_layout_t> {
 
     ZError alloc_gc_defrag_async(std::unique_ptr<AllocLayoutAsyncInterface> receiver) const {
         auto rcv = receiver.release();
-        ::zc_threadsafe_context_t context = {rcv, &shm::provider::closures::_z_alloc_layout_async_interface_drop_fn};
+        ::zc_threadsafe_context_t context = {{rcv}, &shm::provider::closures::_z_alloc_layout_async_interface_drop_fn};
         return ::z_alloc_layout_threadsafe_alloc_gc_defrag_async(
             &rcv->_result, this->loan(), context, shm::provider::closures::_z_alloc_layout_async_interface_result_fn);
     }
