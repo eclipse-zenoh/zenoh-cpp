@@ -10,39 +10,25 @@
 //
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
-//
+
 #include <stdio.h>
 #include <string.h>
 
-#include <chrono>
+#include <condition_variable>
 #include <iostream>
-#include <limits>
-#include <sstream>
-#include <thread>
+#include <map>
+#include <mutex>
 
 #include "../getargs.h"
 #include "zenoh.hxx"
-
 using namespace zenoh;
-using namespace std::chrono_literals;
-
-#ifdef ZENOHCXX_ZENOHC
-const char *default_value = "Pub from C++ zenoh-c!";
-const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-c-pub";
-#elif ZENOHCXX_ZENOHPICO
-const char *default_value = "Pub from C++ zenoh-pico!";
-const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-pico-pub";
-#else
-#error "Unknown zenoh backend"
-#endif
 
 int _main(int argc, char **argv) {
-    const char *keyexpr = default_keyexpr;
-    const char *value = default_value;
+    const char *expr = "demo/example/**";
+    const char *value = "";
     const char *locator = nullptr;
     const char *config_file = nullptr;
-
-    getargs(argc, argv, {}, {{"key expression", &keyexpr}, {"value", &value}, {"locator", &locator}}
+    getargs(argc, argv, {}, {{"key expression", &expr}, {"value", &value}, {"locator", &locator}}
 #ifdef ZENOHCXX_ZENOHC
             ,
             {{"-c", {"config file", &config_file}}}
@@ -73,33 +59,47 @@ int _main(int argc, char **argv) {
         }
     }
 
-    std::cout << "Opening session..." << std::endl;
+    KeyExpr keyexpr(expr);
+
+    std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
-    std::cout << "Declaring Publisher on '" << keyexpr << "'..." << std::endl;
-    auto pub = session.declare_publisher(KeyExpr(keyexpr));
+    std::mutex m;
+    std::condition_variable done_signal;
+    bool done = false;
 
-    std::cout << "Publisher on '" << keyexpr << "' declared" << std::endl;
+    auto on_reply = [](const Reply &reply) {
+        if (reply.is_ok()) {
+            const auto &sample = reply.get_ok();
+            std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
+                      << sample.get_payload().deserialize<std::string>() << "')\n";
+        } else {
+            std::cout << "Received an error :" << reply.get_err().get_payload().deserialize<std::string>() << "\n";
+        }
+    };
+
+    auto on_done = [&m, &done, &done_signal]() {
+        std::lock_guard lock(m);
+        done = true;
+        done_signal.notify_all();
+    };
 
     std::cout << "Preparing SHM Provider...\n";
-    PosixShmProvider provider(MemoryLayout(65536, AllocAlignment({2})));
+    PosixShmProvider provider(MemoryLayout(1024 * 1024, AllocAlignment({2})));
 
-    std::cout << "Press CTRL-C to quit..." << std::endl;
-    for (int idx = 0; idx < std::numeric_limits<int>::max(); ++idx) {
-        std::this_thread::sleep_for(1s);
-        std::ostringstream ss;
-        ss << "[" << idx << "] " << value;
-        auto s = ss.str();  // in C++20 use .view() instead
-        std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
+    std::cout << "Allocating SHM buffer...\n";
+    const auto len = strlen(value) + 1;
+    auto alloc_result = provider.alloc_gc_defrag_blocking(len, AllocAlignment({0}));
+    ZShmMut &&buf = std::get<ZShmMut>(std::move(alloc_result));
+    memcpy(buf.data(), value, len);
 
-        std::cout << "Allocating SHM buffer...\n";
-        const auto len = s.size() + 1;
-        auto alloc_result = provider.alloc_gc_defrag_blocking(len, AllocAlignment({0}));
-        ZShmMut &&buf = std::get<ZShmMut>(std::move(alloc_result));
-        memcpy(buf.data(), s.data(), len);
+    std::cout << "Sending Query '" << expr << "'...\n";
+    session.get(keyexpr, "", on_reply, on_done,
+                {.target = Z_QUERY_TARGET_ALL, .payload = Bytes::serialize(std::move(buf))});
 
-        pub.put(Bytes::serialize(std::move(buf)), {.encoding = Encoding("text/plain")});
-    }
+    std::unique_lock lock(m);
+    done_signal.wait(lock, [&done] { return done; });
+
     return 0;
 }
 

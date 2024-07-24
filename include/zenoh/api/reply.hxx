@@ -17,7 +17,9 @@
 #include "../detail/interop.hxx"
 #include "sample.hxx"
 #include "bytes.hxx"
+#if defined UNSTABLE
 #include "id.hxx"
+#endif
 
 
 namespace zenoh {

@@ -31,8 +31,6 @@ option(ZENOHCXX_ZENOHPICO "Build for Zenoh-pico target" OFF)
 
 set_default_build_type(Release)
 
-
-
 # zenohcxx without dependencies
 add_library(zenohcxx INTERFACE)
 target_include_directories(zenohcxx INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

@@ -15,7 +15,9 @@
 #include "base.hxx"
 #include "../zenohc.hxx"
 #include "enums.hxx"
+#if defined UNSTABLE
 #include "id.hxx"
+#endif
 
 #include <string_view>
 #include <vector>
@@ -29,9 +31,11 @@ public:
 
     /// @name Methods
 
+#if defined UNSTABLE
     /// @brief Get ``Id`` of the entity.
     /// @return ``Id`` of the entity.
     Id get_id() const { return Id(::z_hello_zid(this->loan())); };
+#endif
 
     /// @brief Get the type of the entity.
     /// @return ``zenoh::WhatAmI`` of the entity.

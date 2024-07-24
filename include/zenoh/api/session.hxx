@@ -14,21 +14,26 @@
 
 #pragma once
 
-#include "base.hxx"
-#include "../detail/interop.hxx"
-#include "../detail/closures_concrete.hxx"
+#include <optional>
 
-#include "enums.hxx"
+#include "../detail/closures_concrete.hxx"
+#include "../detail/interop.hxx"
+#include "base.hxx"
+#include "closures.hxx"
 #include "timestamp.hxx"
 #include "config.hxx"
+#include "enums.hxx"
+#if defined UNSTABLE
 #include "id.hxx"
+#endif
 #include "publisher.hxx"
-#include "subscriber.hxx"
-#include "queryable.hxx"
 #include "query_consolidation.hxx"
-#include "closures.hxx"
+#include "subscriber.hxx"
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
 #include "liveliness.hxx"
+#endif
+#if defined(ZENOHCXX_ZENOHC) && defined(SHARED_MEMORY) && defined(UNSTABLE)
+#include "shm/client_storage/client_storage.hxx"
 #endif
 
 #include <optional>
@@ -38,7 +43,7 @@
 namespace zenoh {
 /// A Zenoh session.
 class Session : public Owned<::z_owned_session_t> {
-public:
+   public:
     using Owned::Owned;
 
     /// @brief Options to be passed when opening a ``Session``.
@@ -87,6 +92,19 @@ public:
 #endif
     }
 
+#if defined(ZENOHCXX_ZENOHC) && defined(SHARED_MEMORY) && defined(UNSTABLE)
+    /// @brief Create a new Session with custom SHM client set.
+    /// @param config Zenoh session ``Config``.
+    /// @param shm_storage Storage with custom SHM clients.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    Session(Config&& config, const ShmClientStorage& shm_storage, ZError* err = nullptr) : Owned(nullptr) {
+        __ZENOH_ERROR_CHECK(
+            ::z_open_with_custom_shm_clients(&this->_0, detail::as_owned_c_ptr(config), detail::loan(shm_storage)), err,
+            "Failed to open session");
+    }
+#endif
+
     /// @brief A factory method equivalent to a ``Session`` constructor.
     /// @param config Zenoh session ``Config``.
     /// @param options Options to pass to session creation operation.
@@ -95,6 +113,18 @@ public:
     static Session open(Config&& config, SessionOptions&& options = SessionOptions::create_default(), ZError* err = nullptr) {
         return Session(std::move(config), std::move(options), err);
     }
+
+#if defined(ZENOHCXX_ZENOHC) && defined(SHARED_MEMORY) && defined(UNSTABLE)
+    /// @brief A factory method equivalent to a ``Session`` constructor for custom SHM clients list.
+    /// @param config Zenoh session ``Config``.
+    /// @param shm_storage Storage with custom SHM clients.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @return ``Session`` object. In case of failure it will be return in invalid state.
+    static Session open(Config&& config, const ShmClientStorage& shm_storage, ZError* err = nullptr) {
+        return Session(std::move(config), shm_storage, err);
+    }
+#endif
 
     /// @name Methods
 
@@ -106,15 +136,17 @@ public:
         return s;
     }
 
+#if defined UNSTABLE
     /// @brief Get the unique identifier of the zenoh node associated to this ``Session``.
     /// @return the unique identifier ``Id``.
-    Id get_zid() const { 
-         return Id(::z_info_zid(this->loan())); 
-    }
+    Id get_zid() const { return Id(::z_info_zid(this->loan())); }
+#endif
 
-    /// @brief Create ``KeyExpr`` instance with numeric id registered in ``Session`` routing tables (to reduce bandwith usage).
+    /// @brief Create ``KeyExpr`` instance with numeric id registered in ``Session`` routing tables (to reduce bandwith
+    /// usage).
     /// @param key_expr ``KeyExpr`` to declare.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
     /// @return Declared ``KeyExpr`` instance.
     KeyExpr declare_keyexpr(const KeyExpr& key_expr, ZError* err = nullptr) const {
         KeyExpr k;
@@ -127,14 +159,12 @@ public:
     }
 
     /// @brief Remove ``KeyExpr`` instance from ``Session`` routing table and drop ``KeyExpr`` instance.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
     /// @param key_expr ``KeyExpr`` instance to undeclare, that was previously returned by ``Session::declare_keyexpr``.
     void undeclare_keyexpr(KeyExpr&& key_expr, ZError* err = nullptr) const {
-        __ZENOH_ERROR_CHECK(
-            ::z_undeclare_keyexpr(detail::as_owned_c_ptr(key_expr), this->loan()),
-            err,
-            "Failed to undeclare key expression"
-        );
+        __ZENOH_ERROR_CHECK(::z_undeclare_keyexpr(detail::as_owned_c_ptr(key_expr), this->loan()), err,
+                            "Failed to undeclare key expression");
     }
 
     /// @brief Options passed to the ``get`` operation.
@@ -169,20 +199,16 @@ public:
     /// @param on_reply callable that will be called once for each received reply.
     /// @param on_drop callable that will be called once all replies are received.
     /// @param options ``GetOptions`` query options.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
-    template<class C, class D>
-    void get(
-        const KeyExpr& key_expr, const std::string& parameters, C&& on_reply, D&& on_drop, 
-        GetOptions&& options = GetOptions::create_default(), ZError* err = nullptr
-    ) const {
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    template <class C, class D>
+    void get(const KeyExpr& key_expr, const std::string& parameters, C&& on_reply, D&& on_drop,
+             GetOptions&& options = GetOptions::create_default(), ZError* err = nullptr) const {
         static_assert(
             std::is_invocable_r<void, C, const Reply&>::value,
-            "on_reply should be callable with the following signature: void on_reply(const zenoh::Reply& reply)"
-        );
-        static_assert(
-            std::is_invocable_r<void, D>::value,
-            "on_drop should be callable with the following signature: void on_drop()"
-        );
+            "on_reply should be callable with the following signature: void on_reply(const zenoh::Reply& reply)");
+        static_assert(std::is_invocable_r<void, D>::value,
+                      "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_reply_t c_closure;
         using ClosureType = typename detail::closures::Closure<C, D, void, const Reply&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_reply), std::forward<D>(on_drop));
@@ -200,24 +226,25 @@ public:
         opts.timeout_ms = options.timeout_ms;
 
         __ZENOH_ERROR_CHECK(
-            ::z_get(this->loan(), detail::loan(key_expr), parameters.c_str(), ::z_move(c_closure), &opts),
-            err,
-            "Failed to perform get operation"
-        );
+            ::z_get(this->loan(), detail::loan(key_expr), parameters.c_str(), ::z_move(c_closure), &opts), err,
+            "Failed to perform get operation");
     }
 
     /// @brief Query data from the matching queryables in the system. Replies are provided through a channel.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or `zenoh::channels::RingChannel`).
+    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
+    /// `zenoh::channels::RingChannel`).
     /// @param key_expr the key expression matching resources to query.
     /// @param parameters the parameters string in URL format.
     /// @param channel channel instance.
     /// @param options query options.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
     /// @return Reply handler.
-    template<class Channel>
-    typename Channel::template HandlerType<Reply> get(
-        const KeyExpr& key_expr, const std::string& parameters, Channel channel, GetOptions&& options = GetOptions::create_default(), ZError* err = nullptr
-    ) const {
+    template <class Channel>
+    typename Channel::template HandlerType<Reply> get(const KeyExpr& key_expr, const std::string& parameters,
+                                                      Channel channel,
+                                                      GetOptions&& options = GetOptions::create_default(),
+                                                      ZError* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Reply>();
         ::z_get_options_t opts;
         z_get_options_default(&opts);
@@ -231,12 +258,9 @@ public:
         opts.attachment = detail::as_owned_c_ptr(options.attachment);
         opts.timeout_ms = options.timeout_ms;
 
-        ZError res = ::z_get(this->loan(), detail::loan(key_expr), parameters.c_str(), ::z_move(cb_handler_pair.first), &opts);
-        __ZENOH_ERROR_CHECK(
-            res,
-            err,
-            "Failed to perform get operation"
-        );
+        ZError res =
+            ::z_get(this->loan(), detail::loan(key_expr), parameters.c_str(), ::z_move(cb_handler_pair.first), &opts);
+        __ZENOH_ERROR_CHECK(res, err, "Failed to perform get operation");
         if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
         return std::move(cb_handler_pair.second);
     }
@@ -261,19 +285,18 @@ public:
     /// @brief Undeclare a resource. Equivalent to ``Publisher::delete_resource``.
     /// @param key_expr  the key expression to delete the resource.
     /// @param options options to pass to delete operation.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
-    void delete_resource(const KeyExpr& key_expr, DeleteOptions&& options = DeleteOptions::create_default(), ZError* err = nullptr) const {
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void delete_resource(const KeyExpr& key_expr, DeleteOptions&& options = DeleteOptions::create_default(),
+                         ZError* err = nullptr) const {
         ::z_delete_options_t opts;
         z_delete_options_default(&opts);
         opts.congestion_control = options.congestion_control;
         opts.priority = options.priority;
         opts.is_express = options.is_express;
 
-        __ZENOH_ERROR_CHECK(
-            ::z_delete(this->loan(), detail::loan(key_expr), &opts),
-            err,
-            "Failed to perform delete operation"
-        );
+        __ZENOH_ERROR_CHECK(::z_delete(this->loan(), detail::loan(key_expr), &opts), err,
+                            "Failed to perform delete operation");
     }
 
     /// @brief Options passed to the ``Session::put`` operation.
@@ -310,8 +333,10 @@ public:
     /// @param key_expr the key expression to put the data.
     /// @param payload the data to publish.
     /// @param options options to pass to put operation.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
-    void put(const KeyExpr& key_expr, Bytes&& payload, PutOptions&& options = PutOptions::create_default(), ZError* err = nullptr) const {
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void put(const KeyExpr& key_expr, Bytes&& payload, PutOptions&& options = PutOptions::create_default(),
+             ZError* err = nullptr) const {
         ::z_put_options_t opts;
         z_put_options_default(&opts);
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
@@ -327,11 +352,8 @@ public:
         opts.allowed_destination = options.allowed_destination;
 #endif
         auto payload_ptr = detail::as_owned_c_ptr(payload);
-        __ZENOH_ERROR_CHECK(
-            ::z_put(this->loan(), detail::loan(key_expr), payload_ptr, &opts),
-            err,
-            "Failed to perform put operation"
-        );
+        __ZENOH_ERROR_CHECK(::z_put(this->loan(), detail::loan(key_expr), payload_ptr, &opts), err,
+                            "Failed to perform put operation");
     }
 
     /// @brief Options to be passed when declaring a ``Queryable``
@@ -351,20 +373,18 @@ public:
     /// @param on_query the callable to handle ``Query`` requests. Will be called once for each query.
     /// @param on_drop the drop callable. Will be called once, when ``Queryable`` is destroyed or undeclared.
     /// @param options options passed to queryable declaration.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
     /// @return a ``Queryable`` object.
-    template<class C, class D>
-    Queryable<void> declare_queryable(
-        const KeyExpr& key_expr, C&& on_query, D&& on_drop, QueryableOptions&& options = QueryableOptions::create_default(), ZError* err = nullptr
-    ) const {
+    template <class C, class D>
+    Queryable<void> declare_queryable(const KeyExpr& key_expr, C&& on_query, D&& on_drop,
+                                      QueryableOptions&& options = QueryableOptions::create_default(),
+                                      ZError* err = nullptr) const {
         static_assert(
             std::is_invocable_r<void, C, const Query&>::value,
-            "on_query should be callable with the following signature: void on_query(const zenoh::Query& query)"
-        );
-        static_assert(
-            std::is_invocable_r<void, D>::value,
-            "on_drop should be callable with the following signature: void on_drop()"
-        );
+            "on_query should be callable with the following signature: void on_query(const zenoh::Query& query)");
+        static_assert(std::is_invocable_r<void, D>::value,
+                      "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_query_t c_closure;
         using ClosureType = typename detail::closures::Closure<C, D, void, const Query&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_query), std::forward<D>(on_drop));
@@ -374,36 +394,37 @@ public:
         opts.complete = options.complete;
 
         Queryable<void> q(nullptr);
-        ZError res =  ::z_declare_queryable(
-            detail::as_owned_c_ptr(q), this->loan(), detail::loan(key_expr), ::z_move(c_closure), &opts
-        );
+        ZError res = ::z_declare_queryable(detail::as_owned_c_ptr(q), this->loan(), detail::loan(key_expr),
+                                           ::z_move(c_closure), &opts);
         __ZENOH_ERROR_CHECK(res, err, "Failed to declare Queryable");
         return q;
     }
 
     /// @brief Create a ``Queryable`` object to answer to ``Session::get`` requests.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or `zenoh::channels::RingChannel`).
+    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
+    /// `zenoh::channels::RingChannel`).
     /// @param key_expr the key expression to match the ``Session::get`` requests.
     /// @param channel an instance of channel.
     /// @param options options passed to queryable declaration.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
     /// @return a ``Queryable`` object.
-    template<class Channel>
+    template <class Channel>
     Queryable<typename Channel::template HandlerType<Query>> declare_queryable(
-        const KeyExpr& key_expr, Channel channel, QueryableOptions&& options = QueryableOptions::create_default(), ZError* err = nullptr
-    ) const {
+        const KeyExpr& key_expr, Channel channel, QueryableOptions&& options = QueryableOptions::create_default(),
+        ZError* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Query>();
         ::z_queryable_options_t opts;
         z_queryable_options_default(&opts);
         opts.complete = options.complete;
 
         QueryableBase q(nullptr);
-        ZError res =  ::z_declare_queryable(
-            detail::as_owned_c_ptr(q), this->loan(), detail::loan(key_expr), ::z_move(cb_handler_pair.first), &opts
-        );
+        ZError res = ::z_declare_queryable(detail::as_owned_c_ptr(q), this->loan(), detail::loan(key_expr),
+                                           ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_ERROR_CHECK(res, err, "Failed to declare Queryable");
         if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
-        return Queryable<typename Channel::template HandlerType<Query>>(std::move(q), std::move(cb_handler_pair.second));
+        return Queryable<typename Channel::template HandlerType<Query>>(std::move(q),
+                                                                        std::move(cb_handler_pair.second));
     }
 
     /// @brief Options to be passed when declaring a ``Subscriber``.
@@ -420,25 +441,24 @@ public:
 
     /// @brief Create a ``Subscriber`` object to receive data from matching ``Publisher`` objects or from.
     /// ``Session::put`` and ``Session::delete_resource`` requests.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or `zenoh::channels::RingChannel`).
+    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
+    /// `zenoh::channels::RingChannel`).
     /// @param key_expr the key expression to match the publishers.
     /// @param on_sample the callback that will be called for each received sample.
     /// @param on_drop the callback that will be called once subscriber is destroyed or undeclared.
     /// @param options options to pass to subscriber declaration.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
     /// @return a ``Subscriber`` object.
-    template<class C, class D>
-    Subscriber<void> declare_subscriber(
-        const KeyExpr& key_expr, C&& on_sample, D&& on_drop, SubscriberOptions&& options = SubscriberOptions::create_default(), ZError *err = nullptr
-    ) const {
+    template <class C, class D>
+    Subscriber<void> declare_subscriber(const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
+                                        SubscriberOptions&& options = SubscriberOptions::create_default(),
+                                        ZError* err = nullptr) const {
         static_assert(
             std::is_invocable_r<void, C, const Sample&>::value,
-            "on_sample should be callable with the following signature: void on_sample(const zenoh::Sample& sample)"
-        );
-        static_assert(
-            std::is_invocable_r<void, D>::value,
-            "on_drop should be callable with the following signature: void on_drop()"
-        );
+            "on_sample should be callable with the following signature: void on_sample(const zenoh::Sample& sample)");
+        static_assert(std::is_invocable_r<void, D>::value,
+                      "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_sample_t c_closure;
         using ClosureType = typename detail::closures::Closure<C, D, void, const Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
@@ -447,36 +467,37 @@ public:
         z_subscriber_options_default(&opts);
         opts.reliability = options.reliability;
         Subscriber<void> s(nullptr);
-        ZError res =  ::z_declare_subscriber(
-            detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr), ::z_move(c_closure), &opts
-        );
+        ZError res = ::z_declare_subscriber(detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr),
+                                            ::z_move(c_closure), &opts);
         __ZENOH_ERROR_CHECK(res, err, "Failed to declare Subscriber");
         return s;
     }
 
     /// @brief Create a ``Subscriber`` object to receive data from matching ``Publisher`` objects or from.
     /// ``Session::put`` and ``Session::delete_resource`` requests.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or `zenoh::channels::RingChannel`).
+    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
+    /// `zenoh::channels::RingChannel`).
     /// @param key_expr the key expression to match the publishers.
     /// @param channel an instance of channel.
     /// @param options options to pass to subscriber declaration.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
     /// @return a ``Subscriber`` object.
-    template<class Channel>
+    template <class Channel>
     Subscriber<typename Channel::template HandlerType<Sample>> declare_subscriber(
-        const KeyExpr& key_expr, Channel channel, SubscriberOptions&& options = SubscriberOptions::create_default(), ZError *err = nullptr
-    ) const {
+        const KeyExpr& key_expr, Channel channel, SubscriberOptions&& options = SubscriberOptions::create_default(),
+        ZError* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Sample>();
         ::z_subscriber_options_t opts;
         z_subscriber_options_default(&opts);
         opts.reliability = options.reliability;
         SubscriberBase s(nullptr);
-        ZError res =  ::z_declare_subscriber(
-            detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr), ::z_move(cb_handler_pair.first), &opts
-        );
+        ZError res = ::z_declare_subscriber(detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr),
+                                            ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_ERROR_CHECK(res, err, "Failed to declare Subscriber");
         if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
-        return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s), std::move(cb_handler_pair.second));
+        return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
+                                                                          std::move(cb_handler_pair.second));
     }
 
     /// @brief Options to be passed when declaring a ``Publisher``.
@@ -502,11 +523,12 @@ public:
     /// @brief Create a ``Publisher`` object to publish data to matching ``Subscriber`` objects.
     /// @param key_expr The key expression to match the subscribers.
     /// @param options Options passed to publisher declaration.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
     /// @return a ``Publisher`` object.
-    Publisher declare_publisher(
-        const KeyExpr& key_expr, PublisherOptions&& options = PublisherOptions::create_default(), ZError* err = nullptr
-    ) const {
+    Publisher declare_publisher(const KeyExpr& key_expr,
+                                PublisherOptions&& options = PublisherOptions::create_default(),
+                                ZError* err = nullptr) const {
         ::z_publisher_options_t opts;
         z_publisher_options_default(&opts);
         opts.congestion_control = options.congestion_control;
@@ -517,55 +539,44 @@ public:
 #endif
 
         Publisher p(nullptr);
-        ZError res =  ::z_declare_publisher(
-            detail::as_owned_c_ptr(p), this->loan(), detail::loan(key_expr), &opts
-        );
+        ZError res = ::z_declare_publisher(detail::as_owned_c_ptr(p), this->loan(), detail::loan(key_expr), &opts);
         __ZENOH_ERROR_CHECK(res, err, "Failed to declare Publisher");
         return p;
     }
 
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
     /// @brief Fetches the Zenoh IDs of all connected routers.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
     /// @return a vector of all connected router Id.
     std::vector<Id> get_routers_z_id(ZError* err = nullptr) const {
         std::vector<Id> out;
-        auto f = [&out](const Id& z_id) {
-            out.push_back(z_id);
-        };
+        auto f = [&out](const Id& z_id) { out.push_back(z_id); };
         typedef decltype(f) F;
         ::z_owned_closure_zid_t c_closure;
         using ClosureType = typename detail::closures::Closure<F, closures::None, void, const Id&>;
         auto closure = ClosureType::into_context(std::forward<F>(f), closures::none);
-        ::z_closure(&c_closure, detail::closures::_zenoh_on_id_call,  detail::closures::_zenoh_on_drop, closure);
-        __ZENOH_ERROR_CHECK(
-            ::z_info_routers_zid(this->loan(), &c_closure),
-            err,
-            "Failed to fetch router Ids"
-        );
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_id_call, detail::closures::_zenoh_on_drop, closure);
+        __ZENOH_ERROR_CHECK(::z_info_routers_zid(this->loan(), &c_closure), err, "Failed to fetch router Ids");
         return out;
     }
 
     /// @brief Fetches the Zenoh IDs of all connected peers.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
     /// @return a vector of all connected peer Id.
     std::vector<Id> get_peers_z_id(ZError* err = nullptr) const {
         std::vector<Id> out;
-        auto f = [&out](const Id& z_id) {
-            out.push_back(z_id);
-        };
+        auto f = [&out](const Id& z_id) { out.push_back(z_id); };
         typedef decltype(f) F;
         ::z_owned_closure_zid_t c_closure;
-        auto closure = detail::closures::Closure<F, closures::None, void, const Id&>::into_context(
-            std::forward<F>(f), closures::none
-        );
-        ::z_closure(&c_closure, detail::closures::_zenoh_on_id_call,  detail::closures::_zenoh_on_drop, closure);
-        __ZENOH_ERROR_CHECK(
-            ::z_info_peers_zid(this->loan(), &c_closure),
-            err,
-            "Failed to fetch peer Ids"
-        );
+        auto closure = detail::closures::Closure<F, closures::None, void, const Id&>::into_context(std::forward<F>(f),
+                                                                                                   closures::none);
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_id_call, detail::closures::_zenoh_on_drop, closure);
+        __ZENOH_ERROR_CHECK(::z_info_peers_zid(this->loan(), &c_closure), err, "Failed to fetch peer Ids");
         return out;
     }
+#endif
 
 #ifdef ZENOHCXX_ZENOHPICO
     /// @brief Start a separate task to read from the network and process the messages as soon as they are received.
@@ -652,9 +663,10 @@ public:
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
     /// @brief Options to pass to ``Session::liveliness_declare_token``.
     struct LivelinessDeclarationOptions {
-    protected:
+       protected:
         uint8_t _dummy = 0;
-    public:
+
+       public:
         static LivelinessDeclarationOptions create_default() { return {}; }
     };
 
@@ -665,54 +677,52 @@ public:
     ///
     /// @param key_expr: A keyexpr to declare a liveliess token for.
     /// @param options: Liveliness token declaration properties.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
     /// @return a ``LivelinessToken``.
     LivelinessToken liveliness_declare_token(
-        const KeyExpr& key_expr, 
+        const KeyExpr& key_expr,
         LivelinessDeclarationOptions&& options = LivelinessDeclarationOptions::create_default(),
-        ZError* err = nullptr
-    ) {
+        ZError* err = nullptr) {
         LivelinessToken t(nullptr);
         ::zc_liveliness_declaration_options_t opts;
         zc_liveliness_declaration_options_default(&opts);
         (void)options;
         __ZENOH_ERROR_CHECK(
-            ::zc_liveliness_declare_token(detail::as_owned_c_ptr(t), this->loan(), detail::loan(key_expr), &opts),
-            err,
-            "Failed to perform liveliness_declare_token operation"
-        );
+            ::zc_liveliness_declare_token(detail::as_owned_c_ptr(t), this->loan(), detail::loan(key_expr), &opts), err,
+            "Failed to perform liveliness_declare_token operation");
         return t;
     }
 
     /// @brief Options to pass to ``Session::liveliness_declare_subscriber``.
     struct LivelinessSubscriberOptions {
-    protected:
+       protected:
         uint8_t _dummy = 0;
-    public:
+
+       public:
         static LivelinessSubscriberOptions create_default() { return {}; }
     };
 
-
     /// @brief Declares a subscriber on liveliness tokens that intersect `key_expr`.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or `zenoh::channels::RingChannel`).
+    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
+    /// `zenoh::channels::RingChannel`).
     /// @param key_expr  the key expression to subscribe to.
     /// @param on_sample the callabl that will be called each time a liveliness token status is changed.
     /// @param on_drop the callable that will be called once subscriber is destroyed or undeclared.
     /// @param options options to pass to subscriber declaration.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
     /// @return a ``Subscriber`` object.
-    template<class C, class D>
+    template <class C, class D>
     Subscriber<void> liveliness_declare_subscriber(
-        const KeyExpr& key_expr, C&& on_sample, D&& on_drop, LivelinessSubscriberOptions&& options = LivelinessSubscriberOptions::create_default(), ZError *err = nullptr
-    ) const {
+        const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
+        LivelinessSubscriberOptions&& options = LivelinessSubscriberOptions::create_default(),
+        ZError* err = nullptr) const {
         static_assert(
             std::is_invocable_r<void, C, const Sample&>::value,
-            "on_sample should be callable with the following signature: void on_sample(const zenoh::Sample& sample)"
-        );
-        static_assert(
-            std::is_invocable_r<void, D>::value,
-            "on_drop should be callable with the following signature: void on_drop()"
-        );
+            "on_sample should be callable with the following signature: void on_sample(const zenoh::Sample& sample)");
+        static_assert(std::is_invocable_r<void, D>::value,
+                      "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_sample_t c_closure;
         using ClosureType = typename detail::closures::Closure<C, D, void, const Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
@@ -721,37 +731,38 @@ public:
         zc_liveliness_subscriber_options_default(&opts);
         (void)options;
         Subscriber<void> s(nullptr);
-        ZError res =  ::zc_liveliness_declare_subscriber(
-            detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr), ::z_move(c_closure), &opts
-        );
+        ZError res = ::zc_liveliness_declare_subscriber(detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr),
+                                                        ::z_move(c_closure), &opts);
         __ZENOH_ERROR_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
         return s;
     }
 
     /// @brief Declare a subscriber on liveliness tokens that intersect `key_expr`.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or `zenoh::channels::RingChannel`).
+    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
+    /// `zenoh::channels::RingChannel`).
     /// @param key_expr the key expression to subscribe to.
     /// @param channel an instance of channel.
     /// @param options options to pass to subscriber declaration.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
     /// @return a ``Subscriber`` object.
-    template<class Channel>
+    template <class Channel>
     Subscriber<typename Channel::template HandlerType<Sample>> liveliness_declare_subscriber(
-        const KeyExpr& key_expr, Channel channel, LivelinessSubscriberOptions&& options = LivelinessSubscriberOptions::create_default(), ZError *err = nullptr
-    ) const {
+        const KeyExpr& key_expr, Channel channel,
+        LivelinessSubscriberOptions&& options = LivelinessSubscriberOptions::create_default(),
+        ZError* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Sample>();
         ::zc_liveliness_subscriber_options_t opts;
         zc_liveliness_subscriber_options_default(&opts);
         (void)options;
         SubscriberBase s(nullptr);
-        ZError res =  ::zc_liveliness_declare_subscriber(
-            detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr), ::z_move(cb_handler_pair.first), &opts
-        );
+        ZError res = ::zc_liveliness_declare_subscriber(detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr),
+                                                        ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_ERROR_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
         if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
-        return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s), std::move(cb_handler_pair.second));
+        return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
+                                                                          std::move(cb_handler_pair.second));
     }
-
 
     /// @brief Options to pass to ``Session::liveliness_get``.
     struct LivelinessGetOptions {
@@ -764,7 +775,6 @@ public:
         /// @brief Create default option settings.
         static LivelinessGetOptions create_default() { return {}; }
     };
-    
 
     /// @brief Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
     ///
@@ -772,20 +782,17 @@ public:
     /// @param key_expr: The key expression to query liveliness tokens for.
     /// @param callback: The callable that will be called for each received reply.
     /// @param options: Additional options for the liveliness get operation.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
-    template<class C, class D>
-    void liveliness_get(
-        const KeyExpr& key_expr, C&& on_reply, D&& on_drop, 
-        LivelinessGetOptions&& options = LivelinessGetOptions::create_default(), ZError* err = nullptr
-    ) const {
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    template <class C, class D>
+    void liveliness_get(const KeyExpr& key_expr, C&& on_reply, D&& on_drop,
+                        LivelinessGetOptions&& options = LivelinessGetOptions::create_default(),
+                        ZError* err = nullptr) const {
         static_assert(
             std::is_invocable_r<void, C, const Reply&>::value,
-            "on_reply should be callable with the following signature: void on_reply(const zenoh::Reply& reply)"
-        );
-        static_assert(
-            std::is_invocable_r<void, D>::value,
-            "on_drop should be callable with the following signature: void on_drop()"
-        );
+            "on_reply should be callable with the following signature: void on_reply(const zenoh::Reply& reply)");
+        static_assert(std::is_invocable_r<void, D>::value,
+                      "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_reply_t c_closure;
         using ClosureType = typename detail::closures::Closure<C, D, void, const Reply&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_reply), std::forward<D>(on_drop));
@@ -794,35 +801,30 @@ public:
         zc_liveliness_get_options_default(&opts);
         opts.timeout_ms = options.timeout_ms;
 
-        __ZENOH_ERROR_CHECK(
-            ::zc_liveliness_get(this->loan(), detail::loan(key_expr), ::z_move(c_closure), &opts),
-            err,
-            "Failed to perform liveliness_get operation"
-        );
+        __ZENOH_ERROR_CHECK(::zc_liveliness_get(this->loan(), detail::loan(key_expr), ::z_move(c_closure), &opts), err,
+                            "Failed to perform liveliness_get operation");
     }
 
     /// @brief Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or `zenoh::channels::RingChannel`).
+    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
+    /// `zenoh::channels::RingChannel`).
     /// @param key_expr the key expression to query liveliness tokens for.
     /// @param channel channel instance.
     /// @param options  additional options for the liveliness get operation.
-    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be thrown in case of error.
+    /// @param err if not null, the error code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
     /// @return Reply handler.
-    template<class Channel>
+    template <class Channel>
     typename Channel::template HandlerType<Reply> liveliness_get(
-        const KeyExpr& key_expr, Channel channel, LivelinessGetOptions&& options = LivelinessGetOptions::create_default(), ZError* err = nullptr
-    ) const {
+        const KeyExpr& key_expr, Channel channel,
+        LivelinessGetOptions&& options = LivelinessGetOptions::create_default(), ZError* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Reply>();
         ::zc_liveliness_get_options_t opts;
         zc_liveliness_get_options_default(&opts);
         opts.timeout_ms = options.timeout_ms;
 
         ZError res = ::zc_liveliness_get(this->loan(), detail::loan(key_expr), ::z_move(cb_handler_pair.first), &opts);
-        __ZENOH_ERROR_CHECK(
-            res,
-            err,
-            "Failed to perform liveliness_get operation"
-        );
+        __ZENOH_ERROR_CHECK(res, err, "Failed to perform liveliness_get operation");
         if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
         return std::move(cb_handler_pair.second);
     }
@@ -840,4 +842,4 @@ public:
         return Timestamp(t);
     }
 };
-}
+}  // namespace zenoh

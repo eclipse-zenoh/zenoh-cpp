@@ -12,8 +12,9 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-#include "zenoh.hxx"
 #include <thread>
+
+#include "zenoh.hxx"
 
 using namespace zenoh;
 using namespace std::chrono_literals;
@@ -21,7 +22,29 @@ using namespace std::chrono_literals;
 #undef NDEBUG
 #include <assert.h>
 
-void pub_sub() {
+struct CommonAllocator {
+    Bytes alloc_with_data(const char data[]) { return Bytes::serialize(data); }
+};
+
+#if defined SHARED_MEMORY && defined UNSTABLE
+class SHMAllocator {
+    PosixShmProvider provider;
+
+   public:
+    SHMAllocator() : provider(MemoryLayout(1024 * 1024, AllocAlignment({2}))) {}
+
+    Bytes alloc_with_data(const char* data) {
+        const auto len = strlen(data);
+        auto alloc_result = provider.alloc_gc_defrag_blocking(len, AllocAlignment({0}));
+        ZShmMut&& buf = std::get<ZShmMut>(std::move(alloc_result));
+        memcpy(buf.data(), data, len+1);
+        return Bytes::serialize(std::move(buf));
+    }
+};
+#endif
+
+template <typename Talloc>
+void pub_sub(Talloc& alloc) {
     KeyExpr ke("zenoh/test");
     auto session1 = Session::open(Config::create_default());
     auto session2 = Session::open(Config::create_default());
@@ -33,17 +56,17 @@ void pub_sub() {
     std::vector<std::pair<std::string, std::string>> received_messages;
     {
         auto subscriber = session2.declare_subscriber(
-            ke, 
-            [&received_messages](const Sample& s) { 
-                received_messages.emplace_back(s.get_keyexpr().as_string_view(), s.get_payload().deserialize<std::string>()); 
+            ke,
+            [&received_messages](const Sample& s) {
+                received_messages.emplace_back(s.get_keyexpr().as_string_view(),
+                                               s.get_payload().deserialize<std::string>());
             },
-            [&subscriber_dropped]() { subscriber_dropped = true; }
-        );
+            [&subscriber_dropped]() { subscriber_dropped = true; });
 
         std::this_thread::sleep_for(1s);
 
-        publisher.put(Bytes::serialize("first"));
-        publisher.put(Bytes::serialize("second"));
+        publisher.put(alloc.alloc_with_data("first"));
+        publisher.put(alloc.alloc_with_data("second"));
 
         std::this_thread::sleep_for(1s);
     }
@@ -56,7 +79,8 @@ void pub_sub() {
     assert(subscriber_dropped);
 }
 
-void put_sub() {
+template <typename Talloc>
+void put_sub(Talloc& alloc) {
     KeyExpr ke("zenoh/test");
     auto session1 = Session::open(Config::create_default());
     auto session2 = Session::open(Config::create_default());
@@ -66,17 +90,17 @@ void put_sub() {
     std::vector<std::pair<std::string, std::string>> received_messages;
 
     auto subscriber = session2.declare_subscriber(
-        ke, 
-        [&received_messages](const Sample& s) { 
-            received_messages.emplace_back(s.get_keyexpr().as_string_view(), s.get_payload().deserialize<std::string>()); 
+        ke,
+        [&received_messages](const Sample& s) {
+            received_messages.emplace_back(s.get_keyexpr().as_string_view(),
+                                           s.get_payload().deserialize<std::string>());
         },
-        closures::none 
-    );
+        closures::none);
 
     std::this_thread::sleep_for(1s);
 
-    session1.put(ke, Bytes::serialize("first"));
-    session1.put(ke, Bytes::serialize("second"));
+    session1.put(ke, alloc.alloc_with_data("first"));
+    session1.put(ke, alloc.alloc_with_data("second"));
 
     std::this_thread::sleep_for(1s);
 
@@ -87,7 +111,8 @@ void put_sub() {
     assert(received_messages[1].second == "second");
 }
 
-void put_sub_fifo_channel() {
+template <typename Talloc>
+void put_sub_fifo_channel(Talloc& alloc) {
     KeyExpr ke("zenoh/test");
     auto session1 = Session::open(Config::create_default());
     auto session2 = Session::open(Config::create_default());
@@ -98,8 +123,8 @@ void put_sub_fifo_channel() {
 
     std::this_thread::sleep_for(1s);
 
-    session1.put(ke, Bytes::serialize("first"));
-    session1.put(ke, Bytes::serialize("second"));
+    session1.put(ke, alloc.alloc_with_data("first"));
+    session1.put(ke, alloc.alloc_with_data("second"));
 
     std::this_thread::sleep_for(1s);
 
@@ -116,7 +141,8 @@ void put_sub_fifo_channel() {
     assert(!static_cast<bool>(msg));
 }
 
-void put_sub_ring_channel() {
+template <typename Talloc>
+void put_sub_ring_channel(Talloc& alloc) {
     KeyExpr ke("zenoh/test");
     auto session1 = Session::open(Config::create_default());
     auto session2 = Session::open(Config::create_default());
@@ -127,8 +153,8 @@ void put_sub_ring_channel() {
 
     std::this_thread::sleep_for(1s);
 
-    session1.put(ke, Bytes::serialize("first"));
-    session1.put(ke, Bytes::serialize("second"));
+    session1.put(ke, alloc.alloc_with_data("first"));
+    session1.put(ke, alloc.alloc_with_data("second"));
 
     std::this_thread::sleep_for(1s);
 
@@ -142,10 +168,39 @@ void put_sub_ring_channel() {
 }
 
 
+template <typename Talloc, bool share_alloc = true>
+void test_with_alloc() {
+    if constexpr (share_alloc) {
+        Talloc alloc;
+        pub_sub(alloc);
+        put_sub(alloc);
+        put_sub_fifo_channel(alloc);
+        put_sub_ring_channel(alloc);
+    } else {
+        {
+            Talloc alloc;
+            pub_sub(alloc);
+        }
+        {
+            Talloc alloc;
+            put_sub(alloc);
+        }
+        {
+            Talloc alloc;
+            put_sub_fifo_channel(alloc);
+        }
+        {
+            Talloc alloc;
+            put_sub_ring_channel(alloc);
+        }
+    }
+}
 
 int main(int argc, char** argv) {
-    pub_sub();
-    put_sub();
-    put_sub_fifo_channel();
-    put_sub_ring_channel();
+    test_with_alloc<CommonAllocator>();
+#if defined SHARED_MEMORY && defined UNSTABLE
+    test_with_alloc<SHMAllocator>();
+    test_with_alloc<SHMAllocator, false>();
+#endif
+    return 0;
 }

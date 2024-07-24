@@ -19,7 +19,9 @@
 #include "../api/sample.hxx"
 #include "../api/reply.hxx"
 #include "../api/query.hxx"
+#if defined UNSTABLE
 #include "../api/id.hxx"
+#endif
 #include "../api/hello.hxx"
 
 // Ensure that function pointers are defined with extern C linkage
@@ -41,9 +43,11 @@ extern "C" {
         IClosure<void, const Query&>::call_from_context(context, detail::as_owned_cpp_obj<Query>(query));
     }
 
+#if defined UNSTABLE
     inline void _zenoh_on_id_call(const ::z_id_t* z_id, void* context) {
         IClosure<void, const Id&>::call_from_context(context, detail::as_copyable_cpp_obj<Id>(z_id));
     }
+#endif
 
     inline void _zenoh_on_hello_call(const ::z_loaned_hello_t* hello, void* context) {
         IClosure<void, const Hello&>::call_from_context(context, detail::as_owned_cpp_obj<Hello>(hello));

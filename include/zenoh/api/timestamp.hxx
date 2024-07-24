@@ -15,7 +15,9 @@
 #include "base.hxx"
 #include "../zenohc.hxx"
 #include "../detail/interop.hxx"
+#if defined UNSTABLE
 #include "id.hxx"
+#endif
 
 namespace zenoh {
 /// Zenoh <a href=https://zenoh.io/docs/manual/abstractions/#timestamp>Timestamp</a>.
@@ -29,9 +31,11 @@ public:
     /// @return time in NTP64 format.
     uint64_t get_time() const { return ::z_timestamp_ntp64_time(&this->inner()); }
 
+#if defined UNSTABLE
     /// @brief Get the unique id of the timestamp.
     /// @return Id associated with this timestamp.
     Id get_id() const { return Id(::z_timestamp_id(&this->inner())); }
+#endif
 };
 
 }
