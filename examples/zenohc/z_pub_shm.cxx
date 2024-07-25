@@ -26,15 +26,8 @@
 using namespace zenoh;
 using namespace std::chrono_literals;
 
-#ifdef ZENOHCXX_ZENOHC
-const char *default_value = "Pub from C++ zenoh-c!";
+const char *default_value = "Pub from C++ zenoh-c SHM!";
 const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-c-pub";
-#elif ZENOHCXX_ZENOHPICO
-const char *default_value = "Pub from C++ zenoh-pico!";
-const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-pico-pub";
-#else
-#error "Unknown zenoh backend"
-#endif
 
 int _main(int argc, char **argv) {
     const char *keyexpr = default_keyexpr;
@@ -42,31 +35,20 @@ int _main(int argc, char **argv) {
     const char *locator = nullptr;
     const char *config_file = nullptr;
 
-    getargs(argc, argv, {}, {{"key expression", &keyexpr}, {"value", &value}, {"locator", &locator}}
-#ifdef ZENOHCXX_ZENOHC
-            ,
-            {{"-c", {"config file", &config_file}}}
-#endif
-    );
+    getargs(argc, argv, {}, {{"key expression", &keyexpr}, {"value", &value}, {"locator", &locator}},
+            {{"-c", {"config file", &config_file}}});
 
     Config config = Config::create_default();
     config.insert_json(Z_CONFIG_SHARED_MEMORY_KEY, "true");
-#ifdef ZENOHCXX_ZENOHC
     if (config_file) {
         config = Config::from_file(config_file);
     }
-#endif
 
     ZResult err;
     if (locator) {
-#ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
         config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
-#elif ZENOHCXX_ZENOHPICO
-        config.insert(Z_CONFIG_CONNECT_KEY, locator, &err);
-#else
-#error "Unknown zenoh backend"
-#endif
+
         if (err != Z_OK) {
             std::cout << "Invalid locator: " << locator << std::endl;
             std::cout << "Expected value in format: tcp/192.168.64.3:7447" << std::endl;
