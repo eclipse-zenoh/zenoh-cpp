@@ -62,7 +62,11 @@ set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}")
 if(UNIX)
   # DEB package
   if(NOT DEBARCH)
-    set(DEBARCH ${CMAKE_SYSTEM_PROCESSOR})
+    execute_process(
+      COMMAND dpkg --print-architecture
+      OUTPUT_VARIABLE DEBARCH
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
   endif()
   message(STATUS "Configure DEB packaging for Linux ${DEBARCH}")
   list(APPEND CPACK_GENERATOR DEB)
