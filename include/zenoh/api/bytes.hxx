@@ -260,6 +260,18 @@ struct ZenohDeserializer<std::string> {
     }
 };
 
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+template <>
+struct ZenohDeserializer<ZShm> {
+    static ZShm deserialize(const Bytes& b, ZResult* err = nullptr) {
+        ZShm shm(nullptr);
+        __ZENOH_RESULT_CHECK(::z_bytes_deserialize_into_owned_shm(detail::loan(b), detail::as_owned_c_ptr(shm)), err,
+                             "Failed to deserialize into ZShm!");
+        return shm;
+    }
+};
+#endif
+
 template <class Allocator>
 struct ZenohDeserializer<std::vector<uint8_t, Allocator>> {
     static std::vector<uint8_t, Allocator> deserialize(const Bytes& b, ZResult* err = nullptr) {

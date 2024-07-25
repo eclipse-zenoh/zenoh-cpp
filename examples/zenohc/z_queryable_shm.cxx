@@ -10,39 +10,33 @@
 //
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
-//
+
 #include <stdio.h>
 #include <string.h>
 
 #include <chrono>
 #include <iostream>
-#include <limits>
-#include <sstream>
 #include <thread>
 
 #include "../getargs.h"
 #include "zenoh.hxx"
-
 using namespace zenoh;
 using namespace std::chrono_literals;
 
 #ifdef ZENOHCXX_ZENOHC
-const char *default_value = "Pub from C++ zenoh-c!";
-const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-c-pub";
+const char *expr = "demo/example/zenoh-cpp-zenoh-c-queryable";
+const char *value = "Queryable from C++ zenoh-c!";
 #elif ZENOHCXX_ZENOHPICO
-const char *default_value = "Pub from C++ zenoh-pico!";
-const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-pico-pub";
+const char *expr = "demo/example/zenoh-cpp-zenoh-pico-queryable";
+const char *value = "Queryable from C++ zenoh-pico!";
 #else
 #error "Unknown zenoh backend"
 #endif
+const char *locator = nullptr;
 
 int _main(int argc, char **argv) {
-    const char *keyexpr = default_keyexpr;
-    const char *value = default_value;
-    const char *locator = nullptr;
     const char *config_file = nullptr;
-
-    getargs(argc, argv, {}, {{"key expression", &keyexpr}, {"value", &value}, {"locator", &locator}}
+    getargs(argc, argv, {}, {{"key expression", &expr}, {"value", &value}, {"locator", &locator}}
 #ifdef ZENOHCXX_ZENOHC
             ,
             {{"-c", {"config file", &config_file}}}
@@ -74,33 +68,48 @@ int _main(int argc, char **argv) {
         }
     }
 
-    std::cout << "Opening session..." << std::endl;
+    printf("Opening session...\n");
     auto session = Session::open(std::move(config));
 
-    std::cout << "Declaring Publisher on '" << keyexpr << "'..." << std::endl;
-    auto pub = session.declare_publisher(KeyExpr(keyexpr));
+    KeyExpr keyexpr(expr);
 
-    std::cout << "Publisher on '" << keyexpr << "' declared" << std::endl;
+    std::cout << "Declaring Queryable on '" << expr << "'...\n";
 
     std::cout << "Preparing SHM Provider...\n";
-    PosixShmProvider provider(MemoryLayout(65536, AllocAlignment({2})));
+    PosixShmProvider provider(MemoryLayout(65536, AllocAlignment({0})));
 
-    std::cout << "Press CTRL-C to quit..." << std::endl;
-    for (int idx = 0; idx < std::numeric_limits<int>::max(); ++idx) {
-        std::this_thread::sleep_for(1s);
-        std::ostringstream ss;
-        ss << "[" << idx << "] " << value;
-        auto s = ss.str();  // in C++20 use .view() instead
-        std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
+    auto on_query = [provider = std::move(provider)](const Query &query) {
+        const char *payload_type = "RAW";
+        {
+            ZResult result;
+            query.get_payload().deserialize<ZShm>(&result);
+            if (result == Z_OK) {
+                payload_type = "SHM";
+            }
+        }
 
-        std::cout << "Allocating SHM buffer...\n";
-        const auto len = s.size() + 1;
+        const KeyExpr &keyexpr = query.get_keyexpr();
+        auto params = query.get_parameters();
+        std::cout << ">> [Queryable ] Received Query [" << payload_type << "] '" << keyexpr.as_string_view() << "?"
+                  << params << "' value = '" << query.get_payload().deserialize<std::string>() << "'\n";
+
+        const auto len = strlen(value) + 1;  // + NULL terminator
         auto alloc_result = provider.alloc_gc_defrag_blocking(len, AllocAlignment({0}));
         ZShmMut &&buf = std::get<ZShmMut>(std::move(alloc_result));
-        memcpy(buf.data(), s.data(), len);
+        memcpy(buf.data(), value, len);
 
-        pub.put(Bytes::serialize(std::move(buf)), {.encoding = Encoding("text/plain")});
+        query.reply(KeyExpr(expr), Bytes::serialize(std::move(buf)), {.encoding = Encoding("text/plain")});
+    };
+
+    auto on_drop_queryable = []() { std::cout << "Destroying queryable\n"; };
+
+    auto queryable = session.declare_queryable(keyexpr, on_query, on_drop_queryable);
+
+    std::cout << "Press CTRL-C to quit...\n";
+    while (true) {
+        std::this_thread::sleep_for(1s);
     }
+
     return 0;
 }
 

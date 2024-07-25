@@ -12,12 +12,9 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 #include <stdio.h>
-#include <string.h>
 
 #include <chrono>
 #include <iostream>
-#include <limits>
-#include <sstream>
 #include <thread>
 
 #include "../getargs.h"
@@ -26,23 +23,52 @@
 using namespace zenoh;
 using namespace std::chrono_literals;
 
-#ifdef ZENOHCXX_ZENOHC
-const char *default_value = "Pub from C++ zenoh-c!";
-const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-c-pub";
-#elif ZENOHCXX_ZENOHPICO
-const char *default_value = "Pub from C++ zenoh-pico!";
-const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-pico-pub";
-#else
-#error "Unknown zenoh backend"
+const char *kind_to_str(SampleKind kind) {
+    switch (kind) {
+        case SampleKind::Z_SAMPLE_KIND_PUT:
+            return "PUT";
+        case SampleKind::Z_SAMPLE_KIND_DELETE:
+            return "DELETE";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+void data_handler(const Sample &sample) {
+// if Zenoh is built without SHM support, the only buffer type it can receive is RAW
+#if !defined(SHARED_MEMORY)
+    const char *payload_type = "RAW";
 #endif
 
+// if Zenoh is built with SHM support but without SHM API (that is unstable), it can
+// receive buffers of any type, but there is no way to detect the buffer type
+#if defined(SHARED_MEMORY) && !defined(UNSTABLE)
+    const char *payload_type = "UNKNOWN";
+#endif
+
+// if Zenoh is built with SHM support and with SHM API, we can detect the exact buffer type
+#if defined(SHARED_MEMORY) && defined(UNSTABLE)
+    const char *payload_type = "RAW";
+    {
+        ZResult result;
+        sample.get_payload().deserialize<ZShm>(&result);
+        if (result == Z_OK) {
+            payload_type = "SHM";
+        }
+    }
+#endif
+
+    std::cout << ">> [Subscriber] Received [" << payload_type << "] " << kind_to_str(sample.get_kind()) << " ('"
+              << sample.get_keyexpr().as_string_view() << "' : '" << sample.get_payload().deserialize<std::string>()
+              << "')\n";
+}
+
 int _main(int argc, char **argv) {
-    const char *keyexpr = default_keyexpr;
-    const char *value = default_value;
+    const char *expr = "demo/example/**";
     const char *locator = nullptr;
     const char *config_file = nullptr;
 
-    getargs(argc, argv, {}, {{"key expression", &keyexpr}, {"value", &value}, {"locator", &locator}}
+    getargs(argc, argv, {}, {{"key expression", &expr}, {"locator", &locator}}
 #ifdef ZENOHCXX_ZENOHC
             ,
             {{"-c", {"config file", &config_file}}}
@@ -74,33 +100,22 @@ int _main(int argc, char **argv) {
         }
     }
 
+    KeyExpr keyexpr(expr);
+
     std::cout << "Opening session..." << std::endl;
     auto session = Session::open(std::move(config));
 
-    std::cout << "Declaring Publisher on '" << keyexpr << "'..." << std::endl;
-    auto pub = session.declare_publisher(KeyExpr(keyexpr));
+    std::cout << "Declaring Subscriber on '" << keyexpr.as_string_view() << "'..." << std::endl;
+    auto subscriber = session.declare_subscriber(keyexpr, data_handler, closures::none);
+#ifdef ZENOHCXX_ZENOHC
+    std::cout << "Subscriber on '" << subscriber.get_keyexpr().as_string_view() << "' declared" << std::endl;
+#endif
 
-    std::cout << "Publisher on '" << keyexpr << "' declared" << std::endl;
-
-    std::cout << "Preparing SHM Provider...\n";
-    PosixShmProvider provider(MemoryLayout(65536, AllocAlignment({2})));
-
-    std::cout << "Press CTRL-C to quit..." << std::endl;
-    for (int idx = 0; idx < std::numeric_limits<int>::max(); ++idx) {
+    std::cout << "Press CTRL-C to quit...\n";
+    while (true) {
         std::this_thread::sleep_for(1s);
-        std::ostringstream ss;
-        ss << "[" << idx << "] " << value;
-        auto s = ss.str();  // in C++20 use .view() instead
-        std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
-
-        std::cout << "Allocating SHM buffer...\n";
-        const auto len = s.size() + 1;
-        auto alloc_result = provider.alloc_gc_defrag_blocking(len, AllocAlignment({0}));
-        ZShmMut &&buf = std::get<ZShmMut>(std::move(alloc_result));
-        memcpy(buf.data(), s.data(), len);
-
-        pub.put(Bytes::serialize(std::move(buf)), {.encoding = Encoding("text/plain")});
     }
+
     return 0;
 }
 
