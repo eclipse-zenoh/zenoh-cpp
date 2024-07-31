@@ -57,10 +57,11 @@ int _main(int argc, char **argv) {
             const Sample& sample = reply.get_ok();
             std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
                       << sample.get_payload().deserialize<std::string>() << "')\n";
-            if (!sample.has_attachment()) return;
+            auto attachment = sample.get_attachment();
+            if (!attachment.has_value()) return;
             // we expect attachment in the form of key-value pairs
-            auto attachment = sample.get_attachment().deserialize<std::unordered_map<std::string, std::string>>();
-            for (auto&& [key, value]: attachment) {
+            auto attachment_deserialized = attachment->get().deserialize<std::unordered_map<std::string, std::string>>();
+            for (auto&& [key, value]: attachment_deserialized) {
                 std::cout << "   attachment: " << key << ": '" << value << "'\n";
             }
         } else {

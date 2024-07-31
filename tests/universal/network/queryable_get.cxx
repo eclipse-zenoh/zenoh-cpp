@@ -45,7 +45,7 @@ void queryable_get() {
         auto queryable = session1.declare_queryable(
             ke,
             [&queries](const Query& q) {
-                auto payload = q.get_payload().deserialize<int32_t>();
+                auto payload = q.get_payload()->get().deserialize<int32_t>();
                 queries.push_back(
                     QueryData{
                         .key = std::string(q.get_keyexpr().as_string_view()),
@@ -122,7 +122,7 @@ void queryable_get_channel() {
         assert(static_cast<bool>(query));
         assert(query.get_keyexpr() == selector);
         assert(query.get_parameters() == "ok");
-        assert(query.get_payload().deserialize<int32_t>() == 1);
+        assert(query.get_payload()->get().deserialize<int32_t>() == 1);
         query.reply(query.get_keyexpr(), Bytes::serialize(std::to_string(1)));
     }
 
@@ -141,7 +141,7 @@ void queryable_get_channel() {
         assert(static_cast<bool>(query));
         assert(query.get_keyexpr() == selector);
         assert(query.get_parameters() == "err");
-        assert(query.get_payload().deserialize<int32_t>() == 3);
+        assert(query.get_payload()->get().deserialize<int32_t>() == 3);
         query.reply_err(Bytes::serialize("err"));
     }
 

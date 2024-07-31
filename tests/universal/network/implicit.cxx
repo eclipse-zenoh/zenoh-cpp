@@ -25,8 +25,8 @@ void put_sub() {
     assert(alive);
     assert(msg.get_keyexpr() == "zenoh/test");
     assert(msg.get_payload().deserialize<std::string>() == "data");
-    assert(msg.has_attachment());
-    assert((msg.get_attachment().deserialize<std::vector<int32_t>>() == std::vector<int32_t>{-1, 10, 15000}));
+    assert(msg.get_attachment().has_value());
+    assert((msg.get_attachment()->get().deserialize<std::vector<int32_t>>() == std::vector<int32_t>{-1, 10, 15000}));
 }
 
 
