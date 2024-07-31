@@ -16,7 +16,7 @@ readonly archive_rpm=$out/$repo_name-$version-rpm-pkgs.zip
 # Make packages into build/packages
 mkdir -p build
 cd build
-cmake ../install
+cmake -DZENOHCXX_ZENOHC=OFF ..
 cmake --build . --target package
 ls -R
 
