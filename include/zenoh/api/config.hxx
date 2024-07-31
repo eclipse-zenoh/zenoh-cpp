@@ -88,6 +88,21 @@ class Config : public Owned<::z_owned_config_t> {
         __ZENOH_RESULT_CHECK(::z_config_client(&c._0, p.data(), p.size()), err, "Failed to create client config");
         return c;
     }
+
+    /// @brief Create a configuration by parsing a file with path stored in ZENOH_CONFIG environment variable.
+    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @return the ``Config`` object.
+    /// @note zenoh-pico only.
+    static Config from_env(ZResult* err = nullptr) {
+        Config c(nullptr);
+        __ZENOH_RESULT_CHECK(
+            ::zc_config_from_env(&c._0),
+            err,
+            "Failed to create config from environment variable"
+        );
+        return c;
+    }
 #endif
 
 #ifdef ZENOHCXX_ZENOHPICO

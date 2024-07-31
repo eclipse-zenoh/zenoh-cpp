@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <functional>
 #include <optional>
 #include <string_view>
 
@@ -47,29 +48,29 @@ class Query : public Owned<::z_owned_query_t> {
 
     /// @brief Get the payload of the query.
     /// @return payload of the query.
-    const Bytes& get_payload() const { return detail::as_owned_cpp_obj<Bytes>(::z_query_payload(this->loan())); }
+    std::optional<std::reference_wrapper<const Bytes>> get_payload() const {
+        auto payload = ::z_query_payload(this->loan());
+        if (payload == nullptr) return {};
+        return std::cref(detail::as_owned_cpp_obj<Bytes>(payload)); 
+    }
 
     /// @brief Get the encoding of the query.
     /// @return encoding of the query.
-    const Encoding& get_encoding() const {
-        return detail::as_owned_cpp_obj<Encoding>(::z_query_encoding(this->loan()));
+    std::optional<std::reference_wrapper<const Encoding>> get_encoding() const {
+        auto encoding = ::z_query_encoding(this->loan());
+        if (encoding == nullptr) return {};
+        return std::cref(detail::as_owned_cpp_obj<Encoding>(::z_query_encoding(this->loan())));
     }
 
-    /// @brief Checks if query contains an attachment. Will throw a ZException if ``Reply::has_attachment`` returns
-    /// ``false``.
-    /// @return ``true`` if query contains an attachment.
-    bool has_attachment() const { return ::z_query_attachment(this->loan()) != nullptr; }
 
     /// @brief Get the attachment of the query.
-    ///
-    /// Will throw a ZException if ``Query::has_attachment`` returns ``false``.
     /// @return attachment of the query.
-    const Bytes& get_attachment() const {
+    std::optional<std::reference_wrapper<const Bytes>> get_attachment() const {
         auto attachment = ::z_query_attachment(this->loan());
         if (attachment == nullptr) {
-            throw ZException("Query does not contain an attachment", Z_EINVAL);
+            return {};
         }
-        return detail::as_owned_cpp_obj<Bytes>(attachment);
+        return std::cref(detail::as_owned_cpp_obj<Bytes>(attachment));
     }
 
     /// @brief Options passed to the ``Query::reply`` operation.
@@ -195,6 +196,15 @@ class Query : public Owned<::z_owned_query_t> {
         __ZENOH_RESULT_CHECK(::z_query_reply_del(this->loan(), detail::loan(key_expr), &opts), err,
                              "Failed to send reply del");
     }
+    
+    /// @brief Construct a a shallow copy of this Query.
+    ///
+    /// The query responses will be sent only when the last clone is destroyed.
+    Query clone() const {
+        Query q(nullptr);
+        ::z_query_clone(&q._0, this->loan());
+        return q;
+    };
 };
 
 }  // namespace zenoh

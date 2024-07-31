@@ -62,19 +62,27 @@ int _main(int argc, char **argv) {
     PosixShmProvider provider(MemoryLayout(65536, AllocAlignment({0})));
 
     auto on_query = [provider = std::move(provider)](const Query &query) {
-        const char *payload_type = "RAW";
-        {
-            ZResult result;
-            query.get_payload().deserialize<ZShm>(&result);
-            if (result == Z_OK) {
+        auto payload = query.get_payload();
+
+        const char *payload_type = "";
+        if (payload.has_value()) {
+            ZResult result;  
+            payload->get().deserialize<ZShm>(&result);
+            if (result == Z_OK) { 
                 payload_type = "SHM";
+            } else {
+                payload_type = "RAW";
             }
         }
 
         const KeyExpr &keyexpr = query.get_keyexpr();
         auto params = query.get_parameters();
-        std::cout << ">> [Queryable ] Received Query [" << payload_type << "] '" << keyexpr.as_string_view() << "?"
-                  << params << "' value = '" << query.get_payload().deserialize<std::string>() << "'\n";
+        std::cout << ">> [Queryable ] Received Query [" << payload_type << "] '" << keyexpr.as_string_view() << "?" 
+            << params;
+        if (payload.has_value()) {
+            std::cout << "' value = '" << payload->get().deserialize<std::string>();
+        }
+        std::cout << "'\n";
 
         const auto len = strlen(value) + 1;  // + NULL terminator
         auto alloc_result = provider.alloc_gc_defrag_blocking(len, AllocAlignment({0}));

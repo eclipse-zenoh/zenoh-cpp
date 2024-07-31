@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include <functional>
+
 #include "base.hxx"
 #include "../detail/interop.hxx"
 #include "enums.hxx"
@@ -50,18 +52,12 @@ public:
     /// @return ``zenoh::SampleKind`` value (PUT or DELETE).
     SampleKind get_kind() const { return ::z_sample_kind(this->loan()); }
 
-    /// @brief Check if sample contains an attachment.
-    /// @return ``true`` if sample contains an attachment, ``false`` otherwise.
-    bool has_attachment() const { return ::z_sample_attachment(this->loan()) != nullptr; }
-
-    /// @brief Get the attachment of this sample. Will throw a ZException if ``Sample::has_attachment`` returns ``false``.
+    /// @brief Get the attachment of this sample.
     /// @return ``Bytes`` object representing sample attachment.
-    const Bytes& get_attachment() const {
+    std::optional<std::reference_wrapper<const Bytes>> get_attachment() const {
         auto attachment = ::z_sample_attachment(this->loan());
-        if (attachment == nullptr) {
-            throw ZException("Sample does not contain an attachment", Z_EINVAL);
-        }
-        return detail::as_owned_cpp_obj<Bytes>(attachment); 
+        if (attachment == nullptr) return {};
+        return std::cref(detail::as_owned_cpp_obj<Bytes>(attachment)); 
     }
 
     /// @brief Get the timestamp of this sample.

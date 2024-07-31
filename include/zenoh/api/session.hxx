@@ -166,6 +166,12 @@ class Session : public Owned<::z_owned_session_t> {
         QueryTarget target = QueryTarget::Z_QUERY_TARGET_ALL;
         /// @brief The replies consolidation strategy to apply on replies to the query.
         QueryConsolidation consolidation = QueryConsolidation();
+        /// @brief The priority of the get message.
+        Priority priority = Z_PRIORITY_DEFAULT;
+        /// @brief The congestion control to apply when routing get message.
+        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
+        /// @brief Whether Zenoh will NOT wait to batch get message with others to reduce the bandwith.
+        bool is_express = false;
         /// @brief An optional payload of the query.
         std::optional<Bytes> payload = {};
         /// @brief  An optional encoding of the query payload and/or attachment.
@@ -208,6 +214,9 @@ class Session : public Owned<::z_owned_session_t> {
         z_get_options_default(&opts);
         opts.target = options.target;
         opts.consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation);
+        opts.congestion_control = options.congestion_control;
+        opts.priority = options.priority;
+        opts.is_express = options.is_express;
         opts.payload = detail::as_owned_c_ptr(options.payload);
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
@@ -505,6 +514,10 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief Allowed destination.
         Locality allowed_destination = ::zc_locality_default();
 #endif
+#if defined(ZENOHCXX_ZENOHC)
+        /// @brief Default encoding to use for Publisher::put.
+        std::optional<Encoding> encoding = {};
+#endif
 
         /// @name Methods
         /// @brief Create default option settings.
@@ -527,6 +540,9 @@ class Session : public Owned<::z_owned_session_t> {
         opts.is_express = options.is_express;
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         opts.allowed_destination = options.allowed_destination;
+#endif
+#if defined(ZENOHCXX_ZENOHC)
+        opts.encoding = detail::as_owned_c_ptr(options.encoding);
 #endif
 
         Publisher p(nullptr);

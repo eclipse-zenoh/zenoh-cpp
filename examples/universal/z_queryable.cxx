@@ -77,8 +77,12 @@ int _main(int argc, char **argv) {
     auto on_query = [](const Query &query) {
         const KeyExpr &keyexpr = query.get_keyexpr();
         auto params = query.get_parameters();
-        std::cout << ">> [Queryable ] Received Query '" << keyexpr.as_string_view() << "?" << params << "' value = '"
-                  << query.get_payload().deserialize<std::string>() << "'\n";
+        std::cout << ">> [Queryable ] Received Query '" << keyexpr.as_string_view() << "?" << params;
+        auto payload = query.get_payload();
+        if (payload.has_value()) {
+            std::cout << "' value = '" << payload->get().deserialize<std::string>();
+        }
+        std::cout << "'\n";
         query.reply(KeyExpr(expr), Bytes::serialize(value), {.encoding = Encoding("text/plain")});
     };
 

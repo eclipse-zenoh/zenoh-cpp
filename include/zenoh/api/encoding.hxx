@@ -35,6 +35,12 @@ class Encoding : public Owned<::z_owned_encoding_t> {
                              std::string("Failed to create encoding from ").append(s));
     }
 
+    /// @brief Copy contructor
+    Encoding(const Encoding& other)
+        :Encoding() {
+        ::z_encoding_clone(&this->_0, other.loan());
+    };
+
     /// @name Methods
 
     /// @brief Get string representation of encoding.
@@ -45,6 +51,31 @@ class Encoding : public Owned<::z_owned_encoding_t> {
         ::z_drop(::z_move(s));
         return out;
     }
+
+#if defined(ZENOHCXX_ZENOHC)
+    /// @brief Set a schema to this encoding from a string.
+    /// 
+    /// Zenoh does not define what a schema is and its semantics is left to the implementer.
+    /// E.g. a common schema for `text/plain` encoding is `utf-8`.
+    void set_schema(std::string_view schema, ZResult* err = nullptr) {
+        __ZENOH_RESULT_CHECK(
+            ::z_encoding_set_schema_from_substr(this->loan(), schema.data(), schema.size()),
+            err,
+            "Failed to set encoding schema"
+        );
+    }
+#endif
+
+    /// @name Operators
+
+    /// @brief Assignment operator.
+    Encoding& operator=(const Encoding& other) {
+        if (this != &other) {
+            ::z_drop(z_move(this->_0));
+            ::z_encoding_clone(&this->_0, other.loan());
+        }
+        return *this;
+    };
 };
 
 }  // namespace zenoh
