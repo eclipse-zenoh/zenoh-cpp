@@ -41,6 +41,8 @@ class Encoding : public Owned<::z_owned_encoding_t> {
         ::z_encoding_clone(&this->_0, other.loan());
     };
 
+    Encoding(Encoding&& other) = default;
+
     /// @name Methods
 
     /// @brief Get string representation of encoding.
@@ -76,6 +78,8 @@ class Encoding : public Owned<::z_owned_encoding_t> {
         }
         return *this;
     };
+
+    Encoding& operator=(Encoding&& other) = default;
 };
 
 }  // namespace zenoh

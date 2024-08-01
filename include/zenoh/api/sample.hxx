@@ -87,7 +87,7 @@ public:
         return detail::as_owned_cpp_obj<SourceInfo>(::z_sample_source_info(this->loan())); 
     }
 #endif
-    /// @brief Construct a copy of this sample.
+    /// @brief Construct a shallow copy of this sample.
     Sample clone() const {
         Sample s(nullptr);
         ::z_sample_clone(&s._0, this->loan());
