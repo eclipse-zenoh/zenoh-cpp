@@ -25,6 +25,7 @@
 #include <cstdint>
 #include <deque>
 #include <iterator>
+#include <functional>
 #include <memory>
 #include <map>
 #include <optional>
