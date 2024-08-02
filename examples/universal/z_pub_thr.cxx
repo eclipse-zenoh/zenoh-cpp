@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include <vector>
+#include <numeric>
 
 #include "../getargs.h"
 #include "zenoh.hxx"
@@ -34,7 +35,6 @@ int _main(int argc, char **argv) {
     );
 
     size_t len = atoi(payload_size);
-    std::vector<uint8_t> payload(len, 1);
 
     Config config = Config::create_default();
 #ifdef ZENOHCXX_ZENOHC
@@ -59,6 +59,10 @@ int _main(int argc, char **argv) {
         }
     }
 
+    std::vector<uint8_t> data(len);
+    std::iota(data.begin(), data.end(), uint8_t{0});
+    Bytes payload = std::move(data);
+
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
@@ -66,7 +70,7 @@ int _main(int argc, char **argv) {
     auto pub = session.declare_publisher(KeyExpr(keyexpr), {.congestion_control = Z_CONGESTION_CONTROL_BLOCK});
 
     printf("Press CTRL-C to quit...\n");
-    while (1) pub.put(Bytes::serialize(payload, ZenohCodec<ZenohCodecType::AVOID_COPY>()));
+    while (1) pub.put(payload.clone());
 }
 
 int main(int argc, char **argv) {
