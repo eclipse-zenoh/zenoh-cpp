@@ -438,9 +438,9 @@ class ZenohCodec {
     std::function<void(void* data)> _alias_guard;
 
     template<class G>
-    ZenohCodec(G alias_guard) :_alias_guard(alias_guard) {};
+    ZenohCodec(G alias_guard) :_alias_guard(alias_guard) {}
 public:
-    ZenohCodec() :_alias_guard() {};
+    ZenohCodec() :_alias_guard() {}
 
     /// @brief Serialize pointer and lenght by copying.
     Bytes serialize(const Slice& s) {
