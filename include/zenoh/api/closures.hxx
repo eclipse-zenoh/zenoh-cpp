@@ -12,8 +12,10 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #pragma once 
-
 namespace zenoh::closures {
-    inline void none() {};
-    using None = decltype(&none);
+    namespace detail {
+        inline void none() {};
+    }
+    static auto none = &detail::none;
+    using None = decltype(none);
 }

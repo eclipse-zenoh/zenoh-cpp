@@ -82,7 +82,7 @@ int _main(int argc, char **argv) {
     auto session = Session::open(std::move(config));
 
     std::cout << "Declaring Subscriber on '" << keyexpr.as_string_view() << "'..." << std::endl;
-    auto subscriber = session.declare_subscriber(keyexpr, data_handler, closures::none);
+    auto subscriber = session.declare_subscriber(keyexpr, &data_handler, closures::none);
 #ifdef ZENOHCXX_ZENOHC
     std::cout << "Subscriber on '" << subscriber.get_keyexpr().as_string_view() << "' declared" << std::endl;
 #endif
