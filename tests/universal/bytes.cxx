@@ -13,12 +13,15 @@
 //
 
 #include "zenoh.hxx"
-using namespace zenoh;
 
+#include <iostream>
 #undef NDEBUG
 #include <assert.h>
 
+using namespace zenoh;
+
 void reader_writer() {
+    std::cout << "running reader_writer\n";
     std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     Bytes b;
     {
@@ -38,6 +41,7 @@ void reader_writer() {
 }
 
 void reader_seek_tell() {
+    std::cout << "running reader_seek_tell\n";
     std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     Bytes b;
     {
@@ -73,6 +77,7 @@ void reader_seek_tell() {
 }
 
 void serde_basic() {
+    std::cout << "running serde_basic\n";
     std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     Bytes b = Bytes::serialize(data);
     assert(b.deserialize<std::vector<uint8_t>>() == data);
@@ -119,6 +124,7 @@ void serde_basic() {
 }
 
 void serde_iter() {
+    std::cout << "running serde_iter\n";
     std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     auto b = Bytes::serialize_from_iter(data.begin(), data.end());
     auto it = b.iter();
@@ -130,6 +136,7 @@ void serde_iter() {
 }
 
 void serde_advanced() {
+    std::cout << "running serde_advanced\n";
     std::vector<float> v = {0.1f, 0.2f, 0.3f};
     auto b = Bytes::serialize(v);
     assert(b.deserialize<decltype(v)>() == v);
@@ -171,6 +178,7 @@ void serde_advanced() {
 }
 
 void serde_shared() {
+    std::cout << "running serde_shared\n";
     std::vector<uint8_t> v = {1, 2, 3, 4, 5};
     auto v_ptr = std::make_shared<std::vector<uint8_t>>(std::move(v));
     auto b = Bytes::serialize(v_ptr);
@@ -272,6 +280,7 @@ CustomStruct CustomCodec::deserialize<CustomStruct>(const Bytes& b, ZResult* err
 }
 
 void serde_custom() {
+    std::cout << "running serde_custom\n";
     CustomStruct s;
     s.d = 0.5;
     s.u = 500;
