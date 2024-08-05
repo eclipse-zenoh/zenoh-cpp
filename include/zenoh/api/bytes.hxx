@@ -24,6 +24,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <deque>
+#include <iterator>
+#include <functional>
+#include <memory>
 #include <map>
 #include <optional>
 #include <set>
@@ -41,14 +44,16 @@ extern "C" {
 inline bool _zenoh_encode_iter(z_owned_bytes_t* b, void* context) {
     return IClosure<bool, z_owned_bytes_t*>::call_from_context(context, b);
 }
+
+inline void _zenoh_drop_with_context(void* data, void* context) {
+    (void)data;
+    IDroppable::delete_from_context(context);
+}
 }
 
 }  // namespace detail::closures
 
-enum class ZenohCodecType { STANDARD, AVOID_COPY };
-
-template <ZenohCodecType ZT = ZenohCodecType::STANDARD>
-struct ZenohCodec;
+class ZenohCodec;
 
 /// @brief A Zenoh serialized data representation.
 class Bytes : public Owned<::z_owned_bytes_t> {
@@ -81,9 +86,31 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     /// @param data instance of T to serialize.
     /// @param codec instance of Codec to use.
     /// @return serialized data.
-    template <class T, class Codec = ZenohCodec<>>
+    template <class T, class Codec = ZenohCodec>
     static Bytes serialize(T&& data, Codec codec = Codec()) {
         return codec.serialize(std::forward<T>(data));
+    }
+
+    template <class ForwardIt, class Transform, class Codec = ZenohCodec>
+    static Bytes serialize_from_iter_transformed(ForwardIt begin, ForwardIt end, Transform t, Codec codec = Codec()) {
+        Bytes out;
+        auto f = [current = begin, end, &codec, &t](z_owned_bytes_t* b) mutable {
+            if (current == end) {
+                ::z_null(b);
+                return false;
+            }
+            auto it = current++;
+            *b = Bytes::serialize(t(it), codec).take();
+            return true;
+        };
+        using F = decltype(f);
+
+        using ClosureType = typename detail::closures::Closure<F, closures::None, bool, z_owned_bytes_t*>;
+        auto closure = ClosureType(std::forward<F>(f), closures::none);
+
+        ::z_bytes_from_iter(detail::as_owned_c_ptr(out), detail::closures::_zenoh_encode_iter,
+                                      closure.as_context());
+        return out;
     }
 
     /// @brief Serializes multiple pieces of data between begin and end iterators.
@@ -95,26 +122,13 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     /// @param end end of the iterator range.
     /// @param codec codec instance.
     /// @return serialized data.
-    template <class ForwardIt, class Codec = ZenohCodec<>>
+    template <class ForwardIt, class Codec = ZenohCodec>
     static Bytes serialize_from_iter(ForwardIt begin, ForwardIt end, Codec codec = Codec()) {
-        Bytes out;
-        auto f = [current = begin, end, &codec](z_owned_bytes_t* b) mutable {
-            if (current == end) {
-                ::z_null(b);
-                return false;
-            }
-            *b = Bytes::serialize(*current, codec).take();
-            current++;
-            return true;
-        };
-        using F = decltype(f);
-
-        using ClosureType = typename detail::closures::Closure<F, closures::None, bool, z_owned_bytes_t*>;
-        auto closure = ClosureType(std::forward<F>(f), closures::none);
-
-        ::z_bytes_serialize_from_iter(detail::as_owned_c_ptr(out), detail::closures::_zenoh_encode_iter,
-                                      closure.as_context());
-        return out;
+        return serialize_from_iter_transformed(
+            begin, end, 
+            [](ForwardIt it) -> typename ForwardIt::reference { return *it; },
+            codec
+        );
     }
 
     /// @brief Deserialize into specified type.
@@ -125,7 +139,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     /// thrown in case of error.
     /// @param codec codec instance.
     /// @return deserialzied data.
-    template <class T, class Codec = ZenohCodec<>>
+    template <class T, class Codec = ZenohCodec>
     T deserialize(ZResult* err, Codec codec = Codec()) const {
         return codec.template deserialize<T>(*this, err);
     }
@@ -135,7 +149,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     /// @tparam T type to deserialize into.
     /// @tparam Codec codec to use.
     /// @return deserialzied data.
-    template <class T, class Codec = ZenohCodec<>>
+    template <class T, class Codec = ZenohCodec>
     T deserialize(Codec codec = Codec()) const {
         return codec.template deserialize<T>(*this, nullptr);
     }
@@ -399,29 +413,94 @@ __ZENOH_DESERIALIZE_ARITHMETIC(double, double);
 #undef __ZENOH_DESERIALIZE_ARITHMETIC
 }  // namespace detail
 
-template <ZenohCodecType ZT>
-struct ZenohCodec {
-    static Bytes serialize(std::string_view s) {
-        return ZenohCodec::serialize(std::make_pair(reinterpret_cast<const uint8_t*>(s.data()), s.size()));
+struct Slice {
+    const uint8_t* data;
+    size_t len;
+};
+
+auto make_slice(const uint8_t* data, size_t len) {
+    return Slice{data, len};
+};
+
+template<class Deleter>
+struct OwnedSlice {
+    uint8_t* data;
+    size_t len;
+    Deleter d;
+};
+
+template<class Deleter>
+auto make_owned_slice(uint8_t* data, size_t len, Deleter&& d) {
+    return OwnedSlice<std::remove_reference_t<Deleter>>{data, len, std::forward<Deleter>(d)};
+};
+
+class ZenohCodec {
+    std::function<void(void* data)> _alias_guard;
+
+    template<class G>
+    ZenohCodec(G alias_guard) :_alias_guard(alias_guard) {}
+public:
+    ZenohCodec() :_alias_guard() {}
+
+    /// @brief Serialize pointer and lenght by copying.
+    Bytes serialize(const Slice& s) {
+        Bytes b;
+        if (!this->_alias_guard) {
+            ::z_bytes_serialize_from_buf(detail::as_owned_c_ptr(b), s.data, s.len);
+        } else {
+            b = serialize(make_owned_slice(const_cast<uint8_t*>(s.data), s.len,  this->_alias_guard));
+        }
+        return b;
     }
 
-    static Bytes serialize(const char* s) { return ZenohCodec::serialize(std::string_view(s)); }
+    /// @brief Serialize pointer and length by moving.
+    template<class Deleter> 
+    Bytes serialize(OwnedSlice<Deleter>&& s) {
+        Bytes b;
+        uint8_t* data = s.data;
+        size_t len = s.len;
+        auto d = [s_in = std::move(s)]() mutable {
+            s_in.d(s_in.data);
+        };
+        using D = decltype(d);
+        using Dval = std::remove_reference_t<D>;
+        using DroppableType = typename detail::closures::Droppable<Dval>;
+        auto drop = DroppableType::into_context(std::forward<D>(d));
+        ::z_bytes_from_buf(detail::as_owned_c_ptr(b), data, len, detail::closures::_zenoh_drop_with_context, drop);
+        return b;
+    }
 
-    static Bytes serialize(const std::string& s) { return ZenohCodec::serialize(static_cast<std::string_view>(s)); }
+    Bytes serialize(std::string_view s) {
+        return serialize(Slice{reinterpret_cast<const uint8_t*>(s.data()), s.size()});
+    }
 
-    static Bytes serialize(Bytes&& b) { return std::move(b); }
+    Bytes serialize(const char* s) { return serialize(std::string_view(s)); }
 
-    static Bytes serialize(const Bytes& b) { return b.clone(); }
+    Bytes serialize(const std::string& s) { return serialize(static_cast<std::string_view>(s)); }
+    Bytes serialize(std::string&& s) {
+        std::string *ptr = new std::string(std::move(s));
+        auto deleter = [p = ptr](void *data) mutable {
+            (void)data;
+            delete p;
+        };
+        return serialize(make_owned_slice(
+            const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(ptr->c_str())), ptr->size(), std::move(deleter))
+        ); 
+    }
+
+    Bytes serialize(Bytes&& b) { return std::move(b); }
+
+    Bytes serialize(const Bytes& b) { return b.clone(); }
 
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-    static Bytes serialize(ZShm&& shm, ZResult* err = nullptr) {
+    Bytes serialize(ZShm&& shm, ZResult* err = nullptr) {
         Bytes b;
         __ZENOH_RESULT_CHECK(::z_bytes_serialize_from_shm(detail::as_owned_c_ptr(b), detail::as_owned_c_ptr(shm)), err,
                              "Failed to serialize ZShm");
         return b;
     }
 
-    static Bytes serialize(ZShmMut&& shm, ZResult* err = nullptr) {
+    Bytes serialize(ZShmMut&& shm, ZResult* err = nullptr) {
         Bytes b;
         __ZENOH_RESULT_CHECK(::z_bytes_serialize_from_shm_mut(detail::as_owned_c_ptr(b), detail::as_owned_c_ptr(shm)),
                              err, "Failed to serialize ZShmMut");
@@ -429,67 +508,151 @@ struct ZenohCodec {
     }
 #endif
 
-    static Bytes serialize(const std::pair<const uint8_t*, size_t>& s) {
-        Bytes b;
-        if constexpr (ZT == ZenohCodecType::AVOID_COPY) {
-            ::z_bytes_serialize_from_slice(detail::as_owned_c_ptr(b), s.first, s.second);
-        } else {
-            ::z_bytes_serialize_from_slice_copy(detail::as_owned_c_ptr(b), s.first, s.second);
-        }
+    template <class Allocator>
+    Bytes serialize(const std::vector<uint8_t, Allocator>& s) {
+        auto b = ZenohCodec::serialize(make_slice(s.data(), s.size()));
         return b;
     }
 
-    static Bytes serialize(const std::pair<uint8_t*, size_t>& s) {
-        return serialize(std::pair<const uint8_t*, size_t>(s.first, s.second));
-    }
-
     template <class Allocator>
-    static Bytes serialize(const std::vector<uint8_t, Allocator>& s) {
-        return ZenohCodec::serialize(std::make_pair<const uint8_t*, size_t>(s.data(), s.size()));
+    Bytes serialize(std::vector<uint8_t, Allocator>&& s) {
+        std::vector<uint8_t, Allocator>* ptr = new std::vector<uint8_t, Allocator>(std::move(s));
+        auto deleter = [p = ptr](void *data) mutable {
+            (void)data;
+            delete p;
+        };
+        return serialize(make_owned_slice(ptr->data(), ptr->size(), std::move(deleter))); 
     }
 
     template <class T, class Allocator>
-    static Bytes serialize(const std::vector<T, Allocator>& s) {
-        return Bytes::serialize_from_iter(s.begin(), s.end());
+    Bytes serialize(const std::vector<T, Allocator>& s) {
+        return Bytes::serialize_from_iter(s.begin(), s.end(), *this);
     }
 
     template <class T, class Allocator>
-    static Bytes serialize(const std::deque<T, Allocator>& s) {
-        return Bytes::serialize_from_iter(s.begin(), s.end());
+    Bytes serialize(std::vector<T, Allocator>&& s) {
+        auto b = Bytes::serialize_from_iter(std::make_move_iterator(s.begin()), std::make_move_iterator(s.end()), *this);
+        s.clear();
+        return b;
+    }
+
+    template <class T, class Allocator>
+    Bytes serialize(const std::deque<T, Allocator>& s) {
+        return Bytes::serialize_from_iter(s.begin(), s.end(), *this);
+    }
+
+    template <class T, class Allocator>
+    Bytes serialize(std::deque<T, Allocator>&& s) {
+        auto b = Bytes::serialize_from_iter(std::make_move_iterator(s.begin()), std::make_move_iterator(s.end()), *this);
+        s.clear();
+        return b;
     }
 
     template <class K, class H, class E, class Allocator>
-    static Bytes serialize(const std::unordered_set<K, H, E, Allocator>& s) {
-        return Bytes::serialize_from_iter(s.begin(), s.end());
+    Bytes serialize(const std::unordered_set<K, H, E, Allocator>& s) {
+        return Bytes::serialize_from_iter(s.begin(), s.end(), *this);
+    }
+
+    template <class K, class H, class E, class Allocator>
+    Bytes serialize(std::unordered_set<K, H, E, Allocator>&& s) {
+        return Bytes::serialize_from_iter_transformed(
+            s.begin(), s.end(),
+            [&s](typename std::unordered_set<K, H, E, Allocator>::iterator it) -> K {
+                return std::move(s.extract(it).value());
+            },
+            *this
+        );
     }
 
     template <class K, class C, class Allocator>
-    static Bytes serialize(const std::set<K, C, Allocator>& s) {
-        return Bytes::serialize_from_iter(s.begin(), s.end());
+    Bytes serialize(const std::set<K, C, Allocator>& s) {
+        return Bytes::serialize_from_iter(s.begin(), s.end(), *this);
+    }
+
+    template <class K, class C, class Allocator>
+    Bytes serialize(std::set<K, C, Allocator>&& s) {
+        return Bytes::serialize_from_iter_transformed(
+            s.begin(), s.end(),
+            [&s](typename std::set<K, C, Allocator>::iterator it) -> K {
+                return std::move(s.extract(it).value());
+            }
+        );
     }
 
     template <class K, class V, class H, class E, class Allocator>
-    static Bytes serialize(const std::unordered_map<K, V, H, E, Allocator>& s) {
-        return Bytes::serialize_from_iter(s.begin(), s.end());
+    Bytes serialize(const std::unordered_map<K, V, H, E, Allocator>& s) {
+        return Bytes::serialize_from_iter(s.begin(), s.end(), *this);
+    }
+
+    template <class K, class V, class H, class E, class Allocator>
+    Bytes serialize(std::unordered_map<K, V, H, E, Allocator>&& s) {
+        return Bytes::serialize_from_iter_transformed(
+            s.begin(), s.end(),
+            [&s](typename std::unordered_map<K, V, H, E, Allocator>::iterator it) {
+                auto node = s.extract(it);
+                return std::pair<K, V>(std::move(node.key()), std::move(node.mapped()));
+            },
+            *this
+        );
+    }
+
+    
+
+    template <class K, class V, class C, class Allocator>
+    Bytes serialize(const std::map<K, V, C, Allocator>& s) {
+        return Bytes::serialize_from_iter(s.begin(), s.end(), *this);
     }
 
     template <class K, class V, class C, class Allocator>
-    static Bytes serialize(const std::map<K, V, C, Allocator>& s) {
-        return Bytes::serialize_from_iter(s.begin(), s.end());
+    Bytes serialize(std::map<K, V, C, Allocator>&& s) {
+        return Bytes::serialize_from_iter_transformed(
+            s.begin(), s.end(),
+            [&s](typename std::map<K, V, C, Allocator>::iterator it) {
+                auto node = s.extract(it);
+                return std::pair<K, V>(std::move(node.key()), std::move(node.mapped()));
+            },
+            *this
+        );
     }
 
     template <class A, class B>
-    static Bytes serialize(const std::pair<A, B>& s) {
-        auto ba = ZenohCodec::serialize(s.first);
-        auto bb = ZenohCodec::serialize(s.second);
+    Bytes serialize(const std::pair<A, B>& s) {
+        auto ba = serialize(s.first);
+        auto bb = serialize(s.second);
         Bytes b;
-        ::z_bytes_serialize_from_pair(detail::as_owned_c_ptr(b), ::z_move(*detail::as_owned_c_ptr(ba)),
+        ::z_bytes_from_pair(detail::as_owned_c_ptr(b), ::z_move(*detail::as_owned_c_ptr(ba)),
                                       ::z_move(*detail::as_owned_c_ptr(bb)));
         return b;
     }
 
+    template <class A, class B>
+    Bytes serialize(std::pair<A, B>&& s) {
+        auto ba = serialize(std::move(s.first));
+        auto bb = serialize(std::move(s.second));
+        Bytes b;
+        ::z_bytes_from_pair(detail::as_owned_c_ptr(b), ::z_move(*detail::as_owned_c_ptr(ba)),
+                                      ::z_move(*detail::as_owned_c_ptr(bb)));
+        return b;
+    }
+
+    template<class T>
+    Bytes serialize(std::shared_ptr<T> s) {
+        if (!this->_alias_guard) {
+            T* ptr = s.get();
+            ZenohCodec c(
+                [p = std::move(s)](void* data) mutable { 
+                    (void)data;
+                    p = nullptr; 
+                });
+            return c.serialize(*ptr);
+        } else {
+            // pointer is inside higher level pointer so there is no need to modify the alias guard.
+            return this->serialize(*s.get());
+        }
+    }
+
 #define __ZENOH_SERIALIZE_ARITHMETIC(TYPE, EXT)                       \
-    static Bytes serialize(TYPE t) {                                  \
+    Bytes serialize(TYPE t) {                                  \
         Bytes b;                                                      \
         ::z_bytes_serialize_from_##EXT(detail::as_owned_c_ptr(b), t); \
         return b;                                                     \
@@ -510,7 +673,7 @@ struct ZenohCodec {
 #undef __ZENOH_SERIALIZE_ARITHMETIC
 
     template <class T>
-    static T deserialize(const Bytes& b, ZResult* err = nullptr) {
+    T deserialize(const Bytes& b, ZResult* err = nullptr) {
         return detail::ZenohDeserializer<T>::deserialize(b, err);
     }
 };

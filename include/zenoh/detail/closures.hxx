@@ -26,6 +26,11 @@ struct IDroppable {
         reinterpret_cast<IDroppable*>(context)->drop();
         delete reinterpret_cast<IDroppable*>(context);
     }
+
+    void* as_context() {
+        auto d = static_cast<IDroppable*>(this);
+        return reinterpret_cast<void*>(d);
+    }
 };
 
 template <class R, class... Args>
@@ -35,6 +40,23 @@ struct IClosure : public IDroppable {
     static R call_from_context(void* context, Args... args) {
         IDroppable* d = reinterpret_cast<IDroppable*>(context);
         return static_cast<IClosure<R, Args...>*>(d)->call(args...);
+    }
+};
+
+template <class D>
+class Droppable : public IDroppable {
+    typename std::conditional_t<std::is_lvalue_reference_v<D>, D, std::remove_reference_t<D>> _drop;
+
+   public:
+    template <class DD>
+    Droppable(DD&& drop) : _drop(std::forward<DD>(drop)) {}
+
+    virtual void drop() override { return _drop(); }
+
+    template <class DD>
+    static void* into_context(DD&& drop) {
+        auto obj = new Droppable<D>(std::forward<DD>(drop));
+        return obj->as_context();
     }
 };
 
@@ -55,11 +77,6 @@ class Closure : public IClosure<R, Args...> {
     static void* into_context(CC&& call, DD&& drop) {
         auto obj = new Closure<C, D, R, Args...>(std::forward<CC>(call), std::forward<DD>(drop));
         return obj->as_context();
-    }
-
-    void* as_context() {
-        auto d = static_cast<IDroppable*>(this);
-        return reinterpret_cast<void*>(d);
     }
 };
 

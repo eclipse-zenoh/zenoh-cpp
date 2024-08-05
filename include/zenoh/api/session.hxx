@@ -207,7 +207,9 @@ class Session : public Owned<::z_owned_session_t> {
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_reply_t c_closure;
-        using ClosureType = typename detail::closures::Closure<C, D, void, const Reply&>;
+        using Cval = std::remove_reference_t<C>;
+        using Dval = std::remove_reference_t<D>;
+        using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Reply&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_reply), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_reply_call, detail::closures::_zenoh_on_drop, closure);
         ::z_get_options_t opts;
@@ -386,7 +388,9 @@ class Session : public Owned<::z_owned_session_t> {
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_query_t c_closure;
-        using ClosureType = typename detail::closures::Closure<C, D, void, const Query&>;
+        using Cval = std::remove_reference_t<C>;
+        using Dval = std::remove_reference_t<D>;
+        using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Query&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_query), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_query_call, detail::closures::_zenoh_on_drop, closure);
         ::z_queryable_options_t opts;
@@ -460,7 +464,9 @@ class Session : public Owned<::z_owned_session_t> {
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_sample_t c_closure;
-        using ClosureType = typename detail::closures::Closure<C, D, void, const Sample&>;
+        using Cval = std::remove_reference_t<C>;
+        using Dval = std::remove_reference_t<D>;
+        using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
         ::z_subscriber_options_t opts;
@@ -709,7 +715,9 @@ class Session : public Owned<::z_owned_session_t> {
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_sample_t c_closure;
-        using ClosureType = typename detail::closures::Closure<C, D, void, const Sample&>;
+        using Cval = std::remove_reference_t<C>;
+        using Dval = std::remove_reference_t<D>;
+        using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
         ::zc_liveliness_subscriber_options_t opts;
@@ -779,7 +787,9 @@ class Session : public Owned<::z_owned_session_t> {
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_reply_t c_closure;
-        using ClosureType = typename detail::closures::Closure<C, D, void, const Reply&>;
+        using Cval = std::remove_reference_t<C>;
+        using Dval = std::remove_reference_t<D>;
+        using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Reply&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_reply), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_reply_call, detail::closures::_zenoh_on_drop, closure);
         ::zc_liveliness_get_options_t opts;
