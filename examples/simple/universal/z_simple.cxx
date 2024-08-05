@@ -39,9 +39,9 @@ struct CustomCodec {
     static Bytes serialize(const CustomStruct& s) {
         Bytes b;
         auto writer = b.writer();
-        writer.write(serialize_arithmetic(s.u).data(), 4);
-        writer.write(serialize_arithmetic(s.d).data(), 8);
-        writer.write(reinterpret_cast<const uint8_t*>(s.s.data()), s.s.size());
+        writer.write_all(serialize_arithmetic(s.u).data(), 4);
+        writer.write_all(serialize_arithmetic(s.d).data(), 8);
+        writer.write_all(reinterpret_cast<const uint8_t*>(s.s.data()), s.s.size());
         return b;
     }
 
