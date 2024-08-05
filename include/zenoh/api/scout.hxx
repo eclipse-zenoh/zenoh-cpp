@@ -37,9 +37,7 @@ void scout(Config&& config, C&& on_hello, D&& on_drop, ScoutOptions&& options = 
     static_assert(std::is_invocable_r<void, D>::value,
                   "on_drop should be callable with the following signature: void on_drop()");
     ::z_owned_closure_hello_t c_closure;
-    using Cval = std::remove_reference_t<C>;
-    using Dval = std::remove_reference_t<D>;
-    using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Hello&>;
+    using ClosureType = typename detail::closures::Closure<C, D, void, const Hello&>;
     auto closure = ClosureType::into_context(std::forward<C>(on_hello), std::forward<D>(on_drop));
     ::z_closure(&c_closure, detail::closures::_zenoh_on_hello_call, detail::closures::_zenoh_on_drop, closure);
     ::z_scout_options_t opts;
