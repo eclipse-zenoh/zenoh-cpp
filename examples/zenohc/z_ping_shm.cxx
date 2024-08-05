@@ -74,13 +74,13 @@ int _main(int argc, char** argv) {
     if (args.warmup_ms) {
         auto end = std::chrono::steady_clock::now() + (1ms * args.warmup_ms);
         while (std::chrono::steady_clock::now() < end) {
-            pub.put(Bytes::serialize(ZShm(buf)));
+            pub.put(Bytes::serialize(ZShm(buf), ZenohCodec<ZenohCodecType::AVOID_COPY>()));
             condvar.wait_for(lock, 1s);
         }
     }
     for (unsigned int i = 0; i < args.number_of_pings; i++) {
         auto start = std::chrono::steady_clock::now();
-        pub.put(Bytes::serialize(ZShm(buf)));
+        pub.put(Bytes::serialize(ZShm(buf), ZenohCodec<ZenohCodecType::AVOID_COPY>()));
         if (condvar.wait_for(lock, 1s) == std::cv_status::timeout) {
             std::cout << "TIMEOUT seq=" << i << "\n";
             continue;

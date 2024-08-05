@@ -63,7 +63,7 @@ int _main(int argc, char **argv) {
     auto session = Session::open(std::move(config));
 
     std::cout << "Declaring Liveliness Subscriber on '" << keyexpr.as_string_view() << "'..." << std::endl;
-    auto subscriber = session.liveliness_declare_subscriber(keyexpr, &data_handler, closures::none);
+    auto subscriber = session.liveliness_declare_subscriber(keyexpr, data_handler, closures::none);
 
     std::cout << "Press CTRL-C to quit...\n";
     while (true) {

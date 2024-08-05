@@ -76,22 +76,20 @@ void serde_basic() {
     std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     Bytes b = Bytes::serialize(data);
     assert(b.deserialize<std::vector<uint8_t>>() == data);
-    assert(b.size() == 10);
 
-    std::vector<uint8_t> data2 = data;
-    b = Bytes::serialize(std::move(data));
-    assert(data.empty());
-    assert(b.deserialize<std::vector<uint8_t>>() == data2);
+    b = Bytes::serialize(std::make_pair(data.data(), data.size()));
+    assert(b.deserialize<std::vector<uint8_t>>() == data);
+
+    // verify that no-copy serialization only forwards a pointer, and thus all data modifications
+    // will likely have visible side effects
+    b = Bytes::serialize(data, ZenohCodec<ZenohCodecType::AVOID_COPY>());
+    data[0] = 100;
+    data[9] = 200;
+    assert(b.deserialize<std::vector<uint8_t>>() == data);
 
     std::string s = "abc";
     b = Bytes::serialize(s);
     assert(b.deserialize<std::string>() == s);
-    assert(!s.empty());
-
-    std::string s2 = s;
-    b = Bytes::serialize(std::move(s));
-    assert(s.empty());
-    assert(b.deserialize<std::string>() == s2);
 
 #define __ZENOH_TEST_ARITHMETIC(TYPE, VALUE) \
     {                                        \
@@ -134,62 +132,20 @@ void serde_advanced() {
     auto b = Bytes::serialize(v);
     assert(b.deserialize<decltype(v)>() == v);
 
-    std::vector<float> v2 = v;
-    b = Bytes::serialize(std::move(v));
-    assert(v.empty());
-    assert(b.deserialize<decltype(v)>() == v2);
-
-
-    std::unordered_map<std::string, double> mu = {{"a", 0.5}, {"b", -123.45}, {"abc", 3.1415926}};
-    b = Bytes::serialize(mu);
-    assert(b.deserialize<decltype(mu)>() == mu);
-
-    std::unordered_map<std::string, double> mu2 = mu;
-    b = Bytes::serialize(std::move(mu));
-    assert(mu.empty());
-    assert(b.deserialize<decltype(mu)>() == mu2);
+    std::unordered_map<std::string, double> m = {{"a", 0.5}, {"b", -123.45}, {"abc", 3.1415926}};
+    b = Bytes::serialize(m);
+    assert(b.deserialize<decltype(m)>() == m);
 
     std::set<uint8_t> s = {1, 2, 3, 4, 0};
     b = Bytes::serialize(s);
     assert(b.deserialize<decltype(s)>() == s);
 
-    std::set<uint8_t> s2 = s;
-    b = Bytes::serialize(std::move(s));
-    assert(s.empty());
-    assert(b.deserialize<decltype(s)>() == s2);
-
-    std::map<std::string, std::deque<double>> mo = {
+    std::map<std::string, std::deque<double>> m2 = {
         {"a", {0.5, 0.2}}, {"b", {-123.45, 0.4}}, {"abc", {3.1415926, -1.0}}};
 
-    b = Bytes::serialize(mo);
-    assert(b.deserialize<decltype(mo)>() == mo);
-
-    std::map<std::string, std::deque<double>> mo2 = mo;
-    b = Bytes::serialize(std::move(mo));
-    assert(mo.empty());
-    assert(b.deserialize<decltype(mo)>() == mo2);
+    b = Bytes::serialize(m2);
+    assert(b.deserialize<decltype(m2)>() == m2);
 }
-
-void serde_shared() {
-    std::vector<uint8_t> v = {1, 2, 3, 4, 5};
-    auto v_ptr = std::make_shared<std::vector<uint8_t>>(std::move(v));
-    auto b = Bytes::serialize(v_ptr);
-    assert(v_ptr.use_count() == 2);
-    assert(b.deserialize<decltype(v)>() == *v_ptr);
-    b = Bytes();
-    assert(v_ptr.use_count() == 1);
-
-    std::unordered_map<std::string, double> mu = {{"a", 0.5}, {"b", -123.45}, {"abc", 3.1415926}};
-    auto mu_ptr = std::make_shared<std::unordered_map<std::string, double>>(std::move(mu));
-    b = Bytes::serialize(mu_ptr);
-    assert(mu_ptr.use_count() == 4);
-    auto m = b.deserialize<decltype(mu)>();
-    assert(b.deserialize<decltype(mu)>() == *mu_ptr);
-    b = Bytes();
-    assert(mu_ptr.use_count() == 1);
-}
-
-
 
 struct CustomStruct {
     uint32_t u = 0;
@@ -289,6 +245,5 @@ int main(int argc, char** argv) {
     serde_basic();
     serde_iter();
     serde_advanced();
-    serde_shared();
     serde_custom();
 }
