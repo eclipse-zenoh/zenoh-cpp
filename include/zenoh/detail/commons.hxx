@@ -25,7 +25,7 @@ class TransformIterator {
 
 public:
     template<class FF>
-    TransformIterator(It const& it, FF&& f) : _it(it), _f(std::forward<FF>(f)) {};
+    TransformIterator(It const& it, FF&& f) : _it(it), _f(std::forward<FF>(f)) {}
 
     using difference_type = typename std::iterator_traits<It>::difference_type;
     using value_type = typename std::invoke_result<Ftype, It>::type;
