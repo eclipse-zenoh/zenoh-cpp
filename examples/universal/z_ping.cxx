@@ -17,6 +17,7 @@
 #include <iostream>
 #include <mutex>
 #include <cstring>
+#include <numeric>
 
 #include "zenoh.hxx"
 using namespace zenoh;
@@ -61,17 +62,20 @@ int _main(int argc, char** argv) {
     );
     auto pub = session.declare_publisher(KeyExpr("test/ping"));
     std::vector<uint8_t> data(args.size);
+    std::iota(data.begin(), data.end(), uint8_t{0});
+    Bytes payload = std::move(data);
+
     std::unique_lock lock(mutex);
     if (args.warmup_ms) {
         auto end = std::chrono::steady_clock::now() + (1ms * args.warmup_ms);
         while (std::chrono::steady_clock::now() < end) {
-            pub.put(Bytes::serialize(data, ZenohCodec<ZenohCodecType::AVOID_COPY>()));
+            pub.put(payload.clone());
             condvar.wait_for(lock, 1s);
         }
     }
     for (unsigned int i = 0; i < args.number_of_pings; i++) {
         auto start = std::chrono::steady_clock::now();
-        pub.put(Bytes::serialize(data, ZenohCodec<ZenohCodecType::AVOID_COPY>()));
+        pub.put(payload.clone());
         if (condvar.wait_for(lock, 1s) == std::cv_status::timeout) {
             std::cout << "TIMEOUT seq=" << i << "\n";
             continue;
