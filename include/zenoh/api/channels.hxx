@@ -107,7 +107,7 @@ public:
     /// @name Methods
 
     /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will block until new data entry arrives.
-    /// @return received data entry if the was any in the buffer, a receive error otherwise.
+    /// @return received data entry if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> recv() const {
         std::variant<T, RecvError> v(T(nullptr));
         z_result_t res = ::z_recv(this->loan(), zenoh::detail::as_owned_c_ptr(std::get<T>(v)));
@@ -119,7 +119,7 @@ public:
     }
 
     /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will immediately return. 
-    /// @return received data entry if the was any in the buffer, a receive error otherwise.
+    /// @return received data entry if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> try_recv() const {
         std::variant<T, RecvError> v(T(nullptr));
         z_result_t res = ::z_try_recv(this->loan(), zenoh::detail::as_owned_c_ptr(std::get<T>(v)));
@@ -143,7 +143,7 @@ public:
     /// @name Methods
 
     /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will block until new data entry arrives.
-    /// @return received data entry if the was any in the buffer, a receive error otherwise.
+    /// @return received data entry if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> recv() const {
         std::variant<T, RecvError> v(T(nullptr));
         z_result_t res = ::z_recv(this->loan(), zenoh::detail::as_owned_c_ptr(std::get<T>(v)));
@@ -155,7 +155,7 @@ public:
     }
 
     /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will immediately return. 
-    /// @return received data entry if the was any in the buffer, a receive error otherwise.
+    /// @return received data entry if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> try_recv() const {
         std::variant<T, RecvError> v(T(nullptr));
         z_result_t res = ::z_try_recv(this->loan(), zenoh::detail::as_owned_c_ptr(std::get<T>(v)));
