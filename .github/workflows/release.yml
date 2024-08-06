@@ -34,6 +34,10 @@ on:
         type: string
         description: Release number of zenoh-pico
         required: false
+      branch:
+        type: string
+        description: Release branch
+        required: false
 
 jobs:
   tag:
@@ -53,6 +57,7 @@ jobs:
           # However, we still need some placeholder version to test that the
           # version can be reliably bumped.
           version: ${{ inputs.version || '0.0.0' }}
+          branch: ${{ inputs.branch }}
           github-token: ${{ secrets.BOT_TOKEN_WORKFLOW }}
 
       - name: Clone this repository
