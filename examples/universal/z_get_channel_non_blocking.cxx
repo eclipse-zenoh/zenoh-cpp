@@ -68,13 +68,18 @@ int _main(int argc, char **argv) {
         session.get(keyexpr, "", channels::FifoChannel(16),
                     {.target = QueryTarget::Z_QUERY_TARGET_ALL, .payload = Bytes::serialize("Get from C++")});
 
-    for (auto [reply, alive] = replies.try_recv(); alive; std::tie(reply, alive) = replies.try_recv()) {
-        if (!reply) {
-            std::cout << ".";
-            std::this_thread::sleep_for(1s);
-            continue;
+    while (true) {
+        auto res = replies.try_recv();
+        if (std::holds_alternative<channels::RecvError>(res)) {
+            if (std::get<channels::RecvError>(res) == channels::RecvError::Z_NODATA) {
+                std::cout << ".";
+                std::this_thread::sleep_for(1s);
+                continue;
+            } else { // channel is closed - no more replies will be received
+                break;
+            }
         }
-        const auto &sample = reply.get_ok();
+        const auto &sample = std::get<Reply>(res).get_ok();
         std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
                   << sample.get_payload().deserialize<std::string>() << "')\n";
     }

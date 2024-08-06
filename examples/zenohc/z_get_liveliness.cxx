@@ -64,7 +64,8 @@ int _main(int argc, char **argv) {
     std::cout << "Sending Liveliness Query '" << expr << "'...\n";
     auto replies = session.liveliness_get(keyexpr, channels::FifoChannel(16));
 
-    for (auto reply = replies.recv().first; static_cast<bool>(reply); reply = replies.recv().first) {
+    for (auto res = replies.recv(); std::holds_alternative<Reply>(res); res = replies.recv()) {
+        const Reply& reply = std::get<Reply>(res);
         if (reply.is_ok()) {
             const auto &sample = reply.get_ok();
             std::cout << "Alive token ('" << sample.get_keyexpr().as_string_view() << "')\n";

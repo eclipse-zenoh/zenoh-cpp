@@ -75,12 +75,14 @@ Subscriber example with non-blocking stream interface:
          KeyExpr("demo/example/simple"),
          channels::FifoChannel(16), // use FIFO buffer to store unprocessed messages 
       );
-      auto [sample, alive] = subscriber.handler().try_recv();
-      for (; alive; std::tie(sample, alive) = subscriber.handler().try_recv()) {
-         if (!sample) { // no messages in the buffer
+      while (true) {
+         auto res = subscriber.handler().try_recv()
+         if (std::holds_alternative<Sample>(res)) {
+            std::cout << "Received: " << std::get<Sample>(res).get_payload().deserialize<std::string>() << std::endl;
+         } else if (std::get<channels::RecvError>(res) == channels::RecvError::Z_NODATA) {
             std::this_thread::sleep_for(1s); // do some other work
          } else {
-            std::cout << "Received: " << sample.get_payload().deserialize<std::string>() << std::endl;
+            break; // channel is closed
          }
       }
    }

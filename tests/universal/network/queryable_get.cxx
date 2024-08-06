@@ -118,38 +118,43 @@ void queryable_get_channel() {
 
     auto replies = session2.get(selector, "ok", channels::FifoChannel(3), {.payload = Bytes::serialize<int32_t>(1) });
     {
-        auto query = queryable.handler().recv().first;
-        assert(static_cast<bool>(query));
+        auto res = queryable.handler().recv();
+        assert(std::holds_alternative<Query>(res));
+        auto& query = std::get<Query>(res);
         assert(query.get_keyexpr() == selector);
         assert(query.get_parameters() == "ok");
         assert(query.get_payload()->get().deserialize<int32_t>() == 1);
         query.reply(query.get_keyexpr(), Bytes::serialize(std::to_string(1)));
     }
 
-    auto reply = replies.recv().first;
-    assert(static_cast<bool>(reply));
-    assert(reply.is_ok());
-    assert(reply.get_ok().get_payload().deserialize<std::string>() == "1");
-    assert(reply.get_ok().get_keyexpr().as_string_view() == "zenoh/test/1");
+    auto res = replies.recv();
+    assert(std::holds_alternative<Reply>(res));
+    assert(std::get<Reply>(res).is_ok());
+    assert(std::get<Reply>(res).get_ok().get_payload().deserialize<std::string>() == "1");
+    assert(std::get<Reply>(res).get_ok().get_keyexpr().as_string_view() == "zenoh/test/1");
 
-    reply = replies.recv().first;
-    assert(!replies.recv().first);
+    res = replies.recv();
+    assert(std::holds_alternative<channels::RecvError>(res));
+    assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
     
     replies = session2.get(selector, "err", channels::FifoChannel(3), {.payload = Bytes::serialize<int32_t>(3) });
     {
-        auto query = queryable.handler().recv().first;
-        assert(static_cast<bool>(query));
+        auto res = queryable.handler().recv();
+        assert(std::holds_alternative<Query>(res));
+        auto& query = std::get<Query>(res);
         assert(query.get_keyexpr() == selector);
         assert(query.get_parameters() == "err");
         assert(query.get_payload()->get().deserialize<int32_t>() == 3);
         query.reply_err(Bytes::serialize("err"));
     }
 
-    reply = replies.recv().first;
-    assert(static_cast<bool>(reply));
-    assert(!reply.is_ok());
-    assert(reply.get_err().get_payload().deserialize<std::string>() == "err");
-    assert(!replies.recv().first);
+    res = replies.recv();
+    assert(std::holds_alternative<Reply>(res));
+    assert(!std::get<Reply>(res).is_ok());
+    assert(std::get<Reply>(res).get_err().get_payload().deserialize<std::string>() == "err");
+    res = replies.recv();
+    assert(std::holds_alternative<channels::RecvError>(res));
+    assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
 }
 
 

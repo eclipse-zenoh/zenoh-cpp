@@ -32,18 +32,21 @@ void test_liveliness_get() {
     std::this_thread::sleep_for(1s);
 
     auto replies = session2.liveliness_get(ke, channels::FifoChannel(3));
-    auto reply = replies.recv().first;
-    assert(static_cast<bool>(reply));
-    assert(reply.is_ok());
-    assert(reply.get_ok().get_keyexpr() == "zenoh/liveliness/test/1");
-    reply = replies.recv().first;
-    assert(!replies.recv().first);
+    auto res = replies.recv();
+    assert(std::holds_alternative<Reply>(res));
+    assert(std::get<Reply>(res).is_ok());
+    assert(std::get<Reply>(res).get_ok().get_keyexpr() == "zenoh/liveliness/test/1");
+    res = replies.recv();
+    assert(std::holds_alternative<channels::RecvError>(res));
+    assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
 
     std::move(token).undeclare();
     std::this_thread::sleep_for(1s);
 
     replies = session2.liveliness_get(ke, channels::FifoChannel(3));
-    assert(!replies.recv().first);
+    res = replies.recv();
+    assert(std::holds_alternative<channels::RecvError>(res));
+    assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
 }
 
 void test_liveliness_subscriber() {
