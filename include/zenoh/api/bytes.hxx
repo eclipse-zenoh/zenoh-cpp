@@ -214,8 +214,8 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         /// @param len number of bytes to copy from src to the underlying ``Bytes`` instance.
         /// @param res if not null, the result code will be written to this location, otherwise ZException exception
         /// will be thrown in case of error.
-        void write(const uint8_t* src, size_t len, ZResult* err = nullptr) {
-            __ZENOH_RESULT_CHECK(::z_bytes_writer_write(this->loan(), src, len), err, "Failed to write data");
+        void write_all(const uint8_t* src, size_t len, ZResult* err = nullptr) {
+            __ZENOH_RESULT_CHECK(::z_bytes_writer_write_all(this->loan(), src, len), err, "Failed to write data");
         }
     };
 
