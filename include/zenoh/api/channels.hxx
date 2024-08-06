@@ -22,6 +22,8 @@
 #include "reply.hxx"
 #include "query.hxx"
 
+#include <variant>
+
 namespace zenoh::channels {
 
 /// @brief Error of the `recv` or `try_recv` operation.
