@@ -24,7 +24,7 @@ if(_IMPORT_PREFIX STREQUAL "/")
 endif()
 
 set(_ZENOHCXX_BACKEND_FOUND FALSE)
-add_library(zenohcxx INTERFACE)
+add_library(zenohcxx INTERFACE IMPORTED)
 target_include_directories(zenohcxx INTERFACE "${_IMPORT_PREFIX}/@CMAKE_INSTALL_INCLUDEDIR@")
 
 # zenohcxx for zenohpico
