@@ -54,7 +54,6 @@ class Encoding : public Owned<::z_owned_encoding_t> {
         return out;
     }
 
-#if defined(ZENOHCXX_ZENOHC)
     /// @brief Set a schema to this encoding from a string.
     /// 
     /// Zenoh does not define what a schema is and its semantics is left to the implementer.
@@ -66,7 +65,6 @@ class Encoding : public Owned<::z_owned_encoding_t> {
             "Failed to set encoding schema"
         );
     }
-#endif
 
     /// @name Operators
 

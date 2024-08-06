@@ -520,10 +520,8 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief Allowed destination.
         Locality allowed_destination = ::zc_locality_default();
 #endif
-#if defined(ZENOHCXX_ZENOHC)
         /// @brief Default encoding to use for Publisher::put.
         std::optional<Encoding> encoding = {};
-#endif
 
         /// @name Methods
         /// @brief Create default option settings.
@@ -547,9 +545,7 @@ class Session : public Owned<::z_owned_session_t> {
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         opts.allowed_destination = options.allowed_destination;
 #endif
-#if defined(ZENOHCXX_ZENOHC)
         opts.encoding = detail::as_owned_c_ptr(options.encoding);
-#endif
 
         Publisher p(nullptr);
         ZResult res = ::z_declare_publisher(detail::as_owned_c_ptr(p), this->loan(), detail::loan(key_expr), &opts);
