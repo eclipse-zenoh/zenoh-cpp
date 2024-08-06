@@ -128,17 +128,18 @@ void put_sub_fifo_channel(Talloc& alloc) {
 
     std::this_thread::sleep_for(1s);
 
-    auto msg = subscriber.handler().recv().first;
-    assert(static_cast<bool>(msg));
-    assert(msg.get_keyexpr() == "zenoh/test");
-    assert(msg.get_payload().deserialize<std::string>() == "first");
-    msg = subscriber.handler().try_recv().first;
-    assert(static_cast<bool>(msg));
-    assert(msg.get_keyexpr() == "zenoh/test");
-    assert(msg.get_payload().deserialize<std::string>() == "second");
+    auto res = subscriber.handler().recv();
+    assert(std::holds_alternative<Sample>(res));
+    assert(std::get<Sample>(res).get_keyexpr() == "zenoh/test");
+    assert(std::get<Sample>(res).get_payload().deserialize<std::string>() == "first");
+    res = subscriber.handler().try_recv();
+    assert(std::holds_alternative<Sample>(res));
+    assert(std::get<Sample>(res).get_keyexpr() == "zenoh/test");
+    assert(std::get<Sample>(res).get_payload().deserialize<std::string>() == "second");
 
-    msg = subscriber.handler().try_recv().first;
-    assert(!static_cast<bool>(msg));
+    res = subscriber.handler().try_recv();
+    assert(std::holds_alternative<channels::RecvError>(res));
+    assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_NODATA);
 }
 
 template <typename Talloc>
@@ -158,13 +159,14 @@ void put_sub_ring_channel(Talloc& alloc) {
 
     std::this_thread::sleep_for(1s);
 
-    auto msg = subscriber.handler().recv().first;
-    assert(static_cast<bool>(msg));
-    assert(msg.get_keyexpr() == "zenoh/test");
-    assert(msg.get_payload().deserialize<std::string>() == "second");
+    auto res = subscriber.handler().recv();
+    assert(std::holds_alternative<Sample>(res));
+    assert(std::get<Sample>(res).get_keyexpr() == "zenoh/test");
+    assert(std::get<Sample>(res).get_payload().deserialize<std::string>() == "second");
 
-    msg = subscriber.handler().try_recv().first;
-    assert(!static_cast<bool>(msg));
+    res = subscriber.handler().try_recv();
+    assert(std::holds_alternative<channels::RecvError>(res));
+    assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_NODATA);
 }
 
 

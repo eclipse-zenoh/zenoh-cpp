@@ -21,8 +21,9 @@ void put_sub() {
 
     std::this_thread::sleep_for(1s);
 
-    auto [msg, alive] = subscriber.handler().recv();
-    assert(alive);
+    auto res = subscriber.handler().recv();
+    assert(std::holds_alternative<Sample>(res));
+    const Sample& msg = std::get<Sample>(res);
     assert(msg.get_keyexpr() == "zenoh/test");
     assert(msg.get_payload().deserialize<std::string>() == "data");
     assert(msg.get_attachment().has_value());

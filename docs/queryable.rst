@@ -95,18 +95,20 @@ Also notice that the callback is processed asynchronously, so the client must no
       // Send a query and receive a stream providing replies.
       // We will receive a FIFO buffer to store unprocessed replies (with size of 16).
       auto replies = session.get(KeyExpr("demo/example/simple"), "", channels::FifoChannel(16));
-      auto&& [reply, is_alive] = replies.recv()
-      for (; is_alive; std::tie(reply, is_alive) = replies.recv()) {
-      // is_alive will become false once there are no more replies to process, termianting the loop
-         if (reply.is_ok()) {
-            auto&& sample = reply.get_ok();
+      while (true) {
+         auto res = replies.recv();
+         Reply* reply = std::get_if(&res);
+         if (reply == nullptr) break;
+         if (reply->is_ok()) {
+            const Sample& sample = reply->get_ok();
             std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
                       << sample.get_payload().deserialize<std::string>() << "')\n";
          } else {
-            auto&& err = reply.get_err();
+            const ReplyError& error = reply->get_err();
             std::cout << "Received an error :" 
                       << error.get_payload().deserialzie<std::string>() << "\n";
          }
+         
       }
 
       std::cout << "No more replies" << std::endl;

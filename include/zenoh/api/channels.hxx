@@ -22,7 +22,18 @@
 #include "reply.hxx"
 #include "query.hxx"
 
+#include <variant>
+
 namespace zenoh::channels {
+
+/// @brief Error of the `recv` or `try_recv` operation.
+enum class RecvError {
+    /// @brief Channel is closed and will no more receive any data.
+    Z_DISCONNECTED = Z_CHANNEL_DISCONNECTED,
+    /// @brief Channel is still active, but no data is currently available in its buffer, 
+    /// future calls to `try_recv` might still succeed.
+    Z_NODATA = Z_CHANNEL_NODATA
+};
 
 namespace detail {
     template<class T>
@@ -96,21 +107,29 @@ public:
     /// @name Methods
 
     /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will block until new data entry arrives.
-    /// @return a pair containing a received data entry (will be in a gravestone state if there is no more data in the buffer and the stream is inactive),
-    /// and a bool flag indicating whether handler's stream is still active, i.e. if there is still possibility to fetch more data in the future. 
-    std::pair<T, bool> recv() const {
-        std::pair<T, bool> p(nullptr, false);
-        p.second = ::z_recv(this->loan(), zenoh::detail::as_owned_c_ptr(p.first));
-        return p;
+    /// @return received data entry if there were any in the buffer, a receive error otherwise.
+    std::variant<T, RecvError> recv() const {
+        std::variant<T, RecvError> v(T(nullptr));
+        z_result_t res = ::z_recv(this->loan(), zenoh::detail::as_owned_c_ptr(std::get<T>(v)));
+        if (res == Z_OK) {
+            return v;
+        } else {
+            return RecvError::Z_DISCONNECTED;
+        }
     }
 
-    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will immediately return (with data entry in a gravestone state). 
-    /// @return a pair containing a received data entry (will be in null state if there is no more data in the buffer),
-    /// and a bool flag indicating whether handler's stream is still active, i.e. if there is still possibility to fetch more data in the future.
-    std::pair<T, bool> try_recv() const {
-        std::pair<T, bool> p(nullptr, false);
-        p.second = ::z_try_recv(this->loan(), zenoh::detail::as_owned_c_ptr(p.first));
-        return p;
+    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will immediately return. 
+    /// @return received data entry if there were any in the buffer, a receive error otherwise.
+    std::variant<T, RecvError> try_recv() const {
+        std::variant<T, RecvError> v(T(nullptr));
+        z_result_t res = ::z_try_recv(this->loan(), zenoh::detail::as_owned_c_ptr(std::get<T>(v)));
+        if (res == Z_OK) {
+            return v;
+        } else if (res == Z_CHANNEL_NODATA) {
+            return RecvError::Z_NODATA;
+        } else {
+            return RecvError::Z_DISCONNECTED;
+        }
     }
 };
 
@@ -123,22 +142,30 @@ public:
 
     /// @name Methods
 
-    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will block until new data entry arrives
-    /// @return a pair containing a received data entry (will be in gravestone state if there is no more data in the buffer and the stream is inactive),
-    /// and a bool flag indicating whether handler's stream is still active, i.e. if there is still possibility to fetch more data in the future. 
-    std::pair<T, bool> recv() const {
-        std::pair<T, bool> p(nullptr, false);
-        p.second = ::z_recv(this->loan(), zenoh::detail::as_owned_c_ptr(p.first));
-        return p;
+    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will block until new data entry arrives.
+    /// @return received data entry if there were any in the buffer, a receive error otherwise.
+    std::variant<T, RecvError> recv() const {
+        std::variant<T, RecvError> v(T(nullptr));
+        z_result_t res = ::z_recv(this->loan(), zenoh::detail::as_owned_c_ptr(std::get<T>(v)));
+        if (res == Z_OK) {
+            return v;
+        } else {
+            return RecvError::Z_DISCONNECTED;
+        }
     }
 
-    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will immediately return (with data entry in a gravestone state). 
-    /// @return a pair containing a received data entry (will be in null state if there is no more data in the buffer),
-    /// and a bool flag indicating whether handler's stream is still active, i.e. if there is still possibility to fetch more data in the future. 
-    std::pair<T, bool> try_recv() const {
-        std::pair<T, bool> p(nullptr, false);
-        p.second = ::z_try_recv(this->loan(), zenoh::detail::as_owned_c_ptr(p.first));
-        return p;
+    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will immediately return. 
+    /// @return received data entry if there were any in the buffer, a receive error otherwise.
+    std::variant<T, RecvError> try_recv() const {
+        std::variant<T, RecvError> v(T(nullptr));
+        z_result_t res = ::z_try_recv(this->loan(), zenoh::detail::as_owned_c_ptr(std::get<T>(v)));
+        if (res == Z_OK) {
+            return v;
+        } else if (res == Z_CHANNEL_NODATA) {
+            return RecvError::Z_NODATA;
+        } else {
+            return RecvError::Z_DISCONNECTED;
+        }
     }
 };
 
@@ -148,7 +175,7 @@ class FifoChannel {
 public:
     /// @brief Constructor.
     /// @param capacity maximum number of entries in the FIFO buffer of the channel. When the buffer is full all
-    /// new incoming entries will be ignored.
+    /// new attempts to insert data will block, until an entry is fetched and the space is freed in the buffer.
     FifoChannel(size_t capacity)
         :_capacity(capacity)
     {}
