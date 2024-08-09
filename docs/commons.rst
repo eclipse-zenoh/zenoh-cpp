@@ -79,4 +79,4 @@ Sample
 Logging
 -------
 
-.. doxygenfunction:: init_logger
+.. doxygenfunction:: init_logging

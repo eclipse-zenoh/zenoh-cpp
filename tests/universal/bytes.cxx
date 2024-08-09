@@ -197,6 +197,59 @@ void serde_shared() {
     assert(mu_ptr.use_count() == 1);
 }
 
+void reader_writer_append() {
+    std::cout << "running reader_writer_append\n";
+    std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    std::vector<uint8_t> data2 = {11, 12, 13, 14};
+    Bytes b;
+    {
+        auto writer = b.writer();
+        writer.write_all(data.data(), 5);
+        writer.write_all(data.data() + 5, 5);
+        writer.append(data2);
+    }
+
+    auto reader = b.reader();
+    std::vector<uint8_t> out(3);
+    assert(reader.read(out.data(), 3) == 3);
+    assert(out == std::vector<uint8_t>(data.begin(), data.begin() + 3));
+    out = std::vector<uint8_t>(7);
+    assert(reader.read(out.data(), 7) == 7);
+    assert(out == std::vector<uint8_t>(data.begin() + 3, data.end()));
+
+    out = std::vector<uint8_t>(4);
+    assert(reader.read(out.data(), 4) == 4);
+    assert(out == data2);
+    assert(reader.read(out.data(), 1) == 0); // reached the end of the payload
+}
+
+void reader_writer_append_bounded() {
+    std::cout << "running reader_writer_append_bounded\n";
+    std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    std::string s = "abcd";
+    float f = 0.5f;
+    Bytes b;
+    {
+        auto writer = b.writer();
+        writer.write_all(data.data(), 5);
+        writer.write_all(data.data() + 5, 5);
+        writer.append_bounded(s);
+        writer.append_bounded(f);
+    }
+
+    auto reader = b.reader();
+    std::vector<uint8_t> out(3);
+    assert(reader.read(out.data(), 3) == 3);
+    assert(out == std::vector<uint8_t>(data.begin(), data.begin() + 3));
+    out = std::vector<uint8_t>(7);
+    assert(reader.read(out.data(), 7) == 7);
+    assert(out == std::vector<uint8_t>(data.begin() + 3, data.end()));
+
+    assert(reader.read_bounded().deserialize<std::string>() == s);
+    assert(reader.read_bounded().deserialize<float>() == f);
+    assert(reader.read(out.data(), 1) == 0); // reached the end of the payload
+}
+
 
 
 struct CustomStruct {
@@ -214,6 +267,24 @@ struct CustomCodec {
         writer.write_all(serialize_arithmetic(s.u).data(), 4);
         writer.write_all(serialize_arithmetic(s.d).data(), 8);
         writer.write_all(reinterpret_cast<const uint8_t*>(s.s.data()), s.s.size());
+        return b;
+    }
+
+    static Bytes serialize(CustomStruct&& s) {
+        Bytes b;
+        auto writer = b.writer();
+        writer.write_all(serialize_arithmetic(s.u).data(), 4);
+        writer.write_all(serialize_arithmetic(s.d).data(), 8);
+        writer.append(std::move(s.s));
+        return b;
+    }
+
+    static Bytes serialize(std::shared_ptr<CustomStruct> s) {
+        Bytes b;
+        auto writer = b.writer();
+        writer.write_all(serialize_arithmetic(s->u).data(), 4);
+        writer.write_all(serialize_arithmetic(s->d).data(), 8);
+        writer.append(Bytes::serialize(s->s, ZenohCodec(s)));
         return b;
     }
 
@@ -290,6 +361,20 @@ void serde_custom() {
     assert(s.d == out.d);
     assert(s.u == out.u);
     assert(s.s == out.s);
+
+    CustomStruct s2 = s;
+
+    b = Bytes::serialize(std::move(s2), CustomCodec());
+    out = b.deserialize<CustomStruct>(CustomCodec());
+    assert(s.d == out.d);
+    assert(s.u == out.u);
+    assert(s.s == out.s);
+
+    b = Bytes::serialize(std::make_shared<CustomStruct>(s), CustomCodec());
+    out = b.deserialize<CustomStruct>(CustomCodec());
+    assert(s.d == out.d);
+    assert(s.u == out.u);
+    assert(s.s == out.s);
 }
 
 int main(int argc, char** argv) {
@@ -299,5 +384,8 @@ int main(int argc, char** argv) {
     serde_iter();
     serde_advanced();
     serde_shared();
+
+    reader_writer_append();
+    reader_writer_append_bounded();
     serde_custom();
 }

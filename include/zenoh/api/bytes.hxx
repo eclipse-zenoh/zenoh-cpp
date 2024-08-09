@@ -196,6 +196,20 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         void seek_from_end(int64_t offset, ZResult* err = nullptr) {
             __ZENOH_RESULT_CHECK(::z_bytes_reader_seek(&this->_0, offset, SEEK_END), err, "seek_from_end failed");
         }
+
+        /// @brief Read bounded data previously written by ``Bytes::Writer::write_bounded``.
+        ///
+        /// @param res if not null, the result code will be written to this location, otherwise ZException exception
+        /// will be thrown in case of error.
+        Bytes read_bounded(ZResult* err = nullptr) {
+            Bytes b;
+            __ZENOH_RESULT_CHECK(
+                ::z_bytes_reader_read_bounded(&this->_0, &b._0), 
+                err, 
+                "Failed to append data with boundaries"
+            );
+            return b;
+        }
     };
 
     /// @brief Create data reader.
@@ -203,9 +217,9 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     Reader reader() const { return Reader(::z_bytes_get_reader(this->loan())); }
 
     /// @brief A writer for Zenoh-serialized data.
-    class Writer : public Owned<::z_owned_bytes_writer_t> {
+    class Writer : public Copyable<::z_bytes_writer_t> {
        public:
-        using Owned::Owned;
+        using Copyable::Copyable;
 
         /// @name Methods
 
@@ -215,7 +229,32 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         /// @param res if not null, the result code will be written to this location, otherwise ZException exception
         /// will be thrown in case of error.
         void write_all(const uint8_t* src, size_t len, ZResult* err = nullptr) {
-            __ZENOH_RESULT_CHECK(::z_bytes_writer_write_all(this->loan(), src, len), err, "Failed to write data");
+            __ZENOH_RESULT_CHECK(::z_bytes_writer_write_all(&this->_0, src, len), err, "Failed to write data");
+        }
+
+        
+        /// @brief Appends another `Bytes` instance.
+        /// This allows to compose a serialized data out of multiple `Bytes` that may point to different memory regions.
+        /// Said in other terms, it allows to create a linear view on different memory regions without copy.
+        ///
+        /// @param data data to append.
+        /// @param res if not null, the result code will be written to this location, otherwise ZException exception
+        /// will be thrown in case of error.
+        void append(Bytes&& data, ZResult* err = nullptr) {
+            __ZENOH_RESULT_CHECK(::z_bytes_writer_append(&this->_0, z_move(data._0)), err, "Failed to append data");
+        }
+
+        /// @brief Append another `Bytes` instance, with boundaries information. It would allow to read the same piece of data using ``Bytes::reader::read_bounded``.
+        ///
+        /// @param data data to append.
+        /// @param res if not null, the result code will be written to this location, otherwise ZException exception
+        /// will be thrown in case of error.
+        void append_bounded(Bytes&& data, ZResult* err = nullptr) {
+            __ZENOH_RESULT_CHECK(
+                ::z_bytes_writer_append_bounded(&this->_0, z_move(data._0)), 
+                err, 
+                "Failed to append data with boundaries"
+            );
         }
     };
 
@@ -225,9 +264,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     /// a given moment of time for a given ``Bytes`` instance.
     /// @return writer instance.
     Writer writer() {
-        Writer w(nullptr);
-        ::z_bytes_get_writer(this->loan(), detail::as_owned_c_ptr(w));
-        return w;
+        return Writer(::z_bytes_get_writer(this->loan()));
     }
 };
 
@@ -427,12 +464,15 @@ auto make_owned_slice(uint8_t* data, size_t len, Deleter&& d) {
     return OwnedSlice<std::remove_reference_t<Deleter>>{data, len, std::forward<Deleter>(d)};
 };
 
+/// @brief Default codec for Zenoh serialization / deserialziation
 class ZenohCodec {
     std::shared_ptr<void> _alias_guard;
-
-    ZenohCodec(std::shared_ptr<void> alias_guard) :_alias_guard(std::move(alias_guard)) {}
 public:
-    ZenohCodec() :_alias_guard(nullptr) {}
+    /// @brief Consturctor
+    /// @param alias_guard optional alias guard. If null the data passed by const reference will copied,
+    /// otherwise it will be aliased instead and a copy if alias_guard will be added to all serialized
+    /// ``Bytes`` instances, to ensure that aliased data outlives them.
+    ZenohCodec(std::shared_ptr<void> alias_guard = nullptr) :_alias_guard(std::move(alias_guard)) {}
 
     /// @brief Serialize pointer and length by copying.
     Bytes serialize(const Slice& s) const {

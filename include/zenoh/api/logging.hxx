@@ -22,7 +22,7 @@ namespace zenoh {
 /// User may set environment variable RUST_LOG to values *debug* | *info* | *warn* | *error* to show diagnostic output.
 ///
 /// @note zenoh-c only
-inline void init_logger() { ::zc_init_logger(); }
+inline void init_logging() { ::zc_init_logging(); }
 #endif
 
 }
