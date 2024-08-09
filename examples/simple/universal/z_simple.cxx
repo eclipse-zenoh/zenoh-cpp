@@ -36,12 +36,33 @@ struct CustomStruct {
 // Example of codec for a custom class / struct
 // We need to define corresponding serialize and deserialize methods
 struct CustomCodec {
+    /// @brief Serialize by copying.
     static Bytes serialize(const CustomStruct& s) {
         Bytes b;
         auto writer = b.writer();
         writer.write_all(serialize_arithmetic(s.u).data(), 4);
         writer.write_all(serialize_arithmetic(s.d).data(), 8);
         writer.write_all(reinterpret_cast<const uint8_t*>(s.s.data()), s.s.size());
+        return b;
+    }
+
+    /// @brief Serialize by consuming (only applies to string field).
+    static Bytes serialize(CustomStruct&& s) {
+        Bytes b;
+        auto writer = b.writer();
+        writer.write_all(serialize_arithmetic(s.u).data(), 4);
+        writer.write_all(serialize_arithmetic(s.d).data(), 8);
+        writer.append(std::move(s.s));
+        return b;
+    }
+
+    /// @brief Serialize by aliasing (only applies to string field).
+    static Bytes serialize(std::shared_ptr<CustomStruct> s) {
+        Bytes b;
+        auto writer = b.writer();
+        writer.write_all(serialize_arithmetic(s->u).data(), 4);
+        writer.write_all(serialize_arithmetic(s->d).data(), 8);
+        writer.append(Bytes::serialize(s->s, ZenohCodec(s)));
         return b;
     }
 
@@ -114,6 +135,8 @@ class CustomPublisher {
     }
 
     void put(const CustomStruct& s) { _pub.put(Bytes::serialize(s, CustomCodec())); }
+    void put(CustomStruct&& s) { _pub.put(Bytes::serialize(std::move(s), CustomCodec())); }
+    void put(std::shared_ptr<CustomStruct> s) { _pub.put(Bytes::serialize(std::move(s), CustomCodec())); }
 
    private:
     Publisher _pub;
@@ -145,7 +168,7 @@ int main(int, char**) {
         CustomPublisher pub(session, keyexpr);
         CustomSubscriber sub(session, keyexpr);
 
-        pub.put({0, 0.5, "abc"});
+        pub.put(CustomStruct{0, 0.5, "abc"});
         std::this_thread::sleep_for(1s);  /// wait a bit to receive the message
 
     } catch (std::exception& e) {

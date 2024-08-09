@@ -39,7 +39,7 @@ void test_config_to_string() {
 }
 
 int main(int argc, char** argv) {
-    init_logger();
+    init_logging();
     test_config_client();
     test_config_peer();
     test_config_to_string();
