@@ -106,7 +106,7 @@ int _main(int argc, char **argv) {
     KeyExpr keyexpr = session.declare_keyexpr(KeyExpr("test/thr"));
 
     Stats stats;
-    auto on_receive = [&stats](const Sample& s) { stats(s); };
+    auto on_receive = [&stats](const Sample &s) { stats(s); };
     auto on_drop = [&stats]() { stats(); };
     auto subscriber = session.declare_subscriber(keyexpr, on_receive, on_drop);
 

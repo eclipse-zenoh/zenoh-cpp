@@ -12,9 +12,10 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 #include <stdio.h>
-#include <thread>
+
 #include <chrono>
 #include <iostream>
+#include <thread>
 
 #include "../getargs.h"
 #include "zenoh.hxx"
@@ -64,7 +65,7 @@ int _main(int argc, char **argv) {
         if (!attachment.has_value()) return;
         // we expect attachment in the form of key-value pairs
         auto attachment_data = attachment->get().deserialize<std::unordered_map<std::string, std::string>>();
-        for (auto&& [key, value]: attachment_data) {
+        for (auto &&[key, value] : attachment_data) {
             std::cout << "   attachment: " << key << ": '" << value << "'\n";
         }
     };

@@ -13,20 +13,19 @@
 
 #pragma once
 
-#include "base.hxx"
 #include "../detail/interop.hxx"
-#include "sample.hxx"
+#include "base.hxx"
 #include "bytes.hxx"
+#include "sample.hxx"
 #if defined UNSTABLE
 #include "id.hxx"
 #endif
-
 
 namespace zenoh {
 
 /// @brief Reply error data.
 class ReplyError : public Owned<::z_owned_reply_err_t> {
-public:
+   public:
     using Owned::Owned;
     /// @name Methods
 
@@ -36,12 +35,14 @@ public:
 
     /// @brief The encoding of this error.
     /// @return Error encoding.
-    const Encoding& get_encoding() const { return detail::as_owned_cpp_obj<Encoding>(::z_reply_err_encoding(this->loan())); }
+    const Encoding& get_encoding() const {
+        return detail::as_owned_cpp_obj<Encoding>(::z_reply_err_encoding(this->loan()));
+    }
 };
 
 /// A reply from queryable to ``Session::get`` operation.
 class Reply : public Owned<::z_owned_reply_t> {
-public:
+   public:
     using Owned::Owned;
 
     /// @name Methods
@@ -78,7 +79,7 @@ public:
         }
         return {};
     }
-    #endif
+#endif
 };
 
-}
+}  // namespace zenoh

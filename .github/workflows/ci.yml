@@ -10,6 +10,16 @@ on:
   workflow_dispatch:
 
 jobs:
+  check_format:
+    name: Check codebase format with clang-format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run clang-format dry-run
+        run: find include/ tests/ examples/ -iname "*.hxx" -o -iname "*.cxx" | xargs clang-format -n -Werror
+
   build:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}

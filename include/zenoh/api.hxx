@@ -22,10 +22,12 @@
 #if defined UNSTABLE
 #include "api/id.hxx"
 #endif
+#include "api/channels.hxx"
 #include "api/keyexpr.hxx"
+#include "api/logging.hxx"
 #include "api/publisher.hxx"
-#include "api/query_consolidation.hxx"
 #include "api/query.hxx"
+#include "api/query_consolidation.hxx"
 #include "api/queryable.hxx"
 #include "api/reply.hxx"
 #include "api/sample.hxx"
@@ -33,8 +35,6 @@
 #include "api/session.hxx"
 #include "api/subscriber.hxx"
 #include "api/timestamp.hxx"
-#include "api/channels.hxx"
-#include "api/logging.hxx"
 #if defined SHARED_MEMORY && defined UNSTABLE
 #include "api/shm/shm.hxx"
 #endif

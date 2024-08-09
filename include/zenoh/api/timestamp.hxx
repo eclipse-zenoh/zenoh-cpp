@@ -12,19 +12,19 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #pragma once
-#include "base.hxx"
-#include "../zenohc.hxx"
 #include "../detail/interop.hxx"
+#include "../zenohc.hxx"
+#include "base.hxx"
 #if defined UNSTABLE
 #include "id.hxx"
 #endif
 
 namespace zenoh {
 /// Zenoh <a href=https://zenoh.io/docs/manual/abstractions/#timestamp>Timestamp</a>.
-class Timestamp :public Copyable<::z_timestamp_t> {
-public:
+class Timestamp : public Copyable<::z_timestamp_t> {
+   public:
     using Copyable::Copyable;
-    
+
     /// @name Methods
 
     /// @brief Get the NTP64 time part of the timestamp.
@@ -38,4 +38,4 @@ public:
 #endif
 };
 
-}
+}  // namespace zenoh

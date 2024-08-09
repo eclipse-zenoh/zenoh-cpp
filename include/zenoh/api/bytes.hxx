@@ -14,8 +14,8 @@
 #pragma once
 
 #include "../detail/closures.hxx"
-#include "../detail/interop.hxx"
 #include "../detail/commons.hxx"
+#include "../detail/interop.hxx"
 #include "base.hxx"
 #include "closures.hxx"
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
@@ -26,8 +26,8 @@
 #include <cstdint>
 #include <deque>
 #include <iterator>
-#include <memory>
 #include <map>
+#include <memory>
 #include <optional>
 #include <set>
 #include <string>
@@ -110,7 +110,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
             }
             // increment current, in case iterator dereference might invalidate it, which happens
             // for map/set elements extraction while serializing std::move'd map/set
-            auto it = current++; 
+            auto it = current++;
             *b = Bytes::serialize(*it, codec).take();
             return true;
         };
@@ -119,8 +119,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         using ClosureType = typename detail::closures::Closure<F, closures::None, bool, z_owned_bytes_t*>;
         auto closure = ClosureType(std::forward<F>(f), closures::none);
 
-        ::z_bytes_from_iter(detail::as_owned_c_ptr(out), detail::closures::_zenoh_encode_iter,
-                                      closure.as_context());
+        ::z_bytes_from_iter(detail::as_owned_c_ptr(out), detail::closures::_zenoh_encode_iter, closure.as_context());
         return out;
     }
 
@@ -203,11 +202,8 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         /// will be thrown in case of error.
         Bytes read_bounded(ZResult* err = nullptr) {
             Bytes b;
-            __ZENOH_RESULT_CHECK(
-                ::z_bytes_reader_read_bounded(&this->_0, &b._0), 
-                err, 
-                "Failed to append data with boundaries"
-            );
+            __ZENOH_RESULT_CHECK(::z_bytes_reader_read_bounded(&this->_0, &b._0), err,
+                                 "Failed to append data with boundaries");
             return b;
         }
     };
@@ -232,7 +228,6 @@ class Bytes : public Owned<::z_owned_bytes_t> {
             __ZENOH_RESULT_CHECK(::z_bytes_writer_write_all(&this->_0, src, len), err, "Failed to write data");
         }
 
-        
         /// @brief Appends another `Bytes` instance.
         /// This allows to compose a serialized data out of multiple `Bytes` that may point to different memory regions.
         /// Said in other terms, it allows to create a linear view on different memory regions without copy.
@@ -244,17 +239,15 @@ class Bytes : public Owned<::z_owned_bytes_t> {
             __ZENOH_RESULT_CHECK(::z_bytes_writer_append(&this->_0, z_move(data._0)), err, "Failed to append data");
         }
 
-        /// @brief Append another `Bytes` instance, with boundaries information. It would allow to read the same piece of data using ``Bytes::reader::read_bounded``.
+        /// @brief Append another `Bytes` instance, with boundaries information. It would allow to read the same piece
+        /// of data using ``Bytes::reader::read_bounded``.
         ///
         /// @param data data to append.
         /// @param res if not null, the result code will be written to this location, otherwise ZException exception
         /// will be thrown in case of error.
         void append_bounded(Bytes&& data, ZResult* err = nullptr) {
-            __ZENOH_RESULT_CHECK(
-                ::z_bytes_writer_append_bounded(&this->_0, z_move(data._0)), 
-                err, 
-                "Failed to append data with boundaries"
-            );
+            __ZENOH_RESULT_CHECK(::z_bytes_writer_append_bounded(&this->_0, z_move(data._0)), err,
+                                 "Failed to append data with boundaries");
         }
     };
 
@@ -263,9 +256,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     /// It is the user responsibility to ensure that there is at most one active writer at
     /// a given moment of time for a given ``Bytes`` instance.
     /// @return writer instance.
-    Writer writer() {
-        return Writer(::z_bytes_get_writer(this->loan()));
-    }
+    Writer writer() { return Writer(::z_bytes_get_writer(this->loan())); }
 };
 
 /// @brief An iterator over multi-element serialized data.
@@ -448,18 +439,16 @@ struct Slice {
     size_t len;
 };
 
-auto make_slice(const uint8_t* data, size_t len) {
-    return Slice{data, len};
-};
+auto make_slice(const uint8_t* data, size_t len) { return Slice{data, len}; };
 
-template<class Deleter>
+template <class Deleter>
 struct OwnedSlice {
     uint8_t* data;
     size_t len;
     Deleter d;
 };
 
-template<class Deleter>
+template <class Deleter>
 auto make_owned_slice(uint8_t* data, size_t len, Deleter&& d) {
     return OwnedSlice<std::remove_reference_t<Deleter>>{data, len, std::forward<Deleter>(d)};
 };
@@ -467,12 +456,13 @@ auto make_owned_slice(uint8_t* data, size_t len, Deleter&& d) {
 /// @brief Default codec for Zenoh serialization / deserialziation
 class ZenohCodec {
     std::shared_ptr<void> _alias_guard;
-public:
+
+   public:
     /// @brief Consturctor
     /// @param alias_guard optional alias guard. If null the data passed by const reference will copied,
     /// otherwise it will be aliased instead and a copy if alias_guard will be added to all serialized
     /// ``Bytes`` instances, to ensure that aliased data outlives them.
-    ZenohCodec(std::shared_ptr<void> alias_guard = nullptr) :_alias_guard(std::move(alias_guard)) {}
+    ZenohCodec(std::shared_ptr<void> alias_guard = nullptr) : _alias_guard(std::move(alias_guard)) {}
 
     /// @brief Serialize pointer and length by copying.
     Bytes serialize(const Slice& s) const {
@@ -480,21 +470,19 @@ public:
         if (this->_alias_guard == nullptr) {
             ::z_bytes_serialize_from_buf(detail::as_owned_c_ptr(b), s.data, s.len);
         } else {
-            auto deleter = [ptr = this->_alias_guard] (void *) mutable { ptr.reset(); };
-            b = serialize(make_owned_slice(const_cast<uint8_t*>(s.data), s.len,  std::move(deleter)));
+            auto deleter = [ptr = this->_alias_guard](void*) mutable { ptr.reset(); };
+            b = serialize(make_owned_slice(const_cast<uint8_t*>(s.data), s.len, std::move(deleter)));
         }
         return b;
     }
 
     /// @brief Serialize pointer and length by moving.
-    template<class Deleter> 
+    template <class Deleter>
     Bytes serialize(OwnedSlice<Deleter>&& s) const {
         Bytes b;
         uint8_t* data = s.data;
         size_t len = s.len;
-        auto d = [s_in = std::move(s)]() mutable {
-            s_in.d(s_in.data);
-        };
+        auto d = [s_in = std::move(s)]() mutable { s_in.d(s_in.data); };
         using D = decltype(d);
         using Dval = std::remove_reference_t<D>;
         using DroppableType = typename detail::closures::Droppable<Dval>;
@@ -511,11 +499,10 @@ public:
 
     Bytes serialize(const std::string& s) const { return serialize(static_cast<std::string_view>(s)); }
     Bytes serialize(std::string&& s) const {
-        std::string *ptr = new std::string(std::move(s));
-        auto deleter = [p = ptr](void *) mutable { delete p; };
-        return serialize(make_owned_slice(
-            const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(ptr->c_str())), ptr->size(), std::move(deleter))
-        ); 
+        std::string* ptr = new std::string(std::move(s));
+        auto deleter = [p = ptr](void*) mutable { delete p; };
+        return serialize(make_owned_slice(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(ptr->c_str())),
+                                          ptr->size(), std::move(deleter)));
     }
 
     Bytes serialize(Bytes&& b) const { return std::move(b); }
@@ -547,8 +534,8 @@ public:
     template <class Allocator>
     Bytes serialize(std::vector<uint8_t, Allocator>&& s) const {
         std::vector<uint8_t, Allocator>* ptr = new std::vector<uint8_t, Allocator>(std::move(s));
-        auto deleter = [p = ptr](void *) mutable { delete p; };
-        return serialize(make_owned_slice(ptr->data(), ptr->size(), std::move(deleter))); 
+        auto deleter = [p = ptr](void*) mutable { delete p; };
+        return serialize(make_owned_slice(ptr->data(), ptr->size(), std::move(deleter)));
     }
 
     template <class T, class Allocator>
@@ -558,7 +545,8 @@ public:
 
     template <class T, class Allocator>
     Bytes serialize(std::vector<T, Allocator>&& s) const {
-        auto b = Bytes::serialize_from_iter(std::make_move_iterator(s.begin()), std::make_move_iterator(s.end()), *this);
+        auto b =
+            Bytes::serialize_from_iter(std::make_move_iterator(s.begin()), std::make_move_iterator(s.end()), *this);
         s.clear();
         return b;
     }
@@ -570,7 +558,8 @@ public:
 
     template <class T, class Allocator>
     Bytes serialize(std::deque<T, Allocator>&& s) const {
-        auto b = Bytes::serialize_from_iter(std::make_move_iterator(s.begin()), std::make_move_iterator(s.end()), *this);
+        auto b =
+            Bytes::serialize_from_iter(std::make_move_iterator(s.begin()), std::make_move_iterator(s.end()), *this);
         s.clear();
         return b;
     }
@@ -585,11 +574,8 @@ public:
         auto f = [&s](typename std::unordered_set<K, H, E, Allocator>::iterator it) -> K {
             return std::move(s.extract(it).value());
         };
-        return Bytes::serialize_from_iter(
-            detail::commons::make_transform_iterator(s.begin(), f),
-            detail::commons::make_transform_iterator(s.end(), f),
-            *this
-        );
+        return Bytes::serialize_from_iter(detail::commons::make_transform_iterator(s.begin(), f),
+                                          detail::commons::make_transform_iterator(s.end(), f), *this);
     }
 
     template <class K, class C, class Allocator>
@@ -602,11 +588,8 @@ public:
         auto f = [&s](typename std::set<K, C, Allocator>::iterator it) -> K {
             return std::move(s.extract(it).value());
         };
-        return Bytes::serialize_from_iter(
-            detail::commons::make_transform_iterator(s.begin(), f),
-            detail::commons::make_transform_iterator(s.end(), f),
-            *this
-        );
+        return Bytes::serialize_from_iter(detail::commons::make_transform_iterator(s.begin(), f),
+                                          detail::commons::make_transform_iterator(s.end(), f), *this);
     }
 
     template <class K, class V, class H, class E, class Allocator>
@@ -616,15 +599,12 @@ public:
 
     template <class K, class V, class H, class E, class Allocator>
     Bytes serialize(std::unordered_map<K, V, H, E, Allocator>&& s) const {
-        auto f = [&s](typename std::unordered_map<K, V, H, E, Allocator>::iterator it) -> std::pair<K, V>{
+        auto f = [&s](typename std::unordered_map<K, V, H, E, Allocator>::iterator it) -> std::pair<K, V> {
             auto node = s.extract(it);
             return std::pair<K, V>(std::move(node.key()), std::move(node.mapped()));
         };
-        return Bytes::serialize_from_iter(
-            detail::commons::make_transform_iterator(s.begin(), f),
-            detail::commons::make_transform_iterator(s.end(), f),
-            *this
-        );
+        return Bytes::serialize_from_iter(detail::commons::make_transform_iterator(s.begin(), f),
+                                          detail::commons::make_transform_iterator(s.end(), f), *this);
     }
 
     template <class K, class V, class C, class Allocator>
@@ -638,11 +618,8 @@ public:
             auto node = s.extract(it);
             return std::pair<K, V>(std::move(node.key()), std::move(node.mapped()));
         };
-        return Bytes::serialize_from_iter(
-            detail::commons::make_transform_iterator(s.begin(), f),
-            detail::commons::make_transform_iterator(s.end(), f),
-            *this
-        );
+        return Bytes::serialize_from_iter(detail::commons::make_transform_iterator(s.begin(), f),
+                                          detail::commons::make_transform_iterator(s.end(), f), *this);
     }
 
     template <class A, class B>
@@ -651,7 +628,7 @@ public:
         auto bb = serialize(s.second);
         Bytes b;
         ::z_bytes_from_pair(detail::as_owned_c_ptr(b), ::z_move(*detail::as_owned_c_ptr(ba)),
-                                      ::z_move(*detail::as_owned_c_ptr(bb)));
+                            ::z_move(*detail::as_owned_c_ptr(bb)));
         return b;
     }
 
@@ -661,11 +638,11 @@ public:
         auto bb = serialize(std::move(s.second));
         Bytes b;
         ::z_bytes_from_pair(detail::as_owned_c_ptr(b), ::z_move(*detail::as_owned_c_ptr(ba)),
-                                      ::z_move(*detail::as_owned_c_ptr(bb)));
+                            ::z_move(*detail::as_owned_c_ptr(bb)));
         return b;
     }
 
-    template<class T>
+    template <class T>
     Bytes serialize(std::shared_ptr<T> s) const {
         if (this->_alias_guard == nullptr) {
             T* ptr = s.get();

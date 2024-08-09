@@ -66,9 +66,9 @@ int _main(int argc, char **argv) {
 
         const char *payload_type = "";
         if (payload.has_value()) {
-            ZResult result;  
+            ZResult result;
             payload->get().deserialize<ZShm>(&result);
-            if (result == Z_OK) { 
+            if (result == Z_OK) {
                 payload_type = "SHM";
             } else {
                 payload_type = "RAW";
@@ -77,8 +77,8 @@ int _main(int argc, char **argv) {
 
         const KeyExpr &keyexpr = query.get_keyexpr();
         auto params = query.get_parameters();
-        std::cout << ">> [Queryable ] Received Query [" << payload_type << "] '" << keyexpr.as_string_view() << "?" 
-            << params;
+        std::cout << ">> [Queryable ] Received Query [" << payload_type << "] '" << keyexpr.as_string_view() << "?"
+                  << params;
         if (payload.has_value()) {
             std::cout << "' value = '" << payload->get().deserialize<std::string>();
         }

@@ -12,8 +12,8 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #pragma once
-#include "base.hxx"
 #include "../zenohc.hxx"
+#include "base.hxx"
 #include "enums.hxx"
 #if defined UNSTABLE
 #include "id.hxx"
@@ -26,7 +26,7 @@ namespace zenoh {
 /// ``Hello`` message returned by a zenoh entity as a reply to a "scout"
 /// message.
 class Hello : public Owned<::z_owned_hello_t> {
-public:
+   public:
     using Owned::Owned;
 
     /// @name Methods
@@ -62,4 +62,4 @@ public:
         return locators;
     }
 };
-}
+}  // namespace zenoh

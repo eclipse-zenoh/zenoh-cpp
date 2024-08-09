@@ -37,7 +37,7 @@ class SHMAllocator {
         const auto len = strlen(data);
         auto alloc_result = provider.alloc_gc_defrag_blocking(len, AllocAlignment({0}));
         ZShmMut&& buf = std::get<ZShmMut>(std::move(alloc_result));
-        memcpy(buf.data(), data, len+1);
+        memcpy(buf.data(), data, len + 1);
         return Bytes::serialize(std::move(buf));
     }
 };
@@ -168,7 +168,6 @@ void put_sub_ring_channel(Talloc& alloc) {
     assert(std::holds_alternative<channels::RecvError>(res));
     assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_NODATA);
 }
-
 
 template <typename Talloc, bool share_alloc = true>
 void test_with_alloc() {

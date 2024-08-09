@@ -17,14 +17,14 @@
 
 namespace zenoh::detail::commons {
 
-template<typename It, typename F>
+template <typename It, typename F>
 class TransformIterator {
     It _it;
     using Ftype = typename std::conditional_t<std::is_lvalue_reference_v<F>, F, std::remove_reference_t<F>>;
     Ftype _f;
 
-public:
-    template<class FF>
+   public:
+    template <class FF>
     TransformIterator(It const& it, FF&& f) : _it(it), _f(std::forward<FF>(f)) {}
 
     using difference_type = typename std::iterator_traits<It>::difference_type;
@@ -38,20 +38,20 @@ public:
 
     auto operator*() const { return _f(_it); }
 
-    auto operator++() { 
-        ++_it; 
-        return *this; 
+    auto operator++() {
+        ++_it;
+        return *this;
     }
-    auto operator++(int) { 
-        auto prev = *this; 
-        ++_it; 
-        return prev; 
+    auto operator++(int) {
+        auto prev = *this;
+        ++_it;
+        return prev;
     }
 };
 
-template<typename It, typename F>
+template <typename It, typename F>
 auto make_transform_iterator(It const& it, F&& f) {
     return TransformIterator<It, F>(it, std::forward<F>(f));
 }
 
-}
+}  // namespace zenoh::detail::commons

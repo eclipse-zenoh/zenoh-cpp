@@ -14,8 +14,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <vector>
 #include <numeric>
+#include <vector>
 
 #include "../getargs.h"
 #include "zenoh.hxx"

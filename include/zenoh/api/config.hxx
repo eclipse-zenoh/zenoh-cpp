@@ -96,11 +96,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @note zenoh-pico only.
     static Config from_env(ZResult* err = nullptr) {
         Config c(nullptr);
-        __ZENOH_RESULT_CHECK(
-            ::zc_config_from_env(&c._0),
-            err,
-            "Failed to create config from environment variable"
-        );
+        __ZENOH_RESULT_CHECK(::zc_config_from_env(&c._0), err, "Failed to create config from environment variable");
         return c;
     }
 #endif

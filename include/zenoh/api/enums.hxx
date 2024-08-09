@@ -12,11 +12,11 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #pragma once
-#include "../zenohc.hxx"
 #include <string_view>
 
-namespace zenoh {
+#include "../zenohc.hxx"
 
+namespace zenoh {
 
 /// ``zenoh::Sample`` kind values.
 ///
@@ -105,4 +105,4 @@ inline std::string_view whatami_as_str(WhatAmI whatami) {
 typedef ::zc_locality_t Locality;
 #endif
 
-}
+}  // namespace zenoh

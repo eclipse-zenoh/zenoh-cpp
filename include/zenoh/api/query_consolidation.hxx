@@ -13,14 +13,14 @@
 
 #pragma once
 
-#include "enums.hxx"
 #include "base.hxx"
+#include "enums.hxx"
 
 namespace zenoh {
 
 /// Replies consolidation mode to apply on replies of get operation.
 class QueryConsolidation : public Copyable<::z_query_consolidation_t> {
-public:
+   public:
     using Copyable::Copyable;
 
     /// @name Constructors
@@ -46,4 +46,4 @@ public:
     /// @return ``true`` if the two values are not equal (have different consolidation mode)
     bool operator!=(const QueryConsolidation& other) const { return !operator==(other); }
 };
-}
+}  // namespace zenoh

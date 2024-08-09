@@ -155,7 +155,8 @@ class CustomSubscriber {
 
     void on_receive(const Sample& sample) {
         CustomStruct s = sample.get_payload().deserialize<CustomStruct>(CustomCodec());
-        std::cout << "Received: " << "{" << s.u << ", " << s.d << ", " << s.s << "}\n";
+        std::cout << "Received: "
+                  << "{" << s.u << ", " << s.d << ", " << s.s << "}\n";
     }
 };
 

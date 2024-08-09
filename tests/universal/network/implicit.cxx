@@ -1,5 +1,6 @@
-#include "zenoh.hxx"
 #include <thread>
+
+#include "zenoh.hxx"
 
 using namespace zenoh;
 using namespace std::chrono_literals;
@@ -30,10 +31,4 @@ void put_sub() {
     assert((msg.get_attachment()->get().deserialize<std::vector<int32_t>>() == std::vector<int32_t>{-1, 10, 15000}));
 }
 
-
-
-
-
-int main(int argc, char** argv) {
-    put_sub();
-}
+int main(int argc, char** argv) { put_sub(); }

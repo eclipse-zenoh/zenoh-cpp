@@ -25,4 +25,4 @@ namespace zenoh {
 inline void init_logging() { ::zc_init_logging(); }
 #endif
 
-}
+}  // namespace zenoh

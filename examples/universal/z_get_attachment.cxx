@@ -52,16 +52,17 @@ int _main(int argc, char **argv) {
     std::condition_variable done_signal;
     bool done = false;
 
-    auto on_reply = [](const Reply& reply) {
+    auto on_reply = [](const Reply &reply) {
         if (reply.is_ok()) {
-            const Sample& sample = reply.get_ok();
+            const Sample &sample = reply.get_ok();
             std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
                       << sample.get_payload().deserialize<std::string>() << "')\n";
             auto attachment = sample.get_attachment();
             if (!attachment.has_value()) return;
             // we expect attachment in the form of key-value pairs
-            auto attachment_deserialized = attachment->get().deserialize<std::unordered_map<std::string, std::string>>();
-            for (auto&& [key, value]: attachment_deserialized) {
+            auto attachment_deserialized =
+                attachment->get().deserialize<std::unordered_map<std::string, std::string>>();
+            for (auto &&[key, value] : attachment_deserialized) {
                 std::cout << "   attachment: " << key << ": '" << value << "'\n";
             }
         } else {
@@ -79,8 +80,7 @@ int _main(int argc, char **argv) {
 
     session.get(
         keyexpr, "", on_reply, on_done,
-        {.target = Z_QUERY_TARGET_ALL, .payload = Bytes::serialize(value), .attachment = Bytes::serialize(attachment)}
-    );
+        {.target = Z_QUERY_TARGET_ALL, .payload = Bytes::serialize(value), .attachment = Bytes::serialize(attachment)});
 
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });

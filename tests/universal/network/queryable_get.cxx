@@ -12,8 +12,9 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-#include "zenoh.hxx"
 #include <thread>
+
+#include "zenoh.hxx"
 
 using namespace zenoh;
 using namespace std::chrono_literals;
@@ -25,7 +26,7 @@ struct QueryData {
     std::string key;
     std::string params;
     int32_t payload;
-    bool operator==(const QueryData &other) {
+    bool operator==(const QueryData& other) {
         return key == other.key && params == other.params && payload == other.payload;
     }
 };
@@ -46,21 +47,16 @@ void queryable_get() {
             ke,
             [&queries](const Query& q) {
                 auto payload = q.get_payload()->get().deserialize<int32_t>();
-                queries.push_back(
-                    QueryData{
-                        .key = std::string(q.get_keyexpr().as_string_view()),
-                        .params = std::string(q.get_parameters()), 
-                        .payload = payload
-                    }
-                );
+                queries.push_back(QueryData{.key = std::string(q.get_keyexpr().as_string_view()),
+                                            .params = std::string(q.get_parameters()),
+                                            .payload = payload});
                 if (q.get_parameters() == "ok") {
                     q.reply(q.get_keyexpr(), Bytes::serialize(std::to_string(payload)));
                 } else {
                     q.reply_err(Bytes::serialize("err"));
                 }
             },
-            [&queryable_dropped]() { queryable_dropped = true; }
-        );
+            [&queryable_dropped]() { queryable_dropped = true; });
         std::this_thread::sleep_for(1s);
 
         auto on_reply = [&replies, &errors](const Reply& r) {
@@ -71,27 +67,25 @@ void queryable_get() {
             }
         };
         auto on_drop = [&queries_processed]() { queries_processed++; };
-    
-        session2.get(selector, "ok", on_reply, on_drop, {.payload = Bytes::serialize<int32_t>(1) });
+
+        session2.get(selector, "ok", on_reply, on_drop, {.payload = Bytes::serialize<int32_t>(1)});
         std::this_thread::sleep_for(1s);
-        session2.get(selector, "ok", on_reply, on_drop, {.payload = Bytes::serialize<int32_t>(2) });
+        session2.get(selector, "ok", on_reply, on_drop, {.payload = Bytes::serialize<int32_t>(2)});
         std::this_thread::sleep_for(1s);
-        session2.get(selector, "err", on_reply, on_drop, {.payload = Bytes::serialize<int32_t>(3) });
+        session2.get(selector, "err", on_reply, on_drop, {.payload = Bytes::serialize<int32_t>(3)});
         std::this_thread::sleep_for(1s);
     }
 
     assert(queries.size() == 3);
-    QueryData qd = { "zenoh/test/1", "ok", 1 };
+    QueryData qd = {"zenoh/test/1", "ok", 1};
     assert(queries[0] == qd);
-    qd = { "zenoh/test/1", "ok", 2 };
+    qd = {"zenoh/test/1", "ok", 2};
     assert(queries[1] == qd);
-    qd = { "zenoh/test/1", "err", 3 };
+    qd = {"zenoh/test/1", "err", 3};
     assert(queries[2] == qd);
-    
+
     assert(queryable_dropped);
 
-
-    
     assert(replies.size() == 2);
     assert(replies[0] == "1");
     assert(replies[1] == "2");
@@ -102,7 +96,6 @@ void queryable_get() {
     assert(queries_processed == 3);
 }
 
-
 void queryable_get_channel() {
     KeyExpr ke("zenoh/test/*");
     KeyExpr selector("zenoh/test/1");
@@ -110,13 +103,10 @@ void queryable_get_channel() {
     auto session1 = Session::open(Config::create_default());
     auto session2 = Session::open(Config::create_default());
     size_t queries_processed = 0;
-    auto queryable = session1.declare_queryable(
-        ke,
-        channels::FifoChannel(3)
-    );
+    auto queryable = session1.declare_queryable(ke, channels::FifoChannel(3));
     std::this_thread::sleep_for(1s);
 
-    auto replies = session2.get(selector, "ok", channels::FifoChannel(3), {.payload = Bytes::serialize<int32_t>(1) });
+    auto replies = session2.get(selector, "ok", channels::FifoChannel(3), {.payload = Bytes::serialize<int32_t>(1)});
     {
         auto res = queryable.handler().recv();
         assert(std::holds_alternative<Query>(res));
@@ -136,8 +126,8 @@ void queryable_get_channel() {
     res = replies.recv();
     assert(std::holds_alternative<channels::RecvError>(res));
     assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
-    
-    replies = session2.get(selector, "err", channels::FifoChannel(3), {.payload = Bytes::serialize<int32_t>(3) });
+
+    replies = session2.get(selector, "err", channels::FifoChannel(3), {.payload = Bytes::serialize<int32_t>(3)});
     {
         auto res = queryable.handler().recv();
         assert(std::holds_alternative<Query>(res));
@@ -156,8 +146,6 @@ void queryable_get_channel() {
     assert(std::holds_alternative<channels::RecvError>(res));
     assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
 }
-
-
 
 int main(int argc, char** argv) {
     queryable_get();
