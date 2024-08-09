@@ -23,6 +23,10 @@
 #include "encoding.hxx"
 #include "enums.hxx"
 #include "keyexpr.hxx"
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#include "source_info.hxx"
+#endif
+#include "timestamp.hxx"
 
 namespace zenoh {
 /// The query to be answered by a ``Queryable``.
