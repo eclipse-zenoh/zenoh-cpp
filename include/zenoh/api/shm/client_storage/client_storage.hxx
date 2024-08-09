@@ -43,7 +43,7 @@ class ShmClientStorage : public Owned<::z_owned_shm_client_storage_t> {
     /// @param container arbitrary container of SHM clients. ShmClientStorage takes the ownership of the clients.
     /// @param add_default_client_set if true, the resulting ShmClientStorage will also include zenoh-default set of SHM
     /// clients
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     template <class Container, typename _T = std::enable_if<
                                    std::is_same<typename std::iterator_traits<typename Container::iterator>::value_type,
@@ -57,7 +57,7 @@ class ShmClientStorage : public Owned<::z_owned_shm_client_storage_t> {
     /// @param end end iterator of SHM clients.
     /// @param add_default_client_set if true, the resulting ShmClientStorage will also include zenoh-default set of SHM
     /// clients
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     template <class I, typename _T = std::enable_if<std::is_same<typename std::iterator_traits<I>::value_type,
                                                                  std::pair<ProtocolId, ShmClient>>::value>>

@@ -27,7 +27,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @name Constructors
 
     /// @brief Create a default configuration.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     static Config create_default(ZResult* err = nullptr) {
         Config c(nullptr);
@@ -37,7 +37,7 @@ class Config : public Owned<::z_owned_config_t> {
 
 #ifdef ZENOHCXX_ZENOHC
     /// @brief Create the default configuration for "peer" mode.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return the ``Config`` object.
     /// @note zenoh-c only.
@@ -49,7 +49,7 @@ class Config : public Owned<::z_owned_config_t> {
 
     /// @brief Create the configuration from the JSON file.
     /// @param path path to the config file.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return the ``Config`` object.
     /// @note zenoh-c only.
@@ -62,7 +62,7 @@ class Config : public Owned<::z_owned_config_t> {
 
     /// @brief Create the configuration from the JSON string.
     /// @param s config in JSON format.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return the ``Config`` object.
     /// @note zenoh-c only.
@@ -74,7 +74,7 @@ class Config : public Owned<::z_owned_config_t> {
     }
     /// @brief Create the configuration for "client" mode.
     /// @param peers the array of peer endpoints.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return the ``Config`` object.
     /// @note zenoh-c only.
@@ -90,7 +90,7 @@ class Config : public Owned<::z_owned_config_t> {
     }
 
     /// @brief Create a configuration by parsing a file with path stored in ZENOH_CONFIG environment variable.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return the ``Config`` object.
     /// @note zenoh-pico only.
@@ -104,7 +104,7 @@ class Config : public Owned<::z_owned_config_t> {
 #ifdef ZENOHCXX_ZENOHPICO
     /// @brief Create the default configuration for "peer" mode.
     /// @param locator Multicast address for peer-to-peer communication.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return the ``Config`` object.
     /// @note zenoh-pico only.
@@ -116,7 +116,7 @@ class Config : public Owned<::z_owned_config_t> {
 
     /// @brief Create the configuration for "client" mode.
     /// @param peer the peer locator to connect to, if null, multicast scouting will be performed.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return the ``Config`` object.
     /// @note zenoh-pico only.
@@ -132,7 +132,7 @@ class Config : public Owned<::z_owned_config_t> {
 #ifdef ZENOHCXX_ZENOHC
     /// @brief Get config parameter by the string key.
     /// @param key the key.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return value of the config parameter in JSON format.
     /// @note zenoh-c only.
@@ -159,7 +159,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @brief Insert a config parameter by the string key.
     /// @param key the key.
     /// @param value the JSON string value,
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return true if the parameter was inserted, false otherwise.
     /// @note zenoh-c only.
@@ -175,7 +175,7 @@ class Config : public Owned<::z_owned_config_t> {
 #ifdef ZENOHCXX_ZENOHPICO
     /// @brief Get config parameter by it's numeric ID.
     /// @param key the key.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return pointer to the null-terminated string value of the config parameter.
     /// @note zenoh-pico only.
@@ -189,7 +189,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @brief Insert a config parameter by it's numeric ID.
     /// @param key the key.
     /// @param value the null-terminated string value.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @note zenoh-pico only.
     void insert(uint8_t key, const char* value, ZResult* err = nullptr) {
