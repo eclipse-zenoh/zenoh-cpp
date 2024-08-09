@@ -14,9 +14,9 @@
 
 #include <chrono>
 #include <condition_variable>
+#include <cstring>
 #include <iostream>
 #include <mutex>
-#include <cstring>
 #include <numeric>
 
 #include "zenoh.hxx"
@@ -57,9 +57,8 @@ int _main(int argc, char** argv) {
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
-    auto sub = session.declare_subscriber(KeyExpr("test/pong"), 
-        [&condvar](const Sample&) mutable { condvar.notify_one(); }, closures::none
-    );
+    auto sub = session.declare_subscriber(
+        KeyExpr("test/pong"), [&condvar](const Sample&) mutable { condvar.notify_one(); }, closures::none);
     auto pub = session.declare_publisher(KeyExpr("test/ping"));
     std::vector<uint8_t> data(args.size);
     std::iota(data.begin(), data.end(), uint8_t{0});

@@ -23,6 +23,10 @@
 #include "encoding.hxx"
 #include "enums.hxx"
 #include "keyexpr.hxx"
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#include "source_info.hxx"
+#endif
+#include "timestamp.hxx"
 
 namespace zenoh {
 /// The query to be answered by a ``Queryable``.
@@ -51,7 +55,7 @@ class Query : public Owned<::z_owned_query_t> {
     std::optional<std::reference_wrapper<const Bytes>> get_payload() const {
         auto payload = ::z_query_payload(this->loan());
         if (payload == nullptr) return {};
-        return std::cref(detail::as_owned_cpp_obj<Bytes>(payload)); 
+        return std::cref(detail::as_owned_cpp_obj<Bytes>(payload));
     }
 
     /// @brief Get the encoding of the query.
@@ -61,7 +65,6 @@ class Query : public Owned<::z_owned_query_t> {
         if (encoding == nullptr) return {};
         return std::cref(detail::as_owned_cpp_obj<Encoding>(::z_query_encoding(this->loan())));
     }
-
 
     /// @brief Get the attachment of the query.
     /// @return attachment of the query.
@@ -196,7 +199,7 @@ class Query : public Owned<::z_owned_query_t> {
         __ZENOH_RESULT_CHECK(::z_query_reply_del(this->loan(), detail::loan(key_expr), &opts), err,
                              "Failed to send reply del");
     }
-    
+
     /// @brief Construct a a shallow copy of this Query.
     ///
     /// The query responses will be sent only when the last clone is destroyed.

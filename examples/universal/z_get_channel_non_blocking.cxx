@@ -75,7 +75,7 @@ int _main(int argc, char **argv) {
                 std::cout << ".";
                 std::this_thread::sleep_for(1s);
                 continue;
-            } else { // channel is closed - no more replies will be received
+            } else {  // channel is closed - no more replies will be received
                 break;
             }
         }

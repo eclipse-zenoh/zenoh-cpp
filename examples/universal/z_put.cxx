@@ -68,7 +68,8 @@ int _main(int argc, char **argv) {
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
-    std::cout << "Putting Data (" << "'" << keyexpr << "': '" << value << "')...\n";
+    std::cout << "Putting Data ("
+              << "'" << keyexpr << "': '" << value << "')...\n";
 
     std::unordered_map<std::string, std::string> attachment_map = {{"serial_number", "123"},
                                                                    {"coordinates", "48.7082,2.1498"}};

@@ -13,38 +13,38 @@
 
 #pragma once
 
-#include "base.hxx"
 #include "../detail/interop.hxx"
+#include "base.hxx"
 #include "keyexpr.hxx"
 
 namespace zenoh {
 
 class SubscriberBase : public Owned<::z_owned_subscriber_t> {
-public:
+   public:
     using Owned::Owned;
 
 #ifdef ZENOHCXX_ZENOHC
     /// @brief Get the key expression of the subscriber
     /// @note zenoh-c only.
-    const KeyExpr& get_keyexpr() const { 
-        return detail::as_owned_cpp_obj<KeyExpr>(::z_subscriber_keyexpr(this->loan())); 
+    const KeyExpr& get_keyexpr() const {
+        return detail::as_owned_cpp_obj<KeyExpr>(::z_subscriber_keyexpr(this->loan()));
     }
 #endif
 };
 
 /// A Zenoh subscriber. Destroying subscriber cancels the subscription.
 /// Constructed by ``Session::declare_subscriber`` method.
-template<class Handler>
-class Subscriber: public SubscriberBase {
+template <class Handler>
+class Subscriber : public SubscriberBase {
     Handler _handler;
-public:
+
+   public:
     /// @name Constructors
 
     /// @internal
     /// @brief Construct from subscriber and handler.
     Subscriber(SubscriberBase subscriber, Handler handler)
-        :SubscriberBase(std::move(subscriber)), _handler(std::move(handler)) {
-    }
+        : SubscriberBase(std::move(subscriber)), _handler(std::move(handler)) {}
 
     /// @name Methods
 
@@ -55,11 +55,10 @@ public:
     const Handler& handler() const { return _handler; };
 };
 
-template<>
-class Subscriber<void> :public SubscriberBase {
-public:
+template <>
+class Subscriber<void> : public SubscriberBase {
+   public:
     using SubscriberBase::SubscriberBase;
 };
 
-
-}
+}  // namespace zenoh

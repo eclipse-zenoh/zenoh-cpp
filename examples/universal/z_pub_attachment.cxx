@@ -14,11 +14,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <chrono>
 #include <iostream>
 #include <limits>
 #include <sstream>
 #include <thread>
-#include <chrono>
 
 #include "../getargs.h"
 #include "zenoh.hxx"
@@ -64,9 +64,7 @@ int _main(int argc, char **argv) {
     std::cout << "Publisher on '" << keyexpr << "' declared" << std::endl;
 
     // allocate attachment map
-    std::unordered_map<std::string, std::string> attachment_map = {
-        {"source", "C++"}
-    };
+    std::unordered_map<std::string, std::string> attachment_map = {{"source", "C++"}};
 
     std::cout << "Press CTRL-C to quit..." << std::endl;
     for (int idx = 0; idx < std::numeric_limits<int>::max(); ++idx) {
@@ -77,7 +75,8 @@ int _main(int argc, char **argv) {
         std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
         // add some other attachment value
         attachment_map["index"] = std::to_string(idx);
-        pub.put(Bytes::serialize(s), {.encoding = Encoding("text/plain"), .attachment = Bytes::serialize(attachment_map)});
+        pub.put(Bytes::serialize(s),
+                {.encoding = Encoding("text/plain"), .attachment = Bytes::serialize(attachment_map)});
     }
     return 0;
 }

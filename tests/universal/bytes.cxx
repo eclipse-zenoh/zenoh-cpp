@@ -12,9 +12,9 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-#include "zenoh.hxx"
-
 #include <iostream>
+
+#include "zenoh.hxx"
 #undef NDEBUG
 #include <assert.h>
 
@@ -146,7 +146,6 @@ void serde_advanced() {
     assert(v.empty());
     assert(b.deserialize<decltype(v)>() == v2);
 
-
     std::unordered_map<std::string, double> mu = {{"a", 0.5}, {"b", -123.45}, {"abc", 3.1415926}};
     b = Bytes::serialize(mu);
     assert(b.deserialize<decltype(mu)>() == mu);
@@ -220,7 +219,7 @@ void reader_writer_append() {
     out = std::vector<uint8_t>(4);
     assert(reader.read(out.data(), 4) == 4);
     assert(out == data2);
-    assert(reader.read(out.data(), 1) == 0); // reached the end of the payload
+    assert(reader.read(out.data(), 1) == 0);  // reached the end of the payload
 }
 
 void reader_writer_append_bounded() {
@@ -247,10 +246,8 @@ void reader_writer_append_bounded() {
 
     assert(reader.read_bounded().deserialize<std::string>() == s);
     assert(reader.read_bounded().deserialize<float>() == f);
-    assert(reader.read(out.data(), 1) == 0); // reached the end of the payload
+    assert(reader.read(out.data(), 1) == 0);  // reached the end of the payload
 }
-
-
 
 struct CustomStruct {
     uint32_t u = 0;

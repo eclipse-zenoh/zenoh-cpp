@@ -12,10 +12,10 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-#include "zenoh.hxx"
-
 #include <thread>
 #include <unordered_set>
+
+#include "zenoh.hxx"
 
 using namespace zenoh;
 using namespace std::chrono_literals;
@@ -60,16 +60,15 @@ void test_liveliness_subscriber() {
     std::unordered_set<std::string> delete_tokens;
 
     auto subscriber = session1.liveliness_declare_subscriber(
-        ke, 
-        [&put_tokens, &delete_tokens](const Sample& s) { 
+        ke,
+        [&put_tokens, &delete_tokens](const Sample& s) {
             if (s.get_kind() == Z_SAMPLE_KIND_PUT) {
                 put_tokens.insert(std::string(s.get_keyexpr().as_string_view()));
             } else if (s.get_kind() == Z_SAMPLE_KIND_DELETE) {
                 delete_tokens.insert(std::string(s.get_keyexpr().as_string_view()));
             }
         },
-        closures::none
-    );
+        closures::none);
     std::this_thread::sleep_for(1s);
 
     auto token1 = session2.liveliness_declare_token(token_ke1);
@@ -78,7 +77,6 @@ void test_liveliness_subscriber() {
     assert(put_tokens.size() == 2);
     assert(put_tokens.count("zenoh/liveliness/test/1") == 1);
     assert(put_tokens.count("zenoh/liveliness/test/2") == 1);
-
 
     std::move(token1).undeclare();
     std::this_thread::sleep_for(1s);
@@ -91,7 +89,6 @@ void test_liveliness_subscriber() {
     assert(delete_tokens.size() == 2);
     assert(delete_tokens.count("zenoh/liveliness/test/2") == 1);
 }
-
 
 int main(int argc, char** argv) {
     test_liveliness_get();

@@ -13,19 +13,19 @@
 
 #pragma once
 
-#include "base.hxx"
-#include "../zenohc.hxx"
-
 #include <array>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+
+#include "../zenohc.hxx"
+#include "base.hxx"
 
 namespace zenoh {
 /// @brief A representation a Zenoh ID.
 ///
 /// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
 class Id : public Copyable<::z_id_t> {
-public:
+   public:
     using Copyable::Copyable;
 
     /// @name Methods
@@ -40,9 +40,9 @@ public:
 
 /// @brief Print ``Id`` in the hex format.
 inline std::ostream& operator<<(std::ostream& os, const Id& id) {
-    auto id_ptr = reinterpret_cast<const::z_id_t*>(&id)->id;
+    auto id_ptr = reinterpret_cast<const ::z_id_t*>(&id)->id;
     for (size_t i = 0; id_ptr[i] != 0 && i < 16; i++)
         os << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(id_ptr[i]);
     return os;
 }
-}
+}  // namespace zenoh

@@ -14,9 +14,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <chrono>
 #include <iostream>
 #include <thread>
-#include <chrono>
 
 #include "../getargs.h"
 #include "zenoh.hxx"
@@ -58,7 +58,7 @@ int _main(int argc, char **argv) {
     std::cout << "Declaring Queryable on '" << expr << "'...\n";
 
     auto on_query = [](const Query &query) {
-        const KeyExpr& keyexpr = query.get_keyexpr();
+        const KeyExpr &keyexpr = query.get_keyexpr();
         auto params = query.get_parameters();
         auto payload = query.get_payload();
         std::cout << ">> [Queryable ] Received Query '" << keyexpr.as_string_view() << "?" << params;
@@ -72,13 +72,12 @@ int _main(int argc, char **argv) {
         if (attachment.has_value()) {
             // read attachment as a key-value map
             attachment_map = attachment->get().deserialize<std::unordered_map<std::string, std::string>>();
-            for (auto&& [key, value]: attachment_map) {
+            for (auto &&[key, value] : attachment_map) {
                 std::cout << "   attachment: " << key << ": '" << value << "'\n";
             }
         }
-        query.reply(
-            KeyExpr(expr), Bytes::serialize(value), {.encoding = Encoding("text/palin"), .attachment = Bytes::serialize(attachment_map)}
-        );
+        query.reply(KeyExpr(expr), Bytes::serialize(value),
+                    {.encoding = Encoding("text/palin"), .attachment = Bytes::serialize(attachment_map)});
     };
 
     auto on_drop_queryable = []() { std::cout << "Destroying queryable\n"; };
