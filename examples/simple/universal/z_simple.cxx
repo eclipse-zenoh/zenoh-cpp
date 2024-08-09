@@ -62,7 +62,7 @@ struct CustomCodec {
         auto writer = b.writer();
         writer.write_all(serialize_arithmetic(s->u).data(), 4);
         writer.write_all(serialize_arithmetic(s->d).data(), 8);
-        writer.append(Bytes::serialize(s->s, ZenohCodec(std::move(s))));
+        writer.append(Bytes::serialize(s->s, ZenohCodec(s)));
         return b;
     }
 
