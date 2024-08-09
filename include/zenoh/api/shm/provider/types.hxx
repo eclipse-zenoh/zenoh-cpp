@@ -51,7 +51,7 @@ class MemoryLayout : public Owned<::z_owned_memory_layout_t> {
     /// @brief Create a new MemoryLayout.
     /// @param size layout size
     /// @param alignment layout alignment
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     MemoryLayout(size_t size, AllocAlignment alignment, ZResult* err = nullptr) : Owned(nullptr) {
         __ZENOH_RESULT_CHECK(::z_memory_layout_new(&this->_0, size, alignment), err,

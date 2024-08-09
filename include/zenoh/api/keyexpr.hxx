@@ -37,7 +37,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     ///
     /// @param key_expr String representing key expression.
     /// @param autocanonize If true the key_expr will be autocanonized, prior to constructing key expression.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     explicit KeyExpr(std::string_view key_expr, bool autocanonize = true, ZResult* err = nullptr) : Owned(nullptr) {
         if (autocanonize) {
@@ -54,7 +54,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     ///
     /// @param key_expr String representing key expression.
     /// @param autocanonize If true the key_expr will be autocanonized, prior to constructing key expression.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     KeyExpr(const std::string& key_expr, bool autocanonize = true, ZResult* err = nullptr)
         : KeyExpr(static_cast<std::string_view>(key_expr), autocanonize, err){};
@@ -63,7 +63,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     ///
     /// @param key_expr Null-terminated string representing key expression.
     /// @param autocanonize If true the key_expr will be autocanonized, prior to constructing key expression.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     KeyExpr(const char* key_expr, bool autocanonize = true, ZResult* err = nullptr)
         : KeyExpr(std::string_view(key_expr), autocanonize, err){};
@@ -85,7 +85,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
 
     /// @brief Construct new key expression by concatenating the current one with a string.
     /// @param s A string to concatenate with the key expression.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return A new key expression.
     KeyExpr concat(std::string_view s, ZResult* err = nullptr) const {
@@ -98,7 +98,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
 
     /// @brief Construct new key expression by joining it with another one.
     /// @param other the ``KeyExpr`` to append.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     KeyExpr join(const KeyExpr& other, ZResult* err = nullptr) const {
         KeyExpr k;

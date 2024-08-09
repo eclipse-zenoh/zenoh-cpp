@@ -105,7 +105,7 @@ class Query : public Owned<::z_owned_query_t> {
 
     /// @brief Send reply to a query.
     /// @param options options to pass to reply operation.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void reply(const KeyExpr& key_expr, Bytes&& payload, ReplyOptions&& options = ReplyOptions::create_default(),
                ZResult* err = nullptr) const {
@@ -141,7 +141,7 @@ class Query : public Owned<::z_owned_query_t> {
 
     /// @brief Send error reply to a query.
     /// @param options options to pass to reply error operation.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void reply_err(Bytes&& payload, ReplyErrOptions&& options = ReplyErrOptions::create_default(),
                    ZResult* err = nullptr) const {
@@ -181,7 +181,7 @@ class Query : public Owned<::z_owned_query_t> {
     /// @brief Send a delete reply to a query.
     /// @param key_expr: The key of this delete reply.
     /// @param options: The options to pass to reply del operation.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void reply_del(const KeyExpr& key_expr, ReplyDelOptions&& options = ReplyDelOptions::create_default(),
                    ZResult* err = nullptr) const {

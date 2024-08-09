@@ -66,7 +66,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     /// @brief Publish a message on publisher key expression.
     /// @param payload Data to publish.
     /// @param options Optional values passed to put operation.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void put(Bytes&& payload, PutOptions&& options = PutOptions::create_default(), ZResult* err = nullptr) const {
         auto payload_ptr = detail::as_owned_c_ptr(payload);
@@ -85,7 +85,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
 
     /// @brief Undeclare the resource associated with the publisher key expression.
     /// @param options Optional values to pass to delete operation.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void delete_resource(DeleteOptions&& options = DeleteOptions::create_default(), ZResult* err = nullptr) const {
         ::z_publisher_delete_options_t opts;

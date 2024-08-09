@@ -62,7 +62,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Create a new Session.
     /// @param config Zenoh session ``Config``.
     /// @param options Options to pass to session creation operation.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     Session(Config&& config, SessionOptions&& options = SessionOptions::create_default(), ZResult* err = nullptr)
         : Owned(nullptr) {
@@ -88,7 +88,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Create a new Session with custom SHM client set.
     /// @param config Zenoh session ``Config``.
     /// @param shm_storage Storage with custom SHM clients.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     Session(Config&& config, const ShmClientStorage& shm_storage, ZResult* err = nullptr) : Owned(nullptr) {
         __ZENOH_RESULT_CHECK(
@@ -100,7 +100,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief A factory method equivalent to a ``Session`` constructor.
     /// @param config Zenoh session ``Config``.
     /// @param options Options to pass to session creation operation.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return ``Session`` object. In case of failure it will be return in invalid state.
     static Session open(Config&& config, SessionOptions&& options = SessionOptions::create_default(),
@@ -112,7 +112,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief A factory method equivalent to a ``Session`` constructor for custom SHM clients list.
     /// @param config Zenoh session ``Config``.
     /// @param shm_storage Storage with custom SHM clients.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return ``Session`` object. In case of failure it will be return in invalid state.
     static Session open(Config&& config, const ShmClientStorage& shm_storage, ZResult* err = nullptr) {
@@ -139,7 +139,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Create ``KeyExpr`` instance with numeric id registered in ``Session`` routing tables (to reduce bandwith
     /// usage).
     /// @param key_expr ``KeyExpr`` to declare.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return Declared ``KeyExpr`` instance.
     KeyExpr declare_keyexpr(const KeyExpr& key_expr, ZResult* err = nullptr) const {
@@ -150,7 +150,7 @@ class Session : public Owned<::z_owned_session_t> {
     }
 
     /// @brief Remove ``KeyExpr`` instance from ``Session`` routing table and drop ``KeyExpr`` instance.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @param key_expr ``KeyExpr`` instance to undeclare, that was previously returned by ``Session::declare_keyexpr``.
     void undeclare_keyexpr(KeyExpr&& key_expr, ZResult* err = nullptr) const {
@@ -196,7 +196,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param on_reply callable that will be called once for each received reply.
     /// @param on_drop callable that will be called once all replies are received.
     /// @param options ``GetOptions`` query options.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     template <class C, class D>
     void get(const KeyExpr& key_expr, const std::string& parameters, C&& on_reply, D&& on_drop,
@@ -239,7 +239,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param parameters the parameters string in URL format.
     /// @param channel channel instance.
     /// @param options query options.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return Reply handler.
     template <class Channel>
@@ -287,7 +287,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Undeclare a resource. Equivalent to ``Publisher::delete_resource``.
     /// @param key_expr  the key expression to delete the resource.
     /// @param options options to pass to delete operation.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void delete_resource(const KeyExpr& key_expr, DeleteOptions&& options = DeleteOptions::create_default(),
                          ZResult* err = nullptr) const {
@@ -335,7 +335,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param key_expr the key expression to put the data.
     /// @param payload the data to publish.
     /// @param options options to pass to put operation.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void put(const KeyExpr& key_expr, Bytes&& payload, PutOptions&& options = PutOptions::create_default(),
              ZResult* err = nullptr) const {
@@ -375,7 +375,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param on_query the callable to handle ``Query`` requests. Will be called once for each query.
     /// @param on_drop the drop callable. Will be called once, when ``Queryable`` is destroyed or undeclared.
     /// @param options options passed to queryable declaration.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``Queryable`` object.
     template <class C, class D>
@@ -410,7 +410,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param key_expr the key expression to match the ``Session::get`` requests.
     /// @param channel an instance of channel.
     /// @param options options passed to queryable declaration.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``Queryable`` object.
     template <class Channel>
@@ -451,7 +451,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param on_sample the callback that will be called for each received sample.
     /// @param on_drop the callback that will be called once subscriber is destroyed or undeclared.
     /// @param options options to pass to subscriber declaration.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``Subscriber`` object.
     template <class C, class D>
@@ -486,7 +486,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param key_expr the key expression to match the publishers.
     /// @param channel an instance of channel.
     /// @param options options to pass to subscriber declaration.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``Subscriber`` object.
     template <class Channel>
@@ -531,7 +531,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Create a ``Publisher`` object to publish data to matching ``Subscriber`` objects.
     /// @param key_expr The key expression to match the subscribers.
     /// @param options Options passed to publisher declaration.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``Publisher`` object.
     Publisher declare_publisher(const KeyExpr& key_expr,
@@ -555,7 +555,7 @@ class Session : public Owned<::z_owned_session_t> {
 
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
     /// @brief Fetches the Zenoh IDs of all connected routers.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a vector of all connected router Id.
     std::vector<Id> get_routers_z_id(ZResult* err = nullptr) const {
@@ -571,7 +571,7 @@ class Session : public Owned<::z_owned_session_t> {
     }
 
     /// @brief Fetches the Zenoh IDs of all connected peers.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a vector of all connected peer Id.
     std::vector<Id> get_peers_z_id(ZResult* err = nullptr) const {
@@ -589,7 +589,7 @@ class Session : public Owned<::z_owned_session_t> {
 
 #ifdef ZENOHCXX_ZENOHPICO
     /// @brief Start a separate task to read from the network and process the messages as soon as they are received.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @note zenoh-pico only
     void start_read_task(ZResult* err = nullptr) {
@@ -597,7 +597,7 @@ class Session : public Owned<::z_owned_session_t> {
     }
 
     /// @brief Stop the read task.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @note zenoh-pico only
     void stop_read_task(ZResult* err = nullptr) {
@@ -607,7 +607,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Start a separate task to handle the session lease.  This task will send KeepAlive messages when needed
     /// and will close the session when the lease is expired. When operating over a multicast transport, it also
     /// periodically sends the Join messages.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @note zenoh-pico only
     void start_lease_task(ZResult* err = nullptr) {
@@ -615,7 +615,7 @@ class Session : public Owned<::z_owned_session_t> {
     }
 
     /// @brief Stop the lease task.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @note zenoh-pico only
     void stop_lease_task(ZResult* err = nullptr) {
@@ -624,7 +624,7 @@ class Session : public Owned<::z_owned_session_t> {
 
     /// @brief Triggers a single execution of reading procedure from the network and processes of any received the
     /// message.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @note zenoh-pico only
     void read(ZResult* err = nullptr) {
@@ -633,14 +633,14 @@ class Session : public Owned<::z_owned_session_t> {
 
     /// @brief Triggers a single execution of keep alive procedure. It will send KeepAlive messages when needed and
     /// will close the session when the lease is expired.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void send_keep_alive(ZResult* err = nullptr) {
         __ZENOH_RESULT_CHECK(zp_send_keep_alive(this->loan(), nullptr), err, "Failed to perform send_keep_alive");
     }
 
     /// @brief Triggers a single execution of join procedure: send the Join message.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void send_join(ZResult* err = nullptr) {
         __ZENOH_RESULT_CHECK(zp_send_join(this->loan(), nullptr), err, "Failed to perform send_join");
@@ -664,7 +664,7 @@ class Session : public Owned<::z_owned_session_t> {
     ///
     /// @param key_expr: A keyexpr to declare a liveliess token for.
     /// @param options: Liveliness token declaration properties.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``LivelinessToken``.
     LivelinessToken liveliness_declare_token(
@@ -697,7 +697,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param on_sample the callabl that will be called each time a liveliness token status is changed.
     /// @param on_drop the callable that will be called once subscriber is destroyed or undeclared.
     /// @param options options to pass to subscriber declaration.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``Subscriber`` object.
     template <class C, class D>
@@ -732,7 +732,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param key_expr the key expression to subscribe to.
     /// @param channel an instance of channel.
     /// @param options options to pass to subscriber declaration.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``Subscriber`` object.
     template <class Channel>
@@ -771,7 +771,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param key_expr: The key expression to query liveliness tokens for.
     /// @param callback: The callable that will be called for each received reply.
     /// @param options: Additional options for the liveliness get operation.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     template <class C, class D>
     void liveliness_get(const KeyExpr& key_expr, C&& on_reply, D&& on_drop,
@@ -802,7 +802,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param key_expr the key expression to query liveliness tokens for.
     /// @param channel channel instance.
     /// @param options  additional options for the liveliness get operation.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return Reply handler.
     template <class Channel>
@@ -822,7 +822,7 @@ class Session : public Owned<::z_owned_session_t> {
 
 #endif
     /// @brief Create Timestamp from session id.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     Timestamp new_timestamp(ZResult* err = nullptr) {
         ::z_timestamp_t t;

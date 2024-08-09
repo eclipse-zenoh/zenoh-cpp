@@ -30,7 +30,7 @@ class LivelinessToken : public Owned<::zc_owned_liveliness_token_t> {
     using Owned::Owned;
 
     /// Undeclares liveliness token, resetting it to gravestone state.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void undeclare(ZResult* err = nullptr) && {
         __ZENOH_RESULT_CHECK(::zc_liveliness_undeclare_token(detail::as_owned_c_ptr(*this)), err,

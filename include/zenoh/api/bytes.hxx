@@ -127,7 +127,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     ///
     /// @tparam T Type to deserialize into.
     /// @tparam Codec codec to use.
-    /// @param res if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @param codec codec instance.
     /// @return deserialzied data.
@@ -172,7 +172,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         /// @brief Set the `reader` position indicator to the value pointed to by offset, starting from the current
         /// position.
         /// @param offset offset in bytes starting from the current position.
-        /// @param res if not null, the result code will be written to this location, otherwise ZException exception
+        /// @param err if not null, the result code will be written to this location, otherwise ZException exception
         /// will be thrown in case of error.
         void seek_from_current(int64_t offset, ZResult* err = nullptr) {
             __ZENOH_RESULT_CHECK(::z_bytes_reader_seek(&this->_0, offset, SEEK_CUR), err, "seek_from_current failed");
@@ -181,7 +181,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         /// @brief Set the `reader` position indicator to the value pointed to by offset, starting from the start of the
         /// data.
         /// @param offset offset in bytes starting from the 0-th byte position.
-        /// @param res if not null, the result code will be written to this location, otherwise ZException exception
+        /// @param err if not null, the result code will be written to this location, otherwise ZException exception
         /// will be thrown in case of error.
         void seek_from_start(int64_t offset, ZResult* err = nullptr) {
             __ZENOH_RESULT_CHECK(::z_bytes_reader_seek(&this->_0, offset, SEEK_SET), err, "seek_from_start failed");
@@ -190,7 +190,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         /// @brief Set the `reader` position indicator to the value pointed to by offset with respect to the end of the
         /// data.
         /// @param offset offset in bytes starting from end position.
-        /// @param res if not null, the result code will be written to this location, otherwise ZException exception
+        /// @param err if not null, the result code will be written to this location, otherwise ZException exception
         /// will be thrown in case of error.
         void seek_from_end(int64_t offset, ZResult* err = nullptr) {
             __ZENOH_RESULT_CHECK(::z_bytes_reader_seek(&this->_0, offset, SEEK_END), err, "seek_from_end failed");
@@ -198,7 +198,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
 
         /// @brief Read bounded data previously written by ``Bytes::Writer::write_bounded``.
         ///
-        /// @param res if not null, the result code will be written to this location, otherwise ZException exception
+        /// @param err if not null, the result code will be written to this location, otherwise ZException exception
         /// will be thrown in case of error.
         Bytes read_bounded(ZResult* err = nullptr) {
             Bytes b;
@@ -222,7 +222,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         /// @brief Copy data from sepcified source into underlying ``Bytes`` instance.
         /// @param src source to copy data from.
         /// @param len number of bytes to copy from src to the underlying ``Bytes`` instance.
-        /// @param res if not null, the result code will be written to this location, otherwise ZException exception
+        /// @param err if not null, the result code will be written to this location, otherwise ZException exception
         /// will be thrown in case of error.
         void write_all(const uint8_t* src, size_t len, ZResult* err = nullptr) {
             __ZENOH_RESULT_CHECK(::z_bytes_writer_write_all(&this->_0, src, len), err, "Failed to write data");
@@ -233,7 +233,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         /// Said in other terms, it allows to create a linear view on different memory regions without copy.
         ///
         /// @param data data to append.
-        /// @param res if not null, the result code will be written to this location, otherwise ZException exception
+        /// @param err if not null, the result code will be written to this location, otherwise ZException exception
         /// will be thrown in case of error.
         void append(Bytes&& data, ZResult* err = nullptr) {
             __ZENOH_RESULT_CHECK(::z_bytes_writer_append(&this->_0, z_move(data._0)), err, "Failed to append data");
@@ -243,7 +243,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         /// of data using ``Bytes::reader::read_bounded``.
         ///
         /// @param data data to append.
-        /// @param res if not null, the result code will be written to this location, otherwise ZException exception
+        /// @param err if not null, the result code will be written to this location, otherwise ZException exception
         /// will be thrown in case of error.
         void append_bounded(Bytes&& data, ZResult* err = nullptr) {
             __ZENOH_RESULT_CHECK(::z_bytes_writer_append_bounded(&this->_0, z_move(data._0)), err,
