@@ -26,8 +26,9 @@ elseif(PROJECT_VERSION_TWEAK GREATER 1)
 endif()
 status_print(project_version)
 
-option(ZENOHCXX_ZENOHC "Build for Zenoh-c target" ON)
-option(ZENOHCXX_ZENOHPICO "Build for Zenoh-pico target" OFF)
+declare_cache_var_true_if_vscode(ZENOHCXX_BUILD_IN_SOURCE_TREE "Load zenoh-c and zenoh-pico from source tree")
+declare_cache_var(ZENOHCXX_ZENOHC ON BOOL "Build for Zenoh-c target")
+declare_cache_var(ZENOHCXX_ZENOHPICO OFF BOOL "Build for Zenoh-pico target")
 
 set_default_build_type(Release)
 
@@ -37,7 +38,15 @@ target_include_directories(zenohcxx INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/inclu
 
 if(ZENOHCXX_ZENOHPICO) 
 	# zenohcxx for zenohpico
-	find_package(zenohpico REQUIRED)
+	if (ZENOHCXX_BUILD_IN_SOURCE_TREE)
+		# use github submodule from source tree
+		message(STATUS "Loading zenoh-pico from ${CMAKE_CURRENT_SOURCE_DIR}/zenoh-pico becasue ZENOHCXX_BUILD_IN_SOURCE_TREE is ON")
+		list(APPEND CMAKE_MESSAGE_INDENT " -- ")
+		add_subdirectory(zenoh-pico)
+		list(POP_BACK CMAKE_MESSAGE_INDENT)
+	else()
+		find_package(zenohpico REQUIRED)
+	endif()
 	if(TARGET zenohpico::lib)
 		message(STATUS "defined lib target zenohcxx::zenohpico for zenohpico::lib")
 		add_library(zenohcxx_zenohpico INTERFACE)
@@ -51,7 +60,15 @@ endif()
 
 if(ZENOHCXX_ZENOHC)
 	# zenohcxx for zenohc
-	find_package(zenohc REQUIRED)
+	if (ZENOHCXX_BUILD_IN_SOURCE_TREE)
+		# use github submodule from source tree
+		message(STATUS "Loading zenoh-c from ${CMAKE_CURRENT_SOURCE_DIR}/zenoh-c becasue ZENOHCXX_BUILD_IN_SOURCE_TREE is ON")
+		list(APPEND CMAKE_MESSAGE_INDENT " -- ")
+		add_subdirectory(zenoh-c)
+		list(POP_BACK CMAKE_MESSAGE_INDENT)
+	else()
+		find_package(zenohc REQUIRED)
+	endif()
 	if(TARGET zenohc::lib)
 		message(STATUS "defined lib target zenohcxx::zenohc::lib for zenohc::lib")
 		add_library(zenohcxx_zenohc INTERFACE)
