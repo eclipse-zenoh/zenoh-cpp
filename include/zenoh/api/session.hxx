@@ -66,7 +66,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     Session(Config&& config, SessionOptions&& options = SessionOptions::create_default(), ZResult* err = nullptr)
         : Owned(nullptr) {
-        __ZENOH_RESULT_CHECK(::z_open(&this->_0, detail::as_owned_c_ptr(config)), err, "Failed to open session");
+        __ZENOH_RESULT_CHECK(::z_open(&this->_0, detail::move_(config)), err, "Failed to open session");
 #ifdef ZENOHCXX_ZENOHPICO
         if (err != nullptr && *err != Z_OK) return;
         if (options.start_background_tasks) {
@@ -92,7 +92,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     Session(Config&& config, const ShmClientStorage& shm_storage, ZResult* err = nullptr) : Owned(nullptr) {
         __ZENOH_RESULT_CHECK(
-            ::z_open_with_custom_shm_clients(&this->_0, detail::as_owned_c_ptr(config), detail::loan(shm_storage)), err,
+            ::z_open_with_custom_shm_clients(&this->_0, detail::move_(config), detail::loan(shm_storage)), err,
             "Failed to open session");
     }
 #endif
@@ -154,7 +154,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @param key_expr ``KeyExpr`` instance to undeclare, that was previously returned by ``Session::declare_keyexpr``.
     void undeclare_keyexpr(KeyExpr&& key_expr, ZResult* err = nullptr) const {
-        __ZENOH_RESULT_CHECK(::z_undeclare_keyexpr(detail::as_owned_c_ptr(key_expr), this->loan()), err,
+        __ZENOH_RESULT_CHECK(::z_undeclare_keyexpr(detail::move_(key_expr), this->loan()), err,
                              "Failed to undeclare key expression");
     }
 
@@ -219,12 +219,12 @@ class Session : public Owned<::z_owned_session_t> {
         opts.congestion_control = options.congestion_control;
         opts.priority = options.priority;
         opts.is_express = options.is_express;
-        opts.payload = detail::as_owned_c_ptr(options.payload);
-        opts.encoding = detail::as_owned_c_ptr(options.encoding);
+        opts.payload = detail::move_(options.payload);
+        opts.encoding = detail::move_(options.encoding);
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
-        opts.source_info = detail::as_owned_c_ptr(options.source_info);
+        opts.source_info = detail::move_(options.source_info);
 #endif
-        opts.attachment = detail::as_owned_c_ptr(options.attachment);
+        opts.attachment = detail::move_(options.attachment);
         opts.timeout_ms = options.timeout_ms;
 
         __ZENOH_RESULT_CHECK(
@@ -252,18 +252,18 @@ class Session : public Owned<::z_owned_session_t> {
         z_get_options_default(&opts);
         opts.target = options.target;
         opts.consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation);
-        opts.payload = detail::as_owned_c_ptr(options.payload);
-        opts.encoding = detail::as_owned_c_ptr(options.encoding);
+        opts.payload = detail::move_(options.payload);
+        opts.encoding = detail::move_(options.encoding);
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
-        opts.source_info = detail::as_owned_c_ptr(options.source_info);
+        opts.source_info = detail::move_(options.source_info);
 #endif
-        opts.attachment = detail::as_owned_c_ptr(options.attachment);
+        opts.attachment = detail::move_(options.attachment);
         opts.timeout_ms = options.timeout_ms;
 
         ZResult res =
             ::z_get(this->loan(), detail::loan(key_expr), parameters.c_str(), ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to perform get operation");
-        if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
+        if (res != Z_OK) ::z_drop(detail::move_(cb_handler_pair.second));
         return std::move(cb_handler_pair.second);
     }
     /// @brief Options to be passed to ``delete_resource`` operation
@@ -341,19 +341,19 @@ class Session : public Owned<::z_owned_session_t> {
              ZResult* err = nullptr) const {
         ::z_put_options_t opts;
         z_put_options_default(&opts);
-        opts.encoding = detail::as_owned_c_ptr(options.encoding);
+        opts.encoding = detail::move_(options.encoding);
         opts.congestion_control = options.congestion_control;
         opts.priority = options.priority;
         opts.is_express = options.is_express;
 #if defined(UNSTABLE)
-        opts.source_info = detail::as_owned_c_ptr(options.source_info);
+        opts.source_info = detail::move_(options.source_info);
 #endif
-        opts.attachment = detail::as_owned_c_ptr(options.attachment);
+        opts.attachment = detail::move_(options.attachment);
         opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         opts.allowed_destination = options.allowed_destination;
 #endif
-        auto payload_ptr = detail::as_owned_c_ptr(payload);
+        auto payload_ptr = detail::move_(payload);
         __ZENOH_RESULT_CHECK(::z_put(this->loan(), detail::loan(key_expr), payload_ptr, &opts), err,
                              "Failed to perform put operation");
     }
@@ -426,7 +426,7 @@ class Session : public Owned<::z_owned_session_t> {
         ZResult res = ::z_declare_queryable(detail::as_owned_c_ptr(q), this->loan(), detail::loan(key_expr),
                                             ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Queryable");
-        if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
+        if (res != Z_OK) ::z_drop(detail::move_(cb_handler_pair.second));
         return Queryable<typename Channel::template HandlerType<Query>>(std::move(q),
                                                                         std::move(cb_handler_pair.second));
     }
@@ -501,7 +501,7 @@ class Session : public Owned<::z_owned_session_t> {
         ZResult res = ::z_declare_subscriber(detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr),
                                              ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Subscriber");
-        if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
+        if (res != Z_OK) ::z_drop(detail::move_(cb_handler_pair.second));
         return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
                                                                           std::move(cb_handler_pair.second));
     }
@@ -545,7 +545,7 @@ class Session : public Owned<::z_owned_session_t> {
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         opts.allowed_destination = options.allowed_destination;
 #endif
-        opts.encoding = detail::as_owned_c_ptr(options.encoding);
+        opts.encoding = detail::move_(options.encoding);
 
         Publisher p(nullptr);
         ZResult res = ::z_declare_publisher(detail::as_owned_c_ptr(p), this->loan(), detail::loan(key_expr), &opts);
@@ -566,7 +566,8 @@ class Session : public Owned<::z_owned_session_t> {
         using ClosureType = typename detail::closures::Closure<F, closures::None, void, const Id&>;
         auto closure = ClosureType::into_context(std::forward<F>(f), closures::none);
         ::z_closure(&c_closure, detail::closures::_zenoh_on_id_call, detail::closures::_zenoh_on_drop, closure);
-        __ZENOH_RESULT_CHECK(::z_info_routers_zid(this->loan(), &c_closure), err, "Failed to fetch router Ids");
+        __ZENOH_RESULT_CHECK(::z_info_routers_zid(this->loan(), ::z_move(c_closure)), err,
+                             "Failed to fetch router Ids");
         return out;
     }
 
@@ -582,7 +583,7 @@ class Session : public Owned<::z_owned_session_t> {
         auto closure = detail::closures::Closure<F, closures::None, void, const Id&>::into_context(std::forward<F>(f),
                                                                                                    closures::none);
         ::z_closure(&c_closure, detail::closures::_zenoh_on_id_call, detail::closures::_zenoh_on_drop, closure);
-        __ZENOH_RESULT_CHECK(::z_info_peers_zid(this->loan(), &c_closure), err, "Failed to fetch peer Ids");
+        __ZENOH_RESULT_CHECK(::z_info_peers_zid(this->loan(), ::z_move(c_closure)), err, "Failed to fetch peer Ids");
         return out;
     }
 #endif
@@ -748,7 +749,7 @@ class Session : public Owned<::z_owned_session_t> {
         ZResult res = ::zc_liveliness_declare_subscriber(
             detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr), ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
-        if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
+        if (res != Z_OK) ::z_drop(::z_move(*detail::move_(cb_handler_pair.second)));
         return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
                                                                           std::move(cb_handler_pair.second));
     }
@@ -816,7 +817,7 @@ class Session : public Owned<::z_owned_session_t> {
 
         ZResult res = ::zc_liveliness_get(this->loan(), detail::loan(key_expr), ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to perform liveliness_get operation");
-        if (res != Z_OK) ::z_drop(::z_move(*detail::as_owned_c_ptr(cb_handler_pair.second)));
+        if (res != Z_OK) ::z_drop(detail::move_(cb_handler_pair.second));
         return std::move(cb_handler_pair.second);
     }
 

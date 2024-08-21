@@ -75,8 +75,15 @@ int _main(int argc, char **argv) {
         std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
         // add some other attachment value
         attachment_map["index"] = std::to_string(idx);
+#if __cplusplus >= 201703L
         pub.put(Bytes::serialize(s),
                 {.encoding = Encoding("text/plain"), .attachment = Bytes::serialize(attachment_map)});
+#else
+        Publisher::PutOptions options;
+        options.encoding = Encoding("text/plain");
+        options.attachment = Bytes::serialize(attachment_map);
+        pub.put(Bytes::serialize(s), std::move(options));
+#endif
     }
     return 0;
 }

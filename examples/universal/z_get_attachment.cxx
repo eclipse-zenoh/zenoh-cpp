@@ -78,9 +78,17 @@ int _main(int argc, char **argv) {
 
     std::unordered_map<std::string, std::string> attachment = {{"Source", "C++"}};
 
+#if __cplusplus >= 201703L
     session.get(
         keyexpr, "", on_reply, on_done,
         {.target = Z_QUERY_TARGET_ALL, .payload = Bytes::serialize(value), .attachment = Bytes::serialize(attachment)});
+#else
+    Session::GetOptions options;
+    options.target = QueryTarget::Z_QUERY_TARGET_ALL;
+    options.payload = Bytes::serialize(value);
+    options.attachment = Bytes::serialize(attachment);
+    session.get(keyexpr, "", on_reply, on_done, std::move(options));
+#endif
 
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });

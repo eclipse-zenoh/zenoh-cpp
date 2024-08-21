@@ -67,7 +67,13 @@ int _main(int argc, char **argv) {
     auto session = Session::open(std::move(config));
 
     std::cout << "Declaring Publisher on " << keyexpr << "...\n";
+#if __cplusplus >= 201703L
     auto pub = session.declare_publisher(KeyExpr(keyexpr), {.congestion_control = Z_CONGESTION_CONTROL_BLOCK});
+#else
+    auto pub_options = Session::PublisherOptions::create_default();
+    pub_options.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
+    auto pub = session.declare_publisher(KeyExpr(keyexpr), std::move(pub_options));
+#endif
 
     printf("Press CTRL-C to quit...\n");
     while (1) pub.put(payload.clone());

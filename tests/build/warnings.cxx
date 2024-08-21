@@ -13,15 +13,26 @@
 //
 
 // Disable 'old-style-cast` warning for C headers only
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
+
 #ifdef ZENOHCXX_ZENOHPICO
 #include "zenoh-pico.h"
 #endif
 #ifdef ZENOHCXX_ZENOHC
 #include "zenoh.h"
 #endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
 #pragma GCC diagnostic pop
+#endif
 
 #include "zenoh.hxx"
 

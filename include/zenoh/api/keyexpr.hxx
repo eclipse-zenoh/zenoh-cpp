@@ -28,7 +28,7 @@ class Session;
 
 class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     friend Session;
-    KeyExpr() : Owned(nullptr){};
+    KeyExpr() : Owned(nullptr) {};
 
    public:
     /// @name Constructors
@@ -57,7 +57,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     KeyExpr(const std::string& key_expr, bool autocanonize = true, ZResult* err = nullptr)
-        : KeyExpr(static_cast<std::string_view>(key_expr), autocanonize, err){};
+        : KeyExpr(static_cast<std::string_view>(key_expr), autocanonize, err) {};
 
     /// @brief Create a new instance from a null-terminated string.
     ///
@@ -66,7 +66,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     KeyExpr(const char* key_expr, bool autocanonize = true, ZResult* err = nullptr)
-        : KeyExpr(std::string_view(key_expr), autocanonize, err){};
+        : KeyExpr(std::string_view(key_expr), autocanonize, err) {};
 
     /// @name Methods
     /// @brief Get underlying key expression string.
@@ -138,7 +138,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param other a string to compare with.
     /// @return true if the key expression string representation is equal to other, false otherwise.
     bool operator==(std::string_view other) const {
-        if (!(*this)) return false;
+        if (!(this->internal_check())) return false;
         return as_string_view() == other;
     }
 
@@ -151,7 +151,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param other a string to compare with.
     /// @return true if the key expression string representation is equal to other, false otherwise.
     bool operator==(const std::string& other) const {
-        if (!(*this)) return false;
+        if (!(this->internal_check())) return false;
         return as_string_view() == other;
     }
 
@@ -164,7 +164,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param other a null-terminated string to compare with.
     /// @return true if the key expression string representation is equal to other, false otherwise.
     bool operator==(const char* other) const {
-        if (!(*this)) return false;
+        if (!(this->internal_check())) return false;
         return as_string_view() == other;
     }
 

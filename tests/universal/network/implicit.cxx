@@ -18,7 +18,9 @@ void put_sub() {
 
     std::this_thread::sleep_for(1s);
 
-    session1.put("zenoh/test", "data", {.attachment = std::vector<int32_t>{-1, 10, 15000}});
+    Session::PutOptions options;
+    options.attachment = std::vector<int32_t>{-1, 10, 15000};
+    session1.put("zenoh/test", "data", std::move(options));
 
     std::this_thread::sleep_for(1s);
 

@@ -105,7 +105,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         Bytes out;
         auto f = [current = begin, end, &codec](z_owned_bytes_t* b) mutable {
             if (current == end) {
-                ::z_null(b);
+                ::z_internal_null(b);
                 return false;
             }
             // increment current, in case iterator dereference might invalidate it, which happens
@@ -300,7 +300,7 @@ template <>
 struct ZenohDeserializer<ZShm> {
     static ZShm deserialize(const Bytes& b, ZResult* err = nullptr) {
         ZShm shm(nullptr);
-        __ZENOH_RESULT_CHECK(::z_bytes_deserialize_into_owned_shm(detail::loan(b), detail::as_owned_c_ptr(shm)), err,
+        __ZENOH_RESULT_CHECK(::z_bytes_deserialize_into_owned_shm(detail::loan(b), detail::move_(shm)), err,
                              "Failed to deserialize into ZShm!");
         return shm;
     }
@@ -512,15 +512,15 @@ class ZenohCodec {
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
     Bytes serialize(ZShm&& shm, ZResult* err = nullptr) const {
         Bytes b;
-        __ZENOH_RESULT_CHECK(::z_bytes_serialize_from_shm(detail::as_owned_c_ptr(b), detail::as_owned_c_ptr(shm)), err,
+        __ZENOH_RESULT_CHECK(::z_bytes_serialize_from_shm(detail::as_owned_c_ptr(b), detail::move_(shm)), err,
                              "Failed to serialize ZShm");
         return b;
     }
 
     Bytes serialize(ZShmMut&& shm, ZResult* err = nullptr) const {
         Bytes b;
-        __ZENOH_RESULT_CHECK(::z_bytes_serialize_from_shm_mut(detail::as_owned_c_ptr(b), detail::as_owned_c_ptr(shm)),
-                             err, "Failed to serialize ZShmMut");
+        __ZENOH_RESULT_CHECK(::z_bytes_serialize_from_shm_mut(detail::as_owned_c_ptr(b), detail::move_(shm)), err,
+                             "Failed to serialize ZShmMut");
         return b;
     }
 #endif
@@ -627,8 +627,7 @@ class ZenohCodec {
         auto ba = serialize(s.first);
         auto bb = serialize(s.second);
         Bytes b;
-        ::z_bytes_from_pair(detail::as_owned_c_ptr(b), ::z_move(*detail::as_owned_c_ptr(ba)),
-                            ::z_move(*detail::as_owned_c_ptr(bb)));
+        ::z_bytes_from_pair(detail::as_owned_c_ptr(b), detail::move_(ba), detail::move_(bb));
         return b;
     }
 
@@ -637,8 +636,7 @@ class ZenohCodec {
         auto ba = serialize(std::move(s.first));
         auto bb = serialize(std::move(s.second));
         Bytes b;
-        ::z_bytes_from_pair(detail::as_owned_c_ptr(b), ::z_move(*detail::as_owned_c_ptr(ba)),
-                            ::z_move(*detail::as_owned_c_ptr(bb)));
+        ::z_bytes_from_pair(detail::as_owned_c_ptr(b), detail::move_(ba), detail::move_(bb));
         return b;
     }
 
