@@ -20,8 +20,7 @@ namespace zenoh {
 
 struct Converters {
     static inline BufLayoutAllocResult from(z_buf_layout_alloc_result_t& c_result) {
-        switch (c_result.status)
-        {
+        switch (c_result.status) {
             case zc_buf_layout_alloc_status_t::ZC_BUF_LAYOUT_ALLOC_STATUS_OK:
                 return ZShmMut(&c_result.buf);
             case zc_buf_layout_alloc_status_t::ZC_BUF_LAYOUT_ALLOC_STATUS_LAYOUT_ERROR:
