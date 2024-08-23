@@ -129,9 +129,6 @@ class Owned {
     /// Check object validity uzing zenoh API
     explicit operator bool() const { return ::z_check(_0); }
 
-   protected:
-    OwnedType _0;
-
     template <class OtL = z_owned_to_loaned_type_t<ZC_OWNED_TYPE>,
               class L = typename OtL::type,  // SFINAE here if no loaned type declared
               class LAvail = std::enable_if<detail::is_loan_available_v<ZC_OWNED_TYPE>, L>,
@@ -149,6 +146,9 @@ class Owned {
     T* loan() {
         return ::z_loan_mut(_0);
     }
+
+   protected:
+    OwnedType _0;
 };
 
 }  // namespace zenoh

@@ -439,7 +439,9 @@ struct Slice {
     size_t len;
 };
 
-auto make_slice(const uint8_t* data, size_t len) { return Slice{data, len}; };
+static inline auto make_slice(const uint8_t* data, size_t len) {
+    return Slice{data, len};
+};
 
 template <class Deleter>
 struct OwnedSlice {
