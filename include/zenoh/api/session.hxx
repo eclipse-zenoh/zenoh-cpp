@@ -76,7 +76,7 @@ class Session : public Owned<::z_owned_session_t> {
                 this->start_lease_task(&err_inner);
             }
             if (err_inner == Z_OK) return;
-            ::z_close(&this->_0);
+            ::z_close(::z_move(this->_0));
             __ZENOH_RESULT_CHECK(err_inner, err, "Failed to start background tasks");
         }
 #else
@@ -471,7 +471,11 @@ class Session : public Owned<::z_owned_session_t> {
         ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
         ::z_subscriber_options_t opts;
         z_subscriber_options_default(&opts);
+#if defined(UNSTABLE)
         opts.reliability = options.reliability;
+#else
+        (void)options;
+#endif
         Subscriber<void> s(nullptr);
         ZResult res = ::z_declare_subscriber(detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr),
                                              ::z_move(c_closure), &opts);
@@ -496,7 +500,11 @@ class Session : public Owned<::z_owned_session_t> {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Sample>();
         ::z_subscriber_options_t opts;
         z_subscriber_options_default(&opts);
+#if defined(UNSTABLE)
         opts.reliability = options.reliability;
+#else
+        (void)options;
+#endif
         SubscriberBase s(nullptr);
         ZResult res = ::z_declare_subscriber(detail::as_owned_c_ptr(s), this->loan(), detail::loan(key_expr),
                                              ::z_move(cb_handler_pair.first), &opts);
