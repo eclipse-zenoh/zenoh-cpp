@@ -163,7 +163,6 @@ void put_sub_ring_channel(Talloc& alloc) {
     auto& session2 = session1;
 #endif
 
-
     std::this_thread::sleep_for(1s);
 
     auto subscriber = session2.declare_subscriber(ke, channels::RingChannel(1));
