@@ -91,9 +91,9 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     Session(Config&& config, const ShmClientStorage& shm_storage, ZResult* err = nullptr) : Owned(nullptr) {
-        __ZENOH_RESULT_CHECK(
-            ::z_open_with_custom_shm_clients(&this->_0, detail::as_moved_c_ptr(config), detail::as_loaned_c_ptr(shm_storage)), err,
-            "Failed to open session");
+        __ZENOH_RESULT_CHECK(::z_open_with_custom_shm_clients(&this->_0, detail::as_moved_c_ptr(config),
+                                                              detail::as_loaned_c_ptr(shm_storage)),
+                             err, "Failed to open session");
     }
 #endif
 
@@ -144,8 +144,9 @@ class Session : public Owned<::z_owned_session_t> {
     /// @return Declared ``KeyExpr`` instance.
     KeyExpr declare_keyexpr(const KeyExpr& key_expr, ZResult* err = nullptr) const {
         KeyExpr k;
-        __ZENOH_RESULT_CHECK(::z_declare_keyexpr(detail::as_owned_c_ptr(k), this->loan(), detail::as_loaned_c_ptr(key_expr)), err,
-                             std::string("Failed to declare key expression: ").append(k.as_string_view()));
+        __ZENOH_RESULT_CHECK(
+            ::z_declare_keyexpr(detail::as_owned_c_ptr(k), this->loan(), detail::as_loaned_c_ptr(key_expr)), err,
+            std::string("Failed to declare key expression: ").append(k.as_string_view()));
         return k;
     }
 
@@ -228,8 +229,8 @@ class Session : public Owned<::z_owned_session_t> {
         opts.timeout_ms = options.timeout_ms;
 
         __ZENOH_RESULT_CHECK(
-            ::z_get(this->loan(), detail::as_loaned_c_ptr(key_expr), parameters.c_str(), ::z_move(c_closure), &opts), err,
-            "Failed to perform get operation");
+            ::z_get(this->loan(), detail::as_loaned_c_ptr(key_expr), parameters.c_str(), ::z_move(c_closure), &opts),
+            err, "Failed to perform get operation");
     }
 
     /// @brief Query data from the matching queryables in the system. Replies are provided through a channel.
@@ -260,8 +261,8 @@ class Session : public Owned<::z_owned_session_t> {
         opts.attachment = detail::as_moved_c_ptr(options.attachment);
         opts.timeout_ms = options.timeout_ms;
 
-        ZResult res =
-            ::z_get(this->loan(), detail::as_loaned_c_ptr(key_expr), parameters.c_str(), ::z_move(cb_handler_pair.first), &opts);
+        ZResult res = ::z_get(this->loan(), detail::as_loaned_c_ptr(key_expr), parameters.c_str(),
+                              ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to perform get operation");
         if (res != Z_OK) ::z_drop(detail::as_moved_c_ptr(cb_handler_pair.second));
         return std::move(cb_handler_pair.second);
@@ -556,7 +557,8 @@ class Session : public Owned<::z_owned_session_t> {
         opts.encoding = detail::as_moved_c_ptr(options.encoding);
 
         Publisher p(nullptr);
-        ZResult res = ::z_declare_publisher(detail::as_owned_c_ptr(p), this->loan(), detail::as_loaned_c_ptr(key_expr), &opts);
+        ZResult res =
+            ::z_declare_publisher(detail::as_owned_c_ptr(p), this->loan(), detail::as_loaned_c_ptr(key_expr), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Publisher");
         return p;
     }
@@ -684,9 +686,9 @@ class Session : public Owned<::z_owned_session_t> {
         ::zc_liveliness_declaration_options_t opts;
         zc_liveliness_declaration_options_default(&opts);
         (void)options;
-        __ZENOH_RESULT_CHECK(
-            ::zc_liveliness_declare_token(detail::as_owned_c_ptr(t), this->loan(), detail::as_loaned_c_ptr(key_expr), &opts), err,
-            "Failed to perform liveliness_declare_token operation");
+        __ZENOH_RESULT_CHECK(::zc_liveliness_declare_token(detail::as_owned_c_ptr(t), this->loan(),
+                                                           detail::as_loaned_c_ptr(key_expr), &opts),
+                             err, "Failed to perform liveliness_declare_token operation");
         return t;
     }
 
@@ -754,8 +756,9 @@ class Session : public Owned<::z_owned_session_t> {
         zc_liveliness_subscriber_options_default(&opts);
         (void)options;
         SubscriberBase s(nullptr);
-        ZResult res = ::zc_liveliness_declare_subscriber(
-            detail::as_owned_c_ptr(s), this->loan(), detail::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
+        ZResult res = ::zc_liveliness_declare_subscriber(detail::as_owned_c_ptr(s), this->loan(),
+                                                         detail::as_loaned_c_ptr(key_expr),
+                                                         ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
         if (res != Z_OK) ::z_drop(::z_move(*detail::as_moved_c_ptr(cb_handler_pair.second)));
         return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
@@ -801,8 +804,9 @@ class Session : public Owned<::z_owned_session_t> {
         zc_liveliness_get_options_default(&opts);
         opts.timeout_ms = options.timeout_ms;
 
-        __ZENOH_RESULT_CHECK(::zc_liveliness_get(this->loan(), detail::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts), err,
-                             "Failed to perform liveliness_get operation");
+        __ZENOH_RESULT_CHECK(
+            ::zc_liveliness_get(this->loan(), detail::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts), err,
+            "Failed to perform liveliness_get operation");
     }
 
     /// @brief Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
@@ -823,7 +827,8 @@ class Session : public Owned<::z_owned_session_t> {
         zc_liveliness_get_options_default(&opts);
         opts.timeout_ms = options.timeout_ms;
 
-        ZResult res = ::zc_liveliness_get(this->loan(), detail::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
+        ZResult res = ::zc_liveliness_get(this->loan(), detail::as_loaned_c_ptr(key_expr),
+                                          ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to perform liveliness_get operation");
         if (res != Z_OK) ::z_drop(detail::as_moved_c_ptr(cb_handler_pair.second));
         return std::move(cb_handler_pair.second);
