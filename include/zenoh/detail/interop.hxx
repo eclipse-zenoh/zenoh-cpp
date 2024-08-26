@@ -59,17 +59,17 @@ const auto* as_owned_c_ptr(const std::optional<OwnedCppObj>& o) {
 }
 
 template <class OwnedType>
-auto loan(const OwnedType& o) {
+auto as_loaned_c_ptr(const OwnedType& o) {
     return ::z_loan(*as_owned_c_ptr(o));
 }
 
 template <class OwnedType>
-auto loan(OwnedType& o) {
+auto as_loaned_c_ptr(OwnedType& o) {
     return ::z_loan_mut(*as_owned_c_ptr(o));
 }
 
 template <class OwnedType>
-auto move_(OwnedType& o) {
+auto as_moved_c_ptr(OwnedType& o) {
     return ::z_move(*as_owned_c_ptr(o));
 }
 
