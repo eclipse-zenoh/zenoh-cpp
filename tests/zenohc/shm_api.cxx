@@ -353,7 +353,7 @@ int run_c_client() {
 
     // add client to the list
     list.push_back(std::make_pair(id, std::move(client)));
-    ASSERT_VALID(client);
+    ASSERT_NULL(client);
 
     // create client storage from the list
     // auto storage = ShmClientStorage(std::make_move_iterator(list.begin()), std::make_move_iterator(list.end()),
