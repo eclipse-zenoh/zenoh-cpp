@@ -16,6 +16,7 @@
 
 #include "../zenohc.hxx"
 #include "base.hxx"
+#include "interop.hxx"
 
 namespace zenoh {
 
@@ -36,7 +37,7 @@ class Encoding : public Owned<::z_owned_encoding_t> {
     }
 
     /// @brief Copy contructor
-    Encoding(const Encoding& other) : Encoding() { ::z_encoding_clone(&this->_0, other.loan()); };
+    Encoding(const Encoding& other) : Encoding() { ::z_encoding_clone(&this->_0, interop::as_loaned_c_ptr(other)); };
 
     Encoding(Encoding&& other) = default;
 
@@ -45,7 +46,7 @@ class Encoding : public Owned<::z_owned_encoding_t> {
     /// @brief Get string representation of encoding.
     std::string as_string() const {
         ::z_owned_string_t s;
-        ::z_encoding_to_string(this->loan(), &s);
+        ::z_encoding_to_string(interop::as_loaned_c_ptr(*this), &s);
         std::string out = std::string(::z_string_data(::z_loan(s)), ::z_string_len(::z_loan(s)));
         ::z_drop(::z_move(s));
         return out;
@@ -56,8 +57,9 @@ class Encoding : public Owned<::z_owned_encoding_t> {
     /// Zenoh does not define what a schema is and its semantics is left to the implementer.
     /// E.g. a common schema for `text/plain` encoding is `utf-8`.
     void set_schema(std::string_view schema, ZResult* err = nullptr) {
-        __ZENOH_RESULT_CHECK(::z_encoding_set_schema_from_substr(this->loan(), schema.data(), schema.size()), err,
-                             "Failed to set encoding schema");
+        __ZENOH_RESULT_CHECK(
+            ::z_encoding_set_schema_from_substr(interop::as_loaned_c_ptr(*this), schema.data(), schema.size()), err,
+            "Failed to set encoding schema");
     }
 
     /// @name Operators
@@ -66,7 +68,7 @@ class Encoding : public Owned<::z_owned_encoding_t> {
     Encoding& operator=(const Encoding& other) {
         if (this != &other) {
             ::z_drop(z_move(this->_0));
-            ::z_encoding_clone(&this->_0, other.loan());
+            ::z_encoding_clone(&this->_0, interop::as_loaned_c_ptr(other));
         }
         return *this;
     };

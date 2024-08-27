@@ -16,6 +16,7 @@
 
 #include "../zenohc.hxx"
 #include "base.hxx"
+#include "interop.hxx"
 
 namespace zenoh {
 class Session;
@@ -72,7 +73,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @brief Get underlying key expression string.
     std::string_view as_string_view() const {
         ::z_view_string_t s;
-        ::z_keyexpr_as_view_string(this->loan(), &s);
+        ::z_keyexpr_as_view_string(interop::as_loaned_c_ptr(*this), &s);
         return std::string_view(reinterpret_cast<const char*>(::z_string_data(::z_loan(s))),
                                 ::z_string_len(::z_loan(s)));
     }
@@ -81,7 +82,9 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param other the ``KeyExpr`` to compare with
     /// @return ``true`` if current key expression includes ``other``, i.e. contains every key belonging to the
     /// ``other``.
-    bool includes(const KeyExpr& other) { return ::z_keyexpr_includes(this->loan(), other.loan()); }
+    bool includes(const KeyExpr& other) {
+        return ::z_keyexpr_includes(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(other));
+    }
 
     /// @brief Construct new key expression by concatenating the current one with a string.
     /// @param s A string to concatenate with the key expression.
@@ -91,7 +94,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     KeyExpr concat(std::string_view s, ZResult* err = nullptr) const {
         KeyExpr k;
         __ZENOH_RESULT_CHECK(
-            ::z_keyexpr_concat(&k._0, this->loan(), s.data(), s.size()), err,
+            ::z_keyexpr_concat(&k._0, interop::as_loaned_c_ptr(*this), s.data(), s.size()), err,
             std::string("Failed to concatenate KeyExpr: ").append(this->as_string_view()).append(" with ").append(s));
         return k;
     }
@@ -102,7 +105,8 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// thrown in case of error.
     KeyExpr join(const KeyExpr& other, ZResult* err = nullptr) const {
         KeyExpr k;
-        __ZENOH_RESULT_CHECK(::z_keyexpr_join(&k._0, this->loan(), other.loan()), err,
+        __ZENOH_RESULT_CHECK(::z_keyexpr_join(&k._0, interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(other)),
+                             err,
                              std::string("Failed to join KeyExpr: ")
                                  .append(this->as_string_view())
                                  .append(" with ")
@@ -113,7 +117,9 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @brief Check if 2 key expressions intersect.
     ///
     /// @return true if there is at least one non-empty key that is contained in both key expressions, false otherwise.
-    bool intersects(const KeyExpr& other) const { return ::z_keyexpr_intersects(this->loan(), other.loan()); }
+    bool intersects(const KeyExpr& other) const {
+        return ::z_keyexpr_intersects(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(other));
+    }
 #if defined(UNSTABLE)
     ///
     /// Intersection level of 2 key expressions.
@@ -127,7 +133,9 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     ///
     typedef ::z_keyexpr_intersection_level_t IntersectionLevel;
     /// @brief Returns the relation between `this` and `other` from `this`'s point of view.
-    IntersectionLevel relation_to(const KeyExpr& other) { return ::z_keyexpr_relation_to(this->loan(), other.loan()); }
+    IntersectionLevel relation_to(const KeyExpr& other) {
+        return ::z_keyexpr_relation_to(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(other));
+    }
 #endif
     /// @brief Check if the string represents a canonical key expression
     static bool is_canon(std::string_view s) { return ::z_keyexpr_is_canon(s.data(), s.size()) == Z_OK; }
@@ -137,10 +145,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @brief Key expression to string equality relation.
     /// @param other a string to compare with.
     /// @return true if the key expression string representation is equal to other, false otherwise.
-    bool operator==(std::string_view other) const {
-        if (!(this->internal_check())) return false;
-        return as_string_view() == other;
-    }
+    bool operator==(std::string_view other) const { return as_string_view() == other; }
 
     /// @brief Key expression to string inequality relation.
     /// @param other a string to compare with.
@@ -150,10 +155,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @brief Key expression to string equality relation.
     /// @param other a string to compare with.
     /// @return true if the key expression string representation is equal to other, false otherwise.
-    bool operator==(const std::string& other) const {
-        if (!(this->internal_check())) return false;
-        return as_string_view() == other;
-    }
+    bool operator==(const std::string& other) const { return as_string_view() == other; }
 
     /// @brief Key expression to string inequality relation.
     /// @param other a string to compare with.
@@ -163,10 +165,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @brief Key expression to string equality relation.
     /// @param other a null-terminated string to compare with.
     /// @return true if the key expression string representation is equal to other, false otherwise.
-    bool operator==(const char* other) const {
-        if (!(this->internal_check())) return false;
-        return as_string_view() == other;
-    }
+    bool operator==(const char* other) const { return as_string_view() == other; }
 
     /// @brief Key expression to string inequality relation.
     /// @param other a null-terminated string to compare with.
@@ -176,7 +175,9 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @brief Equality relation.
     /// @param other a key expression to compare with.
     /// @return true if both key expressions are equal (i.e. they represent the same set of resources), false otherwise.
-    bool operator==(const KeyExpr& other) const { return ::z_keyexpr_equals(this->loan(), other.loan()); }
+    bool operator==(const KeyExpr& other) const {
+        return ::z_keyexpr_equals(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(other));
+    }
 
     /// @brief Inequality relation.
     /// @param other a key expression to compare with.

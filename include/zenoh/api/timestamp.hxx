@@ -12,9 +12,9 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #pragma once
-#include "../detail/interop.hxx"
 #include "../zenohc.hxx"
 #include "base.hxx"
+#include "interop.hxx"
 #if defined UNSTABLE
 #include "id.hxx"
 #endif

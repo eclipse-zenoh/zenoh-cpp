@@ -13,8 +13,8 @@
 
 #pragma once
 
-#include "../detail/interop.hxx"
 #include "base.hxx"
+#include "interop.hxx"
 #include "keyexpr.hxx"
 
 namespace zenoh {
@@ -27,7 +27,7 @@ class SubscriberBase : public Owned<::z_owned_subscriber_t> {
     /// @brief Get the key expression of the subscriber
     /// @note zenoh-c only.
     const KeyExpr& get_keyexpr() const {
-        return detail::as_owned_cpp_obj<KeyExpr>(::z_subscriber_keyexpr(this->loan()));
+        return interop::as_owned_cpp_ref<KeyExpr>(::z_subscriber_keyexpr(interop::as_loaned_c_ptr(*this)));
     }
 #endif
 };

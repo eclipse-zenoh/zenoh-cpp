@@ -61,14 +61,14 @@ class MemoryLayout : public Owned<::z_owned_memory_layout_t> {
     size_t size() const {
         size_t size;
         AllocAlignment alignment;
-        z_memory_layout_get_data(&size, &alignment, this->loan());
+        z_memory_layout_get_data(&size, &alignment, interop::as_loaned_c_ptr(*this));
         return size;
     }
 
     AllocAlignment alignment() const {
         size_t size;
         AllocAlignment alignment;
-        z_memory_layout_get_data(&size, &alignment, this->loan());
+        z_memory_layout_get_data(&size, &alignment, interop::as_loaned_c_ptr(*this));
         return alignment;
     }
 };

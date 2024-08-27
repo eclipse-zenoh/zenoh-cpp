@@ -15,6 +15,7 @@
 #include "../zenohc.hxx"
 #include "base.hxx"
 #include "enums.hxx"
+#include "interop.hxx"
 #if defined UNSTABLE
 #include "id.hxx"
 #endif
@@ -34,22 +35,22 @@ class Hello : public Owned<::z_owned_hello_t> {
 #if defined UNSTABLE
     /// @brief Get ``Id`` of the entity.
     /// @return ``Id`` of the entity.
-    Id get_id() const { return Id(::z_hello_zid(this->loan())); };
+    Id get_id() const { return Id(::z_hello_zid(interop::as_loaned_c_ptr(*this))); };
 #endif
 
     /// @brief Get the type of the entity.
     /// @return ``zenoh::WhatAmI`` of the entity.
-    WhatAmI get_whatami() const { return ::z_hello_whatami(this->loan()); }
+    WhatAmI get_whatami() const { return ::z_hello_whatami(interop::as_loaned_c_ptr(*this)); }
 
     /// @brief Get the array of locators of the entity.
     /// @return the array of locators of the entity.
     std::vector<std::string_view> get_locators() const {
 #ifdef ZENOHCXX_ZENOHC
         ::z_owned_string_array_t out;
-        ::z_hello_locators(this->loan(), &out);
+        ::z_hello_locators(interop::as_loaned_c_ptr(*this), &out);
         auto out_loaned = ::z_loan(out);
 #else
-        auto out_loaned = ::z_hello_locators(this->loan());
+        auto out_loaned = ::z_hello_locators(interop::as_loaned_c_ptr(*this));
 #endif
         std::vector<std::string_view> locators(::z_string_array_len(out_loaned));
         for (size_t i = 0; i < ::z_string_array_len(out_loaned); i++) {

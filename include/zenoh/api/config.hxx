@@ -138,8 +138,8 @@ class Config : public Owned<::z_owned_config_t> {
     /// @note zenoh-c only.
     std::string get(std::string_view key, ZResult* err = nullptr) const {
         ::z_owned_string_t s;
-        __ZENOH_RESULT_CHECK(::zc_config_get_from_substr(this->loan(), key.data(), key.size(), &s), err,
-                             std::string("Failed to get config value for the key: ").append(key));
+        __ZENOH_RESULT_CHECK(::zc_config_get_from_substr(interop::as_loaned_c_ptr(*this), key.data(), key.size(), &s),
+                             err, std::string("Failed to get config value for the key: ").append(key));
         std::string out = std::string(::z_string_data(::z_loan(s)), ::z_string_len(::z_loan(s)));
         ::z_drop(::z_move(s));
         return out;
@@ -150,7 +150,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @note zenoh-c only.
     std::string to_string() const {
         ::z_owned_string_t s;
-        ::zc_config_to_string(this->loan(), &s);
+        ::zc_config_to_string(interop::as_loaned_c_ptr(*this), &s);
         std::string out = std::string(::z_string_data(::z_loan(s)), ::z_string_len(::z_loan(s)));
         ::z_drop(::z_move(s));
         return out;
@@ -164,7 +164,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @return true if the parameter was inserted, false otherwise.
     /// @note zenoh-c only.
     void insert_json(const std::string& key, const std::string& value, ZResult* err = nullptr) {
-        __ZENOH_RESULT_CHECK(::zc_config_insert_json(loan(), key.c_str(), value.c_str()), err,
+        __ZENOH_RESULT_CHECK(::zc_config_insert_json(interop::as_loaned_c_ptr(*this), key.c_str(), value.c_str()), err,
                              std::string("Failed to insert '")
                                  .append(value)
                                  .append("' for the key '")
@@ -180,7 +180,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @return pointer to the null-terminated string value of the config parameter.
     /// @note zenoh-pico only.
     const char* get(uint8_t key, ZResult* err = nullptr) const {
-        const char* c = ::zp_config_get(loan(), key);
+        const char* c = ::zp_config_get(interop::as_loaned_c_ptr(*this), key);
         __ZENOH_RESULT_CHECK((c == nullptr ? -1 : Z_OK), err,
                              std::string("Failed to get config value for the key: ").append(std::to_string(key)));
         return c;
@@ -193,7 +193,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// thrown in case of error.
     /// @note zenoh-pico only.
     void insert(uint8_t key, const char* value, ZResult* err = nullptr) {
-        __ZENOH_RESULT_CHECK(zp_config_insert(this->loan(), key, value), err,
+        __ZENOH_RESULT_CHECK(zp_config_insert(interop::as_loaned_c_ptr(*this), key, value), err,
                              std::string("Failed to insert '")
                                  .append(value)
                                  .append("' for the key '")

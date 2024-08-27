@@ -13,9 +13,9 @@
 
 #pragma once
 
-#include "../detail/interop.hxx"
 #include "base.hxx"
 #include "bytes.hxx"
+#include "interop.hxx"
 #include "sample.hxx"
 #if defined UNSTABLE
 #include "id.hxx"
@@ -31,12 +31,14 @@ class ReplyError : public Owned<::z_owned_reply_err_t> {
 
     /// @brief The payload of this error.
     /// @return Error payload.
-    const Bytes& get_payload() const { return detail::as_owned_cpp_obj<Bytes>(::z_reply_err_payload(this->loan())); }
+    const Bytes& get_payload() const {
+        return interop::as_owned_cpp_ref<Bytes>(::z_reply_err_payload(interop::as_loaned_c_ptr(*this)));
+    }
 
     /// @brief The encoding of this error.
     /// @return Error encoding.
     const Encoding& get_encoding() const {
-        return detail::as_owned_cpp_obj<Encoding>(::z_reply_err_encoding(this->loan()));
+        return interop::as_owned_cpp_ref<Encoding>(::z_reply_err_encoding(interop::as_loaned_c_ptr(*this)));
     }
 };
 
@@ -49,24 +51,24 @@ class Reply : public Owned<::z_owned_reply_t> {
 
     /// @brief Check if the reply is OK (and contains a sample).
     /// @return ``true`` if the reply is OK, ``false`` if contains a error.
-    bool is_ok() const { return ::z_reply_is_ok(this->loan()); }
+    bool is_ok() const { return ::z_reply_is_ok(interop::as_loaned_c_ptr(*this)); }
 
     /// @brief Get the reply sample. Will throw a ZException if ``Reply::is_ok`` returns ``false``.
     /// @return Reply sample.
     const Sample& get_ok() const {
-        if (!::z_reply_is_ok(this->loan())) {
+        if (!::z_reply_is_ok(interop::as_loaned_c_ptr(*this))) {
             throw ZException("Reply data sample was requested, but reply contains error", Z_EINVAL);
         }
-        return detail::as_owned_cpp_obj<Sample>(::z_reply_ok(this->loan()));
+        return interop::as_owned_cpp_ref<Sample>(::z_reply_ok(interop::as_loaned_c_ptr(*this)));
     }
 
     /// @brief Get the reply error. Will throw a ZException if ``Reply::is_ok`` returns ``true``.
     /// @return Reply error.
     const ReplyError& get_err() const {
-        if (::z_reply_is_ok(this->loan())) {
+        if (::z_reply_is_ok(interop::as_loaned_c_ptr(*this))) {
             throw ZException("Reply error was requested, but reply contains data sample", Z_EINVAL);
         }
-        return detail::as_owned_cpp_obj<ReplyError>(::z_reply_err(this->loan()));
+        return interop::as_owned_cpp_ref<ReplyError>(::z_reply_err(interop::as_loaned_c_ptr(*this)));
     }
 
 #if defined(UNSTABLE)
@@ -74,7 +76,7 @@ class Reply : public Owned<::z_owned_reply_t> {
     /// @return Zenoh instance id, or an empty optional if the id was not set.
     std::optional<Id> get_replier_id() const {
         ::z_id_t z_id;
-        if (::z_reply_replier_id(this->loan(), &z_id)) {
+        if (::z_reply_replier_id(interop::as_loaned_c_ptr(*this), &z_id)) {
             return Id(z_id);
         }
         return {};

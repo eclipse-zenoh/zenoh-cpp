@@ -41,16 +41,16 @@ using namespace std::chrono_literals;
         return -300;       \
     }
 
-#define ASSERT_VALID(expr)          \
-    if (!(expr.internal_check())) { \
-        assert(false);              \
-        return -300;                \
+#define ASSERT_VALID(expr)               \
+    if (!interop::detail::check(expr)) { \
+        assert(false);                   \
+        return -300;                     \
     }
 
-#define ASSERT_NULL(expr)        \
-    if (expr.internal_check()) { \
-        assert(false);           \
-        return -300;             \
+#define ASSERT_NULL(expr)               \
+    if (interop::detail::check(expr)) { \
+        assert(false);                  \
+        return -300;                    \
     }
 
 int test_shm_buffer(ZShmMut&& buf) {
@@ -160,7 +160,7 @@ class TestShmProviderBackend : public CppShmProviderBackend {
 
    private:
     virtual ChunkAllocResult alloc(const MemoryLayout& layout) override {
-        assert(layout.internal_check());
+        assert(interop::detail::check(layout));
 
         // check size and alignment
         const auto size = layout.size();
@@ -208,7 +208,7 @@ class TestShmProviderBackend : public CppShmProviderBackend {
     virtual size_t available() const override { return this->bytes_available; }
 
     virtual void layout_for(MemoryLayout& layout) override {
-        assert(layout.internal_check());
+        assert(interop::detail::check(layout));
 
         // check size and alignment
         const auto size = layout.size();

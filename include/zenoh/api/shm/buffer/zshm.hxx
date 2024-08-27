@@ -17,6 +17,7 @@
 #include <optional>
 
 #include "../../base.hxx"
+#include "../../interop.hxx"
 #include "zshmmut.hxx"
 
 namespace zenoh {
@@ -36,15 +37,15 @@ class ZShm : public Owned<::z_owned_shm_t> {
 
     /// @brief Create a new ZShm from ZShm by performing a shallow SHM reference copy.
     /// @param other ZShm to copy
-    ZShm(const ZShm& other) : Owned(nullptr) { ::z_shm_clone(&this->_0, other.loan()); }
+    ZShm(const ZShm& other) : Owned(nullptr) { ::z_shm_clone(&this->_0, interop::as_loaned_c_ptr(other)); }
 
     /// @brief Get buffer's const data. It is completely unsafe to to modify SHM data without using ZShmMut interface.
     /// @return pointer to the underlying data
-    const uint8_t* data() const { return ::z_shm_data(this->loan()); }
+    const uint8_t* data() const { return ::z_shm_data(interop::as_loaned_c_ptr(*this)); }
 
     /// @brief Get buffer's data size.
     /// @return underlying data size
-    std::size_t len() const { return ::z_shm_len(this->loan()); }
+    std::size_t len() const { return ::z_shm_len(interop::as_loaned_c_ptr(*this)); }
 
     /// @brief Create a new ZShmMut from ZShm.
     /// @param immut immutable buffer

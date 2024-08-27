@@ -30,7 +30,7 @@ class PosixShmProvider : public ShmProvider {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     PosixShmProvider(const MemoryLayout& layout, ZResult* err = nullptr) : ShmProvider(nullptr) {
-        __ZENOH_RESULT_CHECK(::z_posix_shm_provider_new(&this->_0, layout.loan()), err,
+        __ZENOH_RESULT_CHECK(::z_posix_shm_provider_new(&this->_0, interop::as_loaned_c_ptr(layout)), err,
                              "Failed to create POSIX SHM provider");
     }
 };

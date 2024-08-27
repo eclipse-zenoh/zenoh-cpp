@@ -13,9 +13,9 @@
 
 #pragma once
 
-#include "../detail/interop.hxx"
 #include "../zenohc.hxx"
 #include "base.hxx"
+#include "interop.hxx"
 #if defined UNSTABLE
 #include "id.hxx"
 #endif
@@ -44,16 +44,16 @@ class SourceInfo : public Owned<::z_owned_source_info_t> {
 
     /// @brief Construct from global id and sequence number.
     SourceInfo(const EntityGlobalId& id, uint64_t sn) : Owned(nullptr) {
-        ::z_source_info_new(&this->_0, detail::as_copyable_c_ptr(id), sn);
+        ::z_source_info_new(&this->_0, interop::as_copyable_c_ptr(id), sn);
     }
 
     /// @name Methods
 
     /// @brief Get the source id.
-    EntityGlobalId id() const { return EntityGlobalId(::z_source_info_id(this->loan())); }
+    EntityGlobalId id() const { return EntityGlobalId(::z_source_info_id(interop::as_loaned_c_ptr(*this))); }
 
     /// @brief Get the sequence number of the sample from the given source.
-    uint64_t sn() const { return ::z_source_info_sn(this->loan()); }
+    uint64_t sn() const { return ::z_source_info_sn(interop::as_loaned_c_ptr(*this)); }
 };
 #endif
 }  // namespace zenoh
