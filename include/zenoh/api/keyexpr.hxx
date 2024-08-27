@@ -138,7 +138,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param other a string to compare with.
     /// @return true if the key expression string representation is equal to other, false otherwise.
     bool operator==(std::string_view other) const {
-        if (!(*this)) return false;
+        if (!(this->internal_check())) return false;
         return as_string_view() == other;
     }
 
@@ -151,7 +151,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param other a string to compare with.
     /// @return true if the key expression string representation is equal to other, false otherwise.
     bool operator==(const std::string& other) const {
-        if (!(*this)) return false;
+        if (!(this->internal_check())) return false;
         return as_string_view() == other;
     }
 
@@ -164,7 +164,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param other a null-terminated string to compare with.
     /// @return true if the key expression string representation is equal to other, false otherwise.
     bool operator==(const char* other) const {
-        if (!(*this)) return false;
+        if (!(this->internal_check())) return false;
         return as_string_view() == other;
     }
 

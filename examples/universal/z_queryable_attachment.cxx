@@ -76,8 +76,15 @@ int _main(int argc, char **argv) {
                 std::cout << "   attachment: " << key << ": '" << value << "'\n";
             }
         }
+#if __cplusplus >= 201703L
         query.reply(KeyExpr(expr), Bytes::serialize(value),
                     {.encoding = Encoding("text/palin"), .attachment = Bytes::serialize(attachment_map)});
+#else
+        Query::ReplyOptions options;
+        options.encoding = Encoding("text/plain");
+        options.attachment = Bytes::serialize(attachment_map);
+        query.reply(KeyExpr(expr), Bytes::serialize(value), std::move(options));
+#endif
     };
 
     auto on_drop_queryable = []() { std::cout << "Destroying queryable\n"; };

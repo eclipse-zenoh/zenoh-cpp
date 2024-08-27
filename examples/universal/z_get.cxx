@@ -86,7 +86,15 @@ int _main(int argc, char **argv) {
         done_signal.notify_all();
     };
 
+#if __cplusplus >= 201703L
     session.get(keyexpr, "", on_reply, on_done, {.target = Z_QUERY_TARGET_ALL, .payload = Bytes::serialize(value)});
+#else
+    Session::GetOptions options;
+    options.target = Z_QUERY_TARGET_ALL;
+    options.payload = Bytes::serialize(value);
+    session.get(keyexpr, "", on_reply, on_done, std::move(options));
+#endif
+
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });
 

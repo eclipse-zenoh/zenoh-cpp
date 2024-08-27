@@ -61,9 +61,16 @@ int _main(int argc, char **argv) {
     auto session = Session::open(std::move(config));
 
     std::cout << "Sending Query '" << expr << "'...\n";
+#if __cplusplus >= 201703L
     auto replies =
         session.get(keyexpr, "", channels::FifoChannel(16),
                     {.target = QueryTarget::Z_QUERY_TARGET_ALL, .payload = Bytes::serialize("Get from C++")});
+#else
+    Session::GetOptions options;
+    options.target = QueryTarget::Z_QUERY_TARGET_ALL;
+    options.payload = Bytes::serialize("Get from C++");
+    auto replies = session.get(keyexpr, "", channels::FifoChannel(16), std::move(options));
+#endif
 
     for (auto res = replies.recv(); std::holds_alternative<Reply>(res); res = replies.recv()) {
         const auto &sample = std::get<Reply>(res).get_ok();

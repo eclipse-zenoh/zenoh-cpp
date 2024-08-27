@@ -32,7 +32,7 @@ class ZShm : public Owned<::z_owned_shm_t> {
 
     /// @brief Create a new ZShm from ZShmMut.
     /// @param mut mutable buffer
-    ZShm(ZShmMut&& mut) : Owned(nullptr) { ::z_shm_from_mut(&this->_0, &mut._0); }
+    ZShm(ZShmMut&& mut) : Owned(nullptr) { ::z_shm_from_mut(&this->_0, ::z_move(mut._0)); }
 
     /// @brief Create a new ZShm from ZShm by performing a shallow SHM reference copy.
     /// @param other ZShm to copy
@@ -52,7 +52,7 @@ class ZShm : public Owned<::z_owned_shm_t> {
     static std::optional<ZShmMut> try_mutate(ZShm&& immut) {
         z_owned_shm_mut_t mut_inner;
         ::z_shm_mut_try_from_immut(&mut_inner, z_move(immut._0));
-        if (z_check(mut_inner)) {
+        if (z_internal_check(mut_inner)) {
             return ZShmMut(&mut_inner);
         }
         return std::nullopt;

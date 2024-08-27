@@ -20,20 +20,24 @@ namespace zenoh {
 
 struct Converters {
     static inline BufLayoutAllocResult from(z_buf_layout_alloc_result_t& c_result) {
-        if (z_check(c_result.buf)) {
-            return ZShmMut(&c_result.buf);
-        } else if (c_result.error_is_alloc) {
-            return c_result.alloc_error;
-        } else {
-            return c_result.layout_error;
+        switch (c_result.status) {
+            case zc_buf_layout_alloc_status_t::ZC_BUF_LAYOUT_ALLOC_STATUS_OK:
+                return ZShmMut(&c_result.buf);
+            case zc_buf_layout_alloc_status_t::ZC_BUF_LAYOUT_ALLOC_STATUS_LAYOUT_ERROR:
+                return c_result.layout_error;
+            case zc_buf_layout_alloc_status_t::ZC_BUF_LAYOUT_ALLOC_STATUS_ALLOC_ERROR:
+            default:
+                return c_result.alloc_error;
         }
     }
 
     static inline BufAllocResult from(z_buf_alloc_result_t& c_result) {
-        if (z_check(c_result.buf)) {
-            return ZShmMut(&c_result.buf);
-        } else {
-            return c_result.error;
+        switch (c_result.status) {
+            case zc_buf_alloc_status_t::ZC_BUF_ALLOC_STATUS_OK:
+                return ZShmMut(&c_result.buf);
+            case zc_buf_alloc_status_t::ZC_BUF_ALLOC_STATUS_ALLOC_ERROR:
+            default:
+                return c_result.error;
         }
     }
 };

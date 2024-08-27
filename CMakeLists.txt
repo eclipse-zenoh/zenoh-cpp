@@ -26,8 +26,8 @@ elseif(PROJECT_VERSION_TWEAK GREATER 1)
 endif()
 status_print(project_version)
 
-option(ZENOHCXX_ZENOHC "Build for Zenoh-c target" ON)
-option(ZENOHCXX_ZENOHPICO "Build for Zenoh-pico target" OFF)
+declare_cache_var(ZENOHCXX_ZENOHC ON BOOL "Build for Zenoh-c target")
+declare_cache_var(ZENOHCXX_ZENOHPICO OFF BOOL "Build for Zenoh-pico target")
 
 set_default_build_type(Release)
 
@@ -36,7 +36,6 @@ add_library(zenohcxx INTERFACE)
 target_include_directories(zenohcxx INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 if(ZENOHCXX_ZENOHPICO) 
-	# zenohcxx for zenohpico
 	find_package(zenohpico REQUIRED)
 	if(TARGET zenohpico::lib)
 		message(STATUS "defined lib target zenohcxx::zenohpico for zenohpico::lib")
@@ -46,11 +45,12 @@ if(ZENOHCXX_ZENOHPICO)
 		add_dependencies(zenohcxx_zenohpico zenohpico::lib)
 		target_link_libraries(zenohcxx_zenohpico INTERFACE zenohpico::lib)
 		add_library(zenohcxx::zenohpico ALIAS zenohcxx_zenohpico)
+	else()
+		message(FATAL_ERROR "zenohpico::lib target not found")
 	endif()
 endif()
 
 if(ZENOHCXX_ZENOHC)
-	# zenohcxx for zenohc
 	find_package(zenohc REQUIRED)
 	if(TARGET zenohc::lib)
 		message(STATUS "defined lib target zenohcxx::zenohc::lib for zenohc::lib")
@@ -60,6 +60,8 @@ if(ZENOHCXX_ZENOHC)
 		add_dependencies(zenohcxx_zenohc zenohc::lib)
 		target_link_libraries(zenohcxx_zenohc INTERFACE zenohc::lib)
 		add_library(zenohcxx::zenohc ALIAS zenohcxx_zenohc)
+	else()
+		message(FATAL_ERROR "zenohc::lib target not found")
 	endif()
 endif()
 

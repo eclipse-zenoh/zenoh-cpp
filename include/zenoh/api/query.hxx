@@ -109,20 +109,20 @@ class Query : public Owned<::z_owned_query_t> {
     /// thrown in case of error.
     void reply(const KeyExpr& key_expr, Bytes&& payload, ReplyOptions&& options = ReplyOptions::create_default(),
                ZResult* err = nullptr) const {
-        auto payload_ptr = detail::as_owned_c_ptr(payload);
+        auto payload_ptr = detail::as_moved_c_ptr(payload);
         ::z_query_reply_options_t opts;
         z_query_reply_options_default(&opts);
-        opts.encoding = detail::as_owned_c_ptr(options.encoding);
+        opts.encoding = detail::as_moved_c_ptr(options.encoding);
         opts.priority = options.priority;
         opts.congestion_control = options.congestion_control;
         opts.is_express = options.is_express;
         opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
-        opts.source_info = detail::as_owned_c_ptr(options.source_info);
+        opts.source_info = detail::as_moved_c_ptr(options.source_info);
 #endif
-        opts.attachment = detail::as_owned_c_ptr(options.attachment);
+        opts.attachment = detail::as_moved_c_ptr(options.attachment);
 
-        __ZENOH_RESULT_CHECK(::z_query_reply(this->loan(), detail::loan(key_expr), payload_ptr, &opts), err,
+        __ZENOH_RESULT_CHECK(::z_query_reply(this->loan(), detail::as_loaned_c_ptr(key_expr), payload_ptr, &opts), err,
                              "Failed to send reply");
     }
 
@@ -145,10 +145,10 @@ class Query : public Owned<::z_owned_query_t> {
     /// thrown in case of error.
     void reply_err(Bytes&& payload, ReplyErrOptions&& options = ReplyErrOptions::create_default(),
                    ZResult* err = nullptr) const {
-        auto payload_ptr = detail::as_owned_c_ptr(payload);
+        auto payload_ptr = detail::as_moved_c_ptr(payload);
         ::z_query_reply_err_options_t opts;
         z_query_reply_err_options_default(&opts);
-        opts.encoding = detail::as_owned_c_ptr(options.encoding);
+        opts.encoding = detail::as_moved_c_ptr(options.encoding);
 
         __ZENOH_RESULT_CHECK(::z_query_reply_err(this->loan(), payload_ptr, &opts), err, "Failed to send reply error");
     }
@@ -192,11 +192,11 @@ class Query : public Owned<::z_owned_query_t> {
         opts.is_express = options.is_express;
         opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
-        opts.source_info = detail::as_owned_c_ptr(options.source_info);
+        opts.source_info = detail::as_moved_c_ptr(options.source_info);
 #endif
-        opts.attachment = detail::as_owned_c_ptr(options.attachment);
+        opts.attachment = detail::as_moved_c_ptr(options.attachment);
 
-        __ZENOH_RESULT_CHECK(::z_query_reply_del(this->loan(), detail::loan(key_expr), &opts), err,
+        __ZENOH_RESULT_CHECK(::z_query_reply_del(this->loan(), detail::as_loaned_c_ptr(key_expr), &opts), err,
                              "Failed to send reply del");
     }
 

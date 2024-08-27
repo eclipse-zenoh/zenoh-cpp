@@ -41,26 +41,38 @@ using namespace std::chrono_literals;
         return -300;       \
     }
 
+#define ASSERT_VALID(expr)          \
+    if (!(expr.internal_check())) { \
+        assert(false);              \
+        return -300;                \
+    }
+
+#define ASSERT_NULL(expr)        \
+    if (expr.internal_check()) { \
+        assert(false);           \
+        return -300;             \
+    }
+
 int test_shm_buffer(ZShmMut&& buf) {
-    ASSERT_TRUE(buf);
+    ASSERT_VALID(buf);
 
     ZShm immut(std::move(buf));
-    ASSERT_TRUE(immut);
-    ASSERT_FALSE(buf);
+    ASSERT_VALID(immut);
+    ASSERT_NULL(buf);
 
     ZShm immut2(immut);
-    ASSERT_TRUE(immut);
-    ASSERT_TRUE(immut2);
+    ASSERT_VALID(immut);
+    ASSERT_VALID(immut2);
 
     {
         auto mut = ZShm::try_mutate(std::move(immut2));
         ASSERT_FALSE(mut);
-        ASSERT_FALSE(immut2);
+        ASSERT_NULL(immut2);
     }
 
     auto mut = ZShm::try_mutate(std::move(immut));
     ASSERT_TRUE(mut);
-    ASSERT_FALSE(immut);
+    ASSERT_NULL(immut);
 
     return 0;
 }
@@ -70,7 +82,7 @@ bool check_alloc(Talloc&& alloc) {
     try {
         auto buf = std::get<ZShmMut>(std::move(alloc));
         ASSERT_OK(test_shm_buffer(std::move(buf)));
-        ASSERT_FALSE(buf);
+        ASSERT_NULL(buf);
         return true;
     } catch (...) {
     }
@@ -88,7 +100,7 @@ bool test_allocation(const ShmProvider& provider, size_t size, AllocAlignment al
 }
 
 int test_provider(const ShmProvider& provider, AllocAlignment alignment, size_t buf_ok_size, size_t buf_err_size) {
-    ASSERT_TRUE(provider);
+    ASSERT_VALID(provider);
 
     // test allocation OK
     for (int i = 0; i < 100; ++i) {
@@ -104,7 +116,7 @@ int test_provider(const ShmProvider& provider, AllocAlignment alignment, size_t 
     {
         // make OK allocation layout
         AllocLayout alloc_layout(provider, buf_ok_size, alignment);
-        ASSERT_TRUE(alloc_layout);
+        ASSERT_VALID(alloc_layout);
 
         // test layouted allocation OK
         for (int i = 0; i < 100; ++i) {
@@ -116,7 +128,7 @@ int test_provider(const ShmProvider& provider, AllocAlignment alignment, size_t 
     if (buf_err_size) {
         // make ERR allocation layout
         AllocLayout alloc_layout(provider, buf_err_size, alignment);
-        ASSERT_TRUE(alloc_layout);
+        ASSERT_VALID(alloc_layout);
 
         // test layouted allocation ERROR
         for (int i = 0; i < 100; ++i) {
@@ -148,7 +160,7 @@ class TestShmProviderBackend : public CppShmProviderBackend {
 
    private:
     virtual ChunkAllocResult alloc(const MemoryLayout& layout) override {
-        assert(layout);
+        assert(layout.internal_check());
 
         // check size and alignment
         const auto size = layout.size();
@@ -196,7 +208,7 @@ class TestShmProviderBackend : public CppShmProviderBackend {
     virtual size_t available() const override { return this->bytes_available; }
 
     virtual void layout_for(MemoryLayout& layout) override {
-        assert(layout);
+        assert(layout.internal_check());
 
         // check size and alignment
         const auto size = layout.size();
@@ -218,7 +230,7 @@ int run_c_provider() {
 
     // create provider
     CppShmProvider provider(id, std::move(backend));
-    ASSERT_TRUE(provider);
+    ASSERT_VALID(provider);
 
     // test provider
     AllocAlignment alignment = {0};
@@ -235,7 +247,7 @@ int run_posix_provider() {
     const AllocAlignment alignment = {4};
 
     const MemoryLayout layout(total_size, alignment);
-    ASSERT_TRUE(layout);
+    ASSERT_VALID(layout);
 
     PosixShmProvider provider(layout);
     ASSERT_OK(test_provider(provider, alignment, buf_ok_size, buf_err_size));
@@ -244,11 +256,11 @@ int run_posix_provider() {
 }
 
 int test_client_storage(const ShmClientStorage& storage) {
-    ASSERT_TRUE(storage);
+    ASSERT_VALID(storage);
 
     auto session = Session::open(Config::create_default(), storage);
-    ASSERT_TRUE(session);
-    ASSERT_TRUE(storage);
+    ASSERT_VALID(session);
+    ASSERT_VALID(storage);
 
     return Z_OK;
 }
@@ -297,7 +309,7 @@ int run_client_storage_impl() {
 
     // create POSIX SHM Client
     PosixShmClient client;
-    ASSERT_TRUE(client);
+    ASSERT_VALID(client);
 
     // add client to the list
     list.push_back(std::make_pair(Z_SHM_POSIX_PROTOCOL_ID, std::move(client)));
@@ -337,11 +349,11 @@ int run_c_client() {
 
     // create C SHM Client
     auto client = ShmClient(std::make_unique<TestShmClient>());
-    ASSERT_TRUE(client);
+    ASSERT_VALID(client);
 
     // add client to the list
     list.push_back(std::make_pair(id, std::move(client)));
-    ASSERT_FALSE(client);
+    ASSERT_NULL(client);
 
     // create client storage from the list
     // auto storage = ShmClientStorage(std::make_move_iterator(list.begin()), std::make_move_iterator(list.end()),

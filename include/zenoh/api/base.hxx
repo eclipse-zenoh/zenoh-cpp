@@ -100,9 +100,9 @@ class Owned {
     explicit Owned(OwnedType* pv) {
         if (pv) {
             _0 = *pv;
-            ::z_null(pv);
+            ::z_internal_null(pv);
         } else
-            ::z_null(&this->_0);
+            ::z_internal_null(&this->_0);
     }
     /// Move constructor from other object
     Owned(Owned&& v) : Owned(&v._0) {}
@@ -111,7 +111,7 @@ class Owned {
         if (this != &v) {
             ::z_drop(::z_move(this->_0));
             _0 = v._0;
-            ::z_null(&v._0);
+            ::z_internal_null(&v._0);
         }
         return *this;
     }
@@ -123,11 +123,13 @@ class Owned {
     /// Take out zenoh structure and leave owned object in a null state.
     OwnedType take() && {
         auto r = this->_0;
-        ::z_null(&this->_0);
+        ::z_internal_null(&this->_0);
         return r;
     }
+
     /// Check object validity uzing zenoh API
-    explicit operator bool() const { return ::z_check(_0); }
+    /// This is internal function made public for testing purposes
+    bool internal_check() const { return ::z_internal_check(_0); }
 
    protected:
     OwnedType _0;
