@@ -32,7 +32,6 @@ int _main(int argc, char **argv) {
     size_t len = atoi(payload_size);
 
     Config config = Config::create_default();
-    config.insert_json(Z_CONFIG_SHARED_MEMORY_KEY, "true");
     if (config_file) {
         config = Config::from_file(config_file);
     }

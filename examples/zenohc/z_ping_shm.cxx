@@ -48,7 +48,6 @@ int _main(int argc, char** argv) {
         return 1;
     }
     Config config = Config::create_default();
-    config.insert_json(Z_CONFIG_SHARED_MEMORY_KEY, "true");
     if (args.config_path) {
         config = Config::from_file(args.config_path);
     }

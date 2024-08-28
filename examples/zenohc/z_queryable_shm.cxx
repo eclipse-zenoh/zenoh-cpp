@@ -34,7 +34,6 @@ int _main(int argc, char **argv) {
             {{"-c", {"config file", &config_file}}});
 
     Config config = Config::create_default();
-    config.insert_json(Z_CONFIG_SHARED_MEMORY_KEY, "true");
     if (config_file) {
         config = Config::from_file(config_file);
     }
