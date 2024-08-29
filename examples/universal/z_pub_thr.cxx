@@ -67,7 +67,7 @@ int _main(int argc, char **argv) {
     auto session = Session::open(std::move(config));
 
     std::cout << "Declaring Publisher on " << keyexpr << "...\n";
-#if __cpp_designated_initializers >= 201707L
+#if __cplusplus > 201703L
     auto pub = session.declare_publisher(KeyExpr(keyexpr), {.congestion_control = Z_CONGESTION_CONTROL_BLOCK});
 #else
     auto pub_options = Session::PublisherOptions::create_default();

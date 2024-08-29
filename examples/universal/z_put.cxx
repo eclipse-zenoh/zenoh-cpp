@@ -73,7 +73,7 @@ int _main(int argc, char **argv) {
 
     std::unordered_map<std::string, std::string> attachment_map = {{"serial_number", "123"},
                                                                    {"coordinates", "48.7082,2.1498"}};
-#if __cpp_designated_initializers >= 201707L
+#if __cplusplus > 201703L
     session.put(KeyExpr(keyexpr), Bytes::serialize(value),
                 {.encoding = Encoding("text/plain"), .attachment = Bytes::serialize(attachment_map)});
 #else

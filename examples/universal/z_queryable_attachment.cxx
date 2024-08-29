@@ -76,7 +76,7 @@ int _main(int argc, char **argv) {
                 std::cout << "   attachment: " << key << ": '" << value << "'\n";
             }
         }
-#if __cpp_designated_initializers >= 201707L
+#if __cplusplus > 201703L
         query.reply(KeyExpr(expr), Bytes::serialize(value),
                     {.encoding = Encoding("text/palin"), .attachment = Bytes::serialize(attachment_map)});
 #else

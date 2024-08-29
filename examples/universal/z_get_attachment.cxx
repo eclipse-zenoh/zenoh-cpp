@@ -78,7 +78,7 @@ int _main(int argc, char **argv) {
 
     std::unordered_map<std::string, std::string> attachment = {{"Source", "C++"}};
 
-#if __cpp_designated_initializers >= 201707L
+#if __cplusplus > 201703L
     session.get(
         keyexpr, "", on_reply, on_done,
         {.target = Z_QUERY_TARGET_ALL, .payload = Bytes::serialize(value), .attachment = Bytes::serialize(attachment)});
