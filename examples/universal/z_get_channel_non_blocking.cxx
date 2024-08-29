@@ -64,7 +64,7 @@ int _main(int argc, char **argv) {
 
     std::cout << "Sending Query '" << expr << "'...\n";
 
-#if __cplusplus > 201703L
+#if __cpp_designated_initializers >= 201707L
     auto replies =
         session.get(keyexpr, "", channels::FifoChannel(16),
                     {.target = QueryTarget::Z_QUERY_TARGET_ALL, .payload = Bytes::serialize("Get from C++")});

@@ -83,7 +83,7 @@ int _main(int argc, char **argv) {
             std::cout << "' value = '" << payload->get().deserialize<std::string>();
         }
         std::cout << "'\n";
-#if __cplusplus > 201703L
+#if __cpp_designated_initializers >= 201707L
         query.reply(KeyExpr(expr), Bytes::serialize(value), {.encoding = Encoding("text/plain")});
 #else
         Query::ReplyOptions reply_options;

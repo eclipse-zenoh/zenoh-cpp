@@ -88,7 +88,7 @@ int _main(int argc, char **argv) {
         ss << "[" << idx << "] " << value;
         auto s = ss.str();  // in C++20 use .view() instead
         std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
-#if __cplusplus > 201703L
+#if __cpp_designated_initializers >= 201707L
         pub.put(Bytes::serialize(s), {.encoding = Encoding("text/plain")});
 #else
         auto put_options = Publisher::PutOptions{};
