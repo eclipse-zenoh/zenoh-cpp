@@ -14,7 +14,7 @@
 #pragma once
 namespace zenoh::closures {
 namespace detail {
-inline void none(){};
+inline void none(){}
 }
 static auto none = &detail::none;
 using None = decltype(none);
