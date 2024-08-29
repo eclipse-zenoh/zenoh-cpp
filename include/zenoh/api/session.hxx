@@ -143,7 +143,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @return Declared ``KeyExpr`` instance.
     KeyExpr declare_keyexpr(const KeyExpr& key_expr, ZResult* err = nullptr) const {
-        KeyExpr k;
+        KeyExpr k = interop::detail::null<KeyExpr>();
         __ZENOH_RESULT_CHECK(::z_declare_keyexpr(interop::as_owned_c_ptr(k), interop::as_loaned_c_ptr(*this),
                                                  interop::as_loaned_c_ptr(key_expr)),
                              err, std::string("Failed to declare key expression: ").append(k.as_string_view()));

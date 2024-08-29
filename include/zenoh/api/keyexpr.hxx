@@ -19,7 +19,6 @@
 #include "interop.hxx"
 
 namespace zenoh {
-class Session;
 
 /// @brief A Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#key-expression"> key expression </a>.
 ///
@@ -28,7 +27,6 @@ class Session;
 /// when transporting key expressions.
 
 class KeyExpr : public Owned<::z_owned_keyexpr_t> {
-    friend Session;
     KeyExpr() : Owned(nullptr){};
 
    public:
