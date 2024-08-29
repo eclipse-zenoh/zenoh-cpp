@@ -72,17 +72,6 @@ class Owned {
     typedef ZC_OWNED_TYPE OwnedType;
 
    public:
-    /// @name Constructors
-    /// @brief Construct from owned zenoh-c struct.
-    /// @param pv Pointer to valid owned zenoh-c struct. The ownership is transferred
-    /// to the constructed object.
-    explicit Owned(OwnedType* pv) {
-        if (pv) {
-            _0 = *pv;
-            ::z_internal_null(pv);
-        } else
-            ::z_internal_null(&this->_0);
-    }
     /// Move constructor from other object
     Owned(Owned&& v) : Owned(&v._0) {}
     /// Move assignment from other object
@@ -99,6 +88,14 @@ class Owned {
 
    protected:
     OwnedType _0;
+
+    explicit Owned(OwnedType* pv) {
+        if (pv) {
+            _0 = *pv;
+            ::z_internal_null(pv);
+        } else
+            ::z_internal_null(&this->_0);
+    }
 };
 
 }  // namespace zenoh

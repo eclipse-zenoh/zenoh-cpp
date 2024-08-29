@@ -23,8 +23,6 @@ namespace zenoh {
 /// @brief The <a href="https://zenoh.io/docs/manual/abstractions/#encoding"> encoding </a> of Zenoh data.
 class Encoding : public Owned<::z_owned_encoding_t> {
    public:
-    using Owned::Owned;
-
     /// @name Constructors
 
     /// @brief Construct default encoding.

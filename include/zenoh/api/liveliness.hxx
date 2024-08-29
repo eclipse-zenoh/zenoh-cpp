@@ -17,6 +17,9 @@
 #include "interop.hxx"
 
 namespace zenoh {
+
+class Session;
+
 /// @brief // A liveliness token that can be used to provide the network with information about connectivity to its
 /// declarer.
 ///
@@ -26,9 +29,9 @@ namespace zenoh {
 /// between the subscriber and the token's creator is lost.
 /// @note zenoh-c only.
 class LivelinessToken : public Owned<::zc_owned_liveliness_token_t> {
-   public:
-    using Owned::Owned;
+    LivelinessToken() : Owned(nullptr){};
 
+   public:
     /// Undeclares liveliness token, resetting it to gravestone state.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.

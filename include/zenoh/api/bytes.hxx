@@ -301,7 +301,7 @@ struct ZenohDeserializer<std::string> {
 template <>
 struct ZenohDeserializer<ZShm> {
     static ZShm deserialize(const Bytes& b, ZResult* err = nullptr) {
-        ZShm shm(nullptr);
+        ZShm shm = interop::detail::null<ZShm>();
         __ZENOH_RESULT_CHECK(
             ::z_bytes_deserialize_into_owned_shm(interop::as_loaned_c_ptr(b), interop::as_owned_c_ptr(shm)), err,
             "Failed to deserialize into ZShm!");

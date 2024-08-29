@@ -216,7 +216,7 @@ class TestShmProviderBackend : public CppShmProviderBackend {
 
         // incorrect layout will be invalidated
         if (size != 1 || alignment.pow != 0) {
-            layout = MemoryLayout(nullptr);
+            layout = interop::detail::null<MemoryLayout>();
         }
     }
 };

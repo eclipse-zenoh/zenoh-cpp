@@ -51,8 +51,6 @@ class ShmClient : public Owned<::z_owned_shm_client_t> {
     friend class ShmClientStorage;
 
    public:
-    using Owned::Owned;
-
     /// @name Constructors
 
     /// @brief Create a new CPP-defined ShmClient.

@@ -19,10 +19,13 @@
 
 namespace zenoh {
 
+class Session;
+namespace detail {
 class SubscriberBase : public Owned<::z_owned_subscriber_t> {
-   public:
-    using Owned::Owned;
+   protected:
+    SubscriberBase() : Owned(nullptr){};
 
+   public:
 #ifdef ZENOHCXX_ZENOHC
     /// @brief Get the key expression of the subscriber
     /// @note zenoh-c only.
@@ -30,22 +33,18 @@ class SubscriberBase : public Owned<::z_owned_subscriber_t> {
         return interop::as_owned_cpp_ref<KeyExpr>(::z_subscriber_keyexpr(interop::as_loaned_c_ptr(*this)));
     }
 #endif
+    friend class zenoh::Session;
 };
-
+}  // namespace detail
 /// A Zenoh subscriber. Destroying subscriber cancels the subscription.
 /// Constructed by ``Session::declare_subscriber`` method.
 template <class Handler>
-class Subscriber : public SubscriberBase {
+class Subscriber : public detail::SubscriberBase {
     Handler _handler;
-
-   public:
-    /// @name Constructors
-
-    /// @internal
-    /// @brief Construct from subscriber and handler.
     Subscriber(SubscriberBase subscriber, Handler handler)
         : SubscriberBase(std::move(subscriber)), _handler(std::move(handler)) {}
 
+   public:
     /// @name Methods
 
 #ifdef ZENOHCXX_ZENOHC
@@ -53,12 +52,14 @@ class Subscriber : public SubscriberBase {
 #endif
     /// @brief Return the handler to subscriber data stream.
     const Handler& handler() const { return _handler; };
+    friend class Session;
 };
 
 template <>
-class Subscriber<void> : public SubscriberBase {
-   public:
+class Subscriber<void> : public detail::SubscriberBase {
+   protected:
     using SubscriberBase::SubscriberBase;
+    friend class Session;
 };
 
 }  // namespace zenoh

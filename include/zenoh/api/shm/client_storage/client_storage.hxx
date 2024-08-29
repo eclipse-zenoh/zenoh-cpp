@@ -25,9 +25,9 @@ namespace zenoh {
 /// @brief A storage for SHM clients. Session constructed with instance of this type
 /// gets capabilities to read SHM buffers for Protocols added to this instance.
 class ShmClientStorage : public Owned<::z_owned_shm_client_storage_t> {
-   public:
     using Owned::Owned;
 
+   public:
     /// @name Constructors
 
     /// @brief Create ShmClientStorage referencing a default global list of SHM clients

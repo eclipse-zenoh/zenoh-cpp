@@ -16,34 +16,41 @@
 #include "base.hxx"
 
 namespace zenoh {
+
+class Session;
+namespace detail {
 class QueryableBase : public Owned<::z_owned_queryable_t> {
-   public:
-    using Owned::Owned;
+   protected:
+    QueryableBase() : Owned(nullptr){};
+
+    friend class zenoh::Session;
 };
+}  // namespace detail
 
 /// A Zenoh queryable. Constructed by ``Session::declare_queryable`` method.
 template <class Handler>
-class Queryable : public QueryableBase {
+class Queryable : public detail::QueryableBase {
     Handler _handler;
-
-   public:
-    /// @name Constructors
-
-    /// @internal
-    /// @brief Construct from queryable and handler.
-    Queryable(QueryableBase queryable, Handler handler)
+    Queryable(detail::QueryableBase queryable, Handler handler)
         : QueryableBase(std::move(queryable)), _handler(std::move(handler)) {}
 
+   public:
     /// @name Methods
 
     /// @brief Return handler to queryable data stream.
     const Handler& handler() const { return _handler; };
+
+    friend class Session;
 };
 
 template <>
-class Queryable<void> : public QueryableBase {
+class Queryable<void> : public detail::QueryableBase {
+    Queryable() : QueryableBase(){};
+
    public:
     using QueryableBase::QueryableBase;
+
+    friend class Session;
 };
 
 }  // namespace zenoh

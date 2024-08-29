@@ -23,8 +23,6 @@ class ZShmMut : public Owned<::z_owned_shm_mut_t> {
     friend class ZShm;
 
    public:
-    using Owned::Owned;
-
     /// @brief Get buffer's const data
     /// @return pointer to the underlying data
     const uint8_t* data() const { return ::z_shm_mut_data(interop::as_loaned_c_ptr(*this)); }

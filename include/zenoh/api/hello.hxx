@@ -28,8 +28,6 @@ namespace zenoh {
 /// message.
 class Hello : public Owned<::z_owned_hello_t> {
    public:
-    using Owned::Owned;
-
     /// @name Methods
 
 #if defined UNSTABLE

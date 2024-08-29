@@ -31,9 +31,9 @@
 namespace zenoh {
 /// The query to be answered by a ``Queryable``.
 class Query : public Owned<::z_owned_query_t> {
-   public:
-    using Owned::Owned;
+    Query() : Owned(nullptr){};
 
+   public:
     /// @name Methods
 
     /// @brief Get the key expression of the query.
@@ -209,7 +209,7 @@ class Query : public Owned<::z_owned_query_t> {
     ///
     /// The query responses will be sent only when the last clone is destroyed.
     Query clone() const {
-        Query q(nullptr);
+        Query q;
         ::z_query_clone(&q._0, interop::as_loaned_c_ptr(*this));
         return q;
     };

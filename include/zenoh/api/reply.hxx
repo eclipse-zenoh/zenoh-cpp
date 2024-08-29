@@ -26,7 +26,6 @@ namespace zenoh {
 /// @brief Reply error data.
 class ReplyError : public Owned<::z_owned_reply_err_t> {
    public:
-    using Owned::Owned;
     /// @name Methods
 
     /// @brief The payload of this error.
@@ -45,8 +44,6 @@ class ReplyError : public Owned<::z_owned_reply_err_t> {
 /// A reply from queryable to ``Session::get`` operation.
 class Reply : public Owned<::z_owned_reply_t> {
    public:
-    using Owned::Owned;
-
     /// @name Methods
 
     /// @brief Check if the reply is OK (and contains a sample).

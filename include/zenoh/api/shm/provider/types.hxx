@@ -16,6 +16,7 @@
 
 #include <variant>
 
+#include "../../interop.hxx"
 #include "../buffer/zshmmut.hxx"
 
 namespace zenoh {
@@ -44,8 +45,6 @@ class MemoryLayout : public Owned<::z_owned_memory_layout_t> {
     friend class PosixShmProvider;
 
    public:
-    using Owned::Owned;
-
     /// @name Constructors
 
     /// @brief Create a new MemoryLayout.
@@ -78,8 +77,6 @@ class ChunkAllocResult : public Owned<::z_owned_chunk_alloc_result_t> {
     friend class CppShmProviderBackend;
 
    public:
-    using Owned::Owned;
-
     /// @name Constructors
 
     /// @brief Create a new ChunkAllocResult that carries successfuly allocated chunk.

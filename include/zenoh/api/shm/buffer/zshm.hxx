@@ -27,8 +27,6 @@ class ZShm : public Owned<::z_owned_shm_t> {
     friend class ZShmMut;
 
    public:
-    using Owned::Owned;
-
     /// @name Constructors
 
     /// @brief Create a new ZShm from ZShmMut.
@@ -53,8 +51,8 @@ class ZShm : public Owned<::z_owned_shm_t> {
     static std::optional<ZShmMut> try_mutate(ZShm&& immut) {
         z_owned_shm_mut_t mut_inner;
         ::z_shm_mut_try_from_immut(&mut_inner, z_move(immut._0));
-        if (z_internal_check(mut_inner)) {
-            return ZShmMut(&mut_inner);
+        if (::z_internal_check(mut_inner)) {
+            return std::move(interop::as_owned_cpp_ref<ZShmMut>(&mut_inner));
         }
         return std::nullopt;
     }

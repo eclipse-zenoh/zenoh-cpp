@@ -38,8 +38,6 @@ class EntityGlobalId : public Copyable<::z_entity_global_id_t> {
 /// @brief Informations on the Zenoh source.
 class SourceInfo : public Owned<::z_owned_source_info_t> {
    public:
-    using Owned::Owned;
-
     /// @name Constructors
 
     /// @brief Construct from global id and sequence number.

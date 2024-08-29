@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "../../interop.hxx"
 #include "types.hxx"
 
 namespace zenoh {
@@ -22,7 +23,7 @@ struct Converters {
     static inline BufLayoutAllocResult from(z_buf_layout_alloc_result_t& c_result) {
         switch (c_result.status) {
             case zc_buf_layout_alloc_status_t::ZC_BUF_LAYOUT_ALLOC_STATUS_OK:
-                return ZShmMut(&c_result.buf);
+                return std::move(interop::as_owned_cpp_ref<ZShmMut>(&c_result.buf));
             case zc_buf_layout_alloc_status_t::ZC_BUF_LAYOUT_ALLOC_STATUS_LAYOUT_ERROR:
                 return c_result.layout_error;
             case zc_buf_layout_alloc_status_t::ZC_BUF_LAYOUT_ALLOC_STATUS_ALLOC_ERROR:
@@ -34,7 +35,7 @@ struct Converters {
     static inline BufAllocResult from(z_buf_alloc_result_t& c_result) {
         switch (c_result.status) {
             case zc_buf_alloc_status_t::ZC_BUF_ALLOC_STATUS_OK:
-                return ZShmMut(&c_result.buf);
+                return std::move(interop::as_owned_cpp_ref<ZShmMut>(&c_result.buf));
             case zc_buf_alloc_status_t::ZC_BUF_ALLOC_STATUS_ALLOC_ERROR:
             default:
                 return c_result.error;

@@ -48,8 +48,6 @@ inline void _z_alloc_layout_async_interface_drop_fn(void* context) {
 
 class AllocLayout : public Owned<::z_owned_alloc_layout_t> {
    public:
-    using Owned::Owned;
-
     /// @name Constructors
 
     /// @brief Create a new Alloc Layout for SHM Provider.

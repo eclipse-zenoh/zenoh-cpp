@@ -41,9 +41,9 @@
 namespace zenoh {
 /// A Zenoh session.
 class Session : public Owned<::z_owned_session_t> {
-   public:
-    using Owned::Owned;
+    Session() : Owned(nullptr){};
 
+   public:
     /// @brief Options to be passed when opening a ``Session``.
     struct SessionOptions {
         /// @name Fields
@@ -125,7 +125,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Create a shallow copy of the session.
     /// @return a new ``Session`` instance.
     Session clone() const {
-        Session s(nullptr);
+        Session s;
         ::z_session_clone(&s._0, interop::as_loaned_c_ptr(*this));
         return s;
     }
@@ -399,7 +399,7 @@ class Session : public Owned<::z_owned_session_t> {
         z_queryable_options_default(&opts);
         opts.complete = options.complete;
 
-        Queryable<void> q(nullptr);
+        Queryable<void> q;
         ZResult res = ::z_declare_queryable(interop::as_owned_c_ptr(q), interop::as_loaned_c_ptr(*this),
                                             interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Queryable");
@@ -424,7 +424,7 @@ class Session : public Owned<::z_owned_session_t> {
         z_queryable_options_default(&opts);
         opts.complete = options.complete;
 
-        QueryableBase q(nullptr);
+        detail::QueryableBase q;
         ZResult res = ::z_declare_queryable(interop::as_owned_c_ptr(q), interop::as_loaned_c_ptr(*this),
                                             interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Queryable");
@@ -478,7 +478,7 @@ class Session : public Owned<::z_owned_session_t> {
 #else
         (void)options;
 #endif
-        Subscriber<void> s(nullptr);
+        Subscriber<void> s;
         ZResult res = ::z_declare_subscriber(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
                                              interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Subscriber");
@@ -507,14 +507,13 @@ class Session : public Owned<::z_owned_session_t> {
 #else
         (void)options;
 #endif
-        SubscriberBase s(nullptr);
-        ZResult res =
-            ::z_declare_subscriber(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
-                                   interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
+        ::z_owned_subscriber_t s;
+        ZResult res = ::z_declare_subscriber(&s, interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr),
+                                             ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Subscriber");
         if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
-        return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
-                                                                          std::move(cb_handler_pair.second));
+        return Subscriber<typename Channel::template HandlerType<Sample>>(
+            std::move(interop::as_owned_cpp_ref<detail::SubscriberBase>(&s)), std::move(cb_handler_pair.second));
     }
 
     /// @brief Options to be passed when declaring a ``Publisher``.
@@ -558,7 +557,7 @@ class Session : public Owned<::z_owned_session_t> {
 #endif
         opts.encoding = interop::as_moved_c_ptr(options.encoding);
 
-        Publisher p(nullptr);
+        Publisher p = interop::detail::null<Publisher>();
         ZResult res = ::z_declare_publisher(interop::as_owned_c_ptr(p), interop::as_loaned_c_ptr(*this),
                                             interop::as_loaned_c_ptr(key_expr), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Publisher");
@@ -689,7 +688,7 @@ class Session : public Owned<::z_owned_session_t> {
         const KeyExpr& key_expr,
         LivelinessDeclarationOptions&& options = LivelinessDeclarationOptions::create_default(),
         ZResult* err = nullptr) {
-        LivelinessToken t(nullptr);
+        LivelinessToken t = interop::detail::null<LivelinessToken>();
         ::zc_liveliness_declaration_options_t opts;
         zc_liveliness_declaration_options_default(&opts);
         (void)options;
@@ -737,7 +736,7 @@ class Session : public Owned<::z_owned_session_t> {
         ::zc_liveliness_subscriber_options_t opts;
         zc_liveliness_subscriber_options_default(&opts);
         (void)options;
-        Subscriber<void> s(nullptr);
+        Subscriber<void> s;
         ZResult res =
             ::zc_liveliness_declare_subscriber(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
                                                interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
@@ -763,14 +762,14 @@ class Session : public Owned<::z_owned_session_t> {
         ::zc_liveliness_subscriber_options_t opts;
         zc_liveliness_subscriber_options_default(&opts);
         (void)options;
-        SubscriberBase s(nullptr);
-        ZResult res = ::zc_liveliness_declare_subscriber(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
-                                                         interop::as_loaned_c_ptr(key_expr),
-                                                         ::z_move(cb_handler_pair.first), &opts);
+        ::z_owned_subscriber_t s;
+        ZResult res =
+            ::zc_liveliness_declare_subscriber(&s, interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr),
+                                               ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
         if (res != Z_OK) ::z_drop(::z_move(*interop::as_moved_c_ptr(cb_handler_pair.second)));
-        return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
-                                                                          std::move(cb_handler_pair.second));
+        return Subscriber<typename Channel::template HandlerType<Sample>>(
+            std::move(interop::as_owned_cpp_ref<detail::SubscriberBase>(&s)), std::move(cb_handler_pair.second));
     }
 
     /// @brief Options to pass to ``Session::liveliness_get``.

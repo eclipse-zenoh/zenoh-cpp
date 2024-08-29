@@ -97,19 +97,21 @@ struct RingHandlerData<zenoh::Reply> {
 };
 }  // namespace detail
 
+class FifoChannel;
+
 /// @brief A FIFO channel handler
 /// @tparam T data entry type
 template <class T>
 class FifoHandler : public Owned<typename detail::FifoHandlerData<T>::handler_type> {
-   public:
-    using Owned<typename detail::FifoHandlerData<T>::handler_type>::Owned;
+    FifoHandler() : Owned<typename detail::FifoHandlerData<T>::handler_type>(nullptr){};
 
+   public:
     /// @name Methods
 
     /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will block until new data entry arrives.
     /// @return received data entry if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> recv() const {
-        std::variant<T, RecvError> v(T(nullptr));
+        std::variant<T, RecvError> v(interop::detail::null<T>());
         z_result_t res = ::z_recv(interop::as_loaned_c_ptr(*this), zenoh::interop::as_owned_c_ptr(std::get<T>(v)));
         if (res == Z_OK) {
             return v;
@@ -121,7 +123,7 @@ class FifoHandler : public Owned<typename detail::FifoHandlerData<T>::handler_ty
     /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will immediately return.
     /// @return received data entry if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> try_recv() const {
-        std::variant<T, RecvError> v(T(nullptr));
+        std::variant<T, RecvError> v(interop::detail::null<T>());
         z_result_t res = ::z_try_recv(interop::as_loaned_c_ptr(*this), zenoh::interop::as_owned_c_ptr(std::get<T>(v)));
         if (res == Z_OK) {
             return v;
@@ -131,21 +133,25 @@ class FifoHandler : public Owned<typename detail::FifoHandlerData<T>::handler_ty
             return RecvError::Z_DISCONNECTED;
         }
     }
+
+    friend class FifoChannel;
 };
+
+class RingChannel;
 
 /// @brief A circular buffer channel handler.
 /// @tparam T data entry type.
 template <class T>
 class RingHandler : public Owned<typename detail::RingHandlerData<T>::handler_type> {
-   public:
-    using Owned<typename detail::RingHandlerData<T>::handler_type>::Owned;
+    RingHandler() : Owned<typename detail::RingHandlerData<T>::handler_type>(nullptr){};
 
+   public:
     /// @name Methods
 
     /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will block until new data entry arrives.
     /// @return received data entry if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> recv() const {
-        std::variant<T, RecvError> v(T(nullptr));
+        std::variant<T, RecvError> v(interop::detail::null<T>());
         z_result_t res =
             ::z_recv(zenoh::interop::as_loaned_c_ptr(*this), zenoh::interop::as_owned_c_ptr(std::get<T>(v)));
         if (res == Z_OK) {
@@ -158,7 +164,7 @@ class RingHandler : public Owned<typename detail::RingHandlerData<T>::handler_ty
     /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will immediately return.
     /// @return received data entry if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> try_recv() const {
-        std::variant<T, RecvError> v(T(nullptr));
+        std::variant<T, RecvError> v(interop::detail::null<T>());
         z_result_t res = ::z_try_recv(interop::as_loaned_c_ptr(*this), zenoh::interop::as_owned_c_ptr(std::get<T>(v)));
         if (res == Z_OK) {
             return v;
@@ -168,6 +174,8 @@ class RingHandler : public Owned<typename detail::RingHandlerData<T>::handler_ty
             return RecvError::Z_DISCONNECTED;
         }
     }
+
+    friend class RingChannel;
 };
 
 /// @brief A FIFO channel.
@@ -191,7 +199,7 @@ class FifoChannel {
     template <class T>
     std::pair<typename detail::FifoHandlerData<T>::closure_type, HandlerType<T>> into_cb_handler_pair() const {
         typename detail::FifoHandlerData<T>::closure_type c_closure;
-        FifoHandler<T> h(nullptr);
+        FifoHandler<T> h;
         detail::FifoHandlerData<T>::create_cb_handler_pair(&c_closure, zenoh::interop::as_owned_c_ptr(h), _capacity);
         return {c_closure, std::move(h)};
     }
@@ -218,7 +226,7 @@ class RingChannel {
     template <class T>
     std::pair<typename detail::RingHandlerData<T>::closure_type, HandlerType<T>> into_cb_handler_pair() const {
         typename detail::RingHandlerData<T>::closure_type c_closure;
-        RingHandler<T> h(nullptr);
+        RingHandler<T> h;
         detail::RingHandlerData<T>::create_cb_handler_pair(&c_closure, zenoh::interop::as_owned_c_ptr(h), _capacity);
         return {c_closure, std::move(h)};
     }

@@ -26,11 +26,14 @@
 #include <optional>
 
 namespace zenoh {
+
+class Session;
+
 /// A Zenoh publisher. Constructed by ``Session::declare_publisher`` method.
 class Publisher : public Owned<::z_owned_publisher_t> {
-   public:
-    using Owned::Owned;
+    Publisher() : Owned(nullptr){};
 
+   public:
     /// @brief Options to be passed to ``Publisher::put`` operation.
     struct PutOptions {
         /// @name Fields

@@ -13,6 +13,7 @@
 #pragma once
 
 #include <optional>
+#include <type_traits>
 
 #include "base.hxx"
 
@@ -203,6 +204,15 @@ template <class OwnedType>
 bool check(const Owned<OwnedType>& owned_cpp_obj) {
     return ::z_internal_check(*as_owned_c_ptr(owned_cpp_obj));
 }
+
+template <class T>
+T null() {
+    using ZCtype = std::remove_cv_t<std::remove_pointer_t<decltype(as_owned_c_ptr(std::declval<T>()))>>;
+    ZCtype z;
+    ::z_internal_null(&z);
+    return std::move(as_owned_cpp_ref<T>(&z));
+}
+
 }  // namespace detail
 
 }  // namespace zenoh::interop

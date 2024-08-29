@@ -49,9 +49,10 @@ class ShmProviderAsyncInterface {
 class ShmProvider : public Owned<::z_owned_shm_provider_t> {
     friend class AllocLayout;
 
-   public:
-    using Owned::Owned;
+   protected:
+    ShmProvider() : Owned(nullptr){};
 
+   public:
     BufLayoutAllocResult alloc(size_t size, AllocAlignment alignment) const {
         z_buf_layout_alloc_result_t result;
         ::z_shm_provider_alloc(&result, interop::as_loaned_c_ptr(*this), size, alignment);
@@ -99,7 +100,7 @@ class ShmProvider : public Owned<::z_owned_shm_provider_t> {
     ZShmMut map(AllocatedChunk&& chunk, std::size_t len) const {
         z_owned_shm_mut_t result;
         ::z_shm_provider_map(&result, interop::as_loaned_c_ptr(*this), chunk, len);
-        return ZShmMut(&result);
+        return std::move(interop::as_owned_cpp_ref<ZShmMut>(&result));
     }
 };
 
@@ -112,7 +113,7 @@ class CppShmProvider : public ShmProvider {
     /// @name Constructors
 
     /// @brief Create a new CPP-defined ShmProvider.
-    CppShmProvider(ProtocolId id, std::unique_ptr<CppShmProviderBackend> backend) : ShmProvider(nullptr) {
+    CppShmProvider(ProtocolId id, std::unique_ptr<CppShmProviderBackend> backend) : ShmProvider() {
         // init context
         zc_context_t context = {backend.release(),
                                 &shm::provider_backend::closures::_z_cpp_shm_provider_backend_drop_fn};
@@ -130,7 +131,7 @@ class CppShmProvider : public ShmProvider {
     }
 
     /// @brief Create a new CPP-defined threadsafe ShmProvider.
-    CppShmProvider(ProtocolId id, std::unique_ptr<CppShmProviderBackendThreadsafe> backend) : ShmProvider(nullptr) {
+    CppShmProvider(ProtocolId id, std::unique_ptr<CppShmProviderBackendThreadsafe> backend) : ShmProvider() {
         // init context
         ::zc_threadsafe_context_t context = {{backend.release()},
                                              &shm::provider_backend::closures::_z_cpp_shm_provider_backend_drop_fn};
