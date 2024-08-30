@@ -17,6 +17,7 @@
 #include <optional>
 
 #include "../../base.hxx"
+#include "../../interop.hxx"
 #include "zshmmut.hxx"
 
 namespace zenoh {
@@ -24,10 +25,10 @@ namespace zenoh {
 /// @brief An immutable SHM buffer
 class ZShm : public Owned<::z_owned_shm_t> {
     friend class ZShmMut;
+    ZShm(zenoh::detail::null_object_t) : Owned(nullptr){};
+    friend struct interop::detail::Converter;
 
    public:
-    using Owned::Owned;
-
     /// @name Constructors
 
     /// @brief Create a new ZShm from ZShmMut.
@@ -36,15 +37,15 @@ class ZShm : public Owned<::z_owned_shm_t> {
 
     /// @brief Create a new ZShm from ZShm by performing a shallow SHM reference copy.
     /// @param other ZShm to copy
-    ZShm(const ZShm& other) : Owned(nullptr) { ::z_shm_clone(&this->_0, other.loan()); }
+    ZShm(const ZShm& other) : Owned(nullptr) { ::z_shm_clone(&this->_0, interop::as_loaned_c_ptr(other)); }
 
     /// @brief Get buffer's const data. It is completely unsafe to to modify SHM data without using ZShmMut interface.
     /// @return pointer to the underlying data
-    const uint8_t* data() const { return ::z_shm_data(this->loan()); }
+    const uint8_t* data() const { return ::z_shm_data(interop::as_loaned_c_ptr(*this)); }
 
     /// @brief Get buffer's data size.
     /// @return underlying data size
-    std::size_t len() const { return ::z_shm_len(this->loan()); }
+    std::size_t len() const { return ::z_shm_len(interop::as_loaned_c_ptr(*this)); }
 
     /// @brief Create a new ZShmMut from ZShm.
     /// @param immut immutable buffer
@@ -52,8 +53,8 @@ class ZShm : public Owned<::z_owned_shm_t> {
     static std::optional<ZShmMut> try_mutate(ZShm&& immut) {
         z_owned_shm_mut_t mut_inner;
         ::z_shm_mut_try_from_immut(&mut_inner, z_move(immut._0));
-        if (z_internal_check(mut_inner)) {
-            return ZShmMut(&mut_inner);
+        if (::z_internal_check(mut_inner)) {
+            return std::move(interop::as_owned_cpp_ref<ZShmMut>(&mut_inner));
         }
         return std::nullopt;
     }

@@ -23,19 +23,17 @@ class ZShmMut : public Owned<::z_owned_shm_mut_t> {
     friend class ZShm;
 
    public:
-    using Owned::Owned;
-
     /// @brief Get buffer's const data
     /// @return pointer to the underlying data
-    const uint8_t* data() const { return ::z_shm_mut_data(this->loan()); }
+    const uint8_t* data() const { return ::z_shm_mut_data(interop::as_loaned_c_ptr(*this)); }
 
     /// @brief Get buffer's data
     /// @return pointer to the underlying data
-    uint8_t* data() { return ::z_shm_mut_data_mut(this->loan()); }
+    uint8_t* data() { return ::z_shm_mut_data_mut(interop::as_loaned_c_ptr(*this)); }
 
     /// @brief Get buffer's data size.
     /// @return underlying data size
-    std::size_t len() const { return ::z_shm_mut_len(this->loan()); }
+    std::size_t len() const { return ::z_shm_mut_len(interop::as_loaned_c_ptr(*this)); }
 };
 
 }  // end of namespace zenoh

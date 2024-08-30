@@ -13,9 +13,9 @@
 
 #pragma once
 
-#include "../detail/interop.hxx"
 #include "../zenohc.hxx"
 #include "base.hxx"
+#include "interop.hxx"
 #if defined UNSTABLE
 #include "id.hxx"
 #endif
@@ -24,12 +24,14 @@ namespace zenoh {
 #ifdef ZENOHCXX_ZENOHC
 /// The global unique id of a Zenoh entity.
 class EntityGlobalId : public Copyable<::z_entity_global_id_t> {
-   public:
     using Copyable::Copyable;
+    friend struct interop::detail::Converter;
+
+   public:
     /// @name Methods
 
     /// Get Zenoh id.
-    Id id() const { return Id(::z_entity_global_id_zid(&this->inner())); }
+    Id id() const { return interop::into_copyable_cpp_obj<Id>(::z_entity_global_id_zid(&this->inner())); }
 
     /// Get eid.
     uint32_t eid() const { return ::z_entity_global_id_eid(&this->inner()); }
@@ -38,22 +40,22 @@ class EntityGlobalId : public Copyable<::z_entity_global_id_t> {
 /// @brief Informations on the Zenoh source.
 class SourceInfo : public Owned<::z_owned_source_info_t> {
    public:
-    using Owned::Owned;
-
     /// @name Constructors
 
     /// @brief Construct from global id and sequence number.
     SourceInfo(const EntityGlobalId& id, uint64_t sn) : Owned(nullptr) {
-        ::z_source_info_new(&this->_0, detail::as_copyable_c_ptr(id), sn);
+        ::z_source_info_new(&this->_0, interop::as_copyable_c_ptr(id), sn);
     }
 
     /// @name Methods
 
     /// @brief Get the source id.
-    EntityGlobalId id() const { return EntityGlobalId(::z_source_info_id(this->loan())); }
+    EntityGlobalId id() const {
+        return interop::into_copyable_cpp_obj<EntityGlobalId>(::z_source_info_id(interop::as_loaned_c_ptr(*this)));
+    }
 
     /// @brief Get the sequence number of the sample from the given source.
-    uint64_t sn() const { return ::z_source_info_sn(this->loan()); }
+    uint64_t sn() const { return ::z_source_info_sn(interop::as_loaned_c_ptr(*this)); }
 };
 #endif
 }  // namespace zenoh

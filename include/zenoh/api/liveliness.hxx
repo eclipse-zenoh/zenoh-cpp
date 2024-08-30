@@ -13,10 +13,13 @@
 
 #pragma once
 
-#include "../detail/interop.hxx"
 #include "base.hxx"
+#include "interop.hxx"
 
 namespace zenoh {
+
+class Session;
+
 /// @brief // A liveliness token that can be used to provide the network with information about connectivity to its
 /// declarer.
 ///
@@ -26,14 +29,15 @@ namespace zenoh {
 /// between the subscriber and the token's creator is lost.
 /// @note zenoh-c only.
 class LivelinessToken : public Owned<::zc_owned_liveliness_token_t> {
-   public:
-    using Owned::Owned;
+    LivelinessToken(zenoh::detail::null_object_t) : Owned(nullptr){};
+    friend struct interop::detail::Converter;
 
+   public:
     /// Undeclares liveliness token, resetting it to gravestone state.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void undeclare(ZResult* err = nullptr) && {
-        __ZENOH_RESULT_CHECK(::zc_liveliness_undeclare_token(detail::as_moved_c_ptr(*this)), err,
+        __ZENOH_RESULT_CHECK(::zc_liveliness_undeclare_token(interop::as_moved_c_ptr(*this)), err,
                              "Failed to undeclare liveliness token");
     }
 };

@@ -16,6 +16,7 @@
 
 #include <variant>
 
+#include "../../interop.hxx"
 #include "../buffer/zshmmut.hxx"
 
 namespace zenoh {
@@ -42,10 +43,10 @@ typedef ::z_alloc_alignment_t AllocAlignment;
 
 class MemoryLayout : public Owned<::z_owned_memory_layout_t> {
     friend class PosixShmProvider;
+    MemoryLayout(zenoh::detail::null_object_t) : Owned(nullptr){};
+    friend struct interop::detail::Converter;
 
    public:
-    using Owned::Owned;
-
     /// @name Constructors
 
     /// @brief Create a new MemoryLayout.
@@ -61,14 +62,14 @@ class MemoryLayout : public Owned<::z_owned_memory_layout_t> {
     size_t size() const {
         size_t size;
         AllocAlignment alignment;
-        z_memory_layout_get_data(&size, &alignment, this->loan());
+        z_memory_layout_get_data(&size, &alignment, interop::as_loaned_c_ptr(*this));
         return size;
     }
 
     AllocAlignment alignment() const {
         size_t size;
         AllocAlignment alignment;
-        z_memory_layout_get_data(&size, &alignment, this->loan());
+        z_memory_layout_get_data(&size, &alignment, interop::as_loaned_c_ptr(*this));
         return alignment;
     }
 };
@@ -78,8 +79,6 @@ class ChunkAllocResult : public Owned<::z_owned_chunk_alloc_result_t> {
     friend class CppShmProviderBackend;
 
    public:
-    using Owned::Owned;
-
     /// @name Constructors
 
     /// @brief Create a new ChunkAllocResult that carries successfuly allocated chunk.

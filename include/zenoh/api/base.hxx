@@ -22,27 +22,6 @@
 
 namespace zenoh {
 
-namespace detail {
-template <typename T, typename = void>
-struct is_loan_available : std::false_type {};
-
-template <typename T>
-struct is_loan_available<T, std::void_t<decltype(::z_loan(std::declval<const T&>()))>> : std::true_type {};
-
-template <class T>
-inline constexpr bool is_loan_available_v = is_loan_available<T>::value;
-
-template <typename T, typename = void>
-struct is_loan_mut_available : std::false_type {};
-
-template <typename T>
-struct is_loan_mut_available<T, std::void_t<decltype(::z_loan_mut(std::declval<T&>()))>> : std::true_type {};
-
-template <class T>
-inline constexpr bool is_loan_mut_available_v = is_loan_mut_available<T>::value;
-
-}  // namespace detail
-
 /// @brief Error code returned by Zenoh API
 typedef ::z_result_t ZResult;
 
@@ -76,13 +55,7 @@ class Copyable {
 
     InnerType& inner() { return this->_0; }
     const InnerType& inner() const { return this->_0; }
-
-   public:
-    /// @name Constructors
-    /// Construct from wrapped zenoh-c / zenoh-pico structure
     explicit Copyable(const InnerType& v) : _0(v) {}
-    explicit operator const ZC_COPYABLE_TYPE&() const { return inner(); }
-    explicit operator ZC_COPYABLE_TYPE&() { return inner(); }
 };
 
 /// Base type for C++ wrappers of Zenoh owned structures
@@ -93,17 +66,6 @@ class Owned {
     typedef ZC_OWNED_TYPE OwnedType;
 
    public:
-    /// @name Constructors
-    /// @brief Construct from owned zenoh-c struct.
-    /// @param pv Pointer to valid owned zenoh-c struct. The ownership is transferred
-    /// to the constructed object.
-    explicit Owned(OwnedType* pv) {
-        if (pv) {
-            _0 = *pv;
-            ::z_internal_null(pv);
-        } else
-            ::z_internal_null(&this->_0);
-    }
     /// Move constructor from other object
     Owned(Owned&& v) : Owned(&v._0) {}
     /// Move assignment from other object
@@ -118,39 +80,21 @@ class Owned {
     /// Destructor drops owned value using z_drop from zenoh API
     ~Owned() { ::z_drop(::z_move(_0)); }
 
-    /// @name Methods
-
-    /// Take out zenoh structure and leave owned object in a null state.
-    OwnedType take() && {
-        auto r = this->_0;
-        ::z_internal_null(&this->_0);
-        return r;
-    }
-
-    /// Check object validity uzing zenoh API
-    /// This is internal function made public for testing purposes
-    bool internal_check() const { return ::z_internal_check(_0); }
-
    protected:
     OwnedType _0;
 
-    template <class OtL = z_owned_to_loaned_type_t<ZC_OWNED_TYPE>,
-              class L = typename OtL::type,  // SFINAE here if no loaned type declared
-              class LAvail = std::enable_if<detail::is_loan_available_v<ZC_OWNED_TYPE>, L>,
-              class T = typename LAvail::type  // SFINAE here if immutable loan is not available
-              >
-    const T* loan() const {
-        return ::z_loan(_0);
-    }
-
-    template <class OtL = z_owned_to_loaned_type_t<ZC_OWNED_TYPE>,
-              class L = typename OtL::type,  // SFINAE here if no loaned type declared
-              class LAvail = std::enable_if<detail::is_loan_mut_available_v<ZC_OWNED_TYPE>, L>,
-              class T = typename LAvail::type  // SFINAE here if mutable loan is not available
-              >
-    T* loan() {
-        return ::z_loan_mut(_0);
+    explicit Owned(OwnedType* pv) {
+        if (pv) {
+            _0 = *pv;
+            ::z_internal_null(pv);
+        } else
+            ::z_internal_null(&this->_0);
     }
 };
+
+namespace detail {
+struct null_object_t {};
+inline constexpr null_object_t null_object{};
+}  // namespace detail
 
 }  // namespace zenoh

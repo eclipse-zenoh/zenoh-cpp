@@ -48,44 +48,42 @@ inline void _z_alloc_layout_async_interface_drop_fn(void* context) {
 
 class AllocLayout : public Owned<::z_owned_alloc_layout_t> {
    public:
-    using Owned::Owned;
-
     /// @name Constructors
 
     /// @brief Create a new Alloc Layout for SHM Provider.
     AllocLayout(const ShmProvider& owner_provider, std::size_t size, AllocAlignment alignment, ZResult* err = nullptr)
         : Owned(nullptr) {
-        __ZENOH_RESULT_CHECK(::z_alloc_layout_new(&this->_0, owner_provider.loan(), size, alignment), err,
-                             "Failed to create SHM Alloc Layout");
+        __ZENOH_RESULT_CHECK(::z_alloc_layout_new(&this->_0, interop::as_loaned_c_ptr(owner_provider), size, alignment),
+                             err, "Failed to create SHM Alloc Layout");
     }
 
     BufAllocResult alloc() const {
         z_buf_alloc_result_t result;
-        ::z_alloc_layout_alloc(&result, this->loan());
+        ::z_alloc_layout_alloc(&result, interop::as_loaned_c_ptr(*this));
         return Converters::from(result);
     }
 
     BufAllocResult alloc_gc() const {
         z_buf_alloc_result_t result;
-        ::z_alloc_layout_alloc_gc(&result, this->loan());
+        ::z_alloc_layout_alloc_gc(&result, interop::as_loaned_c_ptr(*this));
         return Converters::from(result);
     }
 
     BufAllocResult alloc_gc_defrag() const {
         z_buf_alloc_result_t result;
-        ::z_alloc_layout_alloc_gc_defrag(&result, this->loan());
+        ::z_alloc_layout_alloc_gc_defrag(&result, interop::as_loaned_c_ptr(*this));
         return Converters::from(result);
     }
 
     BufAllocResult alloc_gc_defrag_dealloc() const {
         z_buf_alloc_result_t result;
-        ::z_alloc_layout_alloc_gc_defrag_dealloc(&result, this->loan());
+        ::z_alloc_layout_alloc_gc_defrag_dealloc(&result, interop::as_loaned_c_ptr(*this));
         return Converters::from(result);
     }
 
     BufAllocResult alloc_gc_defrag_blocking() const {
         z_buf_alloc_result_t result;
-        ::z_alloc_layout_alloc_gc_defrag_blocking(&result, this->loan());
+        ::z_alloc_layout_alloc_gc_defrag_blocking(&result, interop::as_loaned_c_ptr(*this));
         return Converters::from(result);
     }
 
@@ -93,7 +91,8 @@ class AllocLayout : public Owned<::z_owned_alloc_layout_t> {
         auto rcv = receiver.release();
         ::zc_threadsafe_context_t context = {{rcv}, &shm::provider::closures::_z_alloc_layout_async_interface_drop_fn};
         return ::z_alloc_layout_threadsafe_alloc_gc_defrag_async(
-            &rcv->_result, this->loan(), context, shm::provider::closures::_z_alloc_layout_async_interface_result_fn);
+            &rcv->_result, interop::as_loaned_c_ptr(*this), context,
+            shm::provider::closures::_z_alloc_layout_async_interface_result_fn);
     }
 };
 }  // end of namespace zenoh

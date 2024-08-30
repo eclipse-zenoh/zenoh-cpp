@@ -19,7 +19,7 @@ using namespace zenoh;
 
 void key_expr() {
     KeyExpr foo("FOO");
-    assert(foo.internal_check());
+    assert(interop::detail::check(foo));
     assert(foo.as_string_view() == "FOO");
 }
 
@@ -35,13 +35,13 @@ void canonize() {
     // do not force canoniozation on keyexpr construction
     KeyExpr k_err(non_canon, false, &err);
 #ifdef ZENOHCXX_ZENOHC  // Pico does not validate key expressions yet.
-    assert(!k_err.internal_check());
+    assert(!interop::detail::check(k_err));
     assert(err < 0);
 #endif
 
     // enforce canonization
     KeyExpr k_ok(non_canon, true, &err);
-    assert(k_ok.internal_check());
+    assert(interop::detail::check(k_ok));
     assert(err == 0);
     assert(k_ok.as_string_view() == canon);
 }
@@ -93,14 +93,14 @@ void declare(Session& s) {
     KeyExpr foobar("FOO/BAR");
     KeyExpr foostar("FOO/*");
     auto declared = s.declare_keyexpr(foobar);
-    assert(declared.internal_check());
+    assert(interop::detail::check(declared));
 
     assert(declared.as_string_view() == "FOO/BAR");
     assert(declared == foobar);
     assert(foostar.includes(declared));
     assert(declared.intersects(foobar));
     s.undeclare_keyexpr(std::move(declared));
-    assert(!declared.internal_check());
+    assert(!interop::detail::check(declared));
 }
 
 int main(int argc, char** argv) {

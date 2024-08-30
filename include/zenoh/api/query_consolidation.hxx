@@ -15,14 +15,16 @@
 
 #include "base.hxx"
 #include "enums.hxx"
+#include "interop.hxx"
 
 namespace zenoh {
 
 /// Replies consolidation mode to apply on replies of get operation.
 class QueryConsolidation : public Copyable<::z_query_consolidation_t> {
-   public:
     using Copyable::Copyable;
+    friend struct interop::detail::Converter;
 
+   public:
     /// @name Constructors
 
     /// @brief Create a new default ``QueryConsolidation`` value.

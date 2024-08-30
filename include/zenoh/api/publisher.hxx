@@ -13,11 +13,11 @@
 
 #pragma once
 
-#include "../detail/interop.hxx"
 #include "base.hxx"
 #include "bytes.hxx"
 #include "encoding.hxx"
 #include "enums.hxx"
+#include "interop.hxx"
 #include "keyexpr.hxx"
 #include "timestamp.hxx"
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
@@ -26,11 +26,15 @@
 #include <optional>
 
 namespace zenoh {
+
+class Session;
+
 /// A Zenoh publisher. Constructed by ``Session::declare_publisher`` method.
 class Publisher : public Owned<::z_owned_publisher_t> {
-   public:
-    using Owned::Owned;
+    Publisher(zenoh::detail::null_object_t) : Owned(nullptr){};
+    friend struct interop::detail::Converter;
 
+   public:
     /// @brief Options to be passed to ``Publisher::put`` operation.
     struct PutOptions {
         /// @name Fields
@@ -69,17 +73,17 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void put(Bytes&& payload, PutOptions&& options = PutOptions::create_default(), ZResult* err = nullptr) const {
-        auto payload_ptr = detail::as_moved_c_ptr(payload);
+        auto payload_ptr = interop::as_moved_c_ptr(payload);
         ::z_publisher_put_options_t opts;
         z_publisher_put_options_default(&opts);
-        opts.encoding = detail::as_moved_c_ptr(options.encoding);
+        opts.encoding = interop::as_moved_c_ptr(options.encoding);
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
-        opts.source_info = detail::as_moved_c_ptr(options.source_info);
+        opts.source_info = interop::as_moved_c_ptr(options.source_info);
 #endif
-        opts.attachment = detail::as_moved_c_ptr(options.attachment);
-        opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
+        opts.attachment = interop::as_moved_c_ptr(options.attachment);
+        opts.timestamp = interop::as_copyable_c_ptr(options.timestamp);
 
-        __ZENOH_RESULT_CHECK(::z_publisher_put(this->loan(), payload_ptr, &opts), err,
+        __ZENOH_RESULT_CHECK(::z_publisher_put(interop::as_loaned_c_ptr(*this), payload_ptr, &opts), err,
                              "Failed to perform put operation");
     }
 
@@ -90,8 +94,8 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     void delete_resource(DeleteOptions&& options = DeleteOptions::create_default(), ZResult* err = nullptr) const {
         ::z_publisher_delete_options_t opts;
         z_publisher_delete_options_default(&opts);
-        opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
-        __ZENOH_RESULT_CHECK(::z_publisher_delete(this->loan(), &opts), err,
+        opts.timestamp = interop::as_copyable_c_ptr(options.timestamp);
+        __ZENOH_RESULT_CHECK(::z_publisher_delete(interop::as_loaned_c_ptr(*this), &opts), err,
                              "Failed to perform delete_resource operation");
     }
 
@@ -99,13 +103,15 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     /// @brief Get the key expression of the publisher.
     /// @note zenoh-c only.
     const KeyExpr& get_keyexpr() const {
-        return detail::as_owned_cpp_obj<KeyExpr>(::z_publisher_keyexpr(this->loan()));
+        return interop::as_owned_cpp_ref<KeyExpr>(::z_publisher_keyexpr(interop::as_loaned_c_ptr(*this)));
     }
 #endif
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
     /// @brief Get the id of the publisher.
     /// @return id of this publisher.
-    EntityGlobalId get_id() const { return EntityGlobalId(::z_publisher_id(this->loan())); }
+    EntityGlobalId get_id() const {
+        return interop::into_copyable_cpp_obj<EntityGlobalId>(::z_publisher_id(interop::as_loaned_c_ptr(*this)));
+    }
 #endif
 };
 }  // namespace zenoh

@@ -17,6 +17,7 @@
 #include <type_traits>
 
 #include "../../base.hxx"
+#include "../../interop.hxx"
 #include "../client/shm_client.hxx"
 
 namespace zenoh {
@@ -24,9 +25,9 @@ namespace zenoh {
 /// @brief A storage for SHM clients. Session constructed with instance of this type
 /// gets capabilities to read SHM buffers for Protocols added to this instance.
 class ShmClientStorage : public Owned<::z_owned_shm_client_storage_t> {
-   public:
     using Owned::Owned;
 
+   public:
     /// @name Constructors
 
     /// @brief Create ShmClientStorage referencing a default global list of SHM clients
@@ -69,18 +70,20 @@ class ShmClientStorage : public Owned<::z_owned_shm_client_storage_t> {
 
         // fill list with clients
         for (std::move_iterator<I> it = begin; it != end; ++it) {
-            __ZENOH_RESULT_CHECK(zc_shm_client_list_add_client(it->first, z_move(it->second._0), list.loan()), err,
-                                 "Failed to form list of SHM clients");
+            __ZENOH_RESULT_CHECK(
+                zc_shm_client_list_add_client(it->first, z_move(it->second._0), interop::as_loaned_c_ptr(list)), err,
+                "Failed to form list of SHM clients");
         }
 
         // create client storage from the list
-        __ZENOH_RESULT_CHECK(z_shm_client_storage_new(&this->_0, list.loan(), add_default_client_set), err,
-                             "Failed to create SHM client storage!");
+        __ZENOH_RESULT_CHECK(
+            z_shm_client_storage_new(&this->_0, interop::as_loaned_c_ptr(list), add_default_client_set), err,
+            "Failed to create SHM client storage!");
     }
 
     /// @brief Performs a shallow copy of ShmClientStorage
     ShmClientStorage(const ShmClientStorage& other) : Owned(nullptr) {
-        z_shm_client_storage_clone(&this->_0, other.loan());
+        z_shm_client_storage_clone(&this->_0, interop::as_loaned_c_ptr(other));
     }
 
    private:

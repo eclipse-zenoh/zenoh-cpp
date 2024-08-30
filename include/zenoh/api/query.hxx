@@ -17,11 +17,11 @@
 #include <optional>
 #include <string_view>
 
-#include "../detail/interop.hxx"
 #include "base.hxx"
 #include "bytes.hxx"
 #include "encoding.hxx"
 #include "enums.hxx"
+#include "interop.hxx"
 #include "keyexpr.hxx"
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
 #include "source_info.hxx"
@@ -31,14 +31,17 @@
 namespace zenoh {
 /// The query to be answered by a ``Queryable``.
 class Query : public Owned<::z_owned_query_t> {
-   public:
-    using Owned::Owned;
+    Query(zenoh::detail::null_object_t) : Owned(nullptr){};
+    friend struct interop::detail::Converter;
 
+   public:
     /// @name Methods
 
     /// @brief Get the key expression of the query.
     /// @return ``KeyExpr`` of the query.
-    const KeyExpr& get_keyexpr() const { return detail::as_owned_cpp_obj<KeyExpr>(::z_query_keyexpr(this->loan())); }
+    const KeyExpr& get_keyexpr() const {
+        return interop::as_owned_cpp_ref<KeyExpr>(::z_query_keyexpr(interop::as_loaned_c_ptr(*this)));
+    }
 
     /// @brief Get query parameters. See <a
     /// href=https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>Selector</a> for more information.
@@ -46,34 +49,34 @@ class Query : public Owned<::z_owned_query_t> {
     /// @return parameters string.
     std::string_view get_parameters() const {
         ::z_view_string_t p;
-        ::z_query_parameters(this->loan(), &p);
+        ::z_query_parameters(interop::as_loaned_c_ptr(*this), &p);
         return std::string_view(::z_string_data(::z_loan(p)), ::z_string_len(::z_loan(p)));
     }
 
     /// @brief Get the payload of the query.
     /// @return payload of the query.
     std::optional<std::reference_wrapper<const Bytes>> get_payload() const {
-        auto payload = ::z_query_payload(this->loan());
+        auto payload = ::z_query_payload(interop::as_loaned_c_ptr(*this));
         if (payload == nullptr) return {};
-        return std::cref(detail::as_owned_cpp_obj<Bytes>(payload));
+        return std::cref(interop::as_owned_cpp_ref<Bytes>(payload));
     }
 
     /// @brief Get the encoding of the query.
     /// @return encoding of the query.
     std::optional<std::reference_wrapper<const Encoding>> get_encoding() const {
-        auto encoding = ::z_query_encoding(this->loan());
+        auto encoding = ::z_query_encoding(interop::as_loaned_c_ptr(*this));
         if (encoding == nullptr) return {};
-        return std::cref(detail::as_owned_cpp_obj<Encoding>(::z_query_encoding(this->loan())));
+        return std::cref(interop::as_owned_cpp_ref<Encoding>(::z_query_encoding(interop::as_loaned_c_ptr(*this))));
     }
 
     /// @brief Get the attachment of the query.
     /// @return attachment of the query.
     std::optional<std::reference_wrapper<const Bytes>> get_attachment() const {
-        auto attachment = ::z_query_attachment(this->loan());
+        auto attachment = ::z_query_attachment(interop::as_loaned_c_ptr(*this));
         if (attachment == nullptr) {
             return {};
         }
-        return std::cref(detail::as_owned_cpp_obj<Bytes>(attachment));
+        return std::cref(interop::as_owned_cpp_ref<Bytes>(attachment));
     }
 
     /// @brief Options passed to the ``Query::reply`` operation.
@@ -109,21 +112,22 @@ class Query : public Owned<::z_owned_query_t> {
     /// thrown in case of error.
     void reply(const KeyExpr& key_expr, Bytes&& payload, ReplyOptions&& options = ReplyOptions::create_default(),
                ZResult* err = nullptr) const {
-        auto payload_ptr = detail::as_moved_c_ptr(payload);
+        auto payload_ptr = interop::as_moved_c_ptr(payload);
         ::z_query_reply_options_t opts;
         z_query_reply_options_default(&opts);
-        opts.encoding = detail::as_moved_c_ptr(options.encoding);
+        opts.encoding = interop::as_moved_c_ptr(options.encoding);
         opts.priority = options.priority;
         opts.congestion_control = options.congestion_control;
         opts.is_express = options.is_express;
-        opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
+        opts.timestamp = interop::as_copyable_c_ptr(options.timestamp);
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
-        opts.source_info = detail::as_moved_c_ptr(options.source_info);
+        opts.source_info = interop::as_moved_c_ptr(options.source_info);
 #endif
-        opts.attachment = detail::as_moved_c_ptr(options.attachment);
+        opts.attachment = interop::as_moved_c_ptr(options.attachment);
 
-        __ZENOH_RESULT_CHECK(::z_query_reply(this->loan(), detail::as_loaned_c_ptr(key_expr), payload_ptr, &opts), err,
-                             "Failed to send reply");
+        __ZENOH_RESULT_CHECK(
+            ::z_query_reply(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr), payload_ptr, &opts),
+            err, "Failed to send reply");
     }
 
     /// @brief Options passed to the ``Query::reply_err`` operation.
@@ -145,12 +149,13 @@ class Query : public Owned<::z_owned_query_t> {
     /// thrown in case of error.
     void reply_err(Bytes&& payload, ReplyErrOptions&& options = ReplyErrOptions::create_default(),
                    ZResult* err = nullptr) const {
-        auto payload_ptr = detail::as_moved_c_ptr(payload);
+        auto payload_ptr = interop::as_moved_c_ptr(payload);
         ::z_query_reply_err_options_t opts;
         z_query_reply_err_options_default(&opts);
-        opts.encoding = detail::as_moved_c_ptr(options.encoding);
+        opts.encoding = interop::as_moved_c_ptr(options.encoding);
 
-        __ZENOH_RESULT_CHECK(::z_query_reply_err(this->loan(), payload_ptr, &opts), err, "Failed to send reply error");
+        __ZENOH_RESULT_CHECK(::z_query_reply_err(interop::as_loaned_c_ptr(*this), payload_ptr, &opts), err,
+                             "Failed to send reply error");
     }
 
     /// @brief Options passed to the ``Query::reply_del`` operation.
@@ -190,22 +195,23 @@ class Query : public Owned<::z_owned_query_t> {
         opts.priority = options.priority;
         opts.congestion_control = options.congestion_control;
         opts.is_express = options.is_express;
-        opts.timestamp = detail::as_copyable_c_ptr(options.timestamp);
+        opts.timestamp = interop::as_copyable_c_ptr(options.timestamp);
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
-        opts.source_info = detail::as_moved_c_ptr(options.source_info);
+        opts.source_info = interop::as_moved_c_ptr(options.source_info);
 #endif
-        opts.attachment = detail::as_moved_c_ptr(options.attachment);
+        opts.attachment = interop::as_moved_c_ptr(options.attachment);
 
-        __ZENOH_RESULT_CHECK(::z_query_reply_del(this->loan(), detail::as_loaned_c_ptr(key_expr), &opts), err,
-                             "Failed to send reply del");
+        __ZENOH_RESULT_CHECK(
+            ::z_query_reply_del(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr), &opts), err,
+            "Failed to send reply del");
     }
 
     /// @brief Construct a a shallow copy of this Query.
     ///
     /// The query responses will be sent only when the last clone is destroyed.
     Query clone() const {
-        Query q(nullptr);
-        ::z_query_clone(&q._0, this->loan());
+        Query q(zenoh::detail::null_object);
+        ::z_query_clone(&q._0, interop::as_loaned_c_ptr(*this));
         return q;
     };
 };
