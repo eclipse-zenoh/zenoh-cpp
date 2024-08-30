@@ -31,7 +31,7 @@
 namespace zenoh {
 /// The query to be answered by a ``Queryable``.
 class Query : public Owned<::z_owned_query_t> {
-    Query() : Owned(nullptr){};
+    Query(zenoh::detail::null_object_t) : Owned(nullptr){};
     friend struct interop::detail::Converter;
 
    public:
@@ -210,7 +210,7 @@ class Query : public Owned<::z_owned_query_t> {
     ///
     /// The query responses will be sent only when the last clone is destroyed.
     Query clone() const {
-        Query q;
+        Query q(zenoh::detail::null_object);
         ::z_query_clone(&q._0, interop::as_loaned_c_ptr(*this));
         return q;
     };

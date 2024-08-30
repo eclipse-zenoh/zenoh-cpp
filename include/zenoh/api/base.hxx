@@ -92,4 +92,9 @@ class Owned {
     }
 };
 
+namespace detail {
+struct null_object_t {};
+inline constexpr null_object_t null_object{};
+}  // namespace detail
+
 }  // namespace zenoh

@@ -31,7 +31,7 @@ namespace zenoh {
 ///
 /// A sample is the value associated to a given resource at a given point in time.
 class Sample : public Owned<::z_owned_sample_t> {
-    Sample() : Owned(nullptr){};
+    Sample(zenoh::detail::null_object_t) : Owned(nullptr){};
     friend struct interop::detail::Converter;
 
    public:
@@ -98,7 +98,7 @@ class Sample : public Owned<::z_owned_sample_t> {
 #endif
     /// @brief Construct a shallow copy of this sample.
     Sample clone() const {
-        Sample s;
+        Sample s(zenoh::detail::null_object);
         ::z_sample_clone(&s._0, interop::as_loaned_c_ptr(*this));
         return s;
     };

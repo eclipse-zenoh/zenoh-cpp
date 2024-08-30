@@ -25,7 +25,7 @@ class Session;
 namespace detail {
 class SubscriberBase : public Owned<::z_owned_subscriber_t> {
    protected:
-    SubscriberBase() : Owned(nullptr){};
+    SubscriberBase(zenoh::detail::null_object_t) : Owned(nullptr){};
     SubscriberBase(::z_owned_subscriber_t* s) : Owned(s){};
 
    public:

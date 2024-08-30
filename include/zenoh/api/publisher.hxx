@@ -31,7 +31,7 @@ class Session;
 
 /// A Zenoh publisher. Constructed by ``Session::declare_publisher`` method.
 class Publisher : public Owned<::z_owned_publisher_t> {
-    Publisher() : Owned(nullptr){};
+    Publisher(zenoh::detail::null_object_t) : Owned(nullptr){};
     friend struct interop::detail::Converter;
 
    public:

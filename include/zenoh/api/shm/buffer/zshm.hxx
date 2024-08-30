@@ -25,7 +25,7 @@ namespace zenoh {
 /// @brief An immutable SHM buffer
 class ZShm : public Owned<::z_owned_shm_t> {
     friend class ZShmMut;
-    ZShm() : Owned(nullptr){};
+    ZShm(zenoh::detail::null_object_t) : Owned(nullptr){};
     friend struct interop::detail::Converter;
 
    public:

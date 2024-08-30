@@ -41,7 +41,7 @@
 namespace zenoh {
 /// A Zenoh session.
 class Session : public Owned<::z_owned_session_t> {
-    Session() : Owned(nullptr){};
+    Session(zenoh::detail::null_object_t) : Owned(nullptr){};
 
    public:
     /// @brief Options to be passed when opening a ``Session``.
@@ -125,7 +125,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Create a shallow copy of the session.
     /// @return a new ``Session`` instance.
     Session clone() const {
-        Session s;
+        Session s(zenoh::detail::null_object);
         ::z_session_clone(&s._0, interop::as_loaned_c_ptr(*this));
         return s;
     }
@@ -399,7 +399,7 @@ class Session : public Owned<::z_owned_session_t> {
         z_queryable_options_default(&opts);
         opts.complete = options.complete;
 
-        Queryable<void> q;
+        Queryable<void> q(zenoh::detail::null_object);
         ZResult res = ::z_declare_queryable(interop::as_owned_c_ptr(q), interop::as_loaned_c_ptr(*this),
                                             interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Queryable");
@@ -424,7 +424,7 @@ class Session : public Owned<::z_owned_session_t> {
         z_queryable_options_default(&opts);
         opts.complete = options.complete;
 
-        Queryable<void> q;
+        Queryable<void> q(zenoh::detail::null_object);
         ZResult res = ::z_declare_queryable(interop::as_owned_c_ptr(q), interop::as_loaned_c_ptr(*this),
                                             interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Queryable");
@@ -478,7 +478,7 @@ class Session : public Owned<::z_owned_session_t> {
 #else
         (void)options;
 #endif
-        Subscriber<void> s;
+        Subscriber<void> s(zenoh::detail::null_object);
         ZResult res = ::z_declare_subscriber(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
                                              interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Subscriber");
@@ -507,7 +507,7 @@ class Session : public Owned<::z_owned_session_t> {
 #else
         (void)options;
 #endif
-        Subscriber<void> s;
+        Subscriber<void> s(zenoh::detail::null_object);
         ZResult res =
             ::z_declare_subscriber(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
                                    interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
@@ -737,7 +737,7 @@ class Session : public Owned<::z_owned_session_t> {
         ::zc_liveliness_subscriber_options_t opts;
         zc_liveliness_subscriber_options_default(&opts);
         (void)options;
-        Subscriber<void> s;
+        Subscriber<void> s(zenoh::detail::null_object);
         ZResult res =
             ::zc_liveliness_declare_subscriber(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
                                                interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);

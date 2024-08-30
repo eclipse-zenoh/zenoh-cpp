@@ -27,7 +27,7 @@ namespace zenoh {
 /// when transporting key expressions.
 
 class KeyExpr : public Owned<::z_owned_keyexpr_t> {
-    KeyExpr() : Owned(nullptr){};
+    KeyExpr(zenoh::detail::null_object_t) : Owned(nullptr){};
     friend struct interop::detail::Converter;
 
    public:
@@ -91,7 +91,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// thrown in case of error.
     /// @return A new key expression.
     KeyExpr concat(std::string_view s, ZResult* err = nullptr) const {
-        KeyExpr k;
+        KeyExpr k(zenoh::detail::null_object);
         __ZENOH_RESULT_CHECK(
             ::z_keyexpr_concat(&k._0, interop::as_loaned_c_ptr(*this), s.data(), s.size()), err,
             std::string("Failed to concatenate KeyExpr: ").append(this->as_string_view()).append(" with ").append(s));
@@ -103,7 +103,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     KeyExpr join(const KeyExpr& other, ZResult* err = nullptr) const {
-        KeyExpr k;
+        KeyExpr k(zenoh::detail::null_object);
         __ZENOH_RESULT_CHECK(::z_keyexpr_join(&k._0, interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(other)),
                              err,
                              std::string("Failed to join KeyExpr: ")

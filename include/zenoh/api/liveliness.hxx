@@ -29,7 +29,7 @@ class Session;
 /// between the subscriber and the token's creator is lost.
 /// @note zenoh-c only.
 class LivelinessToken : public Owned<::zc_owned_liveliness_token_t> {
-    LivelinessToken() : Owned(nullptr){};
+    LivelinessToken(zenoh::detail::null_object_t) : Owned(nullptr){};
     friend struct interop::detail::Converter;
 
    public:

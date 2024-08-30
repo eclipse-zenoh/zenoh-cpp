@@ -24,7 +24,7 @@ class Session;
 namespace detail {
 class QueryableBase : public Owned<::z_owned_queryable_t> {
    protected:
-    QueryableBase() : Owned(nullptr){};
+    QueryableBase(zenoh::detail::null_object_t) : Owned(nullptr){};
     QueryableBase(::z_owned_queryable_t* q) : Owned(q){};
 
     friend class zenoh::Session;
@@ -36,7 +36,7 @@ class Queryable;
 
 template <>
 class Queryable<void> : public detail::QueryableBase {
-    Queryable() : QueryableBase(){};
+    Queryable(zenoh::detail::null_object_t) : QueryableBase(zenoh::detail::null_object){};
 
    public:
     using QueryableBase::QueryableBase;

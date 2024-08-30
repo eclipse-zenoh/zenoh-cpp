@@ -103,7 +103,7 @@ class FifoChannel;
 /// @tparam T data entry type
 template <class T>
 class FifoHandler : public Owned<typename detail::FifoHandlerData<T>::handler_type> {
-    FifoHandler() : Owned<typename detail::FifoHandlerData<T>::handler_type>(nullptr){};
+    FifoHandler(zenoh::detail::null_object_t) : Owned<typename detail::FifoHandlerData<T>::handler_type>(nullptr){};
 
    public:
     /// @name Methods
@@ -143,7 +143,7 @@ class RingChannel;
 /// @tparam T data entry type.
 template <class T>
 class RingHandler : public Owned<typename detail::RingHandlerData<T>::handler_type> {
-    RingHandler() : Owned<typename detail::RingHandlerData<T>::handler_type>(nullptr){};
+    RingHandler(zenoh::detail::null_object_t) : Owned<typename detail::RingHandlerData<T>::handler_type>(nullptr){};
 
    public:
     /// @name Methods
@@ -199,7 +199,7 @@ class FifoChannel {
     template <class T>
     std::pair<typename detail::FifoHandlerData<T>::closure_type, HandlerType<T>> into_cb_handler_pair() const {
         typename detail::FifoHandlerData<T>::closure_type c_closure;
-        FifoHandler<T> h;
+        FifoHandler<T> h(zenoh::detail::null_object);
         detail::FifoHandlerData<T>::create_cb_handler_pair(&c_closure, zenoh::interop::as_owned_c_ptr(h), _capacity);
         return {c_closure, std::move(h)};
     }
@@ -226,7 +226,7 @@ class RingChannel {
     template <class T>
     std::pair<typename detail::RingHandlerData<T>::closure_type, HandlerType<T>> into_cb_handler_pair() const {
         typename detail::RingHandlerData<T>::closure_type c_closure;
-        RingHandler<T> h;
+        RingHandler<T> h(zenoh::detail::null_object);
         detail::RingHandlerData<T>::create_cb_handler_pair(&c_closure, zenoh::interop::as_owned_c_ptr(h), _capacity);
         return {c_closure, std::move(h)};
     }

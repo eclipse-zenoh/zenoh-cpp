@@ -194,7 +194,7 @@ bool check(const Owned<OwnedType>& owned_cpp_obj) {
 struct Converter {
     template <class T>
     static T null_owned() {
-        return T();
+        return T(zenoh::detail::null_object);
     }
     template <class T, class Inner = typename T::InnerType>
     static T copyable_to_cpp(const Inner& i) {
