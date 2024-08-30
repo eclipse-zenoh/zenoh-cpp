@@ -78,20 +78,6 @@ const OwnedType* as_owned_c_ptr(const Owned<OwnedType>& cpp_obj) {
     return reinterpret_cast<const OwnedType*>(&cpp_obj);
 }
 
-/// @brief Get owned C representation of owned Zenoh-c++ object.
-/// @return Pointer to owned C representation of owned Zenoh-c++ object, or NULL if cpp_obj is empty.
-template <class OwnedCppObj>
-auto* as_owned_c_ptr(std::optional<OwnedCppObj>& cpp_obj) {
-    return cpp_obj.has_value() ? as_owned_c_ptr(cpp_obj.value()) : nullptr;
-}
-
-/// @brief Get owned C representation of owned Zenoh-c++ object.
-/// @return Pointer to owned C representation of owned Zenoh-c++ object, or NULL if cpp_obj is empty.
-template <class OwnedCppObj>
-const auto* as_owned_c_ptr(const std::optional<OwnedCppObj>& cpp_obj) {
-    return cpp_obj.has_value() ? as_owned_c_ptr(cpp_obj.value()) : nullptr;
-}
-
 /// @brief Get loaned C representation of owned Zenoh-c++ object.
 template <
     class OwnedType,

@@ -424,7 +424,7 @@ class Session : public Owned<::z_owned_session_t> {
         z_queryable_options_default(&opts);
         opts.complete = options.complete;
 
-        detail::QueryableBase q;
+        Queryable<void> q;
         ZResult res = ::z_declare_queryable(interop::as_owned_c_ptr(q), interop::as_loaned_c_ptr(*this),
                                             interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Queryable");
@@ -507,13 +507,14 @@ class Session : public Owned<::z_owned_session_t> {
 #else
         (void)options;
 #endif
-        ::z_owned_subscriber_t s;
-        ZResult res = ::z_declare_subscriber(&s, interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr),
-                                             ::z_move(cb_handler_pair.first), &opts);
+        Subscriber<void> s;
+        ZResult res =
+            ::z_declare_subscriber(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
+                                   interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Subscriber");
         if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
-        return Subscriber<typename Channel::template HandlerType<Sample>>(
-            std::move(interop::as_owned_cpp_ref<detail::SubscriberBase>(&s)), std::move(cb_handler_pair.second));
+        return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
+                                                                          std::move(cb_handler_pair.second));
     }
 
     /// @brief Options to be passed when declaring a ``Publisher``.
