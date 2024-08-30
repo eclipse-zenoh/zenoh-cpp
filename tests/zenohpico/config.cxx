@@ -12,21 +12,23 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-#include "zenohpico.hxx"
+#include "zenoh.hxx"
 
-using namespace zenohpico;
+using namespace zenoh;
 
 #undef NDEBUG
 #include <assert.h>
 
 void test_config_default() {
-    Config config;
+    Config config = Config::create_default();
     assert(config.get(Z_CONFIG_MULTICAST_LOCATOR_KEY) != nullptr);
 }
 
 void test_config_insert() {
-    Config config;
-    assert(config.insert(Z_CONFIG_USER_KEY, "foo"));
+    Config config = Config::create_default();
+    ZResult err = Z_OK;
+    config.insert(Z_CONFIG_USER_KEY, "foo", &err);
+    assert(err == Z_OK);
     assert(std::string("foo") == config.get(Z_CONFIG_USER_KEY));
 }
 

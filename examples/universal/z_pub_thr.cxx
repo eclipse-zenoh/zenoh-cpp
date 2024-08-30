@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <numeric>
 #include <vector>
 
 #include "../getargs.h"
@@ -24,57 +25,64 @@ int _main(int argc, char **argv) {
     const char *keyexpr = "test/thr";
     const char *payload_size = nullptr;
     const char *locator = nullptr;
-    const char *configfile = nullptr;
+    const char *config_file = nullptr;
 
     getargs(argc, argv, {{"payload_size", &payload_size}}, {{"locator", &locator}}
 #ifdef ZENOHCXX_ZENOHC
             ,
-            {{"-c", {"config file", &configfile}}}
+            {{"-c", {"config file", &config_file}}}
 #endif
     );
 
     size_t len = atoi(payload_size);
-    std::vector<char> payload(len, 1);
 
-    Config config;
+    Config config = Config::create_default();
 #ifdef ZENOHCXX_ZENOHC
-    if (configfile) {
-        config = expect(config_from_file(configfile));
+    if (config_file) {
+        config = Config::from_file(config_file);
     }
 #endif
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
-        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str()))
+        config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
 #elif ZENOHCXX_ZENOHPICO
-        if (!config.insert(Z_CONFIG_CONNECT_KEY, locator))
+        config.insert(Z_CONFIG_CONNECT_KEY, locator, &err);
 #else
 #error "Unknown zenoh backend"
 #endif
-        {
+        if (err != Z_OK) {
             std::cout << "Invalid locator: " << locator << std::endl;
             std::cout << "Expected value in format: tcp/192.168.64.3:7447" << std::endl;
             exit(-1);
         }
     }
 
-    printf("Opening session...\n");
-    auto session = expect<Session>(open(std::move(config)));
+    std::vector<uint8_t> data(len);
+    std::iota(data.begin(), data.end(), uint8_t{0});
+    Bytes payload = std::move(data);
 
-    PublisherOptions options;
-    options.set_congestion_control(Z_CONGESTION_CONTROL_BLOCK);
+    std::cout << "Opening session...\n";
+    auto session = Session::open(std::move(config));
 
-    printf("Declaring Publisher on '%s'...\n", keyexpr);
-    auto pub = expect<Publisher>(session.declare_publisher(keyexpr, options));
+    std::cout << "Declaring Publisher on " << keyexpr << "...\n";
+#if __cplusplus >= 201703L
+    auto pub = session.declare_publisher(KeyExpr(keyexpr), {.congestion_control = Z_CONGESTION_CONTROL_BLOCK});
+#else
+    auto pub_options = Session::PublisherOptions::create_default();
+    pub_options.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
+    auto pub = session.declare_publisher(KeyExpr(keyexpr), std::move(pub_options));
+#endif
 
     printf("Press CTRL-C to quit...\n");
-    while (1) pub.put(payload);
+    while (1) pub.put(payload.clone());
 }
 
 int main(int argc, char **argv) {
     try {
         _main(argc, argv);
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    } catch (ZException e) {
+        std::cout << "Received an error :" << e.what() << "\n";
     }
 }

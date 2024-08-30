@@ -14,8 +14,10 @@
 
 #include <chrono>
 #include <condition_variable>
+#include <cstring>
 #include <iostream>
 #include <mutex>
+#include <numeric>
 
 #include "zenoh.hxx"
 using namespace zenoh;
@@ -46,30 +48,33 @@ int _main(int argc, char** argv) {
 		";
         return 1;
     }
-    Config config;
+    Config config = Config::create_default();
 #ifdef ZENOHCXX_ZENOHC
     if (args.config_path) {
-        config = expect<Config>(config_from_file(args.config_path));
+        config = Config::from_file(args.config_path);
     }
 #endif
     std::cout << "Opening session...\n";
-    auto session = expect<Session>(open(std::move(config)));
+    auto session = Session::open(std::move(config));
 
-    auto sub = expect<Subscriber>(
-        session.declare_subscriber("test/pong", [&condvar](const Sample&) mutable { condvar.notify_one(); }));
-    auto pub = expect<Publisher>(session.declare_publisher("test/ping"));
-    std::vector<char> data(args.size);
+    auto sub = session.declare_subscriber(
+        KeyExpr("test/pong"), [&condvar](const Sample&) mutable { condvar.notify_one(); }, closures::none);
+    auto pub = session.declare_publisher(KeyExpr("test/ping"));
+    std::vector<uint8_t> data(args.size);
+    std::iota(data.begin(), data.end(), uint8_t{0});
+    Bytes payload = std::move(data);
+
     std::unique_lock lock(mutex);
     if (args.warmup_ms) {
         auto end = std::chrono::steady_clock::now() + (1ms * args.warmup_ms);
         while (std::chrono::steady_clock::now() < end) {
-            pub.put(BytesView(data.data(), data.size()));
+            pub.put(payload.clone());
             condvar.wait_for(lock, 1s);
         }
     }
     for (unsigned int i = 0; i < args.number_of_pings; i++) {
         auto start = std::chrono::steady_clock::now();
-        pub.put(BytesView(data.data(), data.size()));
+        pub.put(payload.clone());
         if (condvar.wait_for(lock, 1s) == std::cv_status::timeout) {
             std::cout << "TIMEOUT seq=" << i << "\n";
             continue;
@@ -138,7 +143,7 @@ struct args_t parse_args(int argc, char** argv) {
 int main(int argc, char** argv) {
     try {
         return _main(argc, argv);
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    } catch (ZException e) {
+        std::cout << "Received an error :" << e.what() << "\n";
     }
 }

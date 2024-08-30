@@ -32,53 +32,56 @@ int _main(int argc, char **argv) {
     const char *keyexpr = default_keyexpr;
     const char *value = default_value;
     const char *locator = nullptr;
-    const char *configfile = nullptr;
+    const char *config_file = nullptr;
 
     getargs(argc, argv, {}, {{"key expression", &keyexpr}, {"value", &value}, {"locator", &locator}}
 #ifdef ZENOHCXX_ZENOHC
             ,
-            {{"-c", {"config file", &configfile}}}
+            {{"-c", {"config file", &config_file}}}
 #endif
     );
 
-    Config config;
+    Config config = Config::create_default();
 #ifdef ZENOHCXX_ZENOHC
-    if (configfile) {
-        config = expect(config_from_file(configfile));
+    if (config_file) {
+        config = Config::from_file(config_file);
     }
 #endif
 
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
-        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str()))
+        config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
 #elif ZENOHCXX_ZENOHPICO
-        if (!config.insert(Z_CONFIG_CONNECT_KEY, locator))
+        config.insert(Z_CONFIG_CONNECT_KEY, locator, &err);
 #else
 #error "Unknown zenoh backend"
 #endif
-        {
+        if (err != Z_OK) {
             std::cout << "Invalid locator: " << locator << std::endl;
             std::cout << "Expected value in format: tcp/192.168.64.3:7447" << std::endl;
             exit(-1);
         }
     }
 
-    printf("Opening session...\n");
-    auto session = expect<Session>(open(std::move(config)));
+    std::cout << "Opening session...\n";
+    auto session = Session::open(std::move(config));
 
-    printf("Putting Data ('%s': '%s')...\n", keyexpr, value);
-    PutOptions options;
-    options.set_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN);
-#ifdef ZENOHCXX_ZENOHC
-    std::map<std::string, std::string> amap;
-    amap.insert(std::make_pair("serial_number", "123"));
-    amap.insert(std::make_pair("coordinates", "48.7082,2.1498"));
-    options.set_attachment(amap);
+    std::cout << "Putting Data ("
+              << "'" << keyexpr << "': '" << value << "')...\n";
+
+    std::unordered_map<std::string, std::string> attachment_map = {{"serial_number", "123"},
+                                                                   {"coordinates", "48.7082,2.1498"}};
+#if __cplusplus >= 201703L
+    session.put(KeyExpr(keyexpr), Bytes::serialize(value),
+                {.encoding = Encoding("text/plain"), .attachment = Bytes::serialize(attachment_map)});
+#else
+    auto put_options = Session::PutOptions::create_default();
+    put_options.encoding = Encoding("text/plain");
+    put_options.attachment = Bytes::serialize(attachment_map);
+    session.put(KeyExpr(keyexpr), Bytes::serialize(value), std::move(put_options));
 #endif
-    if (!session.put(keyexpr, value, options)) {
-        printf("Put failed...\n");
-    }
 
     return 0;
 }
@@ -86,7 +89,7 @@ int _main(int argc, char **argv) {
 int main(int argc, char **argv) {
     try {
         _main(argc, argv);
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    } catch (ZException e) {
+        std::cout << "Received an error :" << e.what() << "\n";
     }
 }

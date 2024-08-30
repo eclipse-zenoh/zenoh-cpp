@@ -18,7 +18,6 @@ import subprocess, os
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 if read_the_docs_build:
      subprocess.call('doxygen', shell=True)
-     breathe_projects = {"zenohcpp": "xml"}
 
 # -- Project information -----------------------------------------------------
 project = 'zenoh-cpp'
@@ -36,4 +35,5 @@ cpp_index_common_prefix = ['z::', 'zenoh::', 'zenohcxx::', 'zenohc::', 'zenohpic
 extensions = [ "breathe" ]
 
 breathe_default_project = "zenohcpp"
+breathe_projects = {"zenohcpp": "xml"}
 breathe_order_parameters_first = True

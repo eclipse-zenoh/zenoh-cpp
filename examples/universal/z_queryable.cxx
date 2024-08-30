@@ -14,17 +14,14 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <chrono>
 #include <iostream>
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include <windows.h>
-#define sleep(x) Sleep(x * 1000)
-#else
-#include <unistd.h>
-#endif
+#include <thread>
 
 #include "../getargs.h"
 #include "zenoh.hxx"
 using namespace zenoh;
+using namespace std::chrono_literals;
 
 #ifdef ZENOHCXX_ZENOHC
 const char *expr = "demo/example/zenoh-cpp-zenoh-c-queryable";
@@ -38,31 +35,32 @@ const char *value = "Queryable from C++ zenoh-pico!";
 const char *locator = nullptr;
 
 int _main(int argc, char **argv) {
-    const char *configfile = nullptr;
+    const char *config_file = nullptr;
     getargs(argc, argv, {}, {{"key expression", &expr}, {"value", &value}, {"locator", &locator}}
 #ifdef ZENOHCXX_ZENOHC
             ,
-            {{"-c", {"config file", &configfile}}}
+            {{"-c", {"config file", &config_file}}}
 #endif
     );
 
-    Config config;
+    Config config = Config::create_default();
 #ifdef ZENOHCXX_ZENOHC
-    if (configfile) {
-        config = expect(config_from_file(configfile));
+    if (config_file) {
+        config = Config::from_file(config_file);
     }
 #endif
 
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
-        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str()))
+        config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
 #elif ZENOHCXX_ZENOHPICO
-        if (!config.insert(Z_CONFIG_CONNECT_KEY, locator))
+        config.insert(Z_CONFIG_CONNECT_KEY, locator, &err);
 #else
 #error "Unknown zenoh backend"
 #endif
-        {
+        if (err != Z_OK) {
             std::cout << "Invalid locator: " << locator << std::endl;
             std::cout << "Expected value in format: tcp/192.168.64.3:7447" << std::endl;
             exit(-1);
@@ -70,34 +68,37 @@ int _main(int argc, char **argv) {
     }
 
     printf("Opening session...\n");
-    auto session = expect<Session>(open(std::move(config)));
+    auto session = Session::open(std::move(config));
 
-    KeyExprView keyexpr(expr);
-    if (!keyexpr.check()) {
-        printf("%s is not a valid key expression", expr);
-        exit(-1);
-    }
+    KeyExpr keyexpr(expr);
 
-    printf("Declaring Queryable on '%s'...\n", expr);
+    std::cout << "Declaring Queryable on '" << expr << "'...\n";
 
     auto on_query = [](const Query &query) {
-        auto keystr = query.get_keyexpr();
-        auto pred = query.get_parameters();
-        auto query_value = query.get_value();
-        std::cout << ">> [Queryable ] Received Query '" << keystr.as_string_view() << "?" << pred.as_string_view()
-                  << "' value = '" << query_value.as_string_view() << "'\n";
-        QueryReplyOptions options;
-        options.set_encoding(Encoding(Z_ENCODING_PREFIX_TEXT_PLAIN));
-        query.reply(expr, value, options);
+        const KeyExpr &keyexpr = query.get_keyexpr();
+        auto params = query.get_parameters();
+        std::cout << ">> [Queryable ] Received Query '" << keyexpr.as_string_view() << "?" << params;
+        auto payload = query.get_payload();
+        if (payload.has_value()) {
+            std::cout << "' value = '" << payload->get().deserialize<std::string>();
+        }
+        std::cout << "'\n";
+#if __cplusplus >= 201703L
+        query.reply(KeyExpr(expr), Bytes::serialize(value), {.encoding = Encoding("text/plain")});
+#else
+        Query::ReplyOptions reply_options;
+        reply_options.encoding = Encoding("text/plain");
+        query.reply(KeyExpr(expr), Bytes::serialize(value), std::move(reply_options));
+#endif
     };
 
     auto on_drop_queryable = []() { std::cout << "Destroying queryable\n"; };
 
-    auto queryable = expect<Queryable>(session.declare_queryable(keyexpr, {on_query, on_drop_queryable}));
+    auto queryable = session.declare_queryable(keyexpr, on_query, on_drop_queryable);
 
-    printf("Press CTRL-C to quit...\n");
-    while (1) {
-        sleep(1);
+    std::cout << "Press CTRL-C to quit...\n";
+    while (true) {
+        std::this_thread::sleep_for(1s);
     }
 
     return 0;
@@ -106,7 +107,7 @@ int _main(int argc, char **argv) {
 int main(int argc, char **argv) {
     try {
         _main(argc, argv);
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    } catch (ZException e) {
+        std::cout << "Received an error :" << e.what() << "\n";
     }
 }

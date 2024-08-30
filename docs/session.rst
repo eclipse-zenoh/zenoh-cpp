@@ -12,29 +12,16 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-Session
-=======
+Session Management
+==================
 
 The :cpp:class:`zenoh::Session` is the main zenoh object. The instance of the session reprsents a single 
 zenoh node in the network.
 
-Builder function
-----------------
-
-.. doxygenfunction:: zenoh::open
-
-Utility functions
------------------
-
-.. doxygenfunction:: init_logger
-
-.. doxygenfunction:: scout(zenoh::ScoutingConfig&& config, zenoh::ClosureHello&& callback, ErrNo& error)
-
-.. doxygenfunction:: scout(zenoh::ScoutingConfig&& config, zenoh::ClosureHello&& callback)
-   
-Session class
--------------
+Session
+-------
 
 .. doxygenclass:: zenoh::Session
    :members:
-   :membergroups: Constructors Operators Methods
+   :membergroups: Constructors Operators Methods Fields
+

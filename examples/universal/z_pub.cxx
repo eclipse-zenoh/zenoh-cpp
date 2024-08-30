@@ -14,22 +14,17 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <chrono>
 #include <iostream>
 #include <limits>
 #include <sstream>
-
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include <windows.h>
-#undef min
-#undef max
-#define sleep(x) Sleep(x * 1000)
-#else
-#include <unistd.h>
-#endif
+#include <thread>
 
 #include "../getargs.h"
 #include "zenoh.hxx"
+
 using namespace zenoh;
+using namespace std::chrono_literals;
 
 #ifdef ZENOHCXX_ZENOHC
 const char *default_value = "Pub from C++ zenoh-c!";
@@ -45,32 +40,33 @@ int _main(int argc, char **argv) {
     const char *keyexpr = default_keyexpr;
     const char *value = default_value;
     const char *locator = nullptr;
-    const char *configfile = nullptr;
+    const char *config_file = nullptr;
 
     getargs(argc, argv, {}, {{"key expression", &keyexpr}, {"value", &value}, {"locator", &locator}}
 #ifdef ZENOHCXX_ZENOHC
             ,
-            {{"-c", {"config file", &configfile}}}
+            {{"-c", {"config file", &config_file}}}
 #endif
     );
 
-    Config config;
+    Config config = Config::create_default();
 #ifdef ZENOHCXX_ZENOHC
-    if (configfile) {
-        config = expect(config_from_file(configfile));
+    if (config_file) {
+        config = Config::from_file(config_file);
     }
 #endif
 
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
-        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str()))
+        config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
 #elif ZENOHCXX_ZENOHPICO
-        if (!config.insert(Z_CONFIG_CONNECT_KEY, locator))
+        config.insert(Z_CONFIG_CONNECT_KEY, locator, &err);
 #else
 #error "Unknown zenoh backend"
 #endif
-        {
+        if (err != Z_OK) {
             std::cout << "Invalid locator: " << locator << std::endl;
             std::cout << "Expected value in format: tcp/192.168.64.3:7447" << std::endl;
             exit(-1);
@@ -78,24 +74,27 @@ int _main(int argc, char **argv) {
     }
 
     std::cout << "Opening session..." << std::endl;
-    auto session = expect<Session>(open(std::move(config)));
+    auto session = Session::open(std::move(config));
 
     std::cout << "Declaring Publisher on '" << keyexpr << "'..." << std::endl;
-    auto pub = expect<Publisher>(session.declare_publisher(keyexpr));
-#ifdef ZENOHCXX_ZENOHC
-    std::cout << "Publisher on '" << pub.get_keyexpr().as_string_view() << "' declared" << std::endl;
-#endif
+    auto pub = session.declare_publisher(KeyExpr(keyexpr));
 
-    PublisherPutOptions options;
-    options.set_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN);
+    std::cout << "Publisher on '" << keyexpr << "' declared" << std::endl;
+
     std::cout << "Press CTRL-C to quit..." << std::endl;
     for (int idx = 0; idx < std::numeric_limits<int>::max(); ++idx) {
-        sleep(1);
+        std::this_thread::sleep_for(1s);
         std::ostringstream ss;
         ss << "[" << idx << "] " << value;
         auto s = ss.str();  // in C++20 use .view() instead
         std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
-        pub.put(s, options);
+#if __cplusplus >= 201703L
+        pub.put(Bytes::serialize(s), {.encoding = Encoding("text/plain")});
+#else
+        auto put_options = Publisher::PutOptions{};
+        put_options.encoding = Encoding("text/plain");
+        pub.put(Bytes::serialize(s), std::move(put_options));
+#endif
     }
     return 0;
 }
@@ -103,7 +102,7 @@ int _main(int argc, char **argv) {
 int main(int argc, char **argv) {
     try {
         _main(argc, argv);
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    } catch (ZException e) {
+        std::cout << "Received an error :" << e.what() << "\n";
     }
 }

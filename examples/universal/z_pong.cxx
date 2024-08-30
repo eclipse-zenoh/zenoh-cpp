@@ -19,14 +19,16 @@
 using namespace zenoh;
 
 int _main(int, char **) {
-    Config config;
+    Config config = Config::create_default();
 
     std::cout << "Opening session...\n";
-    auto session = expect<Session>(open(std::move(config)));
+    auto session = Session::open(std::move(config));
 
-    auto pub = expect<Publisher>(session.declare_publisher("test/pong"));
-    auto sub = expect<Subscriber>(session.declare_subscriber(
-        "test/ping", [pub = std::move(pub)](const Sample &sample) mutable { pub.put(sample.get_payload()); }));
+    auto pub = session.declare_publisher(KeyExpr("test/pong"));
+    auto sub = session.declare_subscriber(
+        KeyExpr("test/ping"),
+        [pub = std::move(pub)](const Sample &sample) mutable { pub.put(sample.get_payload().clone()); },
+        closures::none);
     std::cout << "Pong ready, press any key to quit\n";
     std::getchar();
     return 0;
@@ -35,7 +37,7 @@ int _main(int, char **) {
 int main(int argc, char **argv) {
     try {
         _main(argc, argv);
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    } catch (ZException e) {
+        std::cout << "Received an error :" << e.what() << "\n";
     }
 }

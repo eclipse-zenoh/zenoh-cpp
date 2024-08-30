@@ -25,71 +25,48 @@ using namespace zenoh;
 
 int _main(int argc, char **argv) {
     const char *expr = "demo/example/**";
-    const char *value = nullptr;
-    const char *configfile = nullptr;
+    const char *value = "";
+    const char *config_file = nullptr;
     getargs(argc, argv, {}, {{"key expression", &expr}, {"value", &value}}
 #ifdef ZENOHCXX_ZENOHC
             ,
-            {{"-c", {"config file", &configfile}}}
+            {{"-c", {"config file", &config_file}}}
 #endif
     );
 
-    Config config;
+    Config config = Config::create_default();
 #ifdef ZENOHCXX_ZENOHC
-    if (configfile) {
-        config = expect(config_from_file(configfile));
+    if (config_file) {
+        config = Config::from_file(config_file);
     }
 #endif
 
-    KeyExprView keyexpr(expr);
-    if (!keyexpr.check()) {
-        printf("%s is not a valid key expression", expr);
-        exit(-1);
-    }
+    KeyExpr keyexpr(expr);
 
     printf("Opening session...\n");
-    auto session = expect<Session>(open(std::move(config)));
+    auto session = Session::open(std::move(config));
 
     std::cout << "Sending Query '" << expr << "'...\n";
-    GetOptions opts;
-    opts.set_target(Z_QUERY_TARGET_ALL);
-    opts.set_value(value);
-#ifdef ZENOHCXX_ZENOHC
-    // allocate attachment map
-    std::map<std::string, std::string> amap;
-    // set it as an attachment
-    opts.set_attachment(amap);
-    // add some value
-    amap.insert(std::pair("source", "C++"));
-#endif
 
     std::mutex m;
     std::condition_variable done_signal;
     bool done = false;
 
-    auto on_reply = [](Reply &&reply) {
-        auto result = reply.get();
-
-        if (auto sample = std::get_if<Sample>(&result)) {
-            std::cout << "Received ('" << sample->get_keyexpr().as_string_view() << "' : '"
-                      << sample->get_payload().as_string_view() << "')\n";
-#ifdef ZENOHCXX_ZENOHC
-            if (sample->get_attachment().check()) {
-                // reads full attachment
-                sample->get_attachment().iterate([](const BytesView &key, const BytesView &value) -> bool {
-                    std::cout << "   attachment: " << key.as_string_view() << ": '" << value.as_string_view() << "'\n";
-                    return true;
-                });
-
-                // reads particular attachment item
-                auto index = sample->get_attachment().get("source");
-                if (index != "") {
-                    std::cout << "   event source: " << index.as_string_view() << std::endl;
-                }
+    auto on_reply = [](const Reply &reply) {
+        if (reply.is_ok()) {
+            const Sample &sample = reply.get_ok();
+            std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
+                      << sample.get_payload().deserialize<std::string>() << "')\n";
+            auto attachment = sample.get_attachment();
+            if (!attachment.has_value()) return;
+            // we expect attachment in the form of key-value pairs
+            auto attachment_deserialized =
+                attachment->get().deserialize<std::unordered_map<std::string, std::string>>();
+            for (auto &&[key, value] : attachment_deserialized) {
+                std::cout << "   attachment: " << key << ": '" << value << "'\n";
             }
-#endif
-        } else if (auto error = std::get_if<ErrorMessage>(&result)) {
-            std::cout << "Received an error :" << error->as_string_view() << "\n";
+        } else {
+            std::cout << "Received an error :" << reply.get_err().get_payload().deserialize<std::string>() << "\n";
         }
     };
 
@@ -99,7 +76,19 @@ int _main(int argc, char **argv) {
         done_signal.notify_all();
     };
 
-    session.get(keyexpr, "", {on_reply, on_done}, opts);
+    std::unordered_map<std::string, std::string> attachment = {{"Source", "C++"}};
+
+#if __cplusplus >= 201703L
+    session.get(
+        keyexpr, "", on_reply, on_done,
+        {.target = Z_QUERY_TARGET_ALL, .payload = Bytes::serialize(value), .attachment = Bytes::serialize(attachment)});
+#else
+    Session::GetOptions options;
+    options.target = QueryTarget::Z_QUERY_TARGET_ALL;
+    options.payload = Bytes::serialize(value);
+    options.attachment = Bytes::serialize(attachment);
+    session.get(keyexpr, "", on_reply, on_done, std::move(options));
+#endif
 
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });
@@ -110,7 +99,7 @@ int _main(int argc, char **argv) {
 int main(int argc, char **argv) {
     try {
         _main(argc, argv);
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    } catch (ZException e) {
+        std::cout << "Received an error :" << e.what() << "\n";
     }
 }

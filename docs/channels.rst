@@ -15,8 +15,18 @@
 Channels
 ========
 
-The functions allowing to receive data in synchronous mode, without a callback
+Classes providing stream interface for Zenoh messages.
 
-.. doxygenfunction:: reply_fifo_new
+.. doxygenclass:: zenoh::channels::FifoChannel
+    :members:
 
-.. doxygenfunction:: reply_non_blocking_fifo_new
+.. doxygenclass:: zenoh::channels::FifoHandler
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::channels::RingChannel
+    :members:
+
+.. doxygenclass:: zenoh::channels::RingHandler
+   :members:
+   :membergroups: Constructors Operators Methods

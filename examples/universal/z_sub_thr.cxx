@@ -12,31 +12,29 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 #include <stdio.h>
+
 #include <chrono>
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include <windows.h>
-#define sleep(x) Sleep(x * 1000)
-#else
-#include <unistd.h>
-#endif
+#include <thread>
 
 #include "../getargs.h"
 #include "zenoh.hxx"
+
 using namespace zenoh;
+using namespace std::chrono_literals;
 
 #define N 1000000
 
 struct Stats {
     volatile unsigned long count = 0;
     volatile unsigned long finished_rounds = 0;
-    std::chrono::steady_clock::time_point start = {};
-    std::chrono::steady_clock::time_point first_start = {};
-    std::chrono::steady_clock::time_point end = {};
+    std::chrono::high_resolution_clock::time_point start = {};
+    std::chrono::high_resolution_clock::time_point first_start = {};
+    std::chrono::high_resolution_clock::time_point end = {};
 
     void operator()(const Sample &) {
         if (count == 0) {
-            start = std::chrono::steady_clock::now();
-            if (first_start == std::chrono::steady_clock::time_point()) {
+            start = std::chrono::high_resolution_clock::now();
+            if (first_start == std::chrono::high_resolution_clock::time_point()) {
                 first_start = start;
             }
             count++;
@@ -45,13 +43,17 @@ struct Stats {
         } else {
             finished_rounds++;
             auto elapsed_us =
-                std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start).count();
+                std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start)
+                    .count();
             std::cout << static_cast<double>(N) * 1000000.0 / static_cast<double>(elapsed_us) << " msg/s\n";
             count = 0;
         }
     }
 
-    void operator()() { end = std::chrono::steady_clock::now(); }
+    void operator()() {
+        end = std::chrono::high_resolution_clock::now();
+        print();
+    }
 
     void print() const {
         auto elapsed_s =
@@ -74,44 +76,44 @@ int _main(int argc, char **argv) {
 #endif
     );
 
-    Config config;
+    Config config = Config::create_default();
 #ifdef ZENOHCXX_ZENOHC
     if (configfile) {
-        config = expect(config_from_file(configfile));
+        config = Config::from_file(configfile);
     }
 #endif
 
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
-        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str()))
+        config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
 #elif ZENOHCXX_ZENOHPICO
-        if (!config.insert(Z_CONFIG_CONNECT_KEY, locator))
+        config.insert(Z_CONFIG_CONNECT_KEY, locator, &err);
 #else
 #error "Unknown zenoh backend"
 #endif
-        {
+        if (err != Z_OK) {
             std::cout << "Invalid locator: " << locator << std::endl;
             std::cout << "Expected value in format: tcp/192.168.64.3:7447" << std::endl;
             exit(-1);
         }
     }
 
-    printf("Opening session...\n");
-    auto session = expect<Session>(open(std::move(config)));
+    std::cout << "Opening session...\n";
+    auto session = Session::open(std::move(config));
 
-    KeyExpr keyexpr = session.declare_keyexpr("test/thr");
+    KeyExpr keyexpr = session.declare_keyexpr(KeyExpr("test/thr"));
 
     Stats stats;
-    auto subscriber = expect<Subscriber>(session.declare_subscriber(keyexpr, {stats, stats}));
+    auto on_receive = [&stats](const Sample &s) { stats(s); };
+    auto on_drop = [&stats]() { stats(); };
+    auto subscriber = session.declare_subscriber(keyexpr, on_receive, on_drop);
 
-    printf("Press CTRL-C to quit...\n");
-    while (1) {
-        sleep(1);
+    std::cout << "Press CTRL-C to quit...\n";
+    while (true) {
+        std::this_thread::sleep_for(1s);
     }
-
-    subscriber.drop();
-    stats.print();
 
     session.undeclare_keyexpr(std::move(keyexpr));
 
@@ -121,7 +123,7 @@ int _main(int argc, char **argv) {
 int main(int argc, char **argv) {
     try {
         _main(argc, argv);
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    } catch (ZException e) {
+        std::cout << "Received an error :" << e.what() << "\n";
     }
 }

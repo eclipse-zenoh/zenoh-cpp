@@ -10,84 +10,77 @@
 //
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
-
+//
 #include <stdio.h>
 #include <string.h>
 
-#include <condition_variable>
+#include <chrono>
 #include <iostream>
-
-#include "zenohc.hxx"
-using namespace zenohc;
-
-//
-// Copyright (c) 2022 ZettaScale Technology
-//
-// This program and the accompanying materials are made available under the
-// terms of the Eclipse Public License 2.0 which is available at
-// http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
-// which is available at https://www.apache.org/licenses/LICENSE-2.0.
-//
-// SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
-//
-// Contributors:
-//   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
-//
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
+#include <limits>
 #include <sstream>
+#include <thread>
 
-#include "zenoh.h"
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include <windows.h>
-#define sleep(x) Sleep(x * 1000)
-#else
-#include <unistd.h>
-#endif
+#include "../getargs.h"
+#include "zenoh.hxx"
 
-#define N 10
+using namespace zenoh;
+using namespace std::chrono_literals;
+
+const char *default_value = "Pub from C++ zenoh-c SHM!";
+const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-c-pub";
 
 int _main(int argc, char **argv) {
-    const char *keyexpr = "demo/example/zenoh-cpp-pub-shm";
-    const char *value = "Pub from CPP!";
+    const char *keyexpr = default_keyexpr;
+    const char *value = default_value;
+    const char *locator = nullptr;
+    const char *config_file = nullptr;
 
-    if (argc > 1) keyexpr = argv[1];
-    if (argc > 2) value = argv[2];
+    getargs(argc, argv, {}, {{"key expression", &keyexpr}, {"value", &value}, {"locator", &locator}},
+            {{"-c", {"config file", &config_file}}});
 
-    z_owned_config_t config = z_config_default();
-    if (argc > 3) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[3]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[3], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
+    Config config = Config::create_default();
+    if (config_file) {
+        config = Config::from_file(config_file);
+    }
+
+    ZResult err;
+    if (locator) {
+        auto locator_json_str_list = std::string("[\"") + locator + "\"]";
+        config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
+
+        if (err != Z_OK) {
+            std::cout << "Invalid locator: " << locator << std::endl;
+            std::cout << "Expected value in format: tcp/192.168.64.3:7447" << std::endl;
             exit(-1);
         }
     }
 
-    printf("Opening session...\n");
-    auto session = expect<Session>(open(std::move(config)));
-    std::ostringstream oss;
-    oss << session.info_zid();
+    std::cout << "Opening session..." << std::endl;
+    auto session = Session::open(std::move(config));
 
-    auto manager = expect<ShmManager>(shm_manager_new(session, oss.str().c_str(), N * 256));
+    std::cout << "Declaring Publisher on '" << keyexpr << "'..." << std::endl;
+    auto pub = session.declare_publisher(KeyExpr(keyexpr));
 
-    printf("Declaring Publisher on '%s'...\n", keyexpr);
-    auto pub = expect<Publisher>(session.declare_publisher(keyexpr));
+    std::cout << "Publisher on '" << keyexpr << "' declared" << std::endl;
 
-    PublisherPutOptions options;
-    options.set_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN);
-    for (int idx = 0; idx < N; ++idx) {
-        auto shmbuf = expect<z::Shmbuf>(manager.alloc(256));
-        auto buf = shmbuf.char_ptr();
-        snprintf(buf, 255, "[%4d] %s", idx, value);
-        shmbuf.set_length(strlen(buf));
-        sleep(1);
-        std::cout << "Putting Data ('" << keyexpr << "': '" << shmbuf.as_string_view() << "')..." << std::endl;
-        auto payload = shmbuf.into_payload();
-        pub.put_owned(std::move(payload), options);
+    std::cout << "Preparing SHM Provider...\n";
+    PosixShmProvider provider(MemoryLayout(65536, AllocAlignment({2})));
+
+    std::cout << "Press CTRL-C to quit..." << std::endl;
+    for (int idx = 0; idx < std::numeric_limits<int>::max(); ++idx) {
+        std::this_thread::sleep_for(1s);
+        std::ostringstream ss;
+        ss << "[" << idx << "] " << value;
+        auto s = ss.str();  // in C++20 use .view() instead
+        std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
+
+        std::cout << "Allocating SHM buffer...\n";
+        const auto len = s.size() + 1;
+        auto alloc_result = provider.alloc_gc_defrag_blocking(len, AllocAlignment({0}));
+        ZShmMut &&buf = std::get<ZShmMut>(std::move(alloc_result));
+        memcpy(buf.data(), s.data(), len);
+
+        pub.put(Bytes::serialize(std::move(buf)), {.encoding = Encoding("text/plain")});
     }
     return 0;
 }
@@ -95,7 +88,7 @@ int _main(int argc, char **argv) {
 int main(int argc, char **argv) {
     try {
         _main(argc, argv);
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    } catch (ZException e) {
+        std::cout << "Received an error :" << e.what() << "\n";
     }
 }

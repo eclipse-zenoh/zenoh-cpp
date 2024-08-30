@@ -14,22 +14,17 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <chrono>
 #include <iostream>
 #include <limits>
 #include <sstream>
-
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include <windows.h>
-#undef min
-#undef max
-#define sleep(x) Sleep(x * 1000)
-#else
-#include <unistd.h>
-#endif
+#include <thread>
 
 #include "../getargs.h"
 #include "zenoh.hxx"
+
 using namespace zenoh;
+using namespace std::chrono_literals;
 
 #ifdef ZENOHCXX_ZENOHC
 const char *default_value = "Pub from C++ zenoh-c!";
@@ -44,53 +39,51 @@ const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-pico-pub";
 int _main(int argc, char **argv) {
     const char *keyexpr = default_keyexpr;
     const char *value = default_value;
-    const char *configfile = nullptr;
+    const char *config_file = nullptr;
 
     getargs(argc, argv, {}, {{"key expression", &keyexpr}, {"value", &value}}
 #ifdef ZENOHCXX_ZENOHC
             ,
-            {{"-c", {"config file", &configfile}}}
+            {{"-c", {"config file", &config_file}}}
 #endif
     );
 
-    Config config;
+    Config config = Config::create_default();
 #ifdef ZENOHCXX_ZENOHC
-    if (configfile) {
-        config = expect(config_from_file(configfile));
+    if (config_file) {
+        config = Config::from_file(config_file);
     }
 #endif
 
     std::cout << "Opening session..." << std::endl;
-    auto session = expect<Session>(open(std::move(config)));
+    auto session = Session::open(std::move(config));
 
     std::cout << "Declaring Publisher on '" << keyexpr << "'..." << std::endl;
-    auto pub = expect<Publisher>(session.declare_publisher(keyexpr));
-#ifdef ZENOHCXX_ZENOHC
-    std::cout << "Publisher on '" << pub.get_keyexpr().as_string_view() << "' declared" << std::endl;
-#endif
+    auto pub = session.declare_publisher(KeyExpr(keyexpr));
 
-    PublisherPutOptions options;
-    options.set_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN);
-#ifdef ZENOHCXX_ZENOHC
+    std::cout << "Publisher on '" << keyexpr << "' declared" << std::endl;
+
     // allocate attachment map
-    std::map<std::string, std::string> amap;
-    // set it as an attachment
-    options.set_attachment(amap);
-    // add some value
-    amap.insert(std::pair("source", "C++"));
-#endif
+    std::unordered_map<std::string, std::string> attachment_map = {{"source", "C++"}};
+
     std::cout << "Press CTRL-C to quit..." << std::endl;
     for (int idx = 0; idx < std::numeric_limits<int>::max(); ++idx) {
-        sleep(1);
+        std::this_thread::sleep_for(1s);
         std::ostringstream ss;
         ss << "[" << idx << "] " << value;
         auto s = ss.str();  // in C++20 use .view() instead
         std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
-#ifdef ZENOHCXX_ZENOHC
         // add some other attachment value
-        amap["index"] = std::to_string(idx);
+        attachment_map["index"] = std::to_string(idx);
+#if __cplusplus >= 201703L
+        pub.put(Bytes::serialize(s),
+                {.encoding = Encoding("text/plain"), .attachment = Bytes::serialize(attachment_map)});
+#else
+        Publisher::PutOptions options;
+        options.encoding = Encoding("text/plain");
+        options.attachment = Bytes::serialize(attachment_map);
+        pub.put(Bytes::serialize(s), std::move(options));
 #endif
-        pub.put(s, options);
     }
     return 0;
 }
@@ -98,7 +91,7 @@ int _main(int argc, char **argv) {
 int main(int argc, char **argv) {
     try {
         _main(argc, argv);
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    } catch (ZException e) {
+        std::cout << "Received an error :" << e.what() << "\n";
     }
 }

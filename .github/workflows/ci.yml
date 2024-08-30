@@ -10,6 +10,16 @@ on:
   workflow_dispatch:
 
 jobs:
+  check_format:
+    name: Check codebase format with clang-format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run clang-format dry-run
+        run: find include/ tests/ examples/ -iname "*.hxx" -o -iname "*.cxx" | xargs clang-format -n -Werror
+
   build:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -17,6 +27,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macOS-latest]
+        shm: [false, true]
+        unstable: [false, true]
 
     steps:
       - name: Clone this repository
@@ -25,30 +37,19 @@ jobs:
       - name: install zenoh-cpp
         shell: bash
         run: |
-          mkdir -p build_install && cd build_install
-          cmake ../install -DCMAKE_INSTALL_PREFIX=~/local
-          cmake --install .
+          ./scripts/install_from_git.sh ~/local
 
       - name: make examples
         shell: bash
         run: |
-          mkdir -p build && cd build
-          cmake ..
+          cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
           cmake --build . --target examples
 
-      - name: make examples with zenoh-cpp as subbroject
+      - name: make stand-alone examples
         shell: bash
         run: |
-          mkdir -p build_examples_subproj && cd build_examples_subproj
-          cmake ../examples -DCMAKE_BUILD_TYPE=Debug
-          cmake --build . --config Debug
-
-      - name: make examples with zenoh-cpp as installed package
-        shell: bash
-        run: |
-          mkdir -p build_examples_findproj && cd build_examples_findproj
-          cmake ../examples -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHCXX_SOURCE=PACKAGE
-          cmake --build . --config Release
+          ./scripts/build_standalone_examples.sh ~/local
 
       - name: make tests
         shell: bash
@@ -60,7 +61,7 @@ jobs:
         shell: bash
         run: |
           cd build
-          ctest
+          ctest --output-on-failure
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

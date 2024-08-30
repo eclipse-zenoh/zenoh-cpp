@@ -18,62 +18,63 @@
 #include "zenoh.hxx"
 using namespace zenoh;
 
-void print_zid(const Id& id) {
-    std::cout << id << std::endl;
-}
-
 int _main(int argc, char** argv) {
     const char* locator = nullptr;
-    const char* configfile = nullptr;
+    const char* config_file = nullptr;
     getargs(argc, argv, {}, {{"locator", &locator}}
 #ifdef ZENOHCXX_ZENOHC
             ,
-            {{"-c", {"config file", &configfile}}}
+            {{"-c", {"config file", &config_file}}}
 #endif
     );
 
-    Config config;
+    Config config = Config::create_default();
 #ifdef ZENOHCXX_ZENOHC
-    if (configfile) {
-        config = expect(config_from_file(configfile));
+    if (config_file) {
+        config = Config::from_file(config_file);
     }
 #endif
 
+    ZResult err;
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
-        if (!config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str()))
+        config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
 #elif ZENOHCXX_ZENOHPICO
-        if (!config.insert(Z_CONFIG_CONNECT_KEY, locator))
+        config.insert(Z_CONFIG_CONNECT_KEY, locator, &err);
 #else
 #error "Unknown zenoh backend"
 #endif
-        {
+        if (err != Z_OK) {
             std::cout << "Invalid locator: " << locator << std::endl;
             std::cout << "Expected value in format: tcp/192.168.64.3:7447" << std::endl;
             exit(-1);
         }
     }
 
-    printf("Opening session...\n");
-    auto session = expect<Session>(open(std::move(config)));
+    std::cout << "Opening session...\n";
+    auto session = Session::open(std::move(config));
 
-    auto self_id = session.info_zid();
-    printf("own id: ");
-    print_zid(self_id);
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+    std::cout << "own id: " << session.get_zid() << std::endl;
 
-    printf("routers ids:\n");
-    session.info_routers_zid(print_zid);
+    std::cout << "routers ids:\n";
+    for (const auto zid : session.get_routers_z_id()) {
+        std::cout << zid << "\n";
+    }
 
-    printf("peers ids:\n");
-    session.info_peers_zid(print_zid);
+    std::cout << "peers ids:\n";
+    for (const auto zid : session.get_peers_z_id()) {
+        std::cout << zid << "\n";
+    }
+#endif
     return 0;
 }
 
 int main(int argc, char** argv) {
     try {
         return _main(argc, argv);
-    } catch (ErrorMessage e) {
-        std::cout << "Received an error :" << e.as_string_view() << "\n";
+    } catch (ZException e) {
+        std::cout << "Received an error :" << e.what() << "\n";
     }
 }
