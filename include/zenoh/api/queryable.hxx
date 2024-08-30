@@ -13,7 +13,10 @@
 
 #pragma once
 
+#include <utility>
+
 #include "base.hxx"
+#include "interop.hxx"
 
 namespace zenoh {
 
@@ -71,35 +74,36 @@ namespace interop {
 /// @brief Return a pair of pointers to owned C representations of queryable and its callback.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_owned_c_ptr(Queryable<Handler>& q) {
-    return make_pair(as_owned_c_ptr(static_cast<zenoh::detail::QueryableBase&>(q)),
-                     as_owned_c_ptr(const_cast<Handler&>(q.handler())));
+    return std::make_pair(as_owned_c_ptr(static_cast<zenoh::detail::QueryableBase&>(q)),
+                          as_owned_c_ptr(const_cast<Handler&>(q.handler())));
 }
 
 /// @brief Return a pair of pointers to owned C representations of queryable and its handler.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_owned_c_ptr(const Queryable<Handler>& q) {
-    return make_pair(as_owned_c_ptr(static_cast<const zenoh::detail::QueryableBase&>(q)), as_owned_c_ptr(q.handler()));
+    return std::make_pair(as_owned_c_ptr(static_cast<const zenoh::detail::QueryableBase&>(q)),
+                          as_owned_c_ptr(q.handler()));
 }
 
 /// @brief Return a pair of pointers to loaned C representations of queryable and its handler.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_loaned_c_ptr(Queryable<Handler>& q) {
-    return make_pair(as_loaned_c_ptr(static_cast<zenoh::detail::QueryableBase&>(q)),
-                     as_loaned_c_ptr(const_cast<Handler&>(q.handler())));
+    return std::make_pair(as_loaned_c_ptr(static_cast<zenoh::detail::QueryableBase&>(q)),
+                          as_loaned_c_ptr(const_cast<Handler&>(q.handler())));
 }
 
 /// @brief Return a pair of pointers to loaned C representation of queryable and its handler.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_loaned_c_ptr(const Queryable<Handler>& q) {
-    return make_pair(as_loaned_c_ptr(static_cast<const zenoh::detail::QueryableBase&>(q)),
-                     as_loaned_c_ptr(q.handler()));
+    return std::make_pair(as_loaned_c_ptr(static_cast<const zenoh::detail::QueryableBase&>(q)),
+                          as_loaned_c_ptr(q.handler()));
 }
 
 /// @brief Return a pair of pointers to moved C representation of queryable and its handler.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_moved_c_ptr(Queryable<Handler>& q) {
-    return make_pair(as_moved_c_ptr(static_cast<zenoh::detail::QueryableBase&>(q)),
-                     as_moved_c_ptr(const_cast<Handler&>(q.handler())));
+    return std::make_pair(as_moved_c_ptr(static_cast<zenoh::detail::QueryableBase&>(q)),
+                          as_moved_c_ptr(const_cast<Handler&>(q.handler())));
 }
 
 /// @brief Return a pair of pointers to moved C representation of queryable and its handler.
@@ -116,8 +120,8 @@ auto as_moved_c_ptr(std::optional<Queryable<Handler>>& q) -> decltype(as_moved_c
 /// @brief Move queryable and its handler to a pair containing corresponding Zenoh-c structs.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto move_to_c_obj(Queryable<Handler>&& q) {
-    return make_pair(move_to_c_obj(std::move(static_cast<zenoh::detail::QueryableBase&>(q))),
-                     move_to_c_obj(std::move(const_cast<Handler&>(q))));
+    return std::make_pair(move_to_c_obj(std::move(static_cast<zenoh::detail::QueryableBase&>(q))),
+                          move_to_c_obj(std::move(const_cast<Handler&>(q))));
 }
 }  // namespace interop
 
