@@ -763,14 +763,14 @@ class Session : public Owned<::z_owned_session_t> {
         ::zc_liveliness_subscriber_options_t opts;
         zc_liveliness_subscriber_options_default(&opts);
         (void)options;
-        ::z_owned_subscriber_t s;
-        ZResult res =
-            ::zc_liveliness_declare_subscriber(&s, interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr),
-                                               ::z_move(cb_handler_pair.first), &opts);
+        Subscriber<void> s(zenoh::detail::null_object);
+        ZResult res = ::zc_liveliness_declare_subscriber(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
+                                                         interop::as_loaned_c_ptr(key_expr),
+                                                         ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
         if (res != Z_OK) ::z_drop(::z_move(*interop::as_moved_c_ptr(cb_handler_pair.second)));
-        return Subscriber<typename Channel::template HandlerType<Sample>>(
-            std::move(interop::as_owned_cpp_ref<detail::SubscriberBase>(&s)), std::move(cb_handler_pair.second));
+        return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
+                                                                          std::move(cb_handler_pair.second));
     }
 
     /// @brief Options to pass to ``Session::liveliness_get``.
@@ -849,7 +849,7 @@ class Session : public Owned<::z_owned_session_t> {
     Timestamp new_timestamp(ZResult* err = nullptr) {
         ::z_timestamp_t t;
         __ZENOH_RESULT_CHECK(z_timestamp_new(&t, interop::as_loaned_c_ptr(*this)), err, "Failed to create timestamp");
-        return interop::as_copyable_cpp_ref<Timestamp>(&t);
+        return interop::into_copyable_cpp_obj<Timestamp>(t);
     }
 };
 }  // namespace zenoh
