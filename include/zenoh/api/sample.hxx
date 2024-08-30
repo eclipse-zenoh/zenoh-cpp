@@ -32,6 +32,7 @@ namespace zenoh {
 /// A sample is the value associated to a given resource at a given point in time.
 class Sample : public Owned<::z_owned_sample_t> {
     Sample() : Owned(nullptr){};
+    friend struct interop::detail::Converter;
 
    public:
     /// @name Methods

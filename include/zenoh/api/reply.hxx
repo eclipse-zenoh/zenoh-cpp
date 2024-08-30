@@ -43,6 +43,9 @@ class ReplyError : public Owned<::z_owned_reply_err_t> {
 
 /// A reply from queryable to ``Session::get`` operation.
 class Reply : public Owned<::z_owned_reply_t> {
+    Reply() : Owned(nullptr){};
+    friend struct interop::detail::Converter;
+
    public:
     /// @name Methods
 
@@ -74,7 +77,7 @@ class Reply : public Owned<::z_owned_reply_t> {
     std::optional<Id> get_replier_id() const {
         ::z_id_t z_id;
         if (::z_reply_replier_id(interop::as_loaned_c_ptr(*this), &z_id)) {
-            return Id(z_id);
+            return interop::into_copyable_cpp_obj<Id>(z_id);
         }
         return {};
     }

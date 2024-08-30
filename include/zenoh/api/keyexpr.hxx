@@ -28,6 +28,7 @@ namespace zenoh {
 
 class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     KeyExpr() : Owned(nullptr){};
+    friend struct interop::detail::Converter;
 
    public:
     /// @name Constructors

@@ -22,9 +22,10 @@
 namespace zenoh {
 /// Zenoh <a href=https://zenoh.io/docs/manual/abstractions/#timestamp>Timestamp</a>.
 class Timestamp : public Copyable<::z_timestamp_t> {
-   public:
     using Copyable::Copyable;
+    friend struct interop::detail::Converter;
 
+   public:
     /// @name Methods
 
     /// @brief Get the NTP64 time part of the timestamp.
@@ -34,7 +35,7 @@ class Timestamp : public Copyable<::z_timestamp_t> {
 #if defined UNSTABLE
     /// @brief Get the unique id of the timestamp.
     /// @return Id associated with this timestamp.
-    Id get_id() const { return Id(::z_timestamp_id(&this->inner())); }
+    Id get_id() const { return interop::into_copyable_cpp_obj<Id>(::z_timestamp_id(&this->inner())); }
 #endif
 };
 

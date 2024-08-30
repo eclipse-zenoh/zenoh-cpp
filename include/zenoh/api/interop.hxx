@@ -205,14 +205,28 @@ bool check(const Owned<OwnedType>& owned_cpp_obj) {
     return ::z_internal_check(*as_owned_c_ptr(owned_cpp_obj));
 }
 
+struct Converter {
+    template <class T>
+    static T null_owned() {
+        return T();
+    }
+    template <class T, class Inner = typename T::InnerType>
+    static T copyable_to_cpp(const Inner& i) {
+        return T(i);
+    }
+};
+
 template <class T>
 T null() {
-    using ZCtype = std::remove_cv_t<std::remove_pointer_t<decltype(as_owned_c_ptr(std::declval<T>()))>>;
-    ZCtype z;
-    ::z_internal_null(&z);
-    return std::move(as_owned_cpp_ref<T>(&z));
+    return Converter::null_owned<T>();
 }
 
 }  // namespace detail
+
+/// @brief Copy copyable Zenoh-c struct into corresponding C++ object.
+template <class T, class CopyableType>
+T into_copyable_cpp_obj(const CopyableType& copyable_c_obj) {
+    return detail::Converter::copyable_to_cpp<T>(copyable_c_obj);
+}
 
 }  // namespace zenoh::interop

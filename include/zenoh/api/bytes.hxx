@@ -154,9 +154,10 @@ class Bytes : public Owned<::z_owned_bytes_t> {
 
     /// @brief A reader for Zenoh-serialized data.
     class Reader : public Copyable<::z_bytes_reader_t> {
-       public:
         using Copyable::Copyable;
+        friend struct interop::detail::Converter;
 
+       public:
         /// @name Methods
 
         /// @brief Read data into specified destination.
@@ -210,13 +211,16 @@ class Bytes : public Owned<::z_owned_bytes_t> {
 
     /// @brief Create data reader.
     /// @return reader instance.
-    Reader reader() const { return Reader(::z_bytes_get_reader(interop::as_loaned_c_ptr(*this))); }
+    Reader reader() const {
+        return interop::into_copyable_cpp_obj<Reader>(::z_bytes_get_reader(interop::as_loaned_c_ptr(*this)));
+    }
 
     /// @brief A writer for Zenoh-serialized data.
     class Writer : public Copyable<::z_bytes_writer_t> {
-       public:
         using Copyable::Copyable;
+        friend struct interop::detail::Converter;
 
+       public:
         /// @name Methods
 
         /// @brief Copy data from sepcified source into underlying ``Bytes`` instance.
@@ -256,14 +260,17 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     /// It is the user responsibility to ensure that there is at most one active writer at
     /// a given moment of time for a given ``Bytes`` instance.
     /// @return writer instance.
-    Writer writer() { return Writer(::z_bytes_get_writer(interop::as_loaned_c_ptr(*this))); }
+    Writer writer() {
+        return interop::into_copyable_cpp_obj<Writer>(::z_bytes_get_writer(interop::as_loaned_c_ptr(*this)));
+    }
 };
 
 /// @brief An iterator over multi-element serialized data.
 class Bytes::Iterator : Copyable<::z_bytes_iterator_t> {
-   public:
     using Copyable::Copyable;
+    friend struct interop::detail::Converter;
 
+   public:
     /// @name Methods
 
     /// @brief Return next element of serialized data.
@@ -278,7 +285,7 @@ class Bytes::Iterator : Copyable<::z_bytes_iterator_t> {
 };
 
 inline Bytes::Iterator Bytes::iter() const {
-    return Bytes::Iterator(::z_bytes_get_iterator(interop::as_loaned_c_ptr(*this)));
+    return interop::into_copyable_cpp_obj<Bytes::Iterator>(::z_bytes_get_iterator(interop::as_loaned_c_ptr(*this)));
 }
 
 namespace detail {
@@ -442,7 +449,7 @@ struct Slice {
     size_t len;
 };
 
-auto make_slice(const uint8_t* data, size_t len) { return Slice{data, len}; };
+inline auto make_slice(const uint8_t* data, size_t len) { return Slice{data, len}; };
 
 template <class Deleter>
 struct OwnedSlice {

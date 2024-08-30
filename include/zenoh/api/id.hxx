@@ -19,15 +19,17 @@
 
 #include "../zenohc.hxx"
 #include "base.hxx"
+#include "interop.hxx"
 
 namespace zenoh {
 /// @brief A representation a Zenoh ID.
 ///
 /// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
 class Id : public Copyable<::z_id_t> {
-   public:
     using Copyable::Copyable;
+    friend struct interop::detail::Converter;
 
+   public:
     /// @name Methods
 
     /// Check if the ID is valid.

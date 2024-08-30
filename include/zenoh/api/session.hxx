@@ -133,7 +133,7 @@ class Session : public Owned<::z_owned_session_t> {
 #if defined UNSTABLE
     /// @brief Get the unique identifier of the zenoh node associated to this ``Session``.
     /// @return the unique identifier ``Id``.
-    Id get_zid() const { return Id(::z_info_zid(interop::as_loaned_c_ptr(*this))); }
+    Id get_zid() const { return interop::into_copyable_cpp_obj<Id>(::z_info_zid(interop::as_loaned_c_ptr(*this))); }
 #endif
 
     /// @brief Create ``KeyExpr`` instance with numeric id registered in ``Session`` routing tables (to reduce bandwith
@@ -216,7 +216,7 @@ class Session : public Owned<::z_owned_session_t> {
         ::z_get_options_t opts;
         z_get_options_default(&opts);
         opts.target = options.target;
-        opts.consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation);
+        opts.consolidation = *interop::as_copyable_c_ptr(options.consolidation);
         opts.congestion_control = options.congestion_control;
         opts.priority = options.priority;
         opts.is_express = options.is_express;
@@ -252,7 +252,7 @@ class Session : public Owned<::z_owned_session_t> {
         ::z_get_options_t opts;
         z_get_options_default(&opts);
         opts.target = options.target;
-        opts.consolidation = static_cast<const z_query_consolidation_t&>(options.consolidation);
+        opts.consolidation = *interop::as_copyable_c_ptr(options.consolidation);
         opts.payload = interop::as_moved_c_ptr(options.payload);
         opts.encoding = interop::as_moved_c_ptr(options.encoding);
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
@@ -848,7 +848,7 @@ class Session : public Owned<::z_owned_session_t> {
     Timestamp new_timestamp(ZResult* err = nullptr) {
         ::z_timestamp_t t;
         __ZENOH_RESULT_CHECK(z_timestamp_new(&t, interop::as_loaned_c_ptr(*this)), err, "Failed to create timestamp");
-        return Timestamp(t);
+        return interop::as_copyable_cpp_ref<Timestamp>(&t);
     }
 };
 }  // namespace zenoh

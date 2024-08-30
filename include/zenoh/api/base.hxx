@@ -55,13 +55,7 @@ class Copyable {
 
     InnerType& inner() { return this->_0; }
     const InnerType& inner() const { return this->_0; }
-
-   public:
-    /// @name Constructors
-    /// Construct from wrapped zenoh-c / zenoh-pico structure
     explicit Copyable(const InnerType& v) : _0(v) {}
-    explicit operator const ZC_COPYABLE_TYPE&() const { return inner(); }
-    explicit operator ZC_COPYABLE_TYPE&() { return inner(); }
 };
 
 /// Base type for C++ wrappers of Zenoh owned structures

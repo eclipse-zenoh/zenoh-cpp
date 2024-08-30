@@ -33,7 +33,7 @@ class Hello : public Owned<::z_owned_hello_t> {
 #if defined UNSTABLE
     /// @brief Get ``Id`` of the entity.
     /// @return ``Id`` of the entity.
-    Id get_id() const { return Id(::z_hello_zid(interop::as_loaned_c_ptr(*this))); };
+    Id get_id() const { return interop::into_copyable_cpp_obj<Id>(::z_hello_zid(interop::as_loaned_c_ptr(*this))); };
 #endif
 
     /// @brief Get the type of the entity.

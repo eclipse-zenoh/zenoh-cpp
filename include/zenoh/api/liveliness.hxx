@@ -30,6 +30,7 @@ class Session;
 /// @note zenoh-c only.
 class LivelinessToken : public Owned<::zc_owned_liveliness_token_t> {
     LivelinessToken() : Owned(nullptr){};
+    friend struct interop::detail::Converter;
 
    public:
     /// Undeclares liveliness token, resetting it to gravestone state.

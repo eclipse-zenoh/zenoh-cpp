@@ -32,6 +32,7 @@ class Session;
 /// A Zenoh publisher. Constructed by ``Session::declare_publisher`` method.
 class Publisher : public Owned<::z_owned_publisher_t> {
     Publisher() : Owned(nullptr){};
+    friend struct interop::detail::Converter;
 
    public:
     /// @brief Options to be passed to ``Publisher::put`` operation.
@@ -108,7 +109,9 @@ class Publisher : public Owned<::z_owned_publisher_t> {
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
     /// @brief Get the id of the publisher.
     /// @return id of this publisher.
-    EntityGlobalId get_id() const { return EntityGlobalId(::z_publisher_id(interop::as_loaned_c_ptr(*this))); }
+    EntityGlobalId get_id() const {
+        return interop::into_copyable_cpp_obj<EntityGlobalId>(::z_publisher_id(interop::as_loaned_c_ptr(*this)));
+    }
 #endif
 };
 }  // namespace zenoh

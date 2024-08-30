@@ -32,6 +32,7 @@ namespace zenoh {
 /// The query to be answered by a ``Queryable``.
 class Query : public Owned<::z_owned_query_t> {
     Query() : Owned(nullptr){};
+    friend struct interop::detail::Converter;
 
    public:
     /// @name Methods

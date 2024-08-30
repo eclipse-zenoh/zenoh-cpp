@@ -43,6 +43,8 @@ typedef ::z_alloc_alignment_t AllocAlignment;
 
 class MemoryLayout : public Owned<::z_owned_memory_layout_t> {
     friend class PosixShmProvider;
+    MemoryLayout() : Owned(nullptr){};
+    friend struct interop::detail::Converter;
 
    public:
     /// @name Constructors
