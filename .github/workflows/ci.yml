@@ -27,6 +27,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macOS-latest]
+        shm: [false, true]
+        unstable: [false, true]
 
     steps:
       - name: Clone this repository
@@ -41,7 +43,7 @@ jobs:
         shell: bash
         run: |
           cd build
-          cmake .. -DCMAKE_INSTALL_PREFIX=~/local
+          cmake .. -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
           cmake --build . --target examples
 
       - name: make stand-alone examples
