@@ -22,7 +22,7 @@ function(add_test_instance file mode lib option)
 		endif()
 	endif()
 
-	set(zenoh_router_branch "dev/1.0.0")
+	set(zenoh_router_branch "main")
 	get_filename_component(filename ${file} NAME_WE)
 	set(target ${filename}_${mode})
 	add_executable(${target} EXCLUDE_FROM_ALL ${file})
