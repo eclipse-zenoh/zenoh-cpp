@@ -428,18 +428,18 @@ struct ZenohDeserializer<std::map<K, V, C, Allocator>> {
         }                                                                                                \
     };
 
-__ZENOH_DESERIALIZE_ARITHMETIC(uint8_t, uint8);
-__ZENOH_DESERIALIZE_ARITHMETIC(uint16_t, uint16);
-__ZENOH_DESERIALIZE_ARITHMETIC(uint32_t, uint32);
-__ZENOH_DESERIALIZE_ARITHMETIC(uint64_t, uint64);
+__ZENOH_DESERIALIZE_ARITHMETIC(uint8_t, uint8)
+__ZENOH_DESERIALIZE_ARITHMETIC(uint16_t, uint16)
+__ZENOH_DESERIALIZE_ARITHMETIC(uint32_t, uint32)
+__ZENOH_DESERIALIZE_ARITHMETIC(uint64_t, uint64)
 
-__ZENOH_DESERIALIZE_ARITHMETIC(int8_t, int8);
-__ZENOH_DESERIALIZE_ARITHMETIC(int16_t, int16);
-__ZENOH_DESERIALIZE_ARITHMETIC(int32_t, int32);
-__ZENOH_DESERIALIZE_ARITHMETIC(int64_t, int64);
+__ZENOH_DESERIALIZE_ARITHMETIC(int8_t, int8)
+__ZENOH_DESERIALIZE_ARITHMETIC(int16_t, int16)
+__ZENOH_DESERIALIZE_ARITHMETIC(int32_t, int32)
+__ZENOH_DESERIALIZE_ARITHMETIC(int64_t, int64)
 
-__ZENOH_DESERIALIZE_ARITHMETIC(float, float);
-__ZENOH_DESERIALIZE_ARITHMETIC(double, double);
+__ZENOH_DESERIALIZE_ARITHMETIC(float, float)
+__ZENOH_DESERIALIZE_ARITHMETIC(double, double)
 
 #undef __ZENOH_DESERIALIZE_ARITHMETIC
 }  // namespace detail
@@ -449,7 +449,7 @@ struct Slice {
     size_t len;
 };
 
-inline auto make_slice(const uint8_t* data, size_t len) { return Slice{data, len}; };
+inline auto make_slice(const uint8_t* data, size_t len) { return Slice{data, len}; }
 
 template <class Deleter>
 struct OwnedSlice {
@@ -461,7 +461,7 @@ struct OwnedSlice {
 template <class Deleter>
 auto make_owned_slice(uint8_t* data, size_t len, Deleter&& d) {
     return OwnedSlice<std::remove_reference_t<Deleter>>{data, len, std::forward<Deleter>(d)};
-};
+}
 
 /// @brief Default codec for Zenoh serialization / deserialziation
 class ZenohCodec {

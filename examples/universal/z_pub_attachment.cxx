@@ -75,7 +75,7 @@ int _main(int argc, char **argv) {
         std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
         // add some other attachment value
         attachment_map["index"] = std::to_string(idx);
-#if __cplusplus >= 201703L
+#if __cpp_designated_initializers >= 201707L
         pub.put(Bytes::serialize(s),
                 {.encoding = Encoding("text/plain"), .attachment = Bytes::serialize(attachment_map)});
 #else

@@ -86,7 +86,7 @@ int _main(int argc, char **argv) {
         done_signal.notify_all();
     };
 
-#if __cplusplus >= 201703L
+#if __cpp_designated_initializers >= 201707L
     session.get(keyexpr, "", on_reply, on_done, {.target = Z_QUERY_TARGET_ALL, .payload = Bytes::serialize(value)});
 #else
     Session::GetOptions options;
