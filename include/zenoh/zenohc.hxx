@@ -1,9 +1,7 @@
 #pragma once
 
 #if defined(ZENOHCXX_ZENOHPICO) && defined(ZENOHCXX_ZENOHC)
-#error("Only one of ZENOHCXX_ZENOHPICO and ZENOHCXX_ZENOHC should be defined. \
-Explictly include zenohpico.hxx and zenohc.hxx to use both libraies in the same program\
-under namespaces zenohpico and zenohc respectively.")
+#error("Only one of ZENOHCXX_ZENOHPICO and ZENOHCXX_ZENOHC should be defined.")
 #endif
 #if !defined(ZENOHCXX_ZENOHPICO) && !defined(ZENOHCXX_ZENOHC)
 #error("Either ZENOHCXX_ZENOHPICO or ZENOHCXX_ZENOHC should be defined")
@@ -11,6 +9,10 @@ under namespaces zenohpico and zenohc respectively.")
 
 #if defined(ZENOHCXX_ZENOHPICO)
 #include "zenoh-pico.h"
+// use same macro to check for unstable features
+#if Z_FEATURE_UNSTABLE_API == 1
+#define UNSTABLE
+#endif
 #elif defined(ZENOHCXX_ZENOHC)
 #include "zenoh.h"
 #endif
