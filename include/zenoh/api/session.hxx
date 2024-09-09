@@ -277,6 +277,10 @@ class Session : public Owned<::z_owned_session_t> {
         CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
         /// @brief Whether Zenoh will NOT wait to batch delete message with others to reduce the bandwith.
         bool is_express = false;
+#if defined(UNSTABLE)
+        /// @brief The delete operation reliability.
+        Reliability reliability = Reliability::Z_RELIABILITY_BEST_EFFORT;
+#endif
         /// @brief the timestamp of this message.
         std::optional<Timestamp> timestamp = {};
 
@@ -297,6 +301,9 @@ class Session : public Owned<::z_owned_session_t> {
         opts.congestion_control = options.congestion_control;
         opts.priority = options.priority;
         opts.is_express = options.is_express;
+#if defined(UNSTABLE)
+        opts.reliability = options.reliability;
+#endif
 
         __ZENOH_RESULT_CHECK(::z_delete(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr), &opts),
                              err, "Failed to perform delete operation");
