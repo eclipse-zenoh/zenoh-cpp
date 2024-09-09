@@ -96,6 +96,13 @@ class Sample : public Owned<::z_owned_sample_t> {
         return interop::as_owned_cpp_ref<SourceInfo>(::z_sample_source_info(interop::as_loaned_c_ptr(*this)));
     }
 #endif
+
+#if defined(UNSTABLE)
+    /// @brief Get the reliability this sample was sent with.
+    /// @return ``Reliability`` value.
+    Reliability reliability() const { return ::z_sample_reliability(interop::as_loaned_c_ptr(*this)); }
+#endif
+
     /// @brief Construct a shallow copy of this sample.
     Sample clone() const {
         Sample s(zenoh::detail::null_object);
