@@ -1,7 +1,7 @@
 #pragma once
 
 #if defined(ZENOHCXX_ZENOHPICO) && defined(ZENOHCXX_ZENOHC)
-#error("Only one of ZENOHCXX_ZENOHPICO and ZENOHCXX_ZENOHC should be defined.)
+#error("Only one of ZENOHCXX_ZENOHPICO and ZENOHCXX_ZENOHC should be defined.")
 #endif
 #if !defined(ZENOHCXX_ZENOHPICO) && !defined(ZENOHCXX_ZENOHC)
 #error("Either ZENOHCXX_ZENOHPICO or ZENOHCXX_ZENOHC should be defined")
