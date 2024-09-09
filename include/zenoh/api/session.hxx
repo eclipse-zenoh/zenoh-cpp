@@ -320,6 +320,10 @@ class Session : public Owned<::z_owned_session_t> {
         std::optional<Timestamp> timestamp = {};
         /// @brief  An optional encoding of the message payload and/or attachment.
         std::optional<Encoding> encoding = {};
+#if defined(UNSTABLE)
+        /// @brief The put operation reliability.
+        Reliability reliability = Reliability::Z_RELIABILITY_BEST_EFFORT;
+#endif
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         /// @brief The source info of this message.
         std::optional<SourceInfo> source_info = {};
@@ -347,13 +351,14 @@ class Session : public Owned<::z_owned_session_t> {
         opts.priority = options.priority;
         opts.is_express = options.is_express;
 #if defined(UNSTABLE)
+        opts.reliability = options.reliability;
+#endif
+#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+        opts.allowed_destination = options.allowed_destination;
         opts.source_info = interop::as_moved_c_ptr(options.source_info);
 #endif
         opts.attachment = interop::as_moved_c_ptr(options.attachment);
         opts.timestamp = interop::as_copyable_c_ptr(options.timestamp);
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
-        opts.allowed_destination = options.allowed_destination;
-#endif
         auto payload_ptr = interop::as_moved_c_ptr(payload);
         __ZENOH_RESULT_CHECK(
             ::z_put(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr), payload_ptr, &opts), err,
@@ -437,9 +442,6 @@ class Session : public Owned<::z_owned_session_t> {
     struct SubscriberOptions {
         /// @name Fields
 
-        /// @brief The subscription reliability.
-        Reliability reliability = Reliability::Z_RELIABILITY_BEST_EFFORT;
-
         /// @name Methods
         /// @brief Create default option settings.
         static SubscriberOptions create_default() { return {}; }
@@ -473,11 +475,7 @@ class Session : public Owned<::z_owned_session_t> {
         ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
         ::z_subscriber_options_t opts;
         z_subscriber_options_default(&opts);
-#if defined(UNSTABLE)
-        opts.reliability = options.reliability;
-#else
         (void)options;
-#endif
         Subscriber<void> s(zenoh::detail::null_object);
         ZResult res = ::z_declare_subscriber(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
                                              interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
@@ -502,11 +500,7 @@ class Session : public Owned<::z_owned_session_t> {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Sample>();
         ::z_subscriber_options_t opts;
         z_subscriber_options_default(&opts);
-#if defined(UNSTABLE)
-        opts.reliability = options.reliability;
-#else
         (void)options;
-#endif
         Subscriber<void> s(zenoh::detail::null_object);
         ZResult res =
             ::z_declare_subscriber(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
@@ -527,6 +521,10 @@ class Session : public Owned<::z_owned_session_t> {
         Priority priority = Z_PRIORITY_DEFAULT;
         /// @brief If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
         bool is_express = false;
+#if defined(UNSTABLE)
+        /// @brief The publisher reliability.
+        Reliability reliability = Reliability::Z_RELIABILITY_BEST_EFFORT;
+#endif
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         /// @brief Allowed destination.
         Locality allowed_destination = ::zc_locality_default();
@@ -553,6 +551,9 @@ class Session : public Owned<::z_owned_session_t> {
         opts.congestion_control = options.congestion_control;
         opts.priority = options.priority;
         opts.is_express = options.is_express;
+#if defined(UNSTABLE)
+        opts.reliability = options.reliability;
+#endif
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
         opts.allowed_destination = options.allowed_destination;
 #endif

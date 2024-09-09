@@ -42,11 +42,14 @@ typedef ::z_sample_kind_t SampleKind;
 ///           It optimizes bandwidth.
 typedef ::z_consolidation_mode_t ConsolidationMode;
 
-/// Reliability values.
+/// Publisher reliability values.
 ///
 /// Values:
 ///  - **Z_RELIABILITY_BEST_EFFORT**: Defines reliability as "best effort"
 ///  - **Z_RELIABILITY_RELIABLE**: Defines reliability as "reliable"
+/// @note Currently `reliability` does not trigger any data retransmission on the wire.
+/// It is rather used as a marker on the wire and it may be used to select the best link available (e.g. TCP for
+/// reliable data and UDP for best effort data).
 typedef ::z_reliability_t Reliability;
 
 ///  Congestion control values.
