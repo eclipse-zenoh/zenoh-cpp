@@ -25,7 +25,7 @@ namespace zenoh {
 /// @brief An immutable SHM buffer
 class ZShm : public Owned<::z_owned_shm_t> {
     friend class ZShmMut;
-    ZShm(zenoh::detail::null_object_t) : Owned(nullptr){};
+    ZShm(zenoh::detail::null_object_t) : Owned(nullptr) {}
     friend struct interop::detail::Converter;
 
    public:
@@ -48,12 +48,11 @@ class ZShm : public Owned<::z_owned_shm_t> {
     std::size_t len() const { return ::z_shm_len(interop::as_loaned_c_ptr(*this)); }
 
     /// @brief Create a new ZShmMut from ZShm.
-    /// @param immut immutable buffer
+    /// @param immut immutable buffer, NOTE: the value will not be moved if nullopt returned
     /// @return mutable buffer or empty option if buffer mutation is impossible
     static std::optional<ZShmMut> try_mutate(ZShm&& immut) {
         z_owned_shm_mut_t mut_inner;
-        ::z_shm_mut_try_from_immut(&mut_inner, z_move(immut._0));
-        if (::z_internal_check(mut_inner)) {
+        if (Z_OK == ::z_shm_mut_try_from_immut(&mut_inner, z_move(immut._0), &immut._0)) {
             return std::move(interop::as_owned_cpp_ref<ZShmMut>(&mut_inner));
         }
         return std::nullopt;

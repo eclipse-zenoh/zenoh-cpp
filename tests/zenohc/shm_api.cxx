@@ -60,14 +60,15 @@ int test_shm_buffer(ZShmMut&& buf) {
     ASSERT_VALID(immut);
     ASSERT_NULL(buf);
 
-    ZShm immut2(immut);
-    ASSERT_VALID(immut);
-    ASSERT_VALID(immut2);
-
     {
-        auto mut = ZShm::try_mutate(std::move(immut2));
-        ASSERT_FALSE(mut);
-        ASSERT_NULL(immut2);
+        ZShm immut2(immut);
+        ASSERT_VALID(immut);
+        ASSERT_VALID(immut2);
+        {
+            auto mut = ZShm::try_mutate(std::move(immut2));
+            ASSERT_FALSE(mut);
+            ASSERT_VALID(immut2);
+        }
     }
 
     auto mut = ZShm::try_mutate(std::move(immut));
