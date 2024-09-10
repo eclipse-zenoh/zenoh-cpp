@@ -31,6 +31,8 @@ class Hello : public Owned<::z_owned_hello_t> {
     /// @name Methods
 
 #if defined UNSTABLE
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Get ``Id`` of the entity.
     /// @return ``Id`` of the entity.
     Id get_id() const { return interop::into_copyable_cpp_obj<Id>(::z_hello_zid(interop::as_loaned_c_ptr(*this))); };

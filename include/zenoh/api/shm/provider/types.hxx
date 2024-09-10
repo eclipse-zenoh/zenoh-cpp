@@ -21,26 +21,26 @@
 
 namespace zenoh {
 
-/**
- * Allocation errors
- *
- *     - **NEED_DEFRAGMENT**: defragmentation needed
- *     - **OUT_OF_MEMORY**: the provider is out of memory
- *     - **OTHER**: other error
- */
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Allocation errors.
+///
+///    - **NEED_DEFRAGMENT**: defragmentation needed
+///    - **OUT_OF_MEMORY**: the provider is out of memory
+///    - **OTHER**: other error
 typedef ::z_alloc_error_t AllocError;
 
-/**
- * Layouting errors
- *
- * Z_LAYOUT_ERROR_INCORRECT_LAYOUT_ARGS: layout arguments are incorrect
- * Z_LAYOUT_ERROR_PROVIDER_INCOMPATIBLE_LAYOUT: layout incompatible with provider
- */
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Layouting errors.
+///
+/// * Z_LAYOUT_ERROR_INCORRECT_LAYOUT_ARGS: layout arguments are incorrect
+/// * Z_LAYOUT_ERROR_PROVIDER_INCOMPATIBLE_LAYOUT: layout incompatible with provider
 typedef ::z_layout_error_t LayoutError;
 
-/// An AllocAlignment.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief An AllocAlignment.
 typedef ::z_alloc_alignment_t AllocAlignment;
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 class MemoryLayout : public Owned<::z_owned_memory_layout_t> {
     friend class PosixShmProvider;
     MemoryLayout(zenoh::detail::null_object_t) : Owned(nullptr) {}
@@ -74,7 +74,8 @@ class MemoryLayout : public Owned<::z_owned_memory_layout_t> {
     }
 };
 
-/// SHM chunk allocation result
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief SHM chunk allocation result
 class ChunkAllocResult : public Owned<::z_owned_chunk_alloc_result_t> {
     friend class CppShmProviderBackend;
 
@@ -90,10 +91,12 @@ class ChunkAllocResult : public Owned<::z_owned_chunk_alloc_result_t> {
     ChunkAllocResult(AllocError error) : Owned(nullptr) { ::z_chunk_alloc_result_new_error(&this->_0, error); }
 };
 
-/// SHM buffer allocation result
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief SHM buffer allocation result
 typedef std::variant<ZShmMut, AllocError> BufAllocResult;
 
-/// SHM buffer layouting and allocation result
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief SHM buffer layouting and allocation result
 typedef std::variant<ZShmMut, AllocError, LayoutError> BufLayoutAllocResult;
 
 }  // end of namespace zenoh

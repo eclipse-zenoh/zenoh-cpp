@@ -15,10 +15,12 @@
 
 namespace zenoh {
 
-/// A ChunkDescriptor
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A ChunkDescriptor.
 typedef z_chunk_descriptor_t ChunkDescriptor;
 
-/// An AllocatedChunk
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief An AllocatedChunk.
 typedef z_allocated_chunk_t AllocatedChunk;
 
 }  // end of namespace zenoh

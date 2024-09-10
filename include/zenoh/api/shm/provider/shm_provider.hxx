@@ -104,6 +104,7 @@ class ShmProvider : public Owned<::z_owned_shm_provider_t> {
     }
 };
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 class CppShmProvider : public ShmProvider {
     friend class AllocLayout;
 

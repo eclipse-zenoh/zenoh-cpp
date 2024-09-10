@@ -72,6 +72,8 @@ class Reply : public Owned<::z_owned_reply_t> {
     }
 
 #if defined(UNSTABLE)
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Get the id of the Zenoh instance that issued this reply.
     /// @return Zenoh instance id, or an empty optional if the id was not set.
     std::optional<Id> get_replier_id() const {

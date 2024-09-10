@@ -131,6 +131,8 @@ class Session : public Owned<::z_owned_session_t> {
     }
 
 #if defined UNSTABLE
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Get the unique identifier of the zenoh node associated to this ``Session``.
     /// @return the unique identifier ``Id``.
     Id get_zid() const { return interop::into_copyable_cpp_obj<Id>(::z_info_zid(interop::as_loaned_c_ptr(*this))); }
@@ -178,6 +180,8 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief  An optional encoding of the query payload and/or attachment.
         std::optional<Encoding> encoding = {};
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
         /// @brief The source info for the query.
         std::optional<SourceInfo> source_info = {};
 #endif
@@ -278,6 +282,8 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief Whether Zenoh will NOT wait to batch delete message with others to reduce the bandwith.
         bool is_express = false;
 #if defined(UNSTABLE)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
         /// @brief The delete operation reliability.
         Reliability reliability = Reliability::Z_RELIABILITY_BEST_EFFORT;
 #endif
@@ -320,6 +326,8 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief Whether Zenoh will NOT wait to batch this message with others to reduce the bandwith.
         bool is_express = false;
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
         /// @brief Allowed destination.
         Locality allowed_destination = ::zc_locality_default();
 #endif
@@ -328,10 +336,14 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief  An optional encoding of the message payload and/or attachment.
         std::optional<Encoding> encoding = {};
 #if defined(UNSTABLE)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
         /// @brief The put operation reliability.
         Reliability reliability = Reliability::Z_RELIABILITY_BEST_EFFORT;
 #endif
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
         /// @brief The source info of this message.
         std::optional<SourceInfo> source_info = {};
 #endif
@@ -529,10 +541,14 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
         bool is_express = false;
 #if defined(UNSTABLE)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
         /// @brief The publisher reliability.
         Reliability reliability = Reliability::Z_RELIABILITY_BEST_EFFORT;
 #endif
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
         /// @brief Allowed destination.
         Locality allowed_destination = ::zc_locality_default();
 #endif
@@ -574,6 +590,8 @@ class Session : public Owned<::z_owned_session_t> {
     }
 
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Fetches the Zenoh IDs of all connected routers.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
@@ -674,6 +692,8 @@ class Session : public Owned<::z_owned_session_t> {
 #endif
 
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Options to pass to ``Session::liveliness_declare_token``.
     struct LivelinessDeclarationOptions {
        protected:

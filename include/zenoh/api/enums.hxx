@@ -99,7 +99,8 @@ inline std::string_view whatami_as_str(WhatAmI whatami) {
 }
 
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
-/// The locality of samples to be received by subscribers or targeted by publishers.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief The locality of samples to be received by subscribers or targeted by publishers.
 ///
 /// Values:
 /// - **ZC_LOCALITY_ANY**:  Any.

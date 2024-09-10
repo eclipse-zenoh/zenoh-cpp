@@ -94,6 +94,8 @@ class Query : public Owned<::z_owned_query_t> {
         /// @brief The timestamp of this message.
         std::optional<Timestamp> timestamp = {};
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
         /// @brief The source info of this reply message.
         std::optional<SourceInfo> source_info = {};
 #endif
@@ -171,6 +173,8 @@ class Query : public Owned<::z_owned_query_t> {
         /// @brief the timestamp of this message.
         std::optional<Timestamp> timestamp = {};
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
         /// @brief The source info of this reply message.
         std::optional<SourceInfo> source_info = {};
 #endif

@@ -22,6 +22,7 @@
 
 namespace zenoh {
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An immutable SHM buffer
 class ZShm : public Owned<::z_owned_shm_t> {
     friend class ZShmMut;

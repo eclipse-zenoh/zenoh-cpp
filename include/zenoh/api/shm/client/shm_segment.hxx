@@ -16,6 +16,7 @@
 
 namespace zenoh {
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An interface for accessing custom SHM segments
 class CppShmSegment {
    public:

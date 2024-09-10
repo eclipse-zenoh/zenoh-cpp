@@ -44,6 +44,8 @@ class Publisher : public Owned<::z_owned_publisher_t> {
         /// @brief the timestamp of this message.
         std::optional<Timestamp> timestamp = {};
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
         /// @brief The source info of this message.
         std::optional<SourceInfo> source_info = {};
 #endif
@@ -107,6 +109,8 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     }
 #endif
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Get the id of the publisher.
     /// @return id of this publisher.
     EntityGlobalId get_id() const {

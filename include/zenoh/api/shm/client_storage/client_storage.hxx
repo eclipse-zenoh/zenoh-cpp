@@ -22,6 +22,7 @@
 
 namespace zenoh {
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A storage for SHM clients. Session constructed with instance of this type
 /// gets capabilities to read SHM buffers for Protocols added to this instance.
 class ShmClientStorage : public Owned<::z_owned_shm_client_storage_t> {
