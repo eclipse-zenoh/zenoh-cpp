@@ -91,6 +91,8 @@ class Sample : public Owned<::z_owned_sample_t> {
     /// @return ``CongestionControl`` value.
     bool get_express() const { return ::z_sample_express(interop::as_loaned_c_ptr(*this)); }
 #if defined(ZENOHCXX) && defined(UNSTABLE)
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Get the source info of this sample.
     const SourceInfo& get_source_info() const {
         return interop::as_owned_cpp_ref<SourceInfo>(::z_sample_source_info(interop::as_loaned_c_ptr(*this)));
@@ -98,6 +100,8 @@ class Sample : public Owned<::z_owned_sample_t> {
 #endif
 
 #if defined(UNSTABLE)
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Get the reliability this sample was sent with.
     /// @return ``Reliability`` value.
     Reliability reliability() const { return ::z_sample_reliability(interop::as_loaned_c_ptr(*this)); }

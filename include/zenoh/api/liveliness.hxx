@@ -20,7 +20,8 @@ namespace zenoh {
 
 class Session;
 
-/// @brief // A liveliness token that can be used to provide the network with information about connectivity to its
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A liveliness token that can be used to provide the network with information about connectivity to its
 /// declarer.
 ///
 /// When constructed, a PUT sample will be received by liveliness subscribers on intersecting key expressions.

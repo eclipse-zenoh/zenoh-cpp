@@ -22,6 +22,7 @@
 #include "interop.hxx"
 
 namespace zenoh {
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A representation a Zenoh ID.
 ///
 /// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
@@ -40,6 +41,7 @@ class Id : public Copyable<::z_id_t> {
     const std::array<uint8_t, 16>& bytes() const { return *reinterpret_cast<const std::array<uint8_t, 16>*>(&_0.id); }
 };
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Print ``Id`` in the hex format.
 inline std::ostream& operator<<(std::ostream& os, const Id& id) {
     auto id_ptr = reinterpret_cast<const ::z_id_t*>(&id)->id;

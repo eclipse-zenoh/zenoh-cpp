@@ -46,6 +46,7 @@ inline void _z_alloc_layout_async_interface_drop_fn(void* context) {
 }
 }  // namespace shm::provider::closures
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 class AllocLayout : public Owned<::z_owned_alloc_layout_t> {
    public:
     /// @name Constructors

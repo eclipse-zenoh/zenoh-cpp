@@ -22,6 +22,7 @@
 
 namespace zenoh {
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An interface for making custom SHM clients
 class CppShmClient {
    public:
@@ -46,6 +47,7 @@ inline void _z_cpp_shm_client_drop_fn(void* context) { delete static_cast<CppShm
 }
 }  // namespace shm::client::closures
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An SHM client for reading shared memory buffers
 class ShmClient : public Owned<::z_owned_shm_client_t> {
     friend class ShmClientStorage;
