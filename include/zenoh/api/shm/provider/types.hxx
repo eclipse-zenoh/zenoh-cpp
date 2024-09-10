@@ -43,7 +43,7 @@ typedef ::z_alloc_alignment_t AllocAlignment;
 
 class MemoryLayout : public Owned<::z_owned_memory_layout_t> {
     friend class PosixShmProvider;
-    MemoryLayout(zenoh::detail::null_object_t) : Owned(nullptr){};
+    MemoryLayout(zenoh::detail::null_object_t) : Owned(nullptr) {};
     friend struct interop::detail::Converter;
 
    public:
@@ -62,14 +62,14 @@ class MemoryLayout : public Owned<::z_owned_memory_layout_t> {
     size_t size() const {
         size_t size;
         AllocAlignment alignment;
-        z_memory_layout_get_data(&size, &alignment, interop::as_loaned_c_ptr(*this));
+        z_memory_layout_get_data(interop::as_loaned_c_ptr(*this), &size, &alignment);
         return size;
     }
 
     AllocAlignment alignment() const {
         size_t size;
         AllocAlignment alignment;
-        z_memory_layout_get_data(&size, &alignment, interop::as_loaned_c_ptr(*this));
+        z_memory_layout_get_data(interop::as_loaned_c_ptr(*this), &size, &alignment);
         return alignment;
     }
 };

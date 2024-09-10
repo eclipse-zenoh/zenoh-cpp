@@ -71,7 +71,7 @@ class ShmClientStorage : public Owned<::z_owned_shm_client_storage_t> {
         // fill list with clients
         for (std::move_iterator<I> it = begin; it != end; ++it) {
             __ZENOH_RESULT_CHECK(
-                zc_shm_client_list_add_client(it->first, z_move(it->second._0), interop::as_loaned_c_ptr(list)), err,
+                zc_shm_client_list_add_client(interop::as_loaned_c_ptr(list), it->first, z_move(it->second._0)), err,
                 "Failed to form list of SHM clients");
         }
 
