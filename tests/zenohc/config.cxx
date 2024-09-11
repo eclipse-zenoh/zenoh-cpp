@@ -19,16 +19,13 @@ using namespace zenoh;
 #undef NDEBUG
 #include <assert.h>
 
-void test_config_client() {
+void test_config_insert() {
     std::vector<std::string> peers = {"tcp/192.168.0.1", "tcp/10.0.0.1"};
-    auto config = Config::client(peers);
+    auto config = Config::create_default();
+    config.insert_json("mode", "\"client\"");
+    config.insert_json("connect/endpoints", "[\"tcp/192.168.0.1\", \"tcp/10.0.0.1\"]");
     assert(config.get("mode") == "\"client\"");
     assert(config.get("connect/endpoints") == "[\"tcp/192.168.0.1\",\"tcp/10.0.0.1\"]");
-}
-
-void test_config_peer() {
-    auto config = Config::peer();
-    assert(config.get("mode") == "\"peer\"");
 }
 
 void test_config_to_string() {
@@ -40,8 +37,7 @@ void test_config_to_string() {
 
 int main(int argc, char** argv) {
     init_logging();
-    test_config_client();
-    test_config_peer();
+    test_config_insert();
     test_config_to_string();
     // TODO: add more tests
 };
