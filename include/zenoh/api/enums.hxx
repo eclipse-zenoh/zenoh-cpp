@@ -42,7 +42,9 @@ typedef ::z_sample_kind_t SampleKind;
 ///           It optimizes bandwidth.
 typedef ::z_consolidation_mode_t ConsolidationMode;
 
-/// Publisher reliability values.
+#if defined(UNSTABLE)
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Publisher reliability values.
 ///
 /// Values:
 ///  - **Z_RELIABILITY_BEST_EFFORT**: Defines reliability as "best effort"
@@ -51,6 +53,7 @@ typedef ::z_consolidation_mode_t ConsolidationMode;
 /// It is rather used as a marker on the wire and it may be used to select the best link available (e.g. TCP for
 /// reliable data and UDP for best effort data).
 typedef ::z_reliability_t Reliability;
+#endif
 
 ///  Congestion control values.
 ///
