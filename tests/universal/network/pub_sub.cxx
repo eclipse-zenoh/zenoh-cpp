@@ -77,6 +77,12 @@ void pub_sub(Talloc& alloc) {
     assert(received_messages[0].second == "first");
     assert(received_messages[1].first == "zenoh/test");
     assert(received_messages[1].second == "second");
+#ifdef ZENOHCXX_ZENOHC  // TODO: remove once pico supports background declarations
+    /// check that drop does not undeclare
+    assert(!subscriber_dropped);
+    std::move(session2).close();
+    std::this_thread::sleep_for(1s);
+#endif
     assert(subscriber_dropped);
 }
 

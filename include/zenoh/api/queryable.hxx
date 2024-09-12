@@ -27,6 +27,15 @@ class QueryableBase : public Owned<::z_owned_queryable_t> {
     QueryableBase(zenoh::detail::null_object_t) : Owned(nullptr){};
     QueryableBase(::z_owned_queryable_t* q) : Owned(q){};
 
+   public:
+    /// @brief Undeclares queryable.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void undeclare(ZResult* err = nullptr) && {
+        __ZENOH_RESULT_CHECK(::z_undeclare_queryable(interop::as_moved_c_ptr(*this)), err,
+                             "Failed to undeclare queryable");
+    }
+
     friend class zenoh::Session;
 };
 }  // namespace detail
@@ -40,13 +49,15 @@ class Queryable<void> : public detail::QueryableBase {
 
    public:
     using QueryableBase::QueryableBase;
-
+    using QueryableBase::undeclare;
     friend class Session;
 };
 
 /// A Zenoh queryable. Constructed by ``Session::declare_queryable`` method.
 /// @tparam Handler Streaming handler exposing data. If `void`, no handler access is provided and instead data is being
-/// processed inside the callback.
+/// processed inside the callback. Dropping handler-less queryable does not disable the callback. The corresponding
+/// messages are still received and processed unti the corresponding session is destroyed or closed. If callback needs
+/// to be disabled undeclare method should be called instead.
 template <class Handler>
 class Queryable : public detail::QueryableBase {
     Handler _handler;
@@ -67,7 +78,13 @@ class Queryable : public detail::QueryableBase {
     /// @brief Return handler to queryable data stream.
     const Handler& handler() const { return _handler; };
 
+    using QueryableBase::undeclare;
     friend class Session;
+
+    ~Queryable() {
+        ZResult err;
+        std::move(*this).undeclare(&err);
+    }
 };
 
 namespace interop {
