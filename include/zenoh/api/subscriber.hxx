@@ -29,13 +29,17 @@ class SubscriberBase : public Owned<::z_owned_subscriber_t> {
     SubscriberBase(::z_owned_subscriber_t* s) : Owned(s){};
 
    public:
-#ifdef ZENOHCXX_ZENOHC
     /// @brief Get the key expression of the subscriber
-    /// @note zenoh-c only.
     const KeyExpr& get_keyexpr() const {
         return interop::as_owned_cpp_ref<KeyExpr>(::z_subscriber_keyexpr(interop::as_loaned_c_ptr(*this)));
     }
-#endif
+    /// @brief Undeclares subscriber.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void undeclare(ZResult* err = nullptr) && {
+        __ZENOH_RESULT_CHECK(::z_undeclare_subscriber(interop::as_moved_c_ptr(*this)), err,
+                             "Failed to undeclare subscriber");
+    }
     friend class zenoh::Session;
 };
 
@@ -48,12 +52,18 @@ class Subscriber<void> : public detail::SubscriberBase {
    protected:
     using SubscriberBase::SubscriberBase;
     friend class Session;
+
+   public:
+    using SubscriberBase::get_keyexpr;
+    using SubscriberBase::undeclare;
 };
 
 /// A Zenoh subscriber. Destroying subscriber cancels the subscription.
 /// Constructed by ``Session::declare_subscriber`` method.
 /// @tparam Handler Streaming handler exposing data. If `void`, no handler access is provided and instead data is being
-/// processed inside the callback.
+/// processed inside the callback. Dropping handler-less subscriber does not disable the callback. The corresponding
+/// messages are still received and processed unti the corresponding session is destroyed or closed. If callback needs
+/// to be disabled undeclare method should be called instead.
 template <class Handler>
 class Subscriber : public detail::SubscriberBase {
     Handler _handler;
@@ -71,13 +81,17 @@ class Subscriber : public detail::SubscriberBase {
         : SubscriberBase(interop::as_owned_c_ptr(s)), _handler(std::move(handler)) {}
 
     /// @name Methods
-
-#ifdef ZENOHCXX_ZENOHC
     using SubscriberBase::get_keyexpr;
-#endif
+    using SubscriberBase::undeclare;
+
     /// @brief Return the handler to subscriber data stream.
     const Handler& handler() const { return _handler; };
     friend class Session;
+
+    ~Subscriber() {
+        ZResult err;
+        std::move(*this).undeclare(&err);
+    }
 };
 
 namespace interop {

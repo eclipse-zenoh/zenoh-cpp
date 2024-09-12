@@ -101,13 +101,10 @@ class Publisher : public Owned<::z_owned_publisher_t> {
                              "Failed to perform delete_resource operation");
     }
 
-#ifdef ZENOHCXX_ZENOHC
     /// @brief Get the key expression of the publisher.
-    /// @note zenoh-c only.
     const KeyExpr& get_keyexpr() const {
         return interop::as_owned_cpp_ref<KeyExpr>(::z_publisher_keyexpr(interop::as_loaned_c_ptr(*this)));
     }
-#endif
 #if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.

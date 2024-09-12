@@ -16,6 +16,7 @@
 #include <array>
 #include <iomanip>
 #include <iostream>
+#include <string_view>
 
 #include "../zenohc.hxx"
 #include "base.hxx"
@@ -44,9 +45,10 @@ class Id : public Copyable<::z_id_t> {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Print ``Id`` in the hex format.
 inline std::ostream& operator<<(std::ostream& os, const Id& id) {
-    auto id_ptr = reinterpret_cast<const ::z_id_t*>(&id)->id;
-    for (size_t i = 0; id_ptr[i] != 0 && i < 16; i++)
-        os << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(id_ptr[i]);
+    ::z_owned_string_t s;
+    ::z_id_to_string(interop::as_copyable_c_ptr(id), &s);
+    os << std::string_view(::z_string_data(::z_loan(s)), ::z_string_len(::z_loan(s)));
+    ::z_drop(::z_move(s));
     return os;
 }
 }  // namespace zenoh

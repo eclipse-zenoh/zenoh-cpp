@@ -94,6 +94,12 @@ void queryable_get() {
     qd = {"zenoh/test/1", "err", 3};
     assert(queries[2] == qd);
 
+#ifdef ZENOHCXX_ZENOHC  // TODO: remove once pico supports background declarations
+    /// check that drop does not undeclare
+    assert(!queryable_dropped);
+    std::move(session1).close();
+    std::this_thread::sleep_for(1s);
+#endif
     assert(queryable_dropped);
 
     assert(replies.size() == 2);

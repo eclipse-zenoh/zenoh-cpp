@@ -57,6 +57,12 @@ class Session : public Owned<::z_owned_session_t> {
         static SessionOptions create_default() { return {}; }
     };
 
+    /// @brief Options to be passed when closing a ``Session``.
+    struct SessionCloseOptions {
+        /// @name Fields
+        static SessionCloseOptions create_default() { return {}; }
+    };
+
     /// @name Constructors
 
     /// @brief Create a new Session.
@@ -66,7 +72,8 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     Session(Config&& config, SessionOptions&& options = SessionOptions::create_default(), ZResult* err = nullptr)
         : Owned(nullptr) {
-        __ZENOH_RESULT_CHECK(::z_open(&this->_0, interop::as_moved_c_ptr(config)), err, "Failed to open session");
+        __ZENOH_RESULT_CHECK(::z_open(&this->_0, interop::as_moved_c_ptr(config), nullptr), err,
+                             "Failed to open session");
 #ifdef ZENOHCXX_ZENOHPICO
         if (err != nullptr && *err != Z_OK) return;
         if (options.start_background_tasks) {
@@ -76,7 +83,7 @@ class Session : public Owned<::z_owned_session_t> {
                 this->start_lease_task(&err_inner);
             }
             if (err_inner == Z_OK) return;
-            ::z_close(::z_move(this->_0));
+            ::z_close(::z_move(this->_0), nullptr);
             __ZENOH_RESULT_CHECK(err_inner, err, "Failed to start background tasks");
         }
 #else
@@ -88,9 +95,13 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Create a new Session with custom SHM client set.
     /// @param config Zenoh session ``Config``.
     /// @param shm_storage Storage with custom SHM clients.
+    /// @param options Options to pass to session creation operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    Session(Config&& config, const ShmClientStorage& shm_storage, ZResult* err = nullptr) : Owned(nullptr) {
+    Session(Config&& config, const ShmClientStorage& shm_storage,
+            SessionOptions&& options = SessionOptions::create_default(), ZResult* err = nullptr)
+        : Owned(nullptr) {
+        (void)options;
         __ZENOH_RESULT_CHECK(::z_open_with_custom_shm_clients(&this->_0, interop::as_moved_c_ptr(config),
                                                               interop::as_loaned_c_ptr(shm_storage)),
                              err, "Failed to open session");
@@ -112,24 +123,17 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief A factory method equivalent to a ``Session`` constructor for custom SHM clients list.
     /// @param config Zenoh session ``Config``.
     /// @param shm_storage Storage with custom SHM clients.
+    /// @param options Options to pass to session creation operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return ``Session`` object. In case of failure it will be return in invalid state.
-    static Session open(Config&& config, const ShmClientStorage& shm_storage, ZResult* err = nullptr) {
-        return Session(std::move(config), shm_storage, err);
+    static Session open(Config&& config, const ShmClientStorage& shm_storage,
+                        SessionOptions&& options = SessionOptions::create_default(), ZResult* err = nullptr) {
+        return Session(std::move(config), shm_storage, std::move(options), err);
     }
 #endif
 
     /// @name Methods
-
-    /// @brief Create a shallow copy of the session.
-    /// @return a new ``Session`` instance.
-    Session clone() const {
-        Session s(zenoh::detail::null_object);
-        ::z_session_clone(&s._0, interop::as_loaned_c_ptr(*this));
-        return s;
-    }
-
 #if defined UNSTABLE
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
@@ -878,6 +882,16 @@ class Session : public Owned<::z_owned_session_t> {
         ::z_timestamp_t t;
         __ZENOH_RESULT_CHECK(z_timestamp_new(&t, interop::as_loaned_c_ptr(*this)), err, "Failed to create timestamp");
         return interop::into_copyable_cpp_obj<Timestamp>(t);
+    }
+
+    /// @brief Close and invalidate the session. This also undeclares all non-undeclared Subscriber and Queryable
+    /// callbacks.
+    /// @param options options to pass to close operation.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void close(SessionCloseOptions&& options = SessionCloseOptions::create_default(), ZResult* err = nullptr) && {
+        (void)options;
+        __ZENOH_RESULT_CHECK(::z_close(interop::as_moved_c_ptr(*this), nullptr), err, "Failed to close the session");
     }
 };
 }  // namespace zenoh
