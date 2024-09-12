@@ -147,10 +147,9 @@ auto& as_owned_cpp_ref(LoanedType* loaned_c_obj) {
 
 /// @brief Get C++ representation of owned Zenoh-c struct.
 template <class T, class OwnedType>
-auto& as_owned_cpp_ref(OwnedType* owned_c_obj) {
+std::enable_if_t<std::is_base_of_v<zenoh::Owned<OwnedType>, T>, T&> as_owned_cpp_ref(OwnedType* owned_c_obj) {
     static_assert(sizeof(T) == sizeof(OwnedType) && alignof(T) == alignof(OwnedType),
                   "Owned and Target classes must have the same layout");
-    static_assert(std::is_base_of_v<zenoh::Owned<OwnedType>, T>, "Target class should be derived from an owned class");
     zenoh::Owned<OwnedType>* o_cpp = reinterpret_cast<zenoh::Owned<OwnedType>*>(owned_c_obj);
     return *reinterpret_cast<T*>(o_cpp);
 }
