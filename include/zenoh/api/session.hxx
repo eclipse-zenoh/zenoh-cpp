@@ -733,10 +733,9 @@ class Session : public Owned<::z_owned_session_t> {
 
     /// @brief Options to pass to ``Session::liveliness_declare_subscriber``.
     struct LivelinessSubscriberOptions {
-       protected:
-        uint8_t _dummy = 0;
-
        public:
+        bool history = false;
+
         static LivelinessSubscriberOptions create_default() { return {}; }
     };
 
@@ -768,7 +767,7 @@ class Session : public Owned<::z_owned_session_t> {
         ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
         ::zc_liveliness_subscriber_options_t opts;
         zc_liveliness_subscriber_options_default(&opts);
-        (void)options;
+        opts.history = options.history;
         Subscriber<void> s(zenoh::detail::null_object);
         ZResult res =
             ::zc_liveliness_declare_subscriber(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
@@ -794,7 +793,7 @@ class Session : public Owned<::z_owned_session_t> {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Sample>();
         ::zc_liveliness_subscriber_options_t opts;
         zc_liveliness_subscriber_options_default(&opts);
-        (void)options;
+        opts.history = options.history;
         Subscriber<void> s(zenoh::detail::null_object);
         ZResult res = ::zc_liveliness_declare_subscriber(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
                                                          interop::as_loaned_c_ptr(key_expr),
