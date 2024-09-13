@@ -17,12 +17,24 @@
 namespace zenoh {
 
 #ifdef ZENOHCXX_ZENOHC
-/// @brief Enable logging.
+/// @brief Initializes the zenoh runtime logger, using rust environment settings.
+/// E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
+/// Note that if the environment variable is not set, then logging will not be enabled.
+/// See https://docs.rs/env_logger/latest/env_logger/index.html for accepted filter format.
+/// @note zenoh-c only.
+inline void try_init_log_from_env() { ::zc_try_init_log_from_env(); }
+
+/// @brief Initializes the zenoh runtime logger, using rust environment settings or the provided fallback filter.
+/// E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
 ///
-/// User may set environment variable RUST_LOG to values *debug* | *info* | *warn* | *error* to show diagnostic output.
+/// Note that if the environment variable is not set, then fallback filter will be used instead.
+/// See https://docs.rs/env_logger/latest/env_logger/index.html for accepted filter format.
 ///
-/// @note zenoh-c only
-inline void init_logging() { ::zc_init_logging(); }
+/// @param fallback_filter: The fallback filter if the `RUST_LOG` environment variable is not set.
+/// @note zenoh-c only.
+inline void init_log_from_env_or(const std::string& fallback_filter) {
+    ::zc_init_log_from_env_or(fallback_filter.c_str());
+}
 #endif
 
 }  // namespace zenoh

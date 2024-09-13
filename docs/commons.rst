@@ -79,4 +79,5 @@ Sample
 Logging
 -------
 
-.. doxygenfunction:: init_logging
+.. doxygenfunction:: try_init_log_from_env
+.. doxygenfunction:: init_log_from_env_or

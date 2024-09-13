@@ -36,7 +36,7 @@ void test_config_to_string() {
 }
 
 int main(int argc, char** argv) {
-    init_logging();
+    init_log_from_env_or("error");
     test_config_insert();
     test_config_to_string();
     // TODO: add more tests
