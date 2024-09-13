@@ -29,16 +29,16 @@ namespace zenoh::detail::closures {
 extern "C" {
 inline void _zenoh_on_drop(void* context) { IDroppable::delete_from_context(context); }
 
-inline void _zenoh_on_reply_call(const ::z_loaned_reply_t* reply, void* context) {
-    IClosure<void, const Reply&>::call_from_context(context, interop::as_owned_cpp_ref<Reply>(reply));
+inline void _zenoh_on_reply_call(::z_loaned_reply_t* reply, void* context) {
+    IClosure<void, Reply&>::call_from_context(context, interop::as_owned_cpp_ref<Reply>(reply));
 }
 
-inline void _zenoh_on_sample_call(const ::z_loaned_sample_t* sample, void* context) {
-    IClosure<void, const Sample&>::call_from_context(context, interop::as_owned_cpp_ref<Sample>(sample));
+inline void _zenoh_on_sample_call(::z_loaned_sample_t* sample, void* context) {
+    IClosure<void, Sample&>::call_from_context(context, interop::as_owned_cpp_ref<Sample>(sample));
 }
 
-inline void _zenoh_on_query_call(const ::z_loaned_query_t* query, void* context) {
-    IClosure<void, const Query&>::call_from_context(context, interop::as_owned_cpp_ref<Query>(query));
+inline void _zenoh_on_query_call(::z_loaned_query_t* query, void* context) {
+    IClosure<void, Query&>::call_from_context(context, interop::as_owned_cpp_ref<Query>(query));
 }
 
 #if defined UNSTABLE
@@ -47,8 +47,8 @@ inline void _zenoh_on_id_call(const ::z_id_t* z_id, void* context) {
 }
 #endif
 
-inline void _zenoh_on_hello_call(const ::z_loaned_hello_t* hello, void* context) {
-    IClosure<void, const Hello&>::call_from_context(context, interop::as_owned_cpp_ref<Hello>(hello));
+inline void _zenoh_on_hello_call(::z_loaned_hello_t* hello, void* context) {
+    IClosure<void, Hello&>::call_from_context(context, interop::as_owned_cpp_ref<Hello>(hello));
 }
 }
 }  // namespace zenoh::detail::closures

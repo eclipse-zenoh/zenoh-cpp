@@ -33,7 +33,7 @@ template <class C, class D>
 void scout(Config&& config, C&& on_hello, D&& on_drop, ScoutOptions&& options = ScoutOptions::create_default(),
            ZResult* err = nullptr) {
     static_assert(std::is_invocable_r<void, C, const Hello&>::value,
-                  "on_hello should be callable with the following signature: void on_hello(const zenoh::Hello& hello)");
+                  "on_hello should be callable with the following signature: void on_hello(zenoh::Hello& hello)");
     static_assert(std::is_invocable_r<void, D>::value,
                   "on_drop should be callable with the following signature: void on_drop()");
     ::z_owned_closure_hello_t c_closure;

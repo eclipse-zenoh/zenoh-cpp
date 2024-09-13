@@ -210,9 +210,8 @@ class Session : public Owned<::z_owned_session_t> {
     template <class C, class D>
     void get(const KeyExpr& key_expr, const std::string& parameters, C&& on_reply, D&& on_drop,
              GetOptions&& options = GetOptions::create_default(), ZResult* err = nullptr) const {
-        static_assert(
-            std::is_invocable_r<void, C, const Reply&>::value,
-            "on_reply should be callable with the following signature: void on_reply(const zenoh::Reply& reply)");
+        static_assert(std::is_invocable_r<void, C, const Reply&>::value,
+                      "on_reply should be callable with the following signature: void on_reply(zenoh::Reply& reply)");
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_reply_t c_closure;
@@ -412,9 +411,8 @@ class Session : public Owned<::z_owned_session_t> {
     Queryable<void> declare_queryable(const KeyExpr& key_expr, C&& on_query, D&& on_drop,
                                       QueryableOptions&& options = QueryableOptions::create_default(),
                                       ZResult* err = nullptr) const {
-        static_assert(
-            std::is_invocable_r<void, C, const Query&>::value,
-            "on_query should be callable with the following signature: void on_query(const zenoh::Query& query)");
+        static_assert(std::is_invocable_r<void, C, const Query&>::value,
+                      "on_query should be callable with the following signature: void on_query(zenoh::Query& query)");
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_query_t c_closure;
@@ -487,7 +485,7 @@ class Session : public Owned<::z_owned_session_t> {
                                         ZResult* err = nullptr) const {
         static_assert(
             std::is_invocable_r<void, C, const Sample&>::value,
-            "on_sample should be callable with the following signature: void on_sample(const zenoh::Sample& sample)");
+            "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_sample_t c_closure;
@@ -756,7 +754,7 @@ class Session : public Owned<::z_owned_session_t> {
         ZResult* err = nullptr) const {
         static_assert(
             std::is_invocable_r<void, C, const Sample&>::value,
-            "on_sample should be callable with the following signature: void on_sample(const zenoh::Sample& sample)");
+            "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_sample_t c_closure;
@@ -828,9 +826,8 @@ class Session : public Owned<::z_owned_session_t> {
     void liveliness_get(const KeyExpr& key_expr, C&& on_reply, D&& on_drop,
                         LivelinessGetOptions&& options = LivelinessGetOptions::create_default(),
                         ZResult* err = nullptr) const {
-        static_assert(
-            std::is_invocable_r<void, C, const Reply&>::value,
-            "on_reply should be callable with the following signature: void on_reply(const zenoh::Reply& reply)");
+        static_assert(std::is_invocable_r<void, C, const Reply&>::value,
+                      "on_reply should be callable with the following signature: void on_reply(zenoh::Reply& reply)");
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_reply_t c_closure;
