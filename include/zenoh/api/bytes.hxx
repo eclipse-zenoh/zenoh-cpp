@@ -257,8 +257,8 @@ class Bytes : public Owned<::z_owned_bytes_t> {
 
     /// @brief Create data writer.
     ///
-    /// It is the user responsibility to ensure that there is at most one active writer at
-    /// a given moment of time for a given ``Bytes`` instance.
+    /// @note Creating another writer, for the same ``Bytes`` instance, while previous one is still in use is undefined
+    /// behaviour.
     /// @return writer instance.
     Writer writer() {
         return interop::into_copyable_cpp_obj<Writer>(::z_bytes_get_writer(interop::as_loaned_c_ptr(*this)));
