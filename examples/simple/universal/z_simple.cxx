@@ -162,6 +162,9 @@ class CustomSubscriber {
 
 int main(int, char**) {
     try {
+#ifdef ZENOHCXX_ZENOHC
+        init_log_from_env_or("error");
+#endif
         Config config = Config::create_default();
         auto session = Session::open(std::move(config));
 

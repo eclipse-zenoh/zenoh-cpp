@@ -147,6 +147,9 @@ struct args_t parse_args(int argc, char** argv) {
 
 int main(int argc, char** argv) {
     try {
+#ifdef ZENOHCXX_ZENOHC
+        init_log_from_env_or("error");
+#endif
         return _main(argc, argv);
     } catch (ZException e) {
         std::cout << "Received an error :" << e.what() << "\n";
