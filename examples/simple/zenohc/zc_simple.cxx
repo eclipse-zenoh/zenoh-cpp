@@ -18,6 +18,7 @@
 using namespace zenoh;
 
 int main(int, char **) {
+    init_log_from_env_or("error");
     Config config = Config::create_default();
     auto session = Session::open(std::move(config));
     session.put("demo/example/simple", "Simple!");

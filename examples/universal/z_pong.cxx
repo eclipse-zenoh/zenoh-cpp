@@ -36,6 +36,9 @@ int _main(int, char **) {
 
 int main(int argc, char **argv) {
     try {
+#ifdef ZENOHCXX_ZENOHC
+        init_log_from_env_or("error");
+#endif
         _main(argc, argv);
     } catch (ZException e) {
         std::cout << "Received an error :" << e.what() << "\n";
