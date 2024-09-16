@@ -28,6 +28,15 @@ status_print(project_version)
 
 declare_cache_var(ZENOHCXX_ZENOHC ON BOOL "Build for Zenoh-c target")
 declare_cache_var(ZENOHCXX_ZENOHPICO OFF BOOL "Build for Zenoh-pico target")
+# when project is open in vscode include git submodules "zenoh-c" and "zenoh-pico" directly
+# as "add_subdirectory" without using "find_package". This is convenient to immediately
+# build project in vscode using cmake-tools extension.
+declare_cache_var_true_if_vscode(ZENOHCXX_INCLUDE_GIT_SUBMODULES "Include git submodules")
+if (ZENOHCXX_INCLUDE_GIT_SUBMODULES)
+	message(STATUS "+----------------------------------------------------------+")
+	message(STATUS "| Building with zenoh-c and zenoh-pico from git submodules |")
+	message(STATUS "+----------------------------------------------------------+")
+endif()
 
 set_default_build_type(Release)
 
@@ -36,7 +45,11 @@ add_library(zenohcxx INTERFACE)
 target_include_directories(zenohcxx INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 if(ZENOHCXX_ZENOHPICO) 
-	find_package(zenohpico REQUIRED)
+	if (ZENOHCXX_INCLUDE_GIT_SUBMODULES)
+		add_subdirectory(zenoh-pico)
+	else()
+		find_package(zenohpico)
+	endif()
 	if(TARGET zenohpico::lib)
 		message(STATUS "defined lib target zenohcxx::zenohpico for zenohpico::lib")
 		add_library(zenohcxx_zenohpico INTERFACE)
@@ -51,7 +64,11 @@ if(ZENOHCXX_ZENOHPICO)
 endif()
 
 if(ZENOHCXX_ZENOHC)
-	find_package(zenohc REQUIRED)
+	if (ZENOHCXX_INCLUDE_GIT_SUBMODULES)
+		add_subdirectory(zenoh-c)
+	else()
+		find_package(zenohc)
+	endif()
 	if(TARGET zenohc::lib)
 		message(STATUS "defined lib target zenohcxx::zenohc::lib for zenohc::lib")
 		add_library(zenohcxx_zenohc INTERFACE)

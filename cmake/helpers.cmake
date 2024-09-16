@@ -39,7 +39,9 @@ endfunction()
 # loaded as root project into vscode
 #
 function(declare_cache_var_true_if_vscode var docstring)
-    if(CMAKE_CURRENT_BINARY_DIR STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/build")
+    if((CMAKE_CURRENT_BINARY_DIR STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/build") AND
+       ("$ENV{TERM_PROGRAM}" STREQUAL "vscode")
+    )
         set(in_vscode TRUE)
     else()
         set(in_vscode FALSE)
