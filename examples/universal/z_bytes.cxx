@@ -113,11 +113,65 @@ int _main(int argc, char **argv) {
 
     // HashMap
     {
-        const std::unordered_map<size_t, std::string> input = {{0, "abc"}, {1, "def"}};
+        const std::unordered_map<uint64_t, std::string> input = {{0, "abc"}, {1, "def"}};
         const auto payload = Bytes::serialize(input);
-        const auto output = payload.deserialize<std::unordered_map<size_t, std::string>>();
+        const auto output = payload.deserialize<std::unordered_map<uint64_t, std::string>>();
         assert(input == output);
     }
+
+    /*
+    // JSON
+    let data = r#"
+    {
+        "name": "John Doe",
+        "age": 43,
+        "phones": [
+            "+44 1234567",
+            "+44 2345678"
+        ]
+    }"#;
+    let input: serde_json::Value = serde_json::from_str(data).unwrap();
+    let payload = ZBytes::try_serialize(input.clone()).unwrap();
+    let output: serde_json::Value = payload.deserialize().unwrap();
+    assert_eq!(input, output);
+    // Corresponding encoding to be used in operations like `.put()`, `.reply()`, etc.
+    // let encoding = Encoding::APPLICATION_JSON;
+
+    // YAML
+    let data = r#"
+        name: "John Doe"
+        age: 43
+        phones:
+          - "+44 1234567"
+          - "+44 2345678"
+    "#;
+    let input: serde_yaml::Value = serde_yaml::from_str(data).unwrap();
+    let payload = ZBytes::try_serialize(input.clone()).unwrap();
+    let output: serde_yaml::Value = payload.deserialize().unwrap();
+    assert_eq!(input, output);
+    // Corresponding encoding to be used in operations like `.put()`, `.reply()`, etc.
+    // let encoding = Encoding::APPLICATION_YAML;
+
+    // Protobuf
+    use prost::Message;
+    #[derive(Message, Eq, PartialEq)]
+    struct EntityInfo {
+        #[prost(uint32)]
+        id: u32,
+        #[prost(string)]
+        name: String,
+    }
+    let input = EntityInfo {
+        id: 1234,
+        name: String::from("John Doe"),
+    };
+    let payload = ZBytes::from(input.encode_to_vec());
+    let output =
+        EntityInfo::decode(Cursor::new(payload.deserialize::<Cow<[u8]>>().unwrap())).unwrap();
+    assert_eq!(input, output);
+    // Corresponding encoding to be used in operations like `.put()`, `.reply()`, etc.
+    // let encoding = Encoding::APPLICATION_PROTOBUF;
+    */
 
     return 0;
 }
