@@ -50,7 +50,7 @@ class Hello : public Owned<::z_owned_hello_t> {
         ::z_hello_locators(interop::as_loaned_c_ptr(*this), &out);
         auto out_loaned = ::z_loan(out);
 #else
-        auto out_loaned = ::z_hello_locators(interop::as_loaned_c_ptr(*this));
+        auto out_loaned = ::zp_hello_locators(interop::as_loaned_c_ptr(*this));
 #endif
         std::vector<std::string_view> locators(::z_string_array_len(out_loaned));
         for (size_t i = 0; i < ::z_string_array_len(out_loaned); i++) {

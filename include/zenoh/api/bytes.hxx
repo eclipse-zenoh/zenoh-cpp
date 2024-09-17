@@ -53,6 +53,25 @@ inline void _zenoh_drop_with_context(void* data, void* context) {
 
 }  // namespace detail::closures
 
+struct Slice {
+    const uint8_t* data;
+    size_t len;
+};
+
+inline auto make_slice(const uint8_t* data, size_t len) { return Slice{data, len}; }
+
+template <class Deleter>
+struct OwnedSlice {
+    uint8_t* data;
+    size_t len;
+    Deleter d;
+};
+
+template <class Deleter>
+auto make_owned_slice(uint8_t* data, size_t len, Deleter&& d) {
+    return OwnedSlice<std::remove_reference_t<Deleter>>{data, len, std::forward<Deleter>(d)};
+}
+
 class ZenohCodec;
 
 /// @brief A Zenoh serialized data representation.
@@ -151,6 +170,15 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     /// @brief Get iterator to multi-element data serialized previously using ``Bytes::serialize_from_iter``.
     /// @return iterator over multiple elements of data.
     Iterator iter() const;
+
+    class SliceIterator;
+
+    /// @brief Returns an iterator on raw bytes slices.
+    /// Zenoh may store data in non-contiguous regions of memory, this iterator
+    /// then allows to access raw data directly without any attempt of deserializing it.
+    /// Please note that no guarantee is provided on the internal memory layout.
+    /// The only provided guarantee is on the bytes order that is preserved.
+    SliceIterator slice_iter() const;
 
     /// @brief A reader for Zenoh-serialized data.
     class Reader : public Copyable<::z_bytes_reader_t> {
@@ -274,7 +302,7 @@ class Bytes::Iterator : Copyable<::z_bytes_iterator_t> {
     /// @name Methods
 
     /// @brief Return next element of serialized data.
-    /// @return next element of serialized data, if the iterator reached the end, an empty optional will be returned.
+    /// @return next element of serialized data. If the iterator reached the end, an empty optional will be returned.
     std::optional<Bytes> next() {
         std::optional<Bytes> b(std::in_place);
         if (!::z_bytes_iterator_next(&this->_0, interop::as_owned_c_ptr(b.value()))) {
@@ -286,6 +314,30 @@ class Bytes::Iterator : Copyable<::z_bytes_iterator_t> {
 
 inline Bytes::Iterator Bytes::iter() const {
     return interop::into_copyable_cpp_obj<Bytes::Iterator>(::z_bytes_get_iterator(interop::as_loaned_c_ptr(*this)));
+}
+
+/// @brief An iterator over raw bytes slices.
+class Bytes::SliceIterator : Copyable<::z_bytes_slice_iterator_t> {
+    using Copyable::Copyable;
+    friend struct interop::detail::Converter;
+
+   public:
+    /// @name Methods
+
+    /// @brief Return next raw slice of serialized data.
+    /// @return next raw slice of serialized data. If the iterator reached the end, an empty optional will be returned.
+    std::optional<Slice> next() {
+        ::z_view_slice_t s;
+        if (!::z_bytes_slice_iterator_next(&this->_0, &s)) {
+            return {};
+        }
+        return Slice{::z_slice_data(z_loan(s)), ::z_slice_len(z_loan(s))};
+    }
+};
+
+inline Bytes::SliceIterator Bytes::slice_iter() const {
+    return interop::into_copyable_cpp_obj<Bytes::SliceIterator>(
+        ::z_bytes_get_slice_iterator(interop::as_loaned_c_ptr(*this)));
 }
 
 namespace detail {
@@ -443,25 +495,6 @@ __ZENOH_DESERIALIZE_ARITHMETIC(double, double)
 
 #undef __ZENOH_DESERIALIZE_ARITHMETIC
 }  // namespace detail
-
-struct Slice {
-    const uint8_t* data;
-    size_t len;
-};
-
-inline auto make_slice(const uint8_t* data, size_t len) { return Slice{data, len}; }
-
-template <class Deleter>
-struct OwnedSlice {
-    uint8_t* data;
-    size_t len;
-    Deleter d;
-};
-
-template <class Deleter>
-auto make_owned_slice(uint8_t* data, size_t len, Deleter&& d) {
-    return OwnedSlice<std::remove_reference_t<Deleter>>{data, len, std::forward<Deleter>(d)};
-}
 
 /// @brief Default codec for Zenoh serialization / deserialziation
 class ZenohCodec {

@@ -22,8 +22,8 @@ using namespace zenoh;
 void test_config_insert() {
     std::vector<std::string> peers = {"tcp/192.168.0.1", "tcp/10.0.0.1"};
     auto config = Config::create_default();
-    config.insert_json("mode", "\"client\"");
-    config.insert_json("connect/endpoints", "[\"tcp/192.168.0.1\", \"tcp/10.0.0.1\"]");
+    config.insert_json5("mode", "\"client\"");
+    config.insert_json5("connect/endpoints", "[\"tcp/192.168.0.1\", \"tcp/10.0.0.1\"]");
     assert(config.get("mode") == "\"client\"");
     assert(config.get("connect/endpoints") == "[\"tcp/192.168.0.1\",\"tcp/10.0.0.1\"]");
 }

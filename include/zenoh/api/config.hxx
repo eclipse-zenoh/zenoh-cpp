@@ -110,8 +110,8 @@ class Config : public Owned<::z_owned_config_t> {
     /// thrown in case of error.
     /// @return true if the parameter was inserted, false otherwise.
     /// @note zenoh-c only.
-    void insert_json(const std::string& key, const std::string& value, ZResult* err = nullptr) {
-        __ZENOH_RESULT_CHECK(::zc_config_insert_json(interop::as_loaned_c_ptr(*this), key.c_str(), value.c_str()), err,
+    void insert_json5(const std::string& key, const std::string& value, ZResult* err = nullptr) {
+        __ZENOH_RESULT_CHECK(::zc_config_insert_json5(interop::as_loaned_c_ptr(*this), key.c_str(), value.c_str()), err,
                              std::string("Failed to insert '")
                                  .append(value)
                                  .append("' for the key '")
