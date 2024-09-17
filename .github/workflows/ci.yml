@@ -26,9 +26,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest]
-        shm: [false, true]
-        unstable: [false, true]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        shm: [FALSE, TRUE]
+        unstable: [FALSE, TRUE]
+        pico: [ON, OFF]
+        exclude:
+          - os: windows-latest
+            pico: ON
+          - os: ubuntu-latest
+            pico: OFF
+          - os: macOS-latest
+            pico: OFF
 
     steps:
       - name: Clone this repository
@@ -37,31 +45,31 @@ jobs:
       - name: install zenoh-cpp
         shell: bash
         run: |
-          ./scripts/install_from_git.sh ~/local
+          ./scripts/install_from_git.sh ~/local ${{ matrix.unstable }} ${{ matrix.shm }} ${{ matrix.pico }}
 
       - name: make examples
         shell: bash
         run: |
           cd build
           cmake .. -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
-          cmake --build . --target examples
+          cmake --build . --target examples --config Release
 
       - name: make stand-alone examples
         shell: bash
         run: |
-          ./scripts/build_standalone_examples.sh ~/local
+          ./scripts/build_standalone_examples.sh ~/local ${{ matrix.pico }}
 
       - name: make tests
         shell: bash
         run: |
           cd build
-          cmake --build . --target tests
+          cmake --build . --target tests --config Release
 
       - name: run tests
         shell: bash
         run: |
           cd build
-          ctest --output-on-failure
+          ctest -C Release --output-on-failure
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

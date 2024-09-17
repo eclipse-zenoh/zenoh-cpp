@@ -22,6 +22,7 @@ function(add_example file mode lib)
     target_link_libraries(${target} PUBLIC ${lib})
 	set_property(TARGET ${target} PROPERTY LANGUAGE CXX)
 	set_property(TARGET ${target} PROPERTY CXX_STANDARD 17)
+	copy_dlls(${target})
 endfunction()
 
 function(add_examples glob mode lib)

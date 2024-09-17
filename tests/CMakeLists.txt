@@ -36,6 +36,7 @@ function(add_test_instance file mode lib option)
 	else()
 		add_test(NAME "test_${target}" COMMAND ${target})
 	endif()
+	copy_dlls(${target})
 endfunction()
 
 file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/universal/*.cxx")

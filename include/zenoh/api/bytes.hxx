@@ -22,6 +22,7 @@
 #include "shm/buffer/buffer.hxx"
 #endif
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <deque>
