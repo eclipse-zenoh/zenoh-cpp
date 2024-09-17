@@ -17,11 +17,9 @@ TESTBIN="$1"
 TESTDIR=$(dirname "$0")
 ZENOH_BRANCH="$2"
 
-if [ "$OSTYPE" = "msys" ]; then
-  TESTBIN="$TESTDIR/Debug/$TESTBIN.exe"
-else
-  TESTBIN="./$TESTBIN"
-fi
+# get vinary name without extension
+TEST_NAME_WE=$(basename -- "$TESTBIN")
+TEST_NAME_WE="${TEST_NAME_WE%.*}"
 
 cd "$TESTDIR"|| exit
 
@@ -46,7 +44,7 @@ for LOCATOR in $(echo "$LOCATORS" | xargs); do
     sleep 1
 
     echo "> Running zenohd ... $LOCATOR"
-    RUST_LOG=debug ./zenohd --plugin-search-dir "$TESTDIR/zenoh-git/target/debug" -l "$LOCATOR" > zenohd."$1".log 2>&1 &
+    RUST_LOG=debug ./zenohd --plugin-search-dir "$TESTDIR/zenoh-git/target/debug" -l "$LOCATOR" > zenohd."$TEST_NAME_WE".log 2>&1 &
     ZPID=$!
 
     sleep 5
@@ -61,7 +59,7 @@ for LOCATOR in $(echo "$LOCATORS" | xargs); do
     sleep 1
 
     echo "> Logs of zenohd ..."
-    cat zenohd."$1".log
+    cat zenohd."$TEST_NAME_WE".log
 
     [ "$RETCODE" -lt 0 ] && exit "$RETCODE"
 done
