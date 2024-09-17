@@ -45,7 +45,7 @@ class SourceInfo : public Owned<::z_owned_source_info_t> {
     /// @name Constructors
 
     /// @brief Construct from global id and sequence number.
-    SourceInfo(const EntityGlobalId& id, uint64_t sn) : Owned(nullptr) {
+    SourceInfo(const EntityGlobalId& id, uint32_t sn) : Owned(nullptr) {
         ::z_source_info_new(&this->_0, interop::as_copyable_c_ptr(id), sn);
     }
 
@@ -57,7 +57,7 @@ class SourceInfo : public Owned<::z_owned_source_info_t> {
     }
 
     /// @brief Get the sequence number of the sample from the given source.
-    uint64_t sn() const { return ::z_source_info_sn(interop::as_loaned_c_ptr(*this)); }
+    uint32_t sn() const { return ::z_source_info_sn(interop::as_loaned_c_ptr(*this)); }
 };
 #endif
 }  // namespace zenoh
