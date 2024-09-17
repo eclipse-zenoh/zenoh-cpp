@@ -54,7 +54,7 @@ int _main(int argc, char **argv) {
     if (locator) {
 #ifdef ZENOHCXX_ZENOHC
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
-        config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
+        config.insert_json5(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
 #elif ZENOHCXX_ZENOHPICO
         config.insert(Z_CONFIG_CONNECT_KEY, locator, &err);
 #else

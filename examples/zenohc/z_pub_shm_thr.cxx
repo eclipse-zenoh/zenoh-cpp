@@ -38,7 +38,7 @@ int _main(int argc, char **argv) {
     ZResult err;
     if (locator) {
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
-        config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
+        config.insert_json5(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
 
         if (err != Z_OK) {
             std::cout << "Invalid locator: " << locator << std::endl;
