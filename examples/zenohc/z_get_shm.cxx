@@ -83,8 +83,15 @@ int _main(int argc, char **argv) {
     memcpy(buf.data(), value, len);
 
     std::cout << "Sending Query '" << expr << "'...\n";
+#if __cpp_designated_initializers >= 201707L
     session.get(keyexpr, "", on_reply, on_done,
                 {.target = Z_QUERY_TARGET_ALL, .payload = Bytes::serialize(std::move(buf))});
+#else
+    Session::GetOptions options;
+    options.target = Z_QUERY_TARGET_ALL;
+    options.payload = Bytes::serialize(std::move(buf));
+    session.get(keyexpr, "", on_reply, on_done, std::move(options));
+#endif
 
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });
