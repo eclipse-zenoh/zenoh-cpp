@@ -88,7 +88,13 @@ int _main(int argc, char **argv) {
         ZShmMut &&buf = std::get<ZShmMut>(std::move(alloc_result));
         memcpy(buf.data(), value, len);
 
+#if __cpp_designated_initializers >= 201707L
         query.reply(KeyExpr(expr), Bytes::serialize(std::move(buf)), {.encoding = Encoding("text/plain")});
+#else
+        Query::ReplyOptions options;
+        options.encoding = Encoding("text/plain");
+        query.reply(KeyExpr(expr), Bytes::serialize(std::move(buf)), std::move(options));
+#endif
     };
 
     auto on_drop_queryable = []() { std::cout << "Destroying queryable\n"; };

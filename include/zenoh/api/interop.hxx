@@ -82,8 +82,9 @@ const OwnedType* as_owned_c_ptr(const Owned<OwnedType>& cpp_obj) {
 template <
     class OwnedType,
     class Loaned = typename ::z_owned_to_loaned_type_t<OwnedType>::type,  // SFINAE here if no loaned type declared
-    class LoanAvailable = std::enable_if_t<detail::is_loan_available_v<OwnedType>, Loaned>  // SFINAE here if immutable
-                                                                                            // loan is not available
+    class LoanAvailable = std::enable_if_t<zenoh::detail::is_loan_available_v<OwnedType>, Loaned>  // SFINAE here if
+                                                                                                   // immutable loan is
+                                                                                                   // not available
     >
 const Loaned* as_loaned_c_ptr(const Owned<OwnedType>& cpp_obj) {
     return ::z_loan(*as_owned_c_ptr(cpp_obj));
@@ -93,8 +94,8 @@ const Loaned* as_loaned_c_ptr(const Owned<OwnedType>& cpp_obj) {
 template <class OwnedType,
           class Loaned = typename ::z_owned_to_loaned_type_t<OwnedType>::type,  // SFINAE here if no loaned type
                                                                                 // declared
-          class LoanAvailable = std::enable_if_t<detail::is_loan_mut_available_v<OwnedType>,
-                                                 Loaned>  // SFINAE here if immutable loan is not available
+          class LoanAvailable = std::enable_if_t<zenoh::detail::is_loan_mut_available_v<OwnedType>,
+                                                 Loaned>  // SFINAE here if mutable loan is not available
           >
 Loaned* as_loaned_c_ptr(Owned<OwnedType>& cpp_obj) {
     return ::z_loan_mut(*as_owned_c_ptr(cpp_obj));

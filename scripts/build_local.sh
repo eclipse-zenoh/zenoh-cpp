@@ -16,5 +16,5 @@ cd "$project_folder"
 rm -rf ./build
 mkdir ./build
 cd ./build
-cmake .. "${@:3}" --install-prefix "$absolute_install_location"
-make
+cmake .. "${@:3}" -DCMAKE_BUILD_TYPE=Release --install-prefix "$absolute_install_location"
+cmake --build . --config Release

@@ -17,6 +17,5 @@ bash $SCRIPT_DIR/install_local.sh $SCRIPT_DIR/../../zenoh-pico $absolute_install
 rm -rf ./build
 mkdir ./build
 cd ./build
-cmake .. -DZENOHCXX_ZENOHPICO=ON --install-prefix "$absolute_install_location"
-make
-make install
+cmake .. -DCMAKE_BUILD_TYPE=Release -DZENOHCXX_ZENOHPICO=ON --install-prefix "$absolute_install_location"
+cmake --build . --target install --config Release

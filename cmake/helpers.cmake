@@ -94,12 +94,16 @@ endfunction()
 # Copy necessary dlls to target runtime directory
 #
 function(copy_dlls target)
-	if(WIN32)
-		add_custom_command(TARGET ${target} POST_BUILD
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:${target}> $<TARGET_FILE_DIR:${target}>
-			COMMAND_EXPAND_LISTS
-		)
-	endif()   
+    set(have_runtime_dlls $<BOOL:$<TARGET_RUNTIME_DLLS:${target}>>)
+    set(command
+        ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_RUNTIME_DLLS:${target}>
+       $<TARGET_FILE_DIR:${target}>
+    )
+    add_custom_command(TARGET ${target} POST_BUILD
+        COMMAND "$<${have_runtime_dlls}:${command}>"
+        COMMAND_EXPAND_LISTS
+    )
 endfunction()
 
 #
@@ -156,18 +160,6 @@ function(get_required_static_libs variable)
 	endif()
     set(${variable} ${native_static_libs} PARENT_SCOPE)
     message(STATUS "${variable} = ${native_static_libs}")
-endfunction()
-
-#
-# Copy necessary dlls to target runtime directory
-#
-function(copy_dlls target)
-	if(WIN32)
-		add_custom_command(TARGET ${target} POST_BUILD
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:${target}> $<TARGET_FILE_DIR:${target}>
-			COMMAND_EXPAND_LISTS
-		)
-	endif()   
 endfunction()
 
 # 

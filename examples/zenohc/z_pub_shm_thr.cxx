@@ -51,8 +51,14 @@ int _main(int argc, char **argv) {
     auto session = Session::open(std::move(config));
 
     std::cout << "Declaring Publisher on " << keyexpr << "...\n";
-    auto pub = session.declare_publisher(KeyExpr(keyexpr), {.congestion_control = Z_CONGESTION_CONTROL_BLOCK});
 
+#if __cpp_designated_initializers >= 201707L
+    auto pub = session.declare_publisher(KeyExpr(keyexpr), {.congestion_control = Z_CONGESTION_CONTROL_BLOCK});
+#else
+    Session::PublisherOptions options;
+    options.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
+    auto pub = session.declare_publisher(keyexpr, std::move(options));
+#endif
     std::cout << "Preparing SHM Provider...\n";
     constexpr auto buffers_count = 4;
     PosixShmProvider provider(MemoryLayout(buffers_count * len, AllocAlignment({2})));

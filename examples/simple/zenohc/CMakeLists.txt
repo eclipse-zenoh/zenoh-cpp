@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(zenohcxx_examples LANGUAGES C CXX)
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../../cmake" ${CMAKE_MODULE_PATH})
+include(helpers)
 
 if(CMAKE_BUILD_TYPE STREQUAL "")
     set(CMAKE_BUILD_TYPE Release)
@@ -12,3 +14,4 @@ add_executable(zc_simple zc_simple.cxx)
 target_link_libraries(zc_simple PRIVATE zenohcxx::zenohc)
 set_property(TARGET zc_simple PROPERTY LANGUAGE CXX)
 set_property(TARGET zc_simple PROPERTY CXX_STANDARD 17)
+copy_dlls(zc_simple)
