@@ -17,7 +17,7 @@
 #include "zenoh.hxx"
 using namespace zenoh;
 
-int _main(int argc, char **argv) {
+int _main(int argc, char** argv) {
     // Numeric: u8, u16, u32, u128, usize, i8, i16, i32, i128, isize, f32, f64
     {
         const uint32_t input = 1234;
@@ -32,7 +32,7 @@ int _main(int argc, char **argv) {
     {
         // C-String
         {
-            const char *input = "test";
+            const char* input = "test";
             const auto payload = Bytes::serialize(input);
             const auto output = payload.deserialize<std::string>();
             assert(input == output);
@@ -84,14 +84,6 @@ int _main(int argc, char **argv) {
         assert(i3 == o3);
     }
 
-    //// Tuple
-    //{
-    //    let input = (1234_u32, String::from("test"));
-    //    let payload = ZBytes::serialize(input.clone());
-    //    let output: (u32, String) = payload.deserialize().unwrap();
-    //    assert_eq!(input, output);
-    //}
-
     // Iterator
     {
         const int32_t input[] = {1, 2, 3, 4};
@@ -104,12 +96,21 @@ int _main(int argc, char **argv) {
         }
     }
 
-    //// Iterator RAW
-    // let input: [i32; 4] = [1, 2, 3, 4];
-    // let payload = ZBytes::from_iter(input.iter());
-    // for slice in payload.slices() {
-    //     println!("{:02x?}", slice);
-    // }
+    // Iterator RAW
+    {
+        const uint8_t input[] = {1, 2, 3, 4};
+        const auto slice = make_slice(input, 4);
+        const auto payload = Bytes::serialize(slice);
+
+        auto idx = 0;
+        auto it = payload.slice_iter();
+        for (auto elem = it.next(); elem.has_value(); elem = it.next()) {
+            const auto& slice = elem.value();
+            for (size_t i = 0; i < slice.len; ++i) {
+                assert(input[idx++] == slice.data[i]);
+            }
+        }
+    }
 
     // HashMap
     {
@@ -119,64 +120,10 @@ int _main(int argc, char **argv) {
         assert(input == output);
     }
 
-    /*
-    // JSON
-    let data = r#"
-    {
-        "name": "John Doe",
-        "age": 43,
-        "phones": [
-            "+44 1234567",
-            "+44 2345678"
-        ]
-    }"#;
-    let input: serde_json::Value = serde_json::from_str(data).unwrap();
-    let payload = ZBytes::try_serialize(input.clone()).unwrap();
-    let output: serde_json::Value = payload.deserialize().unwrap();
-    assert_eq!(input, output);
-    // Corresponding encoding to be used in operations like `.put()`, `.reply()`, etc.
-    // let encoding = Encoding::APPLICATION_JSON;
-
-    // YAML
-    let data = r#"
-        name: "John Doe"
-        age: 43
-        phones:
-          - "+44 1234567"
-          - "+44 2345678"
-    "#;
-    let input: serde_yaml::Value = serde_yaml::from_str(data).unwrap();
-    let payload = ZBytes::try_serialize(input.clone()).unwrap();
-    let output: serde_yaml::Value = payload.deserialize().unwrap();
-    assert_eq!(input, output);
-    // Corresponding encoding to be used in operations like `.put()`, `.reply()`, etc.
-    // let encoding = Encoding::APPLICATION_YAML;
-
-    // Protobuf
-    use prost::Message;
-    #[derive(Message, Eq, PartialEq)]
-    struct EntityInfo {
-        #[prost(uint32)]
-        id: u32,
-        #[prost(string)]
-        name: String,
-    }
-    let input = EntityInfo {
-        id: 1234,
-        name: String::from("John Doe"),
-    };
-    let payload = ZBytes::from(input.encode_to_vec());
-    let output =
-        EntityInfo::decode(Cursor::new(payload.deserialize::<Cow<[u8]>>().unwrap())).unwrap();
-    assert_eq!(input, output);
-    // Corresponding encoding to be used in operations like `.put()`, `.reply()`, etc.
-    // let encoding = Encoding::APPLICATION_PROTOBUF;
-    */
-
     return 0;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     try {
 #ifdef ZENOHCXX_ZENOHC
         init_log_from_env_or("error");
