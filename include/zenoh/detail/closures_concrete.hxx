@@ -19,7 +19,7 @@
 #include "../api/sample.hxx"
 #include "../zenohc.hxx"
 #include "closures.hxx"
-#if defined UNSTABLE
+#if defined Z_FEATURE_UNSTABLE_API
 #include "../api/id.hxx"
 #endif
 #include "../api/hello.hxx"
@@ -41,7 +41,7 @@ inline void _zenoh_on_query_call(::z_loaned_query_t* query, void* context) {
     IClosure<void, Query&>::call_from_context(context, interop::as_owned_cpp_ref<Query>(query));
 }
 
-#if defined UNSTABLE
+#if defined Z_FEATURE_UNSTABLE_API
 inline void _zenoh_on_id_call(const ::z_id_t* z_id, void* context) {
     IClosure<void, const Id&>::call_from_context(context, interop::as_copyable_cpp_ref<Id>(z_id));
 }

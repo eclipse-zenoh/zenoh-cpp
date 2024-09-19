@@ -23,16 +23,16 @@
 #include "enums.hxx"
 #include "interop.hxx"
 #include "timestamp.hxx"
-#if defined UNSTABLE
+#if defined Z_FEATURE_UNSTABLE_API
 #include "id.hxx"
 #endif
 #include "publisher.hxx"
 #include "query_consolidation.hxx"
 #include "subscriber.hxx"
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 #include "liveliness.hxx"
 #endif
-#if defined(ZENOHCXX_ZENOHC) && defined(SHARED_MEMORY) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
 #include "shm/client_storage/client_storage.hxx"
 #endif
 
@@ -91,7 +91,7 @@ class Session : public Owned<::z_owned_session_t> {
 #endif
     }
 
-#if defined(ZENOHCXX_ZENOHC) && defined(SHARED_MEMORY) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
     /// @brief Create a new Session with custom SHM client set.
     /// @param config Zenoh session ``Config``.
     /// @param shm_storage Storage with custom SHM clients.
@@ -119,7 +119,7 @@ class Session : public Owned<::z_owned_session_t> {
         return Session(std::move(config), std::move(options), err);
     }
 
-#if defined(ZENOHCXX_ZENOHC) && defined(SHARED_MEMORY) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
     /// @brief A factory method equivalent to a ``Session`` constructor for custom SHM clients list.
     /// @param config Zenoh session ``Config``.
     /// @param shm_storage Storage with custom SHM clients.
@@ -134,7 +134,7 @@ class Session : public Owned<::z_owned_session_t> {
 #endif
 
     /// @name Methods
-#if defined UNSTABLE
+#if defined Z_FEATURE_UNSTABLE_API
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Get the unique identifier of the zenoh node associated to this ``Session``.
@@ -183,7 +183,7 @@ class Session : public Owned<::z_owned_session_t> {
         std::optional<Bytes> payload = {};
         /// @brief  An optional encoding of the query payload and/or attachment.
         std::optional<Encoding> encoding = {};
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The source info for the query.
@@ -229,7 +229,7 @@ class Session : public Owned<::z_owned_session_t> {
         opts.is_express = options.is_express;
         opts.payload = interop::as_moved_c_ptr(options.payload);
         opts.encoding = interop::as_moved_c_ptr(options.encoding);
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         opts.source_info = interop::as_moved_c_ptr(options.source_info);
 #endif
         opts.attachment = interop::as_moved_c_ptr(options.attachment);
@@ -262,7 +262,7 @@ class Session : public Owned<::z_owned_session_t> {
         opts.consolidation = *interop::as_copyable_c_ptr(options.consolidation);
         opts.payload = interop::as_moved_c_ptr(options.payload);
         opts.encoding = interop::as_moved_c_ptr(options.encoding);
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         opts.source_info = interop::as_moved_c_ptr(options.source_info);
 #endif
         opts.attachment = interop::as_moved_c_ptr(options.attachment);
@@ -284,7 +284,7 @@ class Session : public Owned<::z_owned_session_t> {
         CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
         /// @brief Whether Zenoh will NOT wait to batch delete message with others to reduce the bandwith.
         bool is_express = false;
-#if defined(UNSTABLE)
+#if defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The delete operation reliability.
@@ -310,7 +310,7 @@ class Session : public Owned<::z_owned_session_t> {
         opts.congestion_control = options.congestion_control;
         opts.priority = options.priority;
         opts.is_express = options.is_express;
-#if defined(UNSTABLE)
+#if defined(Z_FEATURE_UNSTABLE_API)
         opts.reliability = options.reliability;
 #endif
 
@@ -328,7 +328,7 @@ class Session : public Owned<::z_owned_session_t> {
         CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
         /// @brief Whether Zenoh will NOT wait to batch this message with others to reduce the bandwith.
         bool is_express = false;
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief Allowed destination.
@@ -338,13 +338,13 @@ class Session : public Owned<::z_owned_session_t> {
         std::optional<Timestamp> timestamp = {};
         /// @brief  An optional encoding of the message payload and/or attachment.
         std::optional<Encoding> encoding = {};
-#if defined(UNSTABLE)
+#if defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The put operation reliability.
         Reliability reliability = Reliability::Z_RELIABILITY_BEST_EFFORT;
 #endif
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The source info of this message.
@@ -372,10 +372,10 @@ class Session : public Owned<::z_owned_session_t> {
         opts.congestion_control = options.congestion_control;
         opts.priority = options.priority;
         opts.is_express = options.is_express;
-#if defined(UNSTABLE)
+#if defined(Z_FEATURE_UNSTABLE_API)
         opts.reliability = options.reliability;
 #endif
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         opts.allowed_destination = options.allowed_destination;
         opts.source_info = interop::as_moved_c_ptr(options.source_info);
 #endif
@@ -542,13 +542,13 @@ class Session : public Owned<::z_owned_session_t> {
         Priority priority = Z_PRIORITY_DEFAULT;
         /// @brief If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
         bool is_express = false;
-#if defined(UNSTABLE)
+#if defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The publisher reliability.
         Reliability reliability = Reliability::Z_RELIABILITY_BEST_EFFORT;
 #endif
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief Allowed destination.
@@ -576,10 +576,10 @@ class Session : public Owned<::z_owned_session_t> {
         opts.congestion_control = options.congestion_control;
         opts.priority = options.priority;
         opts.is_express = options.is_express;
-#if defined(UNSTABLE)
+#if defined(Z_FEATURE_UNSTABLE_API)
         opts.reliability = options.reliability;
 #endif
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         opts.allowed_destination = options.allowed_destination;
 #endif
         opts.encoding = interop::as_moved_c_ptr(options.encoding);
@@ -591,7 +591,7 @@ class Session : public Owned<::z_owned_session_t> {
         return p;
     }
 
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Fetches the Zenoh IDs of all connected routers.
@@ -693,7 +693,7 @@ class Session : public Owned<::z_owned_session_t> {
     }
 #endif
 
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Options to pass to ``Session::liveliness_declare_token``.

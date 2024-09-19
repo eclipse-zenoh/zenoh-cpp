@@ -26,7 +26,7 @@ struct CommonAllocator {
     Bytes alloc_with_data(const char data[]) { return Bytes::serialize(data); }
 };
 
-#if defined SHARED_MEMORY && defined UNSTABLE
+#if defined Z_FEATURE_SHARED_MEMORY && defined Z_FEATURE_UNSTABLE_API
 class SHMAllocator {
     PosixShmProvider provider;
 
@@ -205,7 +205,7 @@ void test_with_alloc() {
 
 int main(int argc, char** argv) {
     test_with_alloc<CommonAllocator>();
-#if defined SHARED_MEMORY && defined UNSTABLE
+#if defined Z_FEATURE_SHARED_MEMORY && defined Z_FEATURE_UNSTABLE_API
     test_with_alloc<SHMAllocator>();
     test_with_alloc<SHMAllocator, false>();
 #endif

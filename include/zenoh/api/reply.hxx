@@ -17,7 +17,7 @@
 #include "bytes.hxx"
 #include "interop.hxx"
 #include "sample.hxx"
-#if defined UNSTABLE
+#if defined Z_FEATURE_UNSTABLE_API
 #include "id.hxx"
 #endif
 
@@ -71,7 +71,7 @@ class Reply : public Owned<::z_owned_reply_t> {
         return interop::as_owned_cpp_ref<ReplyError>(::z_reply_err(interop::as_loaned_c_ptr(*this)));
     }
 
-#if defined(UNSTABLE)
+#if defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Get the id of the Zenoh instance that issued this reply.
