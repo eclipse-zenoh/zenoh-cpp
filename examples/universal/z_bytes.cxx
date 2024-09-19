@@ -98,15 +98,16 @@ int _main(int argc, char** argv) {
 
     // Iterator RAW
     {
-        const int32_t input[] = {1, 2, 3, 4};
-        const auto payload = Bytes::serialize_from_iter(input, input + 4);
-
+        const std::vector<uint8_t> input = {1, 2, 3, 4};
+        const auto payload = Bytes::serialize(input);
+        
         auto idx = 0;
         auto it = payload.slice_iter();
         for (auto elem = it.next(); elem.has_value(); elem = it.next()) {
             const auto& slice = elem.value();
             for (size_t i = 0; i < slice.len; ++i) {
-                assert(input[idx++] == slice.data[i]);
+                const auto index = idx++;
+                assert(input[index] == slice.data[i]);
             }
         }
     }
