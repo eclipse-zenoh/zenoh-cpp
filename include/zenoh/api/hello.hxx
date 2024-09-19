@@ -16,7 +16,7 @@
 #include "base.hxx"
 #include "enums.hxx"
 #include "interop.hxx"
-#if defined UNSTABLE
+#if defined Z_FEATURE_UNSTABLE_API
 #include "id.hxx"
 #endif
 
@@ -30,7 +30,7 @@ class Hello : public Owned<::z_owned_hello_t> {
    public:
     /// @name Methods
 
-#if defined UNSTABLE
+#if defined Z_FEATURE_UNSTABLE_API
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Get ``Id`` of the entity.

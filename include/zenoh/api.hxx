@@ -19,7 +19,7 @@
 #include "api/encoding.hxx"
 #include "api/enums.hxx"
 #include "api/hello.hxx"
-#if defined UNSTABLE
+#if defined Z_FEATURE_UNSTABLE_API
 #include "api/id.hxx"
 #endif
 #include "api/channels.hxx"
@@ -35,6 +35,6 @@
 #include "api/session.hxx"
 #include "api/subscriber.hxx"
 #include "api/timestamp.hxx"
-#if defined SHARED_MEMORY && defined UNSTABLE
+#if defined Z_FEATURE_SHARED_MEMORY && defined Z_FEATURE_UNSTABLE_API
 #include "api/shm/shm.hxx"
 #endif

@@ -18,7 +18,7 @@
 #include "base.hxx"
 #include "closures.hxx"
 #include "interop.hxx"
-#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 #include "shm/buffer/buffer.hxx"
 #endif
 
@@ -357,7 +357,7 @@ struct ZenohDeserializer<std::string> {
     }
 };
 
-#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 template <>
 struct ZenohDeserializer<ZShm> {
     static ZShm deserialize(const Bytes& b, ZResult* err = nullptr) {
@@ -553,7 +553,7 @@ class ZenohCodec {
 
     Bytes serialize(const Bytes& b) const { return b.clone(); }
 
-#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
     Bytes serialize(ZShm&& shm, ZResult* err = nullptr) const {
         Bytes b;
         __ZENOH_RESULT_CHECK(::z_bytes_serialize_from_shm(interop::as_owned_c_ptr(b), interop::as_moved_c_ptr(shm)),

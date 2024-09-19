@@ -42,7 +42,7 @@ typedef ::z_sample_kind_t SampleKind;
 ///           It optimizes bandwidth.
 typedef ::z_consolidation_mode_t ConsolidationMode;
 
-#if defined(UNSTABLE)
+#if defined(Z_FEATURE_UNSTABLE_API)
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Publisher reliability values.
 ///
@@ -101,7 +101,7 @@ inline std::string_view whatami_as_str(WhatAmI whatami) {
     return std::string_view(::z_string_data(::z_loan(str_out)), ::z_string_len(::z_loan(str_out)));
 }
 
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief The locality of samples to be received by subscribers or targeted by publishers.
 ///

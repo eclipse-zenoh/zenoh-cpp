@@ -55,7 +55,7 @@ int _main(int argc, char** argv) {
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     std::cout << "own id: " << session.get_zid() << std::endl;
 
     std::cout << "routers ids:\n";

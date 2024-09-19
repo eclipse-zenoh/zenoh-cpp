@@ -10,9 +10,6 @@
 #if defined(ZENOHCXX_ZENOHPICO)
 #include "zenoh-pico.h"
 // use same macro to check for unstable features
-#if Z_FEATURE_UNSTABLE_API == 1
-#define UNSTABLE
-#endif
 #elif defined(ZENOHCXX_ZENOHC)
 #include "zenoh.h"
 #endif
