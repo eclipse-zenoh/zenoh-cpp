@@ -98,9 +98,8 @@ int _main(int argc, char** argv) {
 
     // Iterator RAW
     {
-        const uint8_t input[] = {1, 2, 3, 4};
-        const auto slice = make_slice(input, 4);
-        const auto payload = Bytes::serialize(slice);
+        const int32_t input[] = {1, 2, 3, 4};
+        const auto payload = Bytes::serialize_from_iter(input, input + 4);
 
         auto idx = 0;
         auto it = payload.slice_iter();
