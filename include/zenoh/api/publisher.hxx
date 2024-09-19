@@ -20,7 +20,7 @@
 #include "interop.hxx"
 #include "keyexpr.hxx"
 #include "timestamp.hxx"
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 #include "source_info.hxx"
 #endif
 #include <optional>
@@ -43,7 +43,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
         std::optional<Encoding> encoding = {};
         /// @brief the timestamp of this message.
         std::optional<Timestamp> timestamp = {};
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The source info of this message.
@@ -79,7 +79,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
         ::z_publisher_put_options_t opts;
         z_publisher_put_options_default(&opts);
         opts.encoding = interop::as_moved_c_ptr(options.encoding);
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         opts.source_info = interop::as_moved_c_ptr(options.source_info);
 #endif
         opts.attachment = interop::as_moved_c_ptr(options.attachment);
@@ -105,7 +105,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     const KeyExpr& get_keyexpr() const {
         return interop::as_owned_cpp_ref<KeyExpr>(::z_publisher_keyexpr(interop::as_loaned_c_ptr(*this)));
     }
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Get the id of the publisher.

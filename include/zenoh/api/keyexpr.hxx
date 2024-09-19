@@ -119,7 +119,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     bool intersects(const KeyExpr& other) const {
         return ::z_keyexpr_intersects(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(other));
     }
-#if defined(UNSTABLE)
+#if defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Intersection level of 2 key expressions.

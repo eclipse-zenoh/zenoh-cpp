@@ -23,7 +23,7 @@
 #include "enums.hxx"
 #include "interop.hxx"
 #include "keyexpr.hxx"
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 #include "source_info.hxx"
 #endif
 #include "timestamp.hxx"
@@ -93,7 +93,7 @@ class Query : public Owned<::z_owned_query_t> {
         bool is_express = false;
         /// @brief The timestamp of this message.
         std::optional<Timestamp> timestamp = {};
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The source info of this reply message.
@@ -122,7 +122,7 @@ class Query : public Owned<::z_owned_query_t> {
         opts.congestion_control = options.congestion_control;
         opts.is_express = options.is_express;
         opts.timestamp = interop::as_copyable_c_ptr(options.timestamp);
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         opts.source_info = interop::as_moved_c_ptr(options.source_info);
 #endif
         opts.attachment = interop::as_moved_c_ptr(options.attachment);
@@ -172,7 +172,7 @@ class Query : public Owned<::z_owned_query_t> {
         bool is_express = false;
         /// @brief the timestamp of this message.
         std::optional<Timestamp> timestamp = {};
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The source info of this reply message.
@@ -200,7 +200,7 @@ class Query : public Owned<::z_owned_query_t> {
         opts.congestion_control = options.congestion_control;
         opts.is_express = options.is_express;
         opts.timestamp = interop::as_copyable_c_ptr(options.timestamp);
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         opts.source_info = interop::as_moved_c_ptr(options.source_info);
 #endif
         opts.attachment = interop::as_moved_c_ptr(options.attachment);

@@ -35,7 +35,7 @@ void printlocators(const std::vector<std::string_view> &locs) {
 
 void printhello(const Hello &hello) {
     std::cout << "Hello { ";
-#if defined(ZENOHCXX_ZENOHC) && defined(UNSTABLE)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     std::cout << "pid: " << hello.get_id() << ", ";
 #endif
     std::cout << "whatami: " << hello.get_whatami();
