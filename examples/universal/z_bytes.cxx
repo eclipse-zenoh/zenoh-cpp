@@ -100,7 +100,7 @@ int _main(int argc, char** argv) {
     {
         const std::vector<uint8_t> input = {1, 2, 3, 4};
         const auto payload = Bytes::serialize(input);
-        
+
         auto idx = 0;
         auto it = payload.slice_iter();
         for (auto elem = it.next(); elem.has_value(); elem = it.next()) {
