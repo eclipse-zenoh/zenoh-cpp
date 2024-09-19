@@ -71,6 +71,13 @@ class Encoding : public Owned<::z_owned_encoding_t> {
         return *this;
     };
 
+    /// @brief Equality relation.
+    /// @param other an encoding to compare with.
+    /// @return true if both encodings are equal, false otherwise.
+    bool operator==(const Encoding& other) {
+        return ::z_encoding_equals(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(other));
+    };
+
     Encoding& operator=(Encoding&& other) = default;
 };
 

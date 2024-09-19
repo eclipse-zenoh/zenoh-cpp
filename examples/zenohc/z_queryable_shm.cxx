@@ -41,7 +41,7 @@ int _main(int argc, char **argv) {
     ZResult err;
     if (locator) {
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
-        config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
+        config.insert_json5(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
 
         if (err != Z_OK) {
             std::cout << "Invalid locator: " << locator << std::endl;
@@ -88,7 +88,13 @@ int _main(int argc, char **argv) {
         ZShmMut &&buf = std::get<ZShmMut>(std::move(alloc_result));
         memcpy(buf.data(), value, len);
 
+#if __cpp_designated_initializers >= 201707L
         query.reply(KeyExpr(expr), Bytes::serialize(std::move(buf)), {.encoding = Encoding("text/plain")});
+#else
+        Query::ReplyOptions options;
+        options.encoding = Encoding("text/plain");
+        query.reply(KeyExpr(expr), Bytes::serialize(std::move(buf)), std::move(options));
+#endif
     };
 
     auto on_drop_queryable = []() { std::cout << "Destroying queryable\n"; };

@@ -46,7 +46,7 @@ int _main(int argc, char **argv) {
     ZResult err;
     if (locator) {
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
-        config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
+        config.insert_json5(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
 
         if (err != Z_OK) {
             std::cout << "Invalid locator: " << locator << std::endl;
@@ -80,7 +80,13 @@ int _main(int argc, char **argv) {
         ZShmMut &&buf = std::get<ZShmMut>(std::move(alloc_result));
         memcpy(buf.data(), s.data(), len);
 
+#if __cpp_designated_initializers >= 201707L
         pub.put(Bytes::serialize(std::move(buf)), {.encoding = Encoding("text/plain")});
+#else
+        Publisher::PutOptions options;
+        options.encoding = Encoding("text/plain");
+        pub.put(Bytes::serialize(std::move(buf)), std::move(options));
+#endif
     }
     return 0;
 }

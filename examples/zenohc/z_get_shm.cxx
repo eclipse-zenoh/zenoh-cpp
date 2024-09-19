@@ -39,7 +39,7 @@ int _main(int argc, char **argv) {
     ZResult err;
     if (locator) {
         auto locator_json_str_list = std::string("[\"") + locator + "\"]";
-        config.insert_json(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
+        config.insert_json5(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
 
         if (err != Z_OK) {
             std::cout << "Invalid locator: " << locator << std::endl;
@@ -83,8 +83,15 @@ int _main(int argc, char **argv) {
     memcpy(buf.data(), value, len);
 
     std::cout << "Sending Query '" << expr << "'...\n";
+#if __cpp_designated_initializers >= 201707L
     session.get(keyexpr, "", on_reply, on_done,
                 {.target = Z_QUERY_TARGET_ALL, .payload = Bytes::serialize(std::move(buf))});
+#else
+    Session::GetOptions options;
+    options.target = Z_QUERY_TARGET_ALL;
+    options.payload = Bytes::serialize(std::move(buf));
+    session.get(keyexpr, "", on_reply, on_done, std::move(options));
+#endif
 
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });
