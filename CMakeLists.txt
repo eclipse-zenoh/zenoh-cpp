@@ -28,6 +28,7 @@ status_print(project_version)
 
 declare_cache_var(ZENOHCXX_ZENOHC ON BOOL "Build for Zenoh-c target")
 declare_cache_var(ZENOHCXX_ZENOHPICO OFF BOOL "Build for Zenoh-pico target")
+declare_cache_var(ZENOHCXX_EXAMPLES_PROTOBUF ON BOOL "Build Protobuf example (turn off if you have problems with installed Protobuf version)")
 
 set_default_build_type(Release)
 

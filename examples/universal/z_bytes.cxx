@@ -13,6 +13,10 @@
 //
 #include <iostream>
 
+#ifdef ZENOH_CPP_EXMAPLE_WITH_PROTOBUF
+#include "test.pb.h"
+#endif
+
 #include "stdio.h"
 #include "zenoh.hxx"
 using namespace zenoh;
@@ -119,6 +123,50 @@ int _main(int argc, char** argv) {
         const auto output = payload.deserialize<std::unordered_map<uint64_t, std::string>>();
         assert(input == output);
     }
+
+#ifdef ZENOH_CPP_EXMAPLE_WITH_PROTOBUF
+    // Protobuf
+    // This example is conditionally compiled depending on build system being able to find Protobuf installation
+    {
+        // (Protobuf recommendation) Verify that the version of the library that we linked against is
+        // compatible with the version of the headers we compiled against.
+        GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+        // Construct PB message
+        Book input;
+        input.set_author("H. P. Lovecraft");
+        input.set_title("The Call of Cthulhu");
+        input.set_isbn(931082);
+
+        // Serialize PB message into wire format
+        const auto input_wire_pb = input.SerializeAsString();
+
+        // Put PB wire format into Bytes
+        const auto payload = Bytes::serialize(input_wire_pb);
+
+        // Extract PB wire format
+        const auto output_wire_pb = payload.deserialize<std::string>();
+
+        // wire PB data is equal
+        assert(input_wire_pb == output_wire_pb);
+
+        // deserialize output wire PB into PB message
+        Book output;
+        const auto parsed = output.ParseFromString(output_wire_pb);
+        assert(parsed);
+
+        // data is equal
+        assert(input.author() == output.author());
+        assert(input.title() == output.title());
+        assert(input.isbn() == output.isbn());
+
+        // Corresponding encoding to be used in operations like `.put()`, `.reply()`, etc.
+        const auto encoding = Encoding("application/protobuf");
+
+        // (Protobuf recommendation) Optional:  Delete all global objects allocated by libprotobuf.
+        google::protobuf::ShutdownProtobufLibrary();
+    }
+#endif
 
     return 0;
 }
