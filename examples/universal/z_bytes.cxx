@@ -110,8 +110,7 @@ int _main(int argc, char** argv) {
         for (auto elem = it.next(); elem.has_value(); elem = it.next()) {
             const auto& slice = elem.value();
             for (size_t i = 0; i < slice.len; ++i) {
-                const auto index = idx++;
-                assert(input[index] == slice.data[i]);
+                assert(input[idx++] == slice.data[i]);
             }
         }
     }
