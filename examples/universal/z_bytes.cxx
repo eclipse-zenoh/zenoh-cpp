@@ -17,7 +17,6 @@
 #include "test.pb.h"
 #endif
 
-#include "stdio.h"
 #include "zenoh.hxx"
 using namespace zenoh;
 
