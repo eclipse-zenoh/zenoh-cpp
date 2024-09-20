@@ -16,7 +16,7 @@ function(add_protobuf target)
 		if(Protobuf_FOUND)
 			message(STATUS "Found Protobuf ${protobuf_VERSION}, will build Protobuf example!")
 
-			protobuf_generate_cpp(pb_src pb_hdr ${CMAKE_CURRENT_LIST_DIR}/universal/proto/test.proto)
+			protobuf_generate_cpp(pb_src pb_hdr ${CMAKE_CURRENT_LIST_DIR}/universal/proto/entity.proto)
 
 			add_library(example_message ${pb_hdr} ${pb_src})
 			target_include_directories(example_message INTERFACE ${CMAKE_CURRENT_BINARY_DIR})

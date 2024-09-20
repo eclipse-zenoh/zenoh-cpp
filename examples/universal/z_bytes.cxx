@@ -14,7 +14,7 @@
 #include <iostream>
 
 #ifdef ZENOH_CPP_EXMAPLE_WITH_PROTOBUF
-#include "test.pb.h"
+#include "entity.pb.h"
 #endif
 
 #include "zenoh.hxx"
@@ -131,10 +131,9 @@ int _main(int argc, char** argv) {
         GOOGLE_PROTOBUF_VERIFY_VERSION;
 
         // Construct PB message
-        Book input;
-        input.set_author("H. P. Lovecraft");
-        input.set_title("The Call of Cthulhu");
-        input.set_isbn(931082);
+        Entity input;
+        input.set_id(1234);
+        input.set_name("John Doe");
 
         // Serialize PB message into wire format
         const auto input_wire_pb = input.SerializeAsString();
@@ -149,14 +148,13 @@ int _main(int argc, char** argv) {
         assert(input_wire_pb == output_wire_pb);
 
         // deserialize output wire PB into PB message
-        Book output;
+        Entity output;
         const auto parsed = output.ParseFromString(output_wire_pb);
         assert(parsed);
 
         // data is equal
-        assert(input.author() == output.author());
-        assert(input.title() == output.title());
-        assert(input.isbn() == output.isbn());
+        assert(input.id() == output.id());
+        assert(input.name() == output.name());
 
         // Corresponding encoding to be used in operations like `.put()`, `.reply()`, etc.
         const auto encoding = Encoding("application/protobuf");

@@ -1,8 +1,0 @@
-syntax = "proto3";
-
-message Book {
-    int64 isbn = 1;
-    string title = 2;
-    string author = 3;
-}
-
