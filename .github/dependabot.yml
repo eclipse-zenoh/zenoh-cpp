@@ -1,0 +1,8 @@
+version: 2
+updates:
+  - package-ecosystem: "gitsubmodule"
+    directories:
+      - "zenoh-c"
+      - "zenoh-pico"
+    schedule:
+      interval: "daily"
