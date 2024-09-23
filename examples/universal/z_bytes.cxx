@@ -28,7 +28,11 @@ int _main(int argc, char** argv) {
         const auto output = payload.deserialize<uint32_t>();
         assert(input == output);
         // Corresponding encoding to be used in operations like `.put()`, `.reply()`, etc.
+#if defined(ZENOHCXX_ZENOHC) || (Z_FEATURE_ENCODING_VALUES == 1)
+        const auto encoding = Encoding::Predefined::zenoh_uint32();
+#else
         const auto encoding = Encoding("zenoh/uint32");
+#endif
     }
 
     // String
@@ -48,7 +52,11 @@ int _main(int argc, char** argv) {
             assert(input == output);
         }
         // Corresponding encoding to be used in operations like `.put()`, `.reply()`, etc.
+#if defined(ZENOHCXX_ZENOHC) || (Z_FEATURE_ENCODING_VALUES == 1)
+        const auto encoding = Encoding::Predefined::zenoh_string();
+#else
         const auto encoding = Encoding("zenoh/string");
+#endif
     }
 
     // Vec<u8>: The deserialization should be infallible
@@ -58,7 +66,11 @@ int _main(int argc, char** argv) {
         const auto output = payload.deserialize<std::vector<uint8_t>>();
         assert(input == output);
         // Corresponding encoding to be used in operations like `.put()`, `.reply()`, etc.
+#if defined(ZENOHCXX_ZENOHC) || (Z_FEATURE_ENCODING_VALUES == 1)
+        const auto encoding = Encoding::Predefined::zenoh_bytes();
+#else
         const auto encoding = Encoding("zenoh/bytes");
+#endif
     }
 
     // Writer & Reader
@@ -157,8 +169,11 @@ int _main(int argc, char** argv) {
         assert(input.name() == output.name());
 
         // Corresponding encoding to be used in operations like `.put()`, `.reply()`, etc.
+#if defined(ZENOHCXX_ZENOHC) || (Z_FEATURE_ENCODING_VALUES == 1)
+        const auto encoding = Encoding::Predefined::application_protobuf();
+#else
         const auto encoding = Encoding("application/protobuf");
-
+#endif
         // (Protobuf recommendation) Optional:  Delete all global objects allocated by libprotobuf.
         google::protobuf::ShutdownProtobufLibrary();
     }
