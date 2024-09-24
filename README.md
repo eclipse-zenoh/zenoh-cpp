@@ -37,13 +37,16 @@ To install [zenoh-cpp] do the following steps:
 
 2. Build and install.
 
-   Neither [zenoh-c] nor [zenoh-pico] backends are required for the installation. But at least one of them is required for usage.
+   By default it is expected that you have [zenoh-c] installed. If you want to install for [zenoh-pico] backend or for both (or to not specify any backend), please set `ZENOHCXX_ZENOHC` or `ZENOHCXX_ZENOHPICO` Cmake variables to`ON` or `OFF` accordingly. Notice that at least one of the backends is required for using the library and/or building tests and examples.
 
    Use option `CMAKE_INSTALL_PREFIX` for specifying installation location. Without this parameter installation is performed to default system location `/usr/local` which requires root privileges.
 
     ```bash
     mkdir build && cd build
-    cmake .. -DCMAKE_INSTALL_PREFIX=~/.local
+    cmake ..  -DCMAKE_INSTALL_PREFIX=~/.local # to configure only for zenoh-c backend
+    cmake .. -DZENOHCXX_ZENOHC=OFF -DZENOHCXX_ZENOHPICO=ON  -DCMAKE_INSTALL_PREFIX=~/.local # to configure  only for zenoh-pico backend
+    cmake .. -DZENOHCXX_ZENOHC=OFF -DZENOHCXX_ZENOHPICO=OFF  -DCMAKE_INSTALL_PREFIX=~/.local # to configure for none of the backends
+    cmake .. -DZENOHCXX_ZENOHPICO=ON  -DCMAKE_INSTALL_PREFIX=~/.local # to configure for both backends
     cmake --install .
     ```
 
