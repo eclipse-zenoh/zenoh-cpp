@@ -83,9 +83,7 @@ int _main(int argc, char **argv) {
 
     std::cout << "Declaring Subscriber on '" << keyexpr.as_string_view() << "'..." << std::endl;
     auto subscriber = session.declare_subscriber(keyexpr, &data_handler, closures::none);
-#ifdef ZENOHCXX_ZENOHC
     std::cout << "Subscriber on '" << subscriber.get_keyexpr().as_string_view() << "' declared" << std::endl;
-#endif
 
     std::cout << "Press CTRL-C to quit...\n";
     while (true) {
