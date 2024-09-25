@@ -43,7 +43,7 @@ To install [zenoh-cpp] do the following steps:
 
     ```bash
     mkdir build && cd build
-    cmake ..  -DCMAKE_INSTALL_PREFIX=~/.local # to configure only for zenoh-c backend
+    cmake .. -DCMAKE_INSTALL_PREFIX=~/.local # to configure only for zenoh-c backend
     cmake .. -DZENOHCXX_ZENOHC=OFF -DZENOHCXX_ZENOHPICO=ON  -DCMAKE_INSTALL_PREFIX=~/.local # to configure  only for zenoh-pico backend
     cmake .. -DZENOHCXX_ZENOHC=OFF -DZENOHCXX_ZENOHPICO=OFF  -DCMAKE_INSTALL_PREFIX=~/.local # to configure for none of the backends
     cmake .. -DZENOHCXX_ZENOHPICO=ON  -DCMAKE_INSTALL_PREFIX=~/.local # to configure for both backends
