@@ -366,6 +366,11 @@ int run_c_client() {
     return Z_OK;
 }
 
+int run_cleanup() {
+    cleanup_orphaned_shm_segments();
+    return Z_OK;
+}
+
 int main() {
     ASSERT_OK(run_posix_provider());
     ASSERT_OK(run_c_provider());
@@ -373,5 +378,6 @@ int main() {
     ASSERT_OK(run_global_client_storage());
     ASSERT_OK(run_client_storage());
     ASSERT_OK(run_c_client());
+    ASSERT_OK(run_cleanup());
     return Z_OK;
 }
