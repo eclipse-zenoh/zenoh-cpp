@@ -21,6 +21,7 @@
 #pragma once
 
 #include "buffer/buffer.hxx"
+#include "cleanup.hxx"
 #include "client/client.hxx"
 #include "client_storage/client_storage.hxx"
 #include "protocol_implementations/protocol_implementations.hxx"
