@@ -155,11 +155,10 @@ void __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const
 
 template <class It>
 void __serialize_sequence_with_serializer(zenoh::ext::Serializer& serializer, It begin, It end, size_t n) {
-    ::ze_serializer_serialize_sequence_begin(zenoh::interop::as_loaned_c_ptr(serializer), n);
+    ::ze_serializer_serialize_sequence_length(zenoh::interop::as_loaned_c_ptr(serializer), n);
     for (auto it = begin; it != end; ++it) {
         serialize_with_serializer(serializer, *it);
     }
-    ::ze_serializer_serialize_sequence_end(zenoh::interop::as_loaned_c_ptr(serializer));
 }
 
 template <class T, class Allocator>
@@ -257,14 +256,11 @@ bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserialize
 #define _ZENOH_DESERIALIZE_SEQUENCE_BEGIN                                                                         \
     size_t len;                                                                                                   \
     __ZENOH_RESULT_CHECK(                                                                                         \
-        ::ze_deserializer_deserialize_sequence_begin(zenoh::interop::as_copyable_c_ptr(deserializer), &len), err, \
+        ::ze_deserializer_deserialize_sequence_length(zenoh::interop::as_copyable_c_ptr(deserializer), &len), err, \
         "Deserialization failure:: Failed to read sequence length");                                              \
     if (err != nullptr && *err != Z_OK) return false;
 
-#define _ZENOH_DESERIALIZE_SEQUENCE_END                                                                               \
-    __ZENOH_RESULT_CHECK(::ze_deserializer_deserialize_sequence_end(zenoh::interop::as_copyable_c_ptr(deserializer)), \
-                         err, "Deserialization failure:: Failed to finalize sequence read");                          \
-    return (err == nullptr || *err == Z_OK);
+#define _ZENOH_DESERIALIZE_SEQUENCE_END return (err == nullptr || *err == Z_OK);
 
 template <class T, class Allocator>
 bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer, std::vector<T, Allocator>& value,
