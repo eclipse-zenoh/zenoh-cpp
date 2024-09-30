@@ -86,14 +86,14 @@ int _main(int argc, char **argv) {
         std::this_thread::sleep_for(1s);
         std::ostringstream ss;
         ss << "[" << idx << "] " << value;
-        auto s = ss.str();  // in C++20 use .view() instead
+        auto s = ss.str();
         std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
 #if __cpp_designated_initializers >= 201707L
-        pub.put(Bytes::serialize(s), {.encoding = Encoding("text/plain")});
+        pub.put(s, {.encoding = Encoding("text/plain")});
 #else
         auto put_options = Publisher::PutOptions{};
         put_options.encoding = Encoding("text/plain");
-        pub.put(Bytes::serialize(s), std::move(put_options));
+        pub.put(s, std::move(put_options));
 #endif
     }
     return 0;

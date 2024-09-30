@@ -36,8 +36,7 @@ const char *kind_to_str(SampleKind kind) {
 
 void data_handler(const Sample &sample) {
     std::cout << ">> [Subscriber] Received " << kind_to_str(sample.get_kind()) << " ('"
-              << sample.get_keyexpr().as_string_view() << "' : '" << sample.get_payload().deserialize<std::string>()
-              << "')\n";
+              << sample.get_keyexpr().as_string_view() << "' : '" << sample.get_payload().as_string() << "')\n";
 }
 
 int _main(int argc, char **argv) {

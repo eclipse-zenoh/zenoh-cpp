@@ -81,11 +81,11 @@ int _main(int argc, char **argv) {
         memcpy(buf.data(), s.data(), len);
 
 #if __cpp_designated_initializers >= 201707L
-        pub.put(Bytes::serialize(std::move(buf)), {.encoding = Encoding("text/plain")});
+        pub.put(std::move(buf), {.encoding = Encoding("text/plain")});
 #else
         Publisher::PutOptions options;
         options.encoding = Encoding("text/plain");
-        pub.put(Bytes::serialize(std::move(buf)), std::move(options));
+        pub.put(std::move(buf), std::move(options));
 #endif
     }
     return 0;

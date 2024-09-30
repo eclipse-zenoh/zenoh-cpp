@@ -63,9 +63,6 @@ int _main(int argc, char **argv) {
 
     std::cout << "Publisher on '" << keyexpr << "' declared" << std::endl;
 
-    // allocate attachment map
-    std::unordered_map<std::string, std::string> attachment_map = {{"source", "C++"}};
-
     std::cout << "Press CTRL-C to quit..." << std::endl;
     for (int idx = 0; idx < std::numeric_limits<int>::max(); ++idx) {
         std::this_thread::sleep_for(1s);
@@ -73,17 +70,15 @@ int _main(int argc, char **argv) {
         ss << "[" << idx << "] " << value;
         auto s = ss.str();  // in C++20 use .view() instead
         std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
-        // add some other attachment value
-        attachment_map["index"] = std::to_string(idx);
-#if __cpp_designated_initializers >= 201707L
-        pub.put(Bytes::serialize(s),
-                {.encoding = Encoding("text/plain"), .attachment = Bytes::serialize(attachment_map)});
-#else
         Publisher::PutOptions options;
         options.encoding = Encoding("text/plain");
-        options.attachment = Bytes::serialize(attachment_map);
-        pub.put(Bytes::serialize(s), std::move(options));
+#if defined(Z_FEATURE_UNSTABLE_API)
+        // allocate attachment map
+        std::unordered_map<std::string, std::string> attachment_map = {{"source", "C++"}};
+        attachment_map["index"] = std::to_string(idx);
+        options.attachment = ext::serialize(attachment_map);
 #endif
+        pub.put(s, std::move(options));
     }
     return 0;
 }

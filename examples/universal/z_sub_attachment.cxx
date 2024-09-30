@@ -59,15 +59,16 @@ int _main(int argc, char **argv) {
 
     auto data_handler = [](const Sample &sample) {
         std::cout << ">> [Subscriber] Received " << kind_to_str(sample.get_kind()) << " ('"
-                  << sample.get_keyexpr().as_string_view() << "' : '" << sample.get_payload().deserialize<std::string>()
-                  << "')\n";
+                  << sample.get_keyexpr().as_string_view() << "' : '" << sample.get_payload().as_string() << "')\n";
+#if defined(Z_FEATURE_UNSTABLE_API)
         auto attachment = sample.get_attachment();
         if (!attachment.has_value()) return;
         // we expect attachment in the form of key-value pairs
-        auto attachment_data = attachment->get().deserialize<std::unordered_map<std::string, std::string>>();
+        auto attachment_data = ext::deserialize<std::unordered_map<std::string, std::string>>(attachment->get());
         for (auto &&[key, value] : attachment_data) {
             std::cout << "   attachment: " << key << ": '" << value << "'\n";
         }
+#endif
     };
 
     std::cout << "Declaring Subscriber on '" << keyexpr.as_string_view() << "'..." << std::endl;

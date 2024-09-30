@@ -63,32 +63,29 @@ int _main(int argc, char **argv) {
         auto payload = query.get_payload();
         std::cout << ">> [Queryable ] Received Query '" << keyexpr.as_string_view() << "?" << params;
         if (payload.has_value()) {
-            std::cout << "' value = '" << payload->get().deserialize<std::string>();
+            std::cout << "' value = '" << payload->get().as_string();
         }
         std::cout << "'\n";
-
+#if defined(Z_FEATURE_UNSTABLE_API)
         std::unordered_map<std::string, std::string> attachment_map;
         auto attachment = query.get_attachment();
         if (attachment.has_value()) {
             // read attachment as a key-value map
-            attachment_map = attachment->get().deserialize<std::unordered_map<std::string, std::string>>();
+            attachment_map = ext::deserialize<std::unordered_map<std::string, std::string>>(attachment->get());
             for (auto &&[key, value] : attachment_map) {
                 std::cout << "   attachment: " << key << ": '" << value << "'\n";
             }
         }
-#if __cpp_designated_initializers >= 201707L
-        query.reply(KeyExpr(expr), Bytes::serialize(value),
-                    {.encoding = Encoding("text/palin"), .attachment = Bytes::serialize(attachment_map)});
-#else
+#endif
         Query::ReplyOptions options;
         options.encoding = Encoding("text/plain");
-        options.attachment = Bytes::serialize(attachment_map);
-        query.reply(KeyExpr(expr), Bytes::serialize(value), std::move(options));
+#if defined(Z_FEATURE_UNSTABLE_API)
+        options.attachment = ext::serialize(attachment_map);
 #endif
+        query.reply(KeyExpr(expr), value, std::move(options));
     };
 
     auto on_drop_queryable = []() { std::cout << "Destroying queryable\n"; };
-
     auto queryable = session.declare_queryable(keyexpr, on_query, on_drop_queryable);
 
     printf("Press CTRL-C to quit...\n");
