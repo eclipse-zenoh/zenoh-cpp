@@ -25,7 +25,7 @@ using namespace std::chrono_literals;
 struct QueryData {
     std::string key;
     std::string params;
-    int32_t payload;
+    std::string payload;
     bool operator==(const QueryData& other) {
         return key == other.key && params == other.params && payload == other.payload;
     }
@@ -46,16 +46,16 @@ void queryable_get() {
         auto queryable = session1.declare_queryable(
             ke,
             [&queries](const Query& q) {
-                auto payload = q.get_payload()->get().deserialize<int32_t>();
+                auto payload = q.get_payload()->get().as_string();
                 QueryData qd;
                 qd.key = std::string(q.get_keyexpr().as_string_view());
                 qd.params = std::string(q.get_parameters());
                 qd.payload = payload;
                 queries.push_back(std::move(qd));
                 if (q.get_parameters() == "ok") {
-                    q.reply(q.get_keyexpr(), Bytes::serialize(std::to_string(payload)));
+                    q.reply(q.get_keyexpr(), Bytes(payload));
                 } else {
-                    q.reply_err(Bytes::serialize("err"));
+                    q.reply_err(Bytes("err"));
                 }
             },
             [&queryable_dropped]() { queryable_dropped = true; });
@@ -63,35 +63,35 @@ void queryable_get() {
 
         auto on_reply = [&replies, &errors](const Reply& r) {
             if (r.is_ok()) {
-                replies.push_back(r.get_ok().get_payload().deserialize<std::string>());
+                replies.push_back(r.get_ok().get_payload().as_string());
             } else {
-                errors.push_back(r.get_err().get_payload().deserialize<std::string>());
+                errors.push_back(r.get_err().get_payload().as_string());
             }
         };
         auto on_drop = [&queries_processed]() { queries_processed++; };
 
         Session::GetOptions opt1;
-        opt1.payload = Bytes::serialize<int32_t>(1);
+        opt1.payload = Bytes("1");
         session2.get(selector, "ok", on_reply, on_drop, std::move(opt1));
         std::this_thread::sleep_for(1s);
 
         Session::GetOptions opt2;
-        opt2.payload = Bytes::serialize<int32_t>(2);
+        opt2.payload = Bytes("2");
         session2.get(selector, "ok", on_reply, on_drop, std::move(opt2));
         std::this_thread::sleep_for(1s);
 
         Session::GetOptions opt3;
-        opt3.payload = Bytes::serialize<int32_t>(3);
+        opt3.payload = Bytes("3");
         session2.get(selector, "err", on_reply, on_drop, std::move(opt3));
         std::this_thread::sleep_for(1s);
     }
 
     assert(queries.size() == 3);
-    QueryData qd = {"zenoh/test/1", "ok", 1};
+    QueryData qd = {"zenoh/test/1", "ok", "1"};
     assert(queries[0] == qd);
-    qd = {"zenoh/test/1", "ok", 2};
+    qd = {"zenoh/test/1", "ok", "2"};
     assert(queries[1] == qd);
-    qd = {"zenoh/test/1", "err", 3};
+    qd = {"zenoh/test/1", "err", "3"};
     assert(queries[2] == qd);
 
     /// check that drop does not undeclare
@@ -121,7 +121,7 @@ void queryable_get_channel() {
     std::this_thread::sleep_for(1s);
 
     Session::GetOptions opt1;
-    opt1.payload = Bytes::serialize<int32_t>(1);
+    opt1.payload = "1";
     auto replies = session2.get(selector, "ok", channels::FifoChannel(3), std::move(opt1));
     {
         auto res = queryable.handler().recv();
@@ -129,14 +129,14 @@ void queryable_get_channel() {
         auto& query = std::get<Query>(res);
         assert(query.get_keyexpr() == selector);
         assert(query.get_parameters() == "ok");
-        assert(query.get_payload()->get().deserialize<int32_t>() == 1);
-        query.reply(query.get_keyexpr(), Bytes::serialize(std::to_string(1)));
+        assert(query.get_payload()->get().as_string() == "1");
+        query.reply(query.get_keyexpr(), Bytes("1"));
     }
 
     auto res = replies.recv();
     assert(std::holds_alternative<Reply>(res));
     assert(std::get<Reply>(res).is_ok());
-    assert(std::get<Reply>(res).get_ok().get_payload().deserialize<std::string>() == "1");
+    assert(std::get<Reply>(res).get_ok().get_payload().as_string() == "1");
     assert(std::get<Reply>(res).get_ok().get_keyexpr().as_string_view() == "zenoh/test/1");
 
     res = replies.recv();
@@ -144,7 +144,7 @@ void queryable_get_channel() {
     assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
 
     Session::GetOptions opt3;
-    opt3.payload = Bytes::serialize<int32_t>(3);
+    opt3.payload = Bytes("3");
     replies = session2.get(selector, "err", channels::FifoChannel(3), std::move(opt3));
     {
         auto res = queryable.handler().recv();
@@ -152,14 +152,14 @@ void queryable_get_channel() {
         auto& query = std::get<Query>(res);
         assert(query.get_keyexpr() == selector);
         assert(query.get_parameters() == "err");
-        assert(query.get_payload()->get().deserialize<int32_t>() == 3);
-        query.reply_err(Bytes::serialize("err"));
+        assert(query.get_payload()->get().as_string() == "3");
+        query.reply_err(Bytes("err"));
     }
 
     res = replies.recv();
     assert(std::holds_alternative<Reply>(res));
     assert(!std::get<Reply>(res).is_ok());
-    assert(std::get<Reply>(res).get_err().get_payload().deserialize<std::string>() == "err");
+    assert(std::get<Reply>(res).get_err().get_payload().as_string() == "err");
     res = replies.recv();
     assert(std::holds_alternative<channels::RecvError>(res));
     assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);

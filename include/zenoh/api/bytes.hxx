@@ -73,18 +73,18 @@ class Bytes : public Owned<::z_owned_bytes_t> {
                            detail::closures::_zenoh_drop_with_context, drop);
     }
 
-    /// @brief Construct by copying sequence of bytes.
-    template <class Allocator>
-    Bytes(const std::vector<uint8_t, Allocator>& v) : Bytes() {
-        ::z_bytes_copy_from_buf(interop::as_owned_c_ptr(*this), v.data(), v.size());
-    }
-
     /// @brief Construct by copying sequence of charactes.
     Bytes(std::string_view v) : Bytes() {
         ::z_view_string_t s;
         z_view_string_from_substr(&s, v.data(), v.size());
         ::z_bytes_copy_from_string(interop::as_owned_c_ptr(*this), ::z_loan(s));
     }
+
+    /// @brief Construct by copying sequence of charactes.
+    Bytes(const char* v) : Bytes(std::string_view(v)){};
+
+    /// @brief Construct by copying sequence of charactes.
+    Bytes(const std::string& v) : Bytes(std::string_view(v)){};
 
     /// @brief Construct by moving a string.
     Bytes(std::string&& v) : Bytes() {
@@ -109,11 +109,15 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     Bytes() : Owned(nullptr) { ::z_bytes_empty(interop::as_owned_c_ptr(*this)); }
 
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     Bytes(ZShm&& shm, ZResult* err = nullptr) : Bytes() {
         __ZENOH_RESULT_CHECK(::z_bytes_from_shm(interop::as_owned_c_ptr(*this), interop::as_moved_c_ptr(shm)), err,
                              "Failed to convert from ZShm");
     }
 
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     Bytes(ZShmMut&& shm, ZResult* err = nullptr) : Bytes() {
         __ZENOH_RESULT_CHECK(::z_bytes_from_shm_mut(interop::as_owned_c_ptr(*this), interop::as_moved_c_ptr(shm)), err,
                              "Failed to convert from ZShmMut");
@@ -139,6 +143,8 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     }
 
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     ZShm as_shm(ZResult* err = nullptr) const {
         ZShm shm = interop::detail::null<ZShm>();
         __ZENOH_RESULT_CHECK(::z_bytes_to_owned_shm(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(shm)), err,
@@ -181,6 +187,9 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         /// @return read position indicator on success or -1L if failure occurs.
         int64_t tell() { return ::z_bytes_reader_tell(&this->_0); }
 
+        /// @brief Return the number of bytes that can still be read.
+        size_t remaining() { return ::z_bytes_reader_remaining(&this->_0); }
+
         /// @brief Set the `reader` position indicator to the value pointed to by offset, starting from the current
         /// position.
         /// @param offset offset in bytes starting from the current position.
@@ -218,14 +227,8 @@ class Bytes : public Owned<::z_owned_bytes_t> {
        public:
         /// @name Constructors
 
-        /// Constructs an empty writer
+        /// Construct an empty writer.
         Writer() : Owned(nullptr) { ::z_bytes_writer_empty(interop::as_owned_c_ptr(*this)); }
-
-        /// @brief Construct writer initialized with data.
-        /// @param b Data to initialize writer with.
-        Writer(Bytes&& b) : Owned(nullptr) {
-            z_bytes_writer_from_bytes(interop::as_owned_c_ptr(*this), interop::as_moved_c_ptr(b));
-        }
 
         /// @name Methods
 
@@ -235,10 +238,11 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         /// @param err if not null, the result code will be written to this location, otherwise ZException exception
         /// will be thrown in case of error.
         void write_all(const uint8_t* src, size_t len, ZResult* err = nullptr) {
-            __ZENOH_RESULT_CHECK(::z_bytes_writer_write_all(&this->_0, src, len), err, "Failed to write data");
+            __ZENOH_RESULT_CHECK(::z_bytes_writer_write_all(interop::as_loaned_c_ptr(*this), src, len), err,
+                                 "Failed to write data");
         }
 
-        /// @brief Appends another `Bytes` instance.
+        /// @brief Append another `Bytes` instance.
         /// This allows to compose data out of multiple `Bytes` that may point to different memory regions.
         /// Said in other terms, it allows to create a linear view on different memory regions without copy.
         ///
@@ -246,7 +250,8 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         /// @param err if not null, the result code will be written to this location, otherwise ZException exception
         /// will be thrown in case of error.
         void append(Bytes&& data, ZResult* err = nullptr) {
-            __ZENOH_RESULT_CHECK(::z_bytes_writer_append(&this->_0, z_move(data._0)), err, "Failed to append data");
+            __ZENOH_RESULT_CHECK(::z_bytes_writer_append(interop::as_loaned_c_ptr(*this), z_move(data._0)), err,
+                                 "Failed to append data");
         }
 
         /// @brief Finalize all writes and return underlying `Bytes` object.
