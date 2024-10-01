@@ -32,9 +32,6 @@
 namespace zenoh {
 namespace ext {
 
-#if defined(Z_FEATURE_UNSTABLE_API)
-
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A Zenoh data serializer used for incremental serialization of several values.
 /// I.e. data produced by subsequent calls to `Serializer::serialize` can be read by corresponding calls to
 /// `Deserializer::deserialize` in the same order (or alternatively by a single call to `z_deserialize`
@@ -62,7 +59,6 @@ class Serializer : public Owned<::ze_owned_serializer_t> {
     }
 };
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A Zenoh data deserializer used for incremental deserialization of several values.
 /// I.e. data produced by subsequent calls to `Serializer::serialize` can be read by corresponding calls to
 /// `Deserializer::deserialize` in the same order (or alternatively by a single call to `z_deserialize`
@@ -89,7 +85,6 @@ class Deserializer : public Copyable<::ze_deserializer_t> {
     bool is_done() const { return ::ze_deserializer_is_done(&this->_0); }
 };
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serialize a single value into `Bytes`.
 /// @param value value to serialize.
 /// @return 'Bytes' containing serialized value.
@@ -100,7 +95,6 @@ zenoh::Bytes serialize(const T& value) {
     return std::move(s).finish();
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserialize `Bytes` corresponding to a single serialized value.
 /// @param bytes data to deserialize.
 /// @param err if not null, the result code will be written to this location, otherwise ZException exception
@@ -384,6 +378,5 @@ T Deserializer::deserialize(zenoh::ZResult* err) {
     return t;
 }
 
-#endif
 }  // namespace ext
 }  // namespace zenoh

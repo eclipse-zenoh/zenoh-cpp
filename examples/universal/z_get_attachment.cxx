@@ -57,7 +57,6 @@ int _main(int argc, char **argv) {
             const Sample &sample = reply.get_ok();
             std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
                       << sample.get_payload().as_string() << "')\n";
-#if defined(Z_FEATURE_UNSTABLE_API)
             auto attachment = sample.get_attachment();
             if (!attachment.has_value()) return;
             // we expect attachment in the form of key-value pairs
@@ -66,7 +65,6 @@ int _main(int argc, char **argv) {
             for (auto &&[key, value] : attachment_deserialized) {
                 std::cout << "   attachment: " << key << ": '" << value << "'\n";
             }
-#endif
         } else {
             std::cout << "Received an error :" << reply.get_err().get_payload().as_string() << "\n";
         }
@@ -83,9 +81,7 @@ int _main(int argc, char **argv) {
     Session::GetOptions options;
     options.target = QueryTarget::Z_QUERY_TARGET_ALL;
     options.payload = value;
-#if defined(Z_FEATURE_UNSTABLE_API)
     options.attachment = ext::serialize(attachment);
-#endif
     session.get(keyexpr, "", on_reply, on_done, std::move(options));
 
     std::unique_lock lock(m);

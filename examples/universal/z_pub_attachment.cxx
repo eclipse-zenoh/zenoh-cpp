@@ -72,12 +72,11 @@ int _main(int argc, char **argv) {
         std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
         Publisher::PutOptions options;
         options.encoding = Encoding("text/plain");
-#if defined(Z_FEATURE_UNSTABLE_API)
         // allocate attachment map
         std::unordered_map<std::string, std::string> attachment_map = {{"source", "C++"}};
         attachment_map["index"] = std::to_string(idx);
         options.attachment = ext::serialize(attachment_map);
-#endif
+
         pub.put(s, std::move(options));
     }
     return 0;
