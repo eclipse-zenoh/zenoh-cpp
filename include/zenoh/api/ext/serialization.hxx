@@ -253,11 +253,11 @@ bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserialize
            deserialize_with_deserializer(deserializer, value.second, err);
 }
 
-#define _ZENOH_DESERIALIZE_SEQUENCE_BEGIN                                                                         \
-    size_t len;                                                                                                   \
-    __ZENOH_RESULT_CHECK(                                                                                         \
+#define _ZENOH_DESERIALIZE_SEQUENCE_BEGIN                                                                          \
+    size_t len;                                                                                                    \
+    __ZENOH_RESULT_CHECK(                                                                                          \
         ::ze_deserializer_deserialize_sequence_length(zenoh::interop::as_copyable_c_ptr(deserializer), &len), err, \
-        "Deserialization failure:: Failed to read sequence length");                                              \
+        "Deserialization failure:: Failed to read sequence length");                                               \
     if (err != nullptr && *err != Z_OK) return false;
 
 #define _ZENOH_DESERIALIZE_SEQUENCE_END return (err == nullptr || *err == Z_OK);
