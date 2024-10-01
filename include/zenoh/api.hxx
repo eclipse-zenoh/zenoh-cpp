@@ -38,6 +38,4 @@
 #if defined Z_FEATURE_SHARED_MEMORY && defined Z_FEATURE_UNSTABLE_API
 #include "api/shm/shm.hxx"
 #endif
-#if defined Z_FEATURE_UNSTABLE_API
 #include "api/ext/serialization.hxx"
-#endif

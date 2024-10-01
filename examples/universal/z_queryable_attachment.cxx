@@ -66,7 +66,7 @@ int _main(int argc, char **argv) {
             std::cout << "' value = '" << payload->get().as_string();
         }
         std::cout << "'\n";
-#if defined(Z_FEATURE_UNSTABLE_API)
+
         std::unordered_map<std::string, std::string> attachment_map;
         auto attachment = query.get_attachment();
         if (attachment.has_value()) {
@@ -76,12 +76,10 @@ int _main(int argc, char **argv) {
                 std::cout << "   attachment: " << key << ": '" << value << "'\n";
             }
         }
-#endif
+
         Query::ReplyOptions options;
         options.encoding = Encoding("text/plain");
-#if defined(Z_FEATURE_UNSTABLE_API)
         options.attachment = ext::serialize(attachment_map);
-#endif
         query.reply(KeyExpr(expr), value, std::move(options));
     };
 

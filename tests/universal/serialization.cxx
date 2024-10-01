@@ -18,7 +18,6 @@
 #undef NDEBUG
 #include <assert.h>
 
-#if defined(Z_FEATURE_UNSTABLE_API)
 using namespace zenoh;
 
 template <class T>
@@ -97,12 +96,9 @@ void serialize_custom() {
     assert(s.s == s_out.s);
 }
 
-#endif
 int main(int argc, char** argv) {
-#if defined(Z_FEATURE_UNSTABLE_API)
     serialize_primitive();
     serialize_tuple();
     serialize_container();
     serialize_custom();
-#endif
 }

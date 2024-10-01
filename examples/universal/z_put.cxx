@@ -73,11 +73,11 @@ int _main(int argc, char **argv) {
 
     Session::PutOptions put_options;
     put_options.encoding = Encoding("text/plain");
-#if defined(Z_FEATURE_UNSTABLE_API)
+
     std::unordered_map<std::string, std::string> attachment_map = {{"serial_number", "123"},
                                                                    {"coordinates", "48.7082,2.1498"}};
     put_options.attachment = ext::serialize(attachment_map);
-#endif
+
     session.put(KeyExpr(keyexpr), value, std::move(put_options));
     return 0;
 }

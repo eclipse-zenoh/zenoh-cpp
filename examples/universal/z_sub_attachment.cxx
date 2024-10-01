@@ -60,7 +60,7 @@ int _main(int argc, char **argv) {
     auto data_handler = [](const Sample &sample) {
         std::cout << ">> [Subscriber] Received " << kind_to_str(sample.get_kind()) << " ('"
                   << sample.get_keyexpr().as_string_view() << "' : '" << sample.get_payload().as_string() << "')\n";
-#if defined(Z_FEATURE_UNSTABLE_API)
+
         auto attachment = sample.get_attachment();
         if (!attachment.has_value()) return;
         // we expect attachment in the form of key-value pairs
@@ -68,7 +68,6 @@ int _main(int argc, char **argv) {
         for (auto &&[key, value] : attachment_data) {
             std::cout << "   attachment: " << key << ": '" << value << "'\n";
         }
-#endif
     };
 
     std::cout << "Declaring Subscriber on '" << keyexpr.as_string_view() << "'..." << std::endl;

@@ -21,7 +21,7 @@
 using namespace zenoh;
 
 int _main(int argc, char** argv) {
-    // using raw data
+    // Using raw data
     // String
     {
         // C-String
@@ -75,8 +75,7 @@ int _main(int argc, char** argv) {
         }
     }
 
-#if defined(Z_FEATURE_UNSTABLE_API)
-    /// Serialization
+    // Serialization
     // Vector
     {
         const std::vector<int32_t> input = {1, 2, 3, 4};
@@ -115,7 +114,6 @@ int _main(int argc, char** argv) {
         assert(i2 == o2);
         assert(i3 == o3);
     }
-#endif
 
 #ifdef ZENOH_CPP_EXMAPLE_WITH_PROTOBUF
     // Protobuf
