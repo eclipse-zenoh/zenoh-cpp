@@ -85,7 +85,7 @@ class Deserializer : public Copyable<::ze_deserializer_t> {
 };
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Serialize a single into `Bytes`.
+/// @brief Serialize a single value into `Bytes`.
 template <class T>
 zenoh::Bytes serialize(const T& value) {
     Serializer s;

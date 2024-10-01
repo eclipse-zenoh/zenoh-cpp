@@ -33,7 +33,7 @@ Publisher example:
 
       // Publish from a Publisher object
       auto publisher = session.declare_publisher(KeyExpr("demo/example/simple"));
-      publisher.put(Bytes::serialize("Simple!"));
+      publisher.put("Simple!");
    }
 
 Subscriber example:
