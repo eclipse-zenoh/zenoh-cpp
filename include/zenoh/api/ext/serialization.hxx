@@ -43,16 +43,18 @@ class Serializer : public Owned<::ze_owned_serializer_t> {
    public:
     /// @name Constructors
 
-    /// Constructs an empty writer.
+    /// Constructs an empty serializer.
     Serializer() : Owned(nullptr) { ::ze_serializer_empty(interop::as_owned_c_ptr(*this)); }
 
     /// @name Methods
-    /// @brief Serialize specified value.
+
+    /// @brief Serialize specified value and append it to the underlying `Bytes`.
+    /// @param value value to serialize.
     template <class T>
     void serialize(const T& value);
 
-    /// @brief Finalize serialization and return underlying `Bytes` object.
-    /// @return Underlying `Bytes` object.
+    /// @brief Finalize serialization and return the underlying `Bytes` object.
+    /// @return underlying `Bytes` object.
     Bytes finish() && {
         Bytes b;
         ::ze_serializer_finish(interop::as_moved_c_ptr(*this), interop::as_owned_c_ptr(b));
@@ -70,22 +72,27 @@ class Deserializer : public Copyable<::ze_deserializer_t> {
     /// @name Constructors
 
     /// @brief Construct deserializer for the specified data.
-    /// @param b Data to initialize deserializer with.
+    /// @param b data to initialize deserializer with.
     Deserializer(const Bytes& b) : Copyable(::ze_deserializer_from_bytes(zenoh::interop::as_loaned_c_ptr(b))) {}
 
     /// @name Methods
 
-    /// @brief Deserialize into value of specified type.
+    /// @brief Deserialize next portion of data into specified type.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception
+    /// will be thrown in case of error.
+    /// @return deserialized value.
     template <class T>
     T deserialize(zenoh::ZResult* err = nullptr);
 
     /// @brief Checks if deserializer has parsed all the data.
     /// @return `true` if there is no more data to parse, `false` otherwise.
-    bool is_done() { return ::ze_deserializer_is_done(&this->_0); }
+    bool is_done() const { return ::ze_deserializer_is_done(&this->_0); }
 };
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serialize a single value into `Bytes`.
+/// @param value value to serialize.
+/// @return 'Bytes' containing serialized value.
 template <class T>
 zenoh::Bytes serialize(const T& value) {
     Serializer s;
@@ -95,6 +102,10 @@ zenoh::Bytes serialize(const T& value) {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserialize `Bytes` corresponding to a single serialized value.
+/// @param bytes data to deserialize.
+/// @param err if not null, the result code will be written to this location, otherwise ZException exception
+/// will be thrown in case of error.
+/// @return deserialized value.
 template <class T>
 T deserialize(const zenoh::Bytes& bytes, zenoh::ZResult* err = nullptr) {
     Deserializer d(bytes);
