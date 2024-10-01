@@ -74,9 +74,9 @@ int _main(int argc, char **argv) {
         if (reply.is_ok()) {
             const auto &sample = reply.get_ok();
             std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
-                      << sample.get_payload().deserialize<std::string>() << "')\n";
+                      << sample.get_payload().as_string() << "')\n";
         } else {
-            std::cout << "Received an error :" << reply.get_err().get_payload().deserialize<std::string>() << "\n";
+            std::cout << "Received an error :" << reply.get_err().get_payload().as_string() << "\n";
         }
     };
 
@@ -91,7 +91,7 @@ int _main(int argc, char **argv) {
 #else
     Session::GetOptions options;
     options.target = Z_QUERY_TARGET_ALL;
-    options.payload = Bytes::serialize(value);
+    options.payload = value;
     session.get(keyexpr, "", on_reply, on_done, std::move(options));
 #endif
 

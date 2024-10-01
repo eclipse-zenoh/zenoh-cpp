@@ -23,7 +23,7 @@ using namespace std::chrono_literals;
 #include <assert.h>
 
 struct CommonAllocator {
-    Bytes alloc_with_data(const char data[]) { return Bytes::serialize(data); }
+    Bytes alloc_with_data(const char* data) { return Bytes(data); }
 };
 
 #if defined Z_FEATURE_SHARED_MEMORY && defined Z_FEATURE_UNSTABLE_API
@@ -38,7 +38,7 @@ class SHMAllocator {
         auto alloc_result = provider.alloc_gc_defrag_blocking(len, AllocAlignment({0}));
         ZShmMut&& buf = std::get<ZShmMut>(std::move(alloc_result));
         memcpy(buf.data(), data, len + 1);
-        return Bytes::serialize(std::move(buf));
+        return Bytes(std::move(buf));
     }
 };
 #endif
@@ -59,8 +59,7 @@ void pub_sub(Talloc& alloc) {
         auto subscriber = session2.declare_subscriber(
             ke,
             [&received_messages](const Sample& s) {
-                received_messages.emplace_back(s.get_keyexpr().as_string_view(),
-                                               s.get_payload().deserialize<std::string>());
+                received_messages.emplace_back(s.get_keyexpr().as_string_view(), s.get_payload().as_string());
             },
             [&subscriber_dropped]() { subscriber_dropped = true; });
 
@@ -98,8 +97,7 @@ void put_sub(Talloc& alloc) {
     auto subscriber = session2.declare_subscriber(
         ke,
         [&received_messages](const Sample& s) {
-            received_messages.emplace_back(s.get_keyexpr().as_string_view(),
-                                           s.get_payload().deserialize<std::string>());
+            received_messages.emplace_back(s.get_keyexpr().as_string_view(), s.get_payload().as_string());
         },
         closures::none);
 
@@ -137,11 +135,11 @@ void put_sub_fifo_channel(Talloc& alloc) {
     auto res = subscriber.handler().recv();
     assert(std::holds_alternative<Sample>(res));
     assert(std::get<Sample>(res).get_keyexpr() == "zenoh/test");
-    assert(std::get<Sample>(res).get_payload().deserialize<std::string>() == "first");
+    assert(std::get<Sample>(res).get_payload().as_string() == "first");
     res = subscriber.handler().try_recv();
     assert(std::holds_alternative<Sample>(res));
     assert(std::get<Sample>(res).get_keyexpr() == "zenoh/test");
-    assert(std::get<Sample>(res).get_payload().deserialize<std::string>() == "second");
+    assert(std::get<Sample>(res).get_payload().as_string() == "second");
 
     res = subscriber.handler().try_recv();
     assert(std::holds_alternative<channels::RecvError>(res));
@@ -168,7 +166,7 @@ void put_sub_ring_channel(Talloc& alloc) {
     auto res = subscriber.handler().recv();
     assert(std::holds_alternative<Sample>(res));
     assert(std::get<Sample>(res).get_keyexpr() == "zenoh/test");
-    assert(std::get<Sample>(res).get_payload().deserialize<std::string>() == "second");
+    assert(std::get<Sample>(res).get_payload().as_string() == "second");
 
     res = subscriber.handler().try_recv();
     assert(std::holds_alternative<channels::RecvError>(res));

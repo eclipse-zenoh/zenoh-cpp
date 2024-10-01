@@ -51,7 +51,7 @@ void data_handler(const Sample &sample) {
     const char *payload_type = "RAW";
     {
         ZResult result;
-        sample.get_payload().deserialize<ZShm>(&result);
+        sample.get_payload().as_shm(&result);
         if (result == Z_OK) {
             payload_type = "SHM";
         }
@@ -59,8 +59,7 @@ void data_handler(const Sample &sample) {
 #endif
 
     std::cout << ">> [Subscriber] Received [" << payload_type << "] " << kind_to_str(sample.get_kind()) << " ('"
-              << sample.get_keyexpr().as_string_view() << "' : '" << sample.get_payload().deserialize<std::string>()
-              << "')\n";
+              << sample.get_keyexpr().as_string_view() << "' : '" << sample.get_payload().as_string() << "')\n";
 }
 
 int _main(int argc, char **argv) {

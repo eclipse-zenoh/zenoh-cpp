@@ -56,17 +56,19 @@ int _main(int argc, char **argv) {
         if (reply.is_ok()) {
             const Sample &sample = reply.get_ok();
             std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
-                      << sample.get_payload().deserialize<std::string>() << "')\n";
+                      << sample.get_payload().as_string() << "')\n";
+#if defined(Z_FEATURE_UNSTABLE_API)
             auto attachment = sample.get_attachment();
             if (!attachment.has_value()) return;
             // we expect attachment in the form of key-value pairs
             auto attachment_deserialized =
-                attachment->get().deserialize<std::unordered_map<std::string, std::string>>();
+                ext::deserialize<std::unordered_map<std::string, std::string>>(attachment->get());
             for (auto &&[key, value] : attachment_deserialized) {
                 std::cout << "   attachment: " << key << ": '" << value << "'\n";
             }
+#endif
         } else {
-            std::cout << "Received an error :" << reply.get_err().get_payload().deserialize<std::string>() << "\n";
+            std::cout << "Received an error :" << reply.get_err().get_payload().as_string() << "\n";
         }
     };
 
@@ -78,17 +80,13 @@ int _main(int argc, char **argv) {
 
     std::unordered_map<std::string, std::string> attachment = {{"Source", "C++"}};
 
-#if __cpp_designated_initializers >= 201707L
-    session.get(
-        keyexpr, "", on_reply, on_done,
-        {.target = Z_QUERY_TARGET_ALL, .payload = Bytes::serialize(value), .attachment = Bytes::serialize(attachment)});
-#else
     Session::GetOptions options;
     options.target = QueryTarget::Z_QUERY_TARGET_ALL;
-    options.payload = Bytes::serialize(value);
-    options.attachment = Bytes::serialize(attachment);
-    session.get(keyexpr, "", on_reply, on_done, std::move(options));
+    options.payload = value;
+#if defined(Z_FEATURE_UNSTABLE_API)
+    options.attachment = ext::serialize(attachment);
 #endif
+    session.get(keyexpr, "", on_reply, on_done, std::move(options));
 
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });

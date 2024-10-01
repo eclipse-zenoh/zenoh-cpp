@@ -28,7 +28,7 @@ Then a string is published on "demo/example/simple" key expression.
       try {
          Config config = Config::create_default();
          auto session = Session::open(std::move(config));
-         session.put(KeyExpr("demo/example/simple"), Bytes::serialize("Simple!"));
+         session.put(KeyExpr("demo/example/simple"), "Simple!");
       } catch (ZException e) {
          std::cout << "Received an error :" << e.what() << "\n";
       }

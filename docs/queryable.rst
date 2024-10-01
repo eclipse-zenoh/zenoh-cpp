@@ -102,11 +102,11 @@ Also notice that the callback is processed asynchronously, so the client must no
          if (reply->is_ok()) {
             const Sample& sample = reply->get_ok();
             std::cout << "Received ('" << sample.get_keyexpr().as_string_view() << "' : '"
-                      << sample.get_payload().deserialize<std::string>() << "')\n";
+                      << sample.get_payload().as_string() << "')\n";
          } else {
             const ReplyError& error = reply->get_err();
             std::cout << "Received an error :" 
-                      << error.get_payload().deserialzie<std::string>() << "\n";
+                      << error.get_payload().as_string() << "\n";
          }
          
       }

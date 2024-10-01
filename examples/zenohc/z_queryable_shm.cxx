@@ -66,7 +66,7 @@ int _main(int argc, char **argv) {
         const char *payload_type = "";
         if (payload.has_value()) {
             ZResult result;
-            payload->get().deserialize<ZShm>(&result);
+            payload->get().as_shm(&result);
             if (result == Z_OK) {
                 payload_type = "SHM";
             } else {
@@ -79,7 +79,7 @@ int _main(int argc, char **argv) {
         std::cout << ">> [Queryable ] Received Query [" << payload_type << "] '" << keyexpr.as_string_view() << "?"
                   << params;
         if (payload.has_value()) {
-            std::cout << "' value = '" << payload->get().deserialize<std::string>();
+            std::cout << "' value = '" << payload->get().as_string();
         }
         std::cout << "'\n";
 
@@ -89,11 +89,11 @@ int _main(int argc, char **argv) {
         memcpy(buf.data(), value, len);
 
 #if __cpp_designated_initializers >= 201707L
-        query.reply(KeyExpr(expr), Bytes::serialize(std::move(buf)), {.encoding = Encoding("text/plain")});
+        query.reply(KeyExpr(expr), std::move(buf), {.encoding = Encoding("text/plain")});
 #else
         Query::ReplyOptions options;
         options.encoding = Encoding("text/plain");
-        query.reply(KeyExpr(expr), Bytes::serialize(std::move(buf)), std::move(options));
+        query.reply(KeyExpr(expr), std::move(buf), std::move(options));
 #endif
     };
 

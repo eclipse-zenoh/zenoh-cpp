@@ -69,7 +69,7 @@ int _main(int argc, char **argv) {
     ZShm buf(std::move(buf_mut));
 
     printf("Press CTRL-C to quit...\n");
-    while (1) pub.put(Bytes::serialize(ZShm(buf)));
+    while (1) pub.put(ZShm(buf));
 }
 
 int main(int argc, char **argv) {

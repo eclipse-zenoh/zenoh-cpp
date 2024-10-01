@@ -21,34 +21,21 @@
 using namespace zenoh;
 
 int _main(int argc, char** argv) {
-    // Numeric: u8, u16, u32, u128, usize, i8, i16, i32, i128, isize, f32, f64
-    {
-        const uint32_t input = 1234;
-        const auto payload = Bytes::serialize(input);
-        const auto output = payload.deserialize<uint32_t>();
-        assert(input == output);
-        // Corresponding encoding to be used in operations like `.put()`, `.reply()`, etc.
-#if defined(ZENOHCXX_ZENOHC) || (Z_FEATURE_ENCODING_VALUES == 1)
-        const auto encoding = Encoding::Predefined::zenoh_uint32();
-#else
-        const auto encoding = Encoding("zenoh/uint32");
-#endif
-    }
-
+    // using raw data
     // String
     {
         // C-String
         {
             const char* input = "test";
-            const auto payload = Bytes::serialize(input);
-            const auto output = payload.deserialize<std::string>();
+            const auto payload = Bytes(input);
+            const auto output = payload.as_string();
             assert(input == output);
         }
         // std::string
         {
             const std::string input = "test";
-            const auto payload = Bytes::serialize(input);
-            const auto output = payload.deserialize<std::string>();
+            const auto payload = Bytes(input);
+            const auto output = payload.as_string();
             assert(input == output);
         }
         // Corresponding encoding to be used in operations like `.put()`, `.reply()`, etc.
@@ -59,11 +46,11 @@ int _main(int argc, char** argv) {
 #endif
     }
 
-    // Vec<u8>: The deserialization should be infallible
+    // Vector of uint8_t
     {
         const std::vector<uint8_t> input = {1, 2, 3, 4};
-        const auto payload = Bytes::serialize(input);
-        const auto output = payload.deserialize<std::vector<uint8_t>>();
+        const auto payload = Bytes(input);
+        const auto output = payload.as_vector();
         assert(input == output);
         // Corresponding encoding to be used in operations like `.put()`, `.reply()`, etc.
 #if defined(ZENOHCXX_ZENOHC) || (Z_FEATURE_ENCODING_VALUES == 1)
@@ -73,48 +60,10 @@ int _main(int argc, char** argv) {
 #endif
     }
 
-    // Writer & Reader
-    {
-        // serialization
-        Bytes bytes;
-        auto writer = bytes.writer();
-
-        const uint32_t i1 = 1234;
-        const std::string i2 = "test";
-        const std::vector<uint8_t> i3 = {1, 2, 3, 4};
-
-        writer.append_bounded(i1);
-        writer.append_bounded(i2);
-        writer.append_bounded(i3);
-
-        // deserialization
-        auto reader = bytes.reader();
-
-        const auto o1 = reader.read_bounded().deserialize<uint32_t>();
-        const auto o2 = reader.read_bounded().deserialize<std::string>();
-        const auto o3 = reader.read_bounded().deserialize<std::vector<uint8_t>>();
-
-        assert(i1 == o1);
-        assert(i2 == o2);
-        assert(i3 == o3);
-    }
-
-    // Iterator
-    {
-        const int32_t input[] = {1, 2, 3, 4};
-        const auto payload = Bytes::serialize_from_iter(input, input + 4);
-
-        auto idx = 0;
-        auto it = payload.iter();
-        for (auto elem = it.next(); elem.has_value(); elem = it.next()) {
-            assert(input[idx++] == elem.value().deserialize<int32_t>());
-        }
-    }
-
-    // Iterator RAW
+    // Iterator RAW (in case of fragmented data)
     {
         const std::vector<uint8_t> input = {1, 2, 3, 4};
-        const auto payload = Bytes::serialize(input);
+        const auto payload = Bytes(input);
 
         size_t idx = 0;
         auto it = payload.slice_iter();
@@ -126,13 +75,47 @@ int _main(int argc, char** argv) {
         }
     }
 
+#if defined(Z_FEATURE_UNSTABLE_API)
+    /// Serialization
+    // Vector
+    {
+        const std::vector<int32_t> input = {1, 2, 3, 4};
+        const auto payload = ext::serialize(input);
+        const auto output = ext::deserialize<std::vector<int32_t>>(payload);
+        assert(input == output);
+    }
     // HashMap
     {
         const std::unordered_map<uint64_t, std::string> input = {{0, "abc"}, {1, "def"}};
-        const auto payload = Bytes::serialize(input);
-        const auto output = payload.deserialize<std::unordered_map<uint64_t, std::string>>();
+        const auto payload = ext::serialize(input);
+        const auto output = ext::deserialize<std::unordered_map<uint64_t, std::string>>(payload);
         assert(input == output);
     }
+
+    // Serializer, deserializer (for struct or tuple serialization)
+    {
+        // serialization
+        auto serializer = ext::Serializer();
+        const uint32_t i1 = 1234;
+        const std::string i2 = "test";
+        const std::vector<uint8_t> i3 = {1, 2, 3, 4};
+        serializer.serialize(i1);
+        serializer.serialize(i2);
+        serializer.serialize(i3);
+        Bytes bytes = std::move(serializer).finish();
+
+        // deserialization
+        auto deserializer = ext::Deserializer(bytes);
+
+        const auto o1 = deserializer.deserialize<uint32_t>();
+        const auto o2 = deserializer.deserialize<std::string>();
+        const auto o3 = deserializer.deserialize<std::vector<uint8_t>>();
+
+        assert(i1 == o1);
+        assert(i2 == o2);
+        assert(i3 == o3);
+    }
+#endif
 
 #ifdef ZENOH_CPP_EXMAPLE_WITH_PROTOBUF
     // Protobuf
@@ -148,20 +131,20 @@ int _main(int argc, char** argv) {
         input.set_name("John Doe");
 
         // Serialize PB message into wire format
-        const auto input_wire_pb = input.SerializeAsString();
+        // Avoid using std::string for raw bytes, since certain bindigs
+        // might rise a error if the string is not a valid sequence of utf-8 characters.
+        std::vector<uint8_t> input_wire_pb(input.ByteSizeLong());
+        input.SerializeToArray(input_wire_pb.data(), input_wire_pb.size());
 
         // Put PB wire format into Bytes
-        const auto payload = Bytes::serialize(input_wire_pb);
+        const auto payload = Bytes(std::move(input_wire_pb));
 
         // Extract PB wire format
-        const auto output_wire_pb = payload.deserialize<std::string>();
-
-        // wire PB data is equal
-        assert(input_wire_pb == output_wire_pb);
+        const auto output_wire_pb = payload.as_vector();
 
         // deserialize output wire PB into PB message
         Entity output;
-        const auto parsed = output.ParseFromString(output_wire_pb);
+        const auto parsed = output.ParseFromArray(output_wire_pb.data(), output_wire_pb.size());
         assert(parsed);
 
         // data is equal
@@ -178,7 +161,6 @@ int _main(int argc, char** argv) {
         google::protobuf::ShutdownProtobufLibrary();
     }
 #endif
-
     return 0;
 }
 

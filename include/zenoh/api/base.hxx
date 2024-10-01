@@ -84,7 +84,7 @@ class Owned {
     OwnedType _0;
 
     explicit Owned(OwnedType* pv) {
-        if (pv) {
+        if (pv != nullptr) {
             _0 = *pv;
             ::z_internal_null(pv);
         } else

@@ -80,15 +80,15 @@ int _main(int argc, char **argv) {
         std::cout << ">> [Queryable ] Received Query '" << keyexpr.as_string_view() << "?" << params;
         auto payload = query.get_payload();
         if (payload.has_value()) {
-            std::cout << "' value = '" << payload->get().deserialize<std::string>();
+            std::cout << "' value = '" << payload->get().as_string();
         }
         std::cout << "'\n";
 #if __cpp_designated_initializers >= 201707L
-        query.reply(KeyExpr(expr), Bytes::serialize(value), {.encoding = Encoding("text/plain")});
+        query.reply(KeyExpr(expr), value, {.encoding = Encoding("text/plain")});
 #else
         Query::ReplyOptions reply_options;
         reply_options.encoding = Encoding("text/plain");
-        query.reply(KeyExpr(expr), Bytes::serialize(value), std::move(reply_options));
+        query.reply(KeyExpr(expr), value, std::move(reply_options));
 #endif
     };
 
