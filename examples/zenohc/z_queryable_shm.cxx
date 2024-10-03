@@ -29,26 +29,7 @@ const char *value = "Queryable from C++ zenoh-c SHM!";
 const char *locator = nullptr;
 
 int _main(int argc, char **argv) {
-    const char *config_file = nullptr;
-    getargs(argc, argv, {}, {{"key expression", &expr}, {"value", &value}, {"locator", &locator}},
-            {{"-c", {"config file", &config_file}}});
-
-    Config config = Config::create_default();
-    if (config_file) {
-        config = Config::from_file(config_file);
-    }
-
-    ZResult err;
-    if (locator) {
-        auto locator_json_str_list = std::string("[\"") + locator + "\"]";
-        config.insert_json5(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
-
-        if (err != Z_OK) {
-            std::cout << "Invalid locator: " << locator << std::endl;
-            std::cout << "Expected value in format: tcp/192.168.64.3:7447" << std::endl;
-            exit(-1);
-        }
-    }
+    Config config = parse_args(argc, argv, {}, {{"key_expression", &expr}, {"payload_value", &value}});
 
     printf("Opening session...\n");
     auto session = Session::open(std::move(config));

@@ -18,39 +18,29 @@
 #include <iostream>
 #include <mutex>
 
+#include "../getargs.h"
 #include "zenoh.hxx"
-using namespace zenoh;
 
-struct args_t {
-    unsigned char help_requested;
-    unsigned int number_of_pings;
-    unsigned int size;
-    unsigned int warmup_ms;
-    unsigned int timeout_ms;
-    char* config_path;
-};
-struct args_t parse_args(int argc, char** argv);
+using namespace zenoh;
 
 int _main(int argc, char** argv) {
     using namespace std::literals;
     std::mutex mutex;
     std::condition_variable condvar;
-    auto args = parse_args(argc, argv);
-
-    if (args.help_requested) {
-        std::cout << "\
-		-n (optional, int, default=100): the number of pings to be attempted\n\
-		-s (optional, int, default=8): the size of the payload embedded in the ping and repeated by the pong\n\
-		-w (optional, int, default=1000): the warmup time in ms during which pings will be emitted but not measured\n\
-		-t (optional, int, default=100): the timeout for any individual ping, in ms.\n\
-		-c (optional, string, disabled when backed by pico): the path to a configuration file for the session. If this option isn't passed, the default configuration will be used.\n\
-		";
-        return 1;
-    }
-    Config config = Config::create_default();
-    if (args.config_path) {
-        config = Config::from_file(args.config_path);
-    }
+    const char* number_of_pings_str = "100";
+    const char* payload_size_str = "8";
+    const char* warmup_ms_str = "1000";
+    const char* timeout_ms_str = "100";
+    Config config = parse_args(
+        argc, argv, {}, {},
+        {{"-n", {"number of pings to be attempted", &number_of_pings_str}},
+         {"-s", {"size of the payload embedded in the ping and repeated by the pong", &payload_size_str}},
+         {"-w", {"the warmup time in ms during which pings will be emitted but not measured", &warmup_ms_str}},
+         {"-t", {"timeout for any individual ping, in ms", &timeout_ms_str}}});
+    unsigned int number_of_pings = std::atoi(number_of_pings_str);
+    unsigned int payload_size = std::atoi(payload_size_str);
+    unsigned int warmup_ms = std::atoi(warmup_ms_str);
+    unsigned int timeout_ms = std::atoi(timeout_ms_str);
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
@@ -61,23 +51,23 @@ int _main(int argc, char** argv) {
 
     std::cout << "Preparing SHM Provider...\n";
     constexpr auto buffers_count = 32;
-    PosixShmProvider provider(MemoryLayout(buffers_count * args.size, AllocAlignment({2})));
+    PosixShmProvider provider(MemoryLayout(buffers_count * payload_size, AllocAlignment({2})));
 
     std::cout << "Allocating SHM buffer...\n";
-    auto alloc_result = provider.alloc_gc_defrag_blocking(args.size, AllocAlignment({0}));
+    auto alloc_result = provider.alloc_gc_defrag_blocking(payload_size, AllocAlignment({0}));
     ZShmMut&& buf_mut = std::get<ZShmMut>(std::move(alloc_result));
     ZShm buf(std::move(buf_mut));
 
-    std::vector<uint8_t> data(args.size);
+    std::vector<uint8_t> data(payload_size);
     std::unique_lock lock(mutex);
-    if (args.warmup_ms) {
-        auto end = std::chrono::steady_clock::now() + (1ms * args.warmup_ms);
+    if (warmup_ms) {
+        auto end = std::chrono::steady_clock::now() + (1ms * warmup_ms);
         while (std::chrono::steady_clock::now() < end) {
             pub.put(ZShm(buf));
             condvar.wait_for(lock, 1s);
         }
     }
-    for (unsigned int i = 0; i < args.number_of_pings; i++) {
+    for (unsigned int i = 0; i < number_of_pings; i++) {
         auto start = std::chrono::steady_clock::now();
         pub.put(ZShm(buf));
         if (condvar.wait_for(lock, 1s) == std::cv_status::timeout) {
@@ -86,7 +76,7 @@ int _main(int argc, char** argv) {
         }
         auto rtt =
             std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start).count();
-        std::cout << args.size << " bytes: seq=" << i << " rtt=" << rtt << "µs"
+        std::cout << payload_size << " bytes: seq=" << i << " rtt=" << rtt << "µs"
                   << " lat=" << rtt / 2 << "µs\n";
     }
     lock.unlock();
@@ -105,44 +95,6 @@ char* getopt(int argc, char** argv, char option) {
         }
     }
     return NULL;
-}
-
-struct args_t parse_args(int argc, char** argv) {
-    for (int i = 0; i < argc; i++) {
-        if (strcmp(argv[i], "-h") == 0) {
-            struct args_t args;
-            args.help_requested = 1;
-            return args;
-        }
-    }
-    char* arg = getopt(argc, argv, 's');
-    unsigned int size = 8;
-    if (arg) {
-        size = atoi(arg);
-    }
-    arg = getopt(argc, argv, 'n');
-    unsigned int number_of_pings = 100;
-    if (arg) {
-        number_of_pings = atoi(arg);
-    }
-    arg = getopt(argc, argv, 'w');
-    unsigned int warmup_ms = 1000;
-    if (arg) {
-        warmup_ms = atoi(arg);
-    }
-    arg = getopt(argc, argv, 't');
-    unsigned int timeout_ms = 100;
-    if (arg) {
-        timeout_ms = atoi(arg);
-    }
-    struct args_t args;
-    args.help_requested = 0;
-    args.number_of_pings = number_of_pings;
-    args.size = size;
-    args.warmup_ms = warmup_ms;
-    args.timeout_ms = timeout_ms;
-    args.config_path = getopt(argc, argv, 'c');
-    return args;
 }
 
 int main(int argc, char** argv) {

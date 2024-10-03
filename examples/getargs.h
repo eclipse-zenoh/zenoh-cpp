@@ -15,13 +15,19 @@
 
 #include <cstring>
 #include <iostream>
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <vector>
+#include "zenoh.hxx"
 
-inline void getargs(int argc, char **argv, const std::vector<std::pair<const char *, const char **>> &required,
-                    const std::vector<std::pair<const char *, const char **>> &optional = {},
-                    const std::map<std::string, std::pair<const char *, const char **>> &named = {}) {
+struct CmdArg {
+    const char* name;
+    const char** value;
+};
+
+inline void getargs(int argc, char **argv, const std::vector<CmdArg> &required,
+                    const std::vector<CmdArg> &optional = {},
+                    const std::unordered_map<std::string, CmdArg> &named = {}) {
     // Show help if help option is passed or if no parameters are passed when some are required
     if ((argc == 2 && (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0)) ||
         argc == 1 && required.size() > 0) {
@@ -29,34 +35,28 @@ inline void getargs(int argc, char **argv, const std::vector<std::pair<const cha
         std::cout << "Usage" << std::endl;
         std::cout << "  " << argv[0];
         for (auto &p : required) {
-            std::cout << " " << p.first;
-            if (*p.second) defaults = true;
+            std::cout << " " << p.name;
         }
         for (auto &p : optional) {
-            std::cout << " [" << p.first << "]";
-            if (*p.second) defaults = true;
+            std::cout << " [" << p.name << "]";
+            if (*p.value) defaults = true;
         }
         for (auto &p : named) {
-            std::cout << " " << p.first << " [" << p.second.first << "]";
-            if (*p.second.second) defaults = true;
+            std::cout << " " << p.first << " [" << p.second.name << "]";
+            if (*p.second.value) defaults = true;
         }
         std::cout << std::endl;
 
         if (defaults) {
             std::cout << "Defaults" << std::endl;
-            for (auto &p : required) {
-                if (*p.second) {
-                    std::cout << "  " << p.first << " = " << *p.second << std::endl;
-                }
-            }
             for (auto &p : optional) {
-                if (*p.second) {
-                    std::cout << "  " << p.first << " = " << *p.second << std::endl;
+                if (*p.value) {
+                    std::cout << "  " << p.name << " = " << *p.value << std::endl;
                 }
             }
             for (auto &p : named) {
-                if (*p.second.second) {
-                    std::cout << "  " << p.second.first << " = " << *p.second.second << std::endl;
+                if (*p.second.value) {
+                    std::cout << "  " << p.second.name << " = " << *p.second.value << std::endl;
                 }
             }
         }
@@ -64,8 +64,8 @@ inline void getargs(int argc, char **argv, const std::vector<std::pair<const cha
     }
 
     int position = 0;
-    const char **destination = nullptr;
-    std::vector<std::pair<const char *, const char **>> positioned = required;
+    const char** destination = nullptr;
+    std::vector<CmdArg> positioned = required;
     positioned.insert(positioned.end(), optional.begin(), optional.end());
     for (int i = 1; i < argc; ++i) {
         if (destination) {
@@ -75,9 +75,9 @@ inline void getargs(int argc, char **argv, const std::vector<std::pair<const cha
         }
         auto param = named.find(argv[i]);
         if (param != named.end()) {
-            destination = param->second.second;
+            destination = param->second.value;
         } else if (position < positioned.size()) {
-            *positioned[position].second = argv[i];
+            *positioned[position].value = argv[i];
             ++position;
         } else {
             std::cout << "Unexpected parameter: " << argv[i] << std::endl;
@@ -85,7 +85,63 @@ inline void getargs(int argc, char **argv, const std::vector<std::pair<const cha
         }
     }
     if (position < required.size()) {
-        std::cout << "Missing required parameter: " << required[position].first << std::endl;
+        std::cout << "Missing required parameter: " << required[position].name << std::endl;
         exit(-1);
     }
+}
+
+inline zenoh::Config parse_args(int argc, char **argv, const std::vector<CmdArg> &required,
+                            const std::vector<CmdArg> &optional = {},
+                            const std::unordered_map<std::string, CmdArg> &named = {}) {
+
+    std::unordered_map<std::string, CmdArg> named_with_config = named;
+#ifdef ZENOHCXX_ZENOHC
+    const char* config_file = nullptr;
+    named_with_config.emplace("-c", CmdArg{"config file", &config_file});
+#endif
+    const char* locator = nullptr;
+    named_with_config.emplace("-l", CmdArg{"locator to listen on", &locator});
+    const char* endpoint = nullptr;
+    named_with_config.emplace("-e", CmdArg{"endpoint to connect to", &endpoint});
+#ifdef ZENOHCXX_ZENOHC
+    const char* mode = "peer";
+#elif defined(ZENOHCXX_ZENOHPICO)
+    const char* mode = "client";
+#endif
+    named_with_config.emplace("-m", CmdArg{"mode (peer | client)", &mode});
+
+    getargs(argc, argv, required, optional, named_with_config);
+    zenoh::Config config = zenoh::Config::create_default();
+
+    if (mode != nullptr && strcmp(mode, "peer") != 0 && strcmp(mode, "client") != 0) {
+        throw std::runtime_error("Mode can only be 'peer' or 'client'");
+    }
+       
+    #ifdef ZENOHCXX_ZENOHC
+        if (config_file) {
+            config = zenoh::Config::from_file(config_file);
+        }
+        if (locator) {
+            config.insert_json5(Z_CONFIG_CONNECT_KEY, std::string("[\"") + locator + "\"]");
+        }
+        if (mode) {
+            config.insert_json5(Z_CONFIG_MODE_KEY, std::string("'") + mode + "'");
+        }
+    #elif defined(ZENOHCXX_ZENOHPICO)
+        if (mode) {
+            config.insert(Z_CONFIG_MODE_KEY, mode);
+            if (strcmp(mode, "peer") == 0) {
+                if (locator == nullptr) {
+                    throw std::runtime_error("Zenoh-Pico in 'peer' mode requires providing a multicast group locator to listen to (-l option), e. g. 'udp/224.0.0.224:7447#iface=lo'");
+                } else {
+                    config.insert(Z_CONFIG_LISTEN_KEY, locator);
+                }
+            } else if (strcmp(mode, "client") == 0) {
+                if (endpoint != nullptr) {
+                    config.insert(Z_CONFIG_CONNECT_KEY, endpoint);
+                }
+            }
+        }
+    #endif
+    return std::move(config);
 }

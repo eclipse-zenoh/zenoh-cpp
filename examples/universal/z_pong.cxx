@@ -15,11 +15,13 @@
 #include <cstdio>
 #include <iostream>
 
+#include "../getargs.h"
 #include "zenoh.hxx"
+
 using namespace zenoh;
 
-int _main(int, char **) {
-    Config config = Config::create_default();
+int _main(int argc, char **argv) {
+    Config config = parse_args(argc, argv, {});
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));

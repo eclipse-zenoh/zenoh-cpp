@@ -39,21 +39,7 @@ const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-pico-pub";
 int _main(int argc, char **argv) {
     const char *keyexpr = default_keyexpr;
     const char *value = default_value;
-    const char *config_file = nullptr;
-
-    getargs(argc, argv, {}, {{"key expression", &keyexpr}, {"value", &value}}
-#ifdef ZENOHCXX_ZENOHC
-            ,
-            {{"-c", {"config file", &config_file}}}
-#endif
-    );
-
-    Config config = Config::create_default();
-#ifdef ZENOHCXX_ZENOHC
-    if (config_file) {
-        config = Config::from_file(config_file);
-    }
-#endif
+    Config config = parse_args(argc, argv, {}, {{"key_expression", &keyexpr}, {"payload_value", &value}});
 
     std::cout << "Opening session..." << std::endl;
     auto session = Session::open(std::move(config));
