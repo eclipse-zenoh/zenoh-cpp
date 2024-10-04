@@ -23,37 +23,8 @@ using namespace zenoh;
 
 int _main(int argc, char **argv) {
     const char *expr = "demo/example/**";
-    const char *locator = nullptr;
-    const char *config_file = nullptr;
-    getargs(argc, argv, {}, {{"key expression", &expr}, {"locator", &locator}}
-#ifdef ZENOHCXX_ZENOHC
-            ,
-            {{"-c", {"config file", &config_file}}}
-#endif
-    );
-
-    Config config = Config::create_default();
-#ifdef ZENOHCXX_ZENOHC
-    if (config_file) {
-        config = Config::from_file(config_file);
-    }
-#endif
-    ZResult err;
-    if (locator) {
-#ifdef ZENOHCXX_ZENOHC
-        auto locator_json_str_list = std::string("[\"") + locator + "\"]";
-        config.insert_json5(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
-#elif ZENOHCXX_ZENOHPICO
-        config.insert(Z_CONFIG_CONNECT_KEY, locator, &err);
-#else
-#error "Unknown zenoh backend"
-#endif
-        if (err != Z_OK) {
-            std::cout << "Invalid locator: " << locator << std::endl;
-            std::cout << "Expected value in format: tcp/192.168.64.3:7447" << std::endl;
-            exit(-1);
-        }
-    }
+    const char *value = "Get from C++";
+    Config config = parse_args(argc, argv, {}, {{"key_expression", &expr}, {"payload value", &value}});
 
     KeyExpr keyexpr(expr);
 
@@ -63,11 +34,11 @@ int _main(int argc, char **argv) {
     std::cout << "Sending Query '" << expr << "'...\n";
 #if __cpp_designated_initializers >= 201707L
     auto replies = session.get(keyexpr, "", channels::FifoChannel(16),
-                               {.target = QueryTarget::Z_QUERY_TARGET_ALL, .payload = Bytes("Get from C++")});
+                               {.target = QueryTarget::Z_QUERY_TARGET_ALL, .payload = value});
 #else
     Session::GetOptions options;
     options.target = QueryTarget::Z_QUERY_TARGET_ALL;
-    options.payload = "Get from C++";
+    options.payload = value;
     auto replies = session.get(keyexpr, "", channels::FifoChannel(16), std::move(options));
 #endif
 

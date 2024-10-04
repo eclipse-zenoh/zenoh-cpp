@@ -35,20 +35,7 @@ const char *value = "Queryable from C++ zenoh-pico!";
 #endif
 
 int _main(int argc, char **argv) {
-    const char *config_file = nullptr;
-    getargs(argc, argv, {}, {{"key expression", &expr}, {"value", &value}}
-#ifdef ZENOHCXX_ZENOHC
-            ,
-            {{"-c", {"config file", &config_file}}}
-#endif
-    );
-
-    Config config = Config::create_default();
-#ifdef ZENOHCXX_ZENOHC
-    if (config_file) {
-        config = Config::from_file(config_file);
-    }
-#endif
+    Config config = parse_args(argc, argv, {}, {{"key_expression", &expr}, {"payload_value", &value}});
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));

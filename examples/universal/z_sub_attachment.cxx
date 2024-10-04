@@ -36,21 +36,7 @@ const char *kind_to_str(SampleKind kind) {
 
 int _main(int argc, char **argv) {
     const char *expr = "demo/example/**";
-    const char *config_file = nullptr;
-
-    getargs(argc, argv, {}, {{"key expression", &expr}}
-#ifdef ZENOHCXX_ZENOHC
-            ,
-            {{"-c", {"config file", &config_file}}}
-#endif
-    );
-
-    Config config = Config::create_default();
-#ifdef ZENOHCXX_ZENOHC
-    if (config_file) {
-        config = Config::from_file(config_file);
-    }
-#endif
+    Config config = parse_args(argc, argv, {}, {{"key_expression", &expr}});
 
     KeyExpr keyexpr(expr);
 

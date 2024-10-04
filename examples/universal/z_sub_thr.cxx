@@ -66,39 +66,7 @@ struct Stats {
 };
 
 int _main(int argc, char **argv) {
-    const char *locator = nullptr;
-    const char *configfile = nullptr;
-
-    getargs(argc, argv, {}, {{"locator", &locator}}
-#ifdef ZENOHCXX_ZENOHC
-            ,
-            {{"-c", {"config file", &configfile}}}
-#endif
-    );
-
-    Config config = Config::create_default();
-#ifdef ZENOHCXX_ZENOHC
-    if (configfile) {
-        config = Config::from_file(configfile);
-    }
-#endif
-
-    ZResult err;
-    if (locator) {
-#ifdef ZENOHCXX_ZENOHC
-        auto locator_json_str_list = std::string("[\"") + locator + "\"]";
-        config.insert_json5(Z_CONFIG_CONNECT_KEY, locator_json_str_list.c_str(), &err);
-#elif ZENOHCXX_ZENOHPICO
-        config.insert(Z_CONFIG_CONNECT_KEY, locator, &err);
-#else
-#error "Unknown zenoh backend"
-#endif
-        if (err != Z_OK) {
-            std::cout << "Invalid locator: " << locator << std::endl;
-            std::cout << "Expected value in format: tcp/192.168.64.3:7447" << std::endl;
-            exit(-1);
-        }
-    }
+    Config config = parse_args(argc, argv, {});
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));

@@ -25,21 +25,8 @@ using namespace zenoh;
 
 int _main(int argc, char **argv) {
     const char *expr = "demo/example/**";
-    const char *value = "";
-    const char *config_file = nullptr;
-    getargs(argc, argv, {}, {{"key expression", &expr}, {"value", &value}}
-#ifdef ZENOHCXX_ZENOHC
-            ,
-            {{"-c", {"config file", &config_file}}}
-#endif
-    );
-
-    Config config = Config::create_default();
-#ifdef ZENOHCXX_ZENOHC
-    if (config_file) {
-        config = Config::from_file(config_file);
-    }
-#endif
+    const char *value = "Get from C++";
+    Config config = parse_args(argc, argv, {}, {{"key_expression", &expr}, {"payload value", &value}});
 
     KeyExpr keyexpr(expr);
 
