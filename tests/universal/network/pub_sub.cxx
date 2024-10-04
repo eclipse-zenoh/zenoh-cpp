@@ -144,6 +144,12 @@ void put_sub_fifo_channel(Talloc& alloc) {
     res = subscriber.handler().try_recv();
     assert(std::holds_alternative<channels::RecvError>(res));
     assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_NODATA);
+
+    /// after session close subscriber handler should become disconnected
+    session2.close();
+    res = subscriber.handler().recv();
+    assert(std::holds_alternative<channels::RecvError>(res));
+    assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
 }
 
 template <typename Talloc>
@@ -171,6 +177,12 @@ void put_sub_ring_channel(Talloc& alloc) {
     res = subscriber.handler().try_recv();
     assert(std::holds_alternative<channels::RecvError>(res));
     assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_NODATA);
+
+    /// after session close subscriber handler should become disconnected
+    session2.close();
+    res = subscriber.handler().recv();
+    assert(std::holds_alternative<channels::RecvError>(res));
+    assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
 }
 
 template <typename Talloc, bool share_alloc = true>
