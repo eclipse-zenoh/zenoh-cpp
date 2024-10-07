@@ -83,7 +83,7 @@ class Session : public Owned<::z_owned_session_t> {
                 this->start_lease_task(&err_inner);
             }
             if (err_inner == Z_OK) return;
-            ::z_close(::z_move(this->_0), nullptr);
+            ::z_drop(::z_move(this->_0));
             __ZENOH_RESULT_CHECK(err_inner, err, "Failed to start background tasks");
         }
 #else
@@ -880,14 +880,16 @@ class Session : public Owned<::z_owned_session_t> {
         return interop::into_copyable_cpp_obj<Timestamp>(t);
     }
 
-    /// @brief Close and invalidate the session. This also undeclares all non-undeclared Subscriber and Queryable
-    /// callbacks.
+    /// @brief Close the session and undeclare all not yet undeclared `Subscriber` and `Queryable`
+    /// callbacks. After this, all calls to corresponding session (or session entity) methods will fail.
+    /// It still possible though to process any already received messages using `Subscriber` or
+    /// `Queryable` handlers (but not reply to them).
     /// @param options options to pass to close operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    void close(SessionCloseOptions&& options = SessionCloseOptions::create_default(), ZResult* err = nullptr) && {
+    void close(SessionCloseOptions&& options = SessionCloseOptions::create_default(), ZResult* err = nullptr) {
         (void)options;
-        __ZENOH_RESULT_CHECK(::z_close(interop::as_moved_c_ptr(*this), nullptr), err, "Failed to close the session");
+        __ZENOH_RESULT_CHECK(::z_close(interop::as_loaned_c_ptr(*this), nullptr), err, "Failed to close the session");
     }
 };
 }  // namespace zenoh
