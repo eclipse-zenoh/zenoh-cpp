@@ -880,8 +880,10 @@ class Session : public Owned<::z_owned_session_t> {
         return interop::into_copyable_cpp_obj<Timestamp>(t);
     }
 
-    /// @brief Closes the session. This also undeclares all non-undeclared Subscriber and Queryable
-    /// callbacks.
+    /// @brief Close the session and undeclare all not yet undeclared `Subscriber` and `Queryable`
+    /// callbacks. After this, all calls to corresponding session (or session entity) methods will fail.
+    /// It still possible though to process any already received messages using `Subscriber` or
+    /// `Queryable` handlers (but not reply to them).
     /// @param options options to pass to close operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
