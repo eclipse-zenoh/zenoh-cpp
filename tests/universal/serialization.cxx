@@ -39,6 +39,9 @@ void serialize_primitive() {
 
     assert(zenoh_test_serialization<float>(0.5f));
     assert(zenoh_test_serialization<double>(123.45));
+
+    assert(zenoh_test_serialization<bool>(true));
+    assert(zenoh_test_serialization<bool>(false));
 }
 
 void serialize_tuple() {
