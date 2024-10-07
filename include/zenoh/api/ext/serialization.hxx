@@ -131,6 +131,7 @@ __ZENOH_SERIALIZE_ARITHMETIC(int32_t, int32)
 __ZENOH_SERIALIZE_ARITHMETIC(int64_t, int64)
 __ZENOH_SERIALIZE_ARITHMETIC(float, float)
 __ZENOH_SERIALIZE_ARITHMETIC(double, double)
+__ZENOH_SERIALIZE_ARITHMETIC(bool, bool)
 
 #undef __ZENOH_SERIALIZE_ARITHMETIC
 inline void __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, std::string_view value) {
@@ -228,6 +229,7 @@ __ZENOH_DESERIALIZE_ARITHMETIC(int32_t, int32)
 __ZENOH_DESERIALIZE_ARITHMETIC(int64_t, int64)
 __ZENOH_DESERIALIZE_ARITHMETIC(float, float)
 __ZENOH_DESERIALIZE_ARITHMETIC(double, double)
+__ZENOH_DESERIALIZE_ARITHMETIC(bool, bool)
 
 #undef __ZENOH_DESERIALIZE_ARITHMETIC
 inline bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer, std::string& value,
