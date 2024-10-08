@@ -11,6 +11,8 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
+#pragma once
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
