@@ -94,7 +94,7 @@ void serialize_custom() {
     CustomStruct s = {{0.1, 0.2, -1000.55}, 32, "test"};
     Bytes b = zenoh::ext::serialize(s);
     CustomStruct s_out = zenoh::ext::deserialize<CustomStruct>(b);
-    assert(s_out.vd == s_out.vd);
+    assert(s.vd == s_out.vd);
     assert(s.i == s_out.i);
     assert(s.s == s_out.s);
 }
