@@ -408,9 +408,9 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @return a ``Queryable`` object.
     template <class C, class D>
-    Queryable<void> declare_queryable(const KeyExpr& key_expr, C&& on_query, D&& on_drop,
-                                      QueryableOptions&& options = QueryableOptions::create_default(),
-                                      ZResult* err = nullptr) const {
+    [[nodiscard]] Queryable<void> declare_queryable(const KeyExpr& key_expr, C&& on_query, D&& on_drop,
+                                                    QueryableOptions&& options = QueryableOptions::create_default(),
+                                                    ZResult* err = nullptr) const {
         static_assert(std::is_invocable_r<void, C, const Query&>::value,
                       "on_query should be callable with the following signature: void on_query(zenoh::Query& query)");
         static_assert(std::is_invocable_r<void, D>::value,
@@ -473,7 +473,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @return a ``Queryable`` object.
     template <class Channel>
-    Queryable<typename Channel::template HandlerType<Query>> declare_queryable(
+    [[nodiscard]] Queryable<typename Channel::template HandlerType<Query>> declare_queryable(
         const KeyExpr& key_expr, Channel channel, QueryableOptions&& options = QueryableOptions::create_default(),
         ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Query>();
@@ -509,9 +509,9 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @return a ``Subscriber`` object.
     template <class C, class D>
-    Subscriber<void> declare_subscriber(const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
-                                        SubscriberOptions&& options = SubscriberOptions::create_default(),
-                                        ZResult* err = nullptr) const {
+    [[nodiscard]] Subscriber<void> declare_subscriber(const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
+                                                      SubscriberOptions&& options = SubscriberOptions::create_default(),
+                                                      ZResult* err = nullptr) const {
         static_assert(
             std::is_invocable_r<void, C, const Sample&>::value,
             "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
@@ -576,7 +576,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @return a ``Subscriber`` object.
     template <class Channel>
-    Subscriber<typename Channel::template HandlerType<Sample>> declare_subscriber(
+    [[nodiscard]] Subscriber<typename Channel::template HandlerType<Sample>> declare_subscriber(
         const KeyExpr& key_expr, Channel channel, SubscriberOptions&& options = SubscriberOptions::create_default(),
         ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Sample>();
@@ -807,7 +807,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @return a ``Subscriber`` object.
     template <class C, class D>
-    Subscriber<void> liveliness_declare_subscriber(
+    [[nodiscard]] Subscriber<void> liveliness_declare_subscriber(
         const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
         LivelinessSubscriberOptions&& options = LivelinessSubscriberOptions::create_default(),
         ZResult* err = nullptr) const {
@@ -875,7 +875,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @return a ``Subscriber`` object.
     template <class Channel>
-    Subscriber<typename Channel::template HandlerType<Sample>> liveliness_declare_subscriber(
+    [[nodiscard]] Subscriber<typename Channel::template HandlerType<Sample>> liveliness_declare_subscriber(
         const KeyExpr& key_expr, Channel channel,
         LivelinessSubscriberOptions&& options = LivelinessSubscriberOptions::create_default(),
         ZResult* err = nullptr) const {
