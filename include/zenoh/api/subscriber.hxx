@@ -59,7 +59,8 @@ class Subscriber<void> : public detail::SubscriberBase {
     }
 };
 
-/// A Zenoh subscriber. Destroying subscriber cancels the subscription.
+/// @brief A Zenoh subscriber. Destroying or undeclaring subscriber cancels the subscription.
+
 /// Constructed by ``Session::declare_subscriber`` method.
 /// @tparam Handler Streaming handler exposing data. If `void`, no handler access is provided and instead data is being
 /// processed inside the callback.

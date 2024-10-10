@@ -50,7 +50,9 @@ class Queryable<void> : public detail::QueryableBase {
     friend class Session;
 };
 
-/// A Zenoh queryable. Constructed by ``Session::declare_queryable`` method.
+/// @brief A Zenoh queryable. Destroying or undeclaring queryable cancels its callback function.
+///
+/// Constructed by ``Session::declare_queryable`` method.
 /// @tparam Handler Streaming handler exposing data. If `void`, no handler access is provided and instead data is being
 /// processed inside the callback.
 template <class Handler>
