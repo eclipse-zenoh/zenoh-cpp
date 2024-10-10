@@ -76,8 +76,7 @@ int _main(int argc, char** argv) {
         }
         auto rtt =
             std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start).count();
-        std::cout << payload_size << " bytes: seq=" << i << " rtt=" << rtt << "µs"
-                  << " lat=" << rtt / 2 << "µs\n";
+        std::cout << payload_size << " bytes: seq=" << i << " rtt=" << rtt << "µs" << " lat=" << rtt / 2 << "µs\n";
     }
     lock.unlock();
     return 0;

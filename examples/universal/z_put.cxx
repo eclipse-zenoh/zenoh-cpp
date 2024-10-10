@@ -36,8 +36,7 @@ int _main(int argc, char **argv) {
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
-    std::cout << "Putting Data ("
-              << "'" << keyexpr << "': '" << value << "')...\n";
+    std::cout << "Putting Data (" << "'" << keyexpr << "': '" << value << "')...\n";
 
     Session::PutOptions put_options;
     put_options.encoding = Encoding("text/plain");
