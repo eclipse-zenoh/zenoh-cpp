@@ -38,11 +38,21 @@ class Queryable<void> : public detail::QueryableBase {
     Queryable(zenoh::detail::null_object_t) : QueryableBase(zenoh::detail::null_object){};
 
    public:
-    using QueryableBase::QueryableBase;
+    /// @name Methods
+
+    /// @brief Undeclare queryable.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void undeclare(ZResult* err = nullptr) && {
+        __ZENOH_RESULT_CHECK(::z_undeclare_queryable(interop::as_moved_c_ptr(*this)), err,
+                             "Failed to undeclare queryable");
+    }
     friend class Session;
 };
 
-/// A Zenoh queryable. Constructed by ``Session::declare_queryable`` method.
+/// @brief A Zenoh queryable. Destroying or undeclaring queryable cancels its callback function.
+///
+/// Constructed by ``Session::declare_queryable`` method.
 /// @tparam Handler Streaming handler exposing data. If `void`, no handler access is provided and instead data is being
 /// processed inside the callback.
 template <class Handler>
@@ -64,6 +74,16 @@ class Queryable : public detail::QueryableBase {
 
     /// @brief Return handler to queryable data stream.
     const Handler& handler() const { return _handler; };
+
+    /// @brief Undeclare queryable, and return its handler, which can still be used to examine any queries
+    /// received prior to undeclaration, replying to such queries is undefined behaviour.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    Handler undeclare(ZResult* err = nullptr) && {
+        __ZENOH_RESULT_CHECK(::z_undeclare_queryable(interop::as_moved_c_ptr(*this)), err,
+                             "Failed to undeclare queryable");
+        return std::move(this->_handler);
+    }
 
     friend class Session;
 };

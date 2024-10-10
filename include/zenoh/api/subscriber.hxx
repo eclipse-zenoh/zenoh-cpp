@@ -47,10 +47,20 @@ class Subscriber<void> : public detail::SubscriberBase {
     friend class Session;
 
    public:
+    /// @name Methods
     using SubscriberBase::get_keyexpr;
+
+    /// @brief Undeclare subscriber.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void undeclare(ZResult* err = nullptr) && {
+        __ZENOH_RESULT_CHECK(::z_undeclare_subscriber(interop::as_moved_c_ptr(*this)), err,
+                             "Failed to undeclare subscriber");
+    }
 };
 
-/// A Zenoh subscriber. Destroying subscriber cancels the subscription.
+/// @brief A Zenoh subscriber. Destroying or undeclaring subscriber cancels the subscription.
+
 /// Constructed by ``Session::declare_subscriber`` method.
 /// @tparam Handler Streaming handler exposing data. If `void`, no handler access is provided and instead data is being
 /// processed inside the callback.
@@ -72,6 +82,16 @@ class Subscriber : public detail::SubscriberBase {
 
     /// @name Methods
     using SubscriberBase::get_keyexpr;
+
+    /// @brief Undeclare subscriber, and return its handler, which can still be used to process any messages received
+    /// prior to undeclaration.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    Handler undeclare(ZResult* err = nullptr) && {
+        __ZENOH_RESULT_CHECK(::z_undeclare_subscriber(interop::as_moved_c_ptr(*this)), err,
+                             "Failed to undeclare subscriber");
+        return std::move(this->_handler);
+    }
 
     /// @brief Return the handler to subscriber data stream.
     const Handler& handler() const { return _handler; };

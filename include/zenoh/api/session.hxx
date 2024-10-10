@@ -150,7 +150,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @return Declared ``KeyExpr`` instance.
     KeyExpr declare_keyexpr(const KeyExpr& key_expr, ZResult* err = nullptr) const {
         KeyExpr k = interop::detail::null<KeyExpr>();
-        __ZENOH_RESULT_CHECK(::z_declare_keyexpr(interop::as_owned_c_ptr(k), interop::as_loaned_c_ptr(*this),
+        __ZENOH_RESULT_CHECK(::z_declare_keyexpr(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(k),
                                                  interop::as_loaned_c_ptr(key_expr)),
                              err, std::string("Failed to declare key expression: ").append(k.as_string_view()));
         return k;
@@ -161,7 +161,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @param key_expr ``KeyExpr`` instance to undeclare, that was previously returned by ``Session::declare_keyexpr``.
     void undeclare_keyexpr(KeyExpr&& key_expr, ZResult* err = nullptr) const {
-        __ZENOH_RESULT_CHECK(::z_undeclare_keyexpr(interop::as_moved_c_ptr(key_expr), interop::as_loaned_c_ptr(*this)),
+        __ZENOH_RESULT_CHECK(::z_undeclare_keyexpr(interop::as_loaned_c_ptr(*this), interop::as_moved_c_ptr(key_expr)),
                              err, "Failed to undeclare key expression");
     }
 
@@ -426,7 +426,7 @@ class Session : public Owned<::z_owned_session_t> {
         opts.complete = options.complete;
 
         Queryable<void> q(zenoh::detail::null_object);
-        ZResult res = ::z_queryable_declare(interop::as_owned_c_ptr(q), interop::as_loaned_c_ptr(*this),
+        ZResult res = ::z_declare_queryable(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(q),
                                             interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Queryable");
         return q;
@@ -458,7 +458,7 @@ class Session : public Owned<::z_owned_session_t> {
         z_queryable_options_default(&opts);
         opts.complete = options.complete;
 
-        ZResult res = ::z_queryable_declare_background(interop::as_loaned_c_ptr(*this),
+        ZResult res = ::z_declare_background_queryable(interop::as_loaned_c_ptr(*this),
                                                        interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Queryable");
     }
@@ -482,7 +482,7 @@ class Session : public Owned<::z_owned_session_t> {
         opts.complete = options.complete;
 
         Queryable<void> q(zenoh::detail::null_object);
-        ZResult res = ::z_queryable_declare(interop::as_owned_c_ptr(q), interop::as_loaned_c_ptr(*this),
+        ZResult res = ::z_declare_queryable(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(q),
                                             interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Queryable");
         if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
@@ -527,7 +527,7 @@ class Session : public Owned<::z_owned_session_t> {
         z_subscriber_options_default(&opts);
         (void)options;
         Subscriber<void> s(zenoh::detail::null_object);
-        ZResult res = ::z_subscriber_declare(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
+        ZResult res = ::z_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
                                              interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Subscriber");
         return s;
@@ -560,7 +560,7 @@ class Session : public Owned<::z_owned_session_t> {
         ::z_subscriber_options_t opts;
         z_subscriber_options_default(&opts);
         (void)options;
-        ZResult res = ::z_subscriber_declare_background(interop::as_loaned_c_ptr(*this),
+        ZResult res = ::z_declare_background_subscriber(interop::as_loaned_c_ptr(*this),
                                                         interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Subscriber");
     }
@@ -585,7 +585,7 @@ class Session : public Owned<::z_owned_session_t> {
         (void)options;
         Subscriber<void> s(zenoh::detail::null_object);
         ZResult res =
-            ::z_subscriber_declare(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
+            ::z_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
                                    interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Subscriber");
         if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
@@ -646,7 +646,7 @@ class Session : public Owned<::z_owned_session_t> {
         opts.encoding = interop::as_moved_c_ptr(options.encoding);
 
         Publisher p = interop::detail::null<Publisher>();
-        ZResult res = ::z_publisher_declare(interop::as_owned_c_ptr(p), interop::as_loaned_c_ptr(*this),
+        ZResult res = ::z_declare_publisher(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(p),
                                             interop::as_loaned_c_ptr(key_expr), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Publisher");
         return p;
@@ -784,7 +784,7 @@ class Session : public Owned<::z_owned_session_t> {
         ::zc_liveliness_declaration_options_t opts;
         zc_liveliness_declaration_options_default(&opts);
         (void)options;
-        __ZENOH_RESULT_CHECK(::zc_liveliness_declare_token(interop::as_owned_c_ptr(t), interop::as_loaned_c_ptr(*this),
+        __ZENOH_RESULT_CHECK(::zc_liveliness_declare_token(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(t),
                                                            interop::as_loaned_c_ptr(key_expr), &opts),
                              err, "Failed to perform liveliness_declare_token operation");
         return t;
@@ -827,7 +827,7 @@ class Session : public Owned<::z_owned_session_t> {
         opts.history = options.history;
         Subscriber<void> s(zenoh::detail::null_object);
         ZResult res =
-            ::zc_liveliness_subscriber_declare(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
+            ::zc_liveliness_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
                                                interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
         return s;
@@ -860,7 +860,7 @@ class Session : public Owned<::z_owned_session_t> {
         ::zc_liveliness_subscriber_options_t opts;
         zc_liveliness_subscriber_options_default(&opts);
         opts.history = options.history;
-        ZResult res = ::zc_liveliness_subscriber_declare_background(
+        ZResult res = ::zc_liveliness_declare_background_subscriber(
             interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Liveliness Token Subscriber");
     }
@@ -884,7 +884,7 @@ class Session : public Owned<::z_owned_session_t> {
         zc_liveliness_subscriber_options_default(&opts);
         opts.history = options.history;
         Subscriber<void> s(zenoh::detail::null_object);
-        ZResult res = ::zc_liveliness_subscriber_declare(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
+        ZResult res = ::zc_liveliness_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
                                                          interop::as_loaned_c_ptr(key_expr),
                                                          ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");

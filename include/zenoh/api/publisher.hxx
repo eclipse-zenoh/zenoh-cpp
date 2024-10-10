@@ -105,6 +105,15 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     const KeyExpr& get_keyexpr() const {
         return interop::as_owned_cpp_ref<KeyExpr>(::z_publisher_keyexpr(interop::as_loaned_c_ptr(*this)));
     }
+
+    /// @brief Undeclares publisher.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void undeclare(ZResult* err = nullptr) && {
+        __ZENOH_RESULT_CHECK(::z_undeclare_publisher(interop::as_moved_c_ptr(*this)), err,
+                             "Failed to undeclare publisher");
+    }
+
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
