@@ -27,7 +27,7 @@ int _main(int argc, char **argv) {
     auto session = Session::open(std::move(config));
 
     auto pub = session.declare_publisher(KeyExpr("test/pong"));
-    auto sub = session.declare_subscriber(
+    session.declare_background_subscriber(
         KeyExpr("test/ping"),
         [pub = std::move(pub)](const Sample &sample) mutable { pub.put(sample.get_payload().clone()); },
         closures::none);

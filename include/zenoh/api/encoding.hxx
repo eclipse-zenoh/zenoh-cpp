@@ -86,108 +86,29 @@ class Encoding : public Owned<::z_owned_encoding_t> {
 
         /// Just some bytes.
         /// Constant alias for string: `"zenoh/bytes"`.
-        /// Usually used for types: `uint8_t[]`.
+        /// This encoding supposes that the payload was constructed directly from `std::vector<uint8_t>` and
+        /// its data can be accessed via `Bytes::as_vector`.
         static const Encoding& zenoh_bytes() {
             return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_bytes());
         };
 
-        /// A VLE-encoded signed little-endian 8bit integer. Binary representation uses two's complement.
-        /// Constant alias for string: `"zenoh/int8"`.
-        /// Usually used for types: `int8_t`.
-        static const Encoding& zenoh_int8() { return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_int8()); };
-
-        /// A VLE-encoded signed little-endian 16bit integer. Binary representation uses two's complement.
-        /// Constant alias for string: `"zenoh/int16"`.
-        /// Usually used for types: `int16_t`.
-        static const Encoding& zenoh_int16() {
-            return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_int16());
-        };
-
-        /// A VLE-encoded signed little-endian 32bit integer. Binary representation uses two's complement.
-        /// Constant alias for string: `"zenoh/int32"`.
-        /// Usually used for types: `int32_t`.
-        static const Encoding& zenoh_int32() {
-            return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_int32());
-        };
-
-        /// A VLE-encoded signed little-endian 64bit integer. Binary representation uses two's complement.
-        /// Constant alias for string: `"zenoh/int64"`.
-        /// Usually used for types: `int64_t`.
-        static const Encoding& zenoh_int64() {
-            return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_int64());
-        };
-
-        /// A VLE-encoded signed little-endian 128bit integer. Binary representation uses two's complement.
-        /// Constant alias for string: `"zenoh/int128"`.
-        static const Encoding& zenoh_int128() {
-            return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_int128());
-        };
-
-        /// A VLE-encoded unsigned little-endian 8bit integer.
-        /// Constant alias for string: `"zenoh/uint8"`.
-        /// Usually used for types: `uint8_t`.
-        static const Encoding& zenoh_uint8() {
-            return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_uint8());
-        };
-
-        /// A VLE-encoded unsigned little-endian 16bit integer.
-        /// Constant alias for string: `"zenoh/uint16"`.
-        /// Usually used for types: `uint16_t`.
-        static const Encoding& zenoh_uint16() {
-            return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_uint16());
-        };
-
-        /// A VLE-encoded unsigned little-endian 32bit integer.
-        /// Constant alias for string: `"zenoh/uint32"`.
-        /// Usually used for types: `uint32_t`.
-        static const Encoding& zenoh_uint32() {
-            return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_uint32());
-        };
-
-        /// A VLE-encoded unsigned little-endian 64bit integer.
-        /// Constant alias for string: `"zenoh/uint64"`.
-        /// Usually used for types: `uint64_t`.
-        static const Encoding& zenoh_uint64() {
-            return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_uint64());
-        };
-
-        /// A VLE-encoded unsigned little-endian 128bit integer.
-        /// Constant alias for string: `"zenoh/uint128"`.
-        static const Encoding& zenoh_uint128() {
-            return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_uint128());
-        };
-
-        /// A VLE-encoded 32bit float. Binary representation uses *IEEE 754-2008* *binary32*.
-        /// Constant alias for string: `"zenoh/float32"`.
-        /// Usually used for types: `float`.
-        static const Encoding& zenoh_float32() {
-            return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_float32());
-        };
-
-        /// A VLE-encoded 64bit float. Binary representation uses *IEEE 754-2008* *binary64*.
-        /// Constant alias for string: `"zenoh/float64"`.
-        /// Usually used for types: `double`.
-        static const Encoding& zenoh_float64() {
-            return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_float64());
-        };
-
-        /// A boolean. `0` is `false`, `1` is `true`. Other values are invalid.
-        /// Constant alias for string: `"zenoh/bool"`.
-        /// Usually used for types: `bool`.
-        static const Encoding& zenoh_bool() { return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_bool()); };
-
         /// A UTF-8 string.
         /// Constant alias for string: `"zenoh/string"`.
-        /// Usually used for types: `char[]`.
+        /// This encoding supposes that the payload was created directly from `std::string`, `std::string_view` or a
+        /// null-terminated string and its data can be accessed via `Bytes::as_string`.
         static const Encoding& zenoh_string() {
             return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_string());
         };
 
-        /// A zenoh error.
-        /// Constant alias for string: `"zenoh/error"`.
-        /// Usually used for types: `z_reply_err_t`.
-        static const Encoding& zenoh_error() {
-            return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_error());
+        /// Zenoh serialized data.
+        ///
+        /// Constant alias for string: `"zenoh/serialized"`.
+        ///
+        /// This encoding supposes that the payload was created using `zenoh::ext::serialize` or with the help of
+        /// `zenoh::ext::Serializer` and its data can be accessed via `zenoh::ext::deserialize` or with the help of
+        /// `zenoh::ext::Deserializer`.
+        static const Encoding& zenoh_serialized() {
+            return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_serialized());
         };
 
         /// An application-specific stream of bytes.

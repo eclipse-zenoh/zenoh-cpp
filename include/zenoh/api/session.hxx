@@ -408,7 +408,40 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @return a ``Queryable`` object.
     template <class C, class D>
-    Queryable<void> declare_queryable(const KeyExpr& key_expr, C&& on_query, D&& on_drop,
+    [[nodiscard]] Queryable<void> declare_queryable(const KeyExpr& key_expr, C&& on_query, D&& on_drop,
+                                                    QueryableOptions&& options = QueryableOptions::create_default(),
+                                                    ZResult* err = nullptr) const {
+        static_assert(std::is_invocable_r<void, C, const Query&>::value,
+                      "on_query should be callable with the following signature: void on_query(zenoh::Query& query)");
+        static_assert(std::is_invocable_r<void, D>::value,
+                      "on_drop should be callable with the following signature: void on_drop()");
+        ::z_owned_closure_query_t c_closure;
+        using Cval = std::remove_reference_t<C>;
+        using Dval = std::remove_reference_t<D>;
+        using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Query&>;
+        auto closure = ClosureType::into_context(std::forward<C>(on_query), std::forward<D>(on_drop));
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_query_call, detail::closures::_zenoh_on_drop, closure);
+        ::z_queryable_options_t opts;
+        z_queryable_options_default(&opts);
+        opts.complete = options.complete;
+
+        Queryable<void> q(zenoh::detail::null_object);
+        ZResult res = ::z_queryable_declare(interop::as_owned_c_ptr(q), interop::as_loaned_c_ptr(*this),
+                                            interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Queryable");
+        return q;
+    }
+
+    /// @brief Declare a background queryable. It will answer to ``Session::get`` requests, until the corresponding
+    /// session is closed or destroyed.
+    /// @param key_expr the key expression to match the ``Session::get`` requests.
+    /// @param on_query the callable to handle ``Query`` requests. Will be called once for each query.
+    /// @param on_drop the drop callable. Will be called once, when ``Queryable`` is destroyed or undeclared.
+    /// @param options options passed to queryable declaration.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    template <class C, class D>
+    void declare_background_queryable(const KeyExpr& key_expr, C&& on_query, D&& on_drop,
                                       QueryableOptions&& options = QueryableOptions::create_default(),
                                       ZResult* err = nullptr) const {
         static_assert(std::is_invocable_r<void, C, const Query&>::value,
@@ -425,11 +458,9 @@ class Session : public Owned<::z_owned_session_t> {
         z_queryable_options_default(&opts);
         opts.complete = options.complete;
 
-        Queryable<void> q(zenoh::detail::null_object);
-        ZResult res = ::z_declare_queryable(interop::as_owned_c_ptr(q), interop::as_loaned_c_ptr(*this),
-                                            interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
-        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Queryable");
-        return q;
+        ZResult res = ::z_queryable_declare_background(interop::as_loaned_c_ptr(*this),
+                                                       interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Queryable");
     }
 
     /// @brief Create a ``Queryable`` object to answer to ``Session::get`` requests.
@@ -442,7 +473,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @return a ``Queryable`` object.
     template <class Channel>
-    Queryable<typename Channel::template HandlerType<Query>> declare_queryable(
+    [[nodiscard]] Queryable<typename Channel::template HandlerType<Query>> declare_queryable(
         const KeyExpr& key_expr, Channel channel, QueryableOptions&& options = QueryableOptions::create_default(),
         ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Query>();
@@ -451,7 +482,7 @@ class Session : public Owned<::z_owned_session_t> {
         opts.complete = options.complete;
 
         Queryable<void> q(zenoh::detail::null_object);
-        ZResult res = ::z_declare_queryable(interop::as_owned_c_ptr(q), interop::as_loaned_c_ptr(*this),
+        ZResult res = ::z_queryable_declare(interop::as_owned_c_ptr(q), interop::as_loaned_c_ptr(*this),
                                             interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Queryable");
         if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
@@ -468,10 +499,8 @@ class Session : public Owned<::z_owned_session_t> {
         static SubscriberOptions create_default() { return {}; }
     };
 
-    /// @brief Create a ``Subscriber`` object to receive data from matching ``Publisher`` objects or from.
+    /// @brief Create a ``Subscriber`` object to receive data from matching ``Publisher`` objects or from
     /// ``Session::put`` and ``Session::delete_resource`` requests.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
-    /// `zenoh::channels::RingChannel`).
     /// @param key_expr the key expression to match the publishers.
     /// @param on_sample the callback that will be called for each received sample.
     /// @param on_drop the callback that will be called once subscriber is destroyed or undeclared.
@@ -480,9 +509,9 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @return a ``Subscriber`` object.
     template <class C, class D>
-    Subscriber<void> declare_subscriber(const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
-                                        SubscriberOptions&& options = SubscriberOptions::create_default(),
-                                        ZResult* err = nullptr) const {
+    [[nodiscard]] Subscriber<void> declare_subscriber(const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
+                                                      SubscriberOptions&& options = SubscriberOptions::create_default(),
+                                                      ZResult* err = nullptr) const {
         static_assert(
             std::is_invocable_r<void, C, const Sample&>::value,
             "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
@@ -498,10 +527,42 @@ class Session : public Owned<::z_owned_session_t> {
         z_subscriber_options_default(&opts);
         (void)options;
         Subscriber<void> s(zenoh::detail::null_object);
-        ZResult res = ::z_declare_subscriber(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
+        ZResult res = ::z_subscriber_declare(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
                                              interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Subscriber");
         return s;
+    }
+
+    /// @brief Declare a a background subscriber. It will receive data from matching ``Publisher`` objects or from
+    /// ``Session::put`` and ``Session::delete_resource`` requests, until the corresponding session is closed or
+    /// destroyed.
+    /// @param key_expr the key expression to match the publishers.
+    /// @param on_sample the callback that will be called for each received sample.
+    /// @param on_drop the callback that will be called once subscriber is destroyed or undeclared.
+    /// @param options options to pass to subscriber declaration.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    template <class C, class D>
+    void declare_background_subscriber(const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
+                                       SubscriberOptions&& options = SubscriberOptions::create_default(),
+                                       ZResult* err = nullptr) const {
+        static_assert(
+            std::is_invocable_r<void, C, const Sample&>::value,
+            "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
+        static_assert(std::is_invocable_r<void, D>::value,
+                      "on_drop should be callable with the following signature: void on_drop()");
+        ::z_owned_closure_sample_t c_closure;
+        using Cval = std::remove_reference_t<C>;
+        using Dval = std::remove_reference_t<D>;
+        using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Sample&>;
+        auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
+        ::z_subscriber_options_t opts;
+        z_subscriber_options_default(&opts);
+        (void)options;
+        ZResult res = ::z_subscriber_declare_background(interop::as_loaned_c_ptr(*this),
+                                                        interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Subscriber");
     }
 
     /// @brief Create a ``Subscriber`` object to receive data from matching ``Publisher`` objects or from.
@@ -515,7 +576,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @return a ``Subscriber`` object.
     template <class Channel>
-    Subscriber<typename Channel::template HandlerType<Sample>> declare_subscriber(
+    [[nodiscard]] Subscriber<typename Channel::template HandlerType<Sample>> declare_subscriber(
         const KeyExpr& key_expr, Channel channel, SubscriberOptions&& options = SubscriberOptions::create_default(),
         ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Sample>();
@@ -524,7 +585,7 @@ class Session : public Owned<::z_owned_session_t> {
         (void)options;
         Subscriber<void> s(zenoh::detail::null_object);
         ZResult res =
-            ::z_declare_subscriber(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
+            ::z_subscriber_declare(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
                                    interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Subscriber");
         if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
@@ -585,7 +646,7 @@ class Session : public Owned<::z_owned_session_t> {
         opts.encoding = interop::as_moved_c_ptr(options.encoding);
 
         Publisher p = interop::detail::null<Publisher>();
-        ZResult res = ::z_declare_publisher(interop::as_owned_c_ptr(p), interop::as_loaned_c_ptr(*this),
+        ZResult res = ::z_publisher_declare(interop::as_owned_c_ptr(p), interop::as_loaned_c_ptr(*this),
                                             interop::as_loaned_c_ptr(key_expr), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Publisher");
         return p;
@@ -738,17 +799,15 @@ class Session : public Owned<::z_owned_session_t> {
     };
 
     /// @brief Declares a subscriber on liveliness tokens that intersect `key_expr`.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
-    /// `zenoh::channels::RingChannel`).
     /// @param key_expr  the key expression to subscribe to.
-    /// @param on_sample the callabl that will be called each time a liveliness token status is changed.
+    /// @param on_sample the callable that will be called each time a liveliness token status is changed.
     /// @param on_drop the callable that will be called once subscriber is destroyed or undeclared.
     /// @param options options to pass to subscriber declaration.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``Subscriber`` object.
     template <class C, class D>
-    Subscriber<void> liveliness_declare_subscriber(
+    [[nodiscard]] Subscriber<void> liveliness_declare_subscriber(
         const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
         LivelinessSubscriberOptions&& options = LivelinessSubscriberOptions::create_default(),
         ZResult* err = nullptr) const {
@@ -768,10 +827,42 @@ class Session : public Owned<::z_owned_session_t> {
         opts.history = options.history;
         Subscriber<void> s(zenoh::detail::null_object);
         ZResult res =
-            ::zc_liveliness_declare_subscriber(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
+            ::zc_liveliness_subscriber_declare(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
                                                interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
         return s;
+    }
+
+    /// @brief Declares a background subscriber on liveliness tokens that intersect `key_expr`. The subscriber callback
+    /// will be run in the background until the corresponding session is closed or destroyed.
+    /// @param key_expr  the key expression to subscribe to.
+    /// @param on_sample the callable that will be called each time a liveliness token status is changed.
+    /// @param on_drop the callable that will be called once subscriber is destroyed or undeclared.
+    /// @param options options to pass to subscriber declaration.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    template <class C, class D>
+    void liveliness_declare_background_subscriber(
+        const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
+        LivelinessSubscriberOptions&& options = LivelinessSubscriberOptions::create_default(),
+        ZResult* err = nullptr) const {
+        static_assert(
+            std::is_invocable_r<void, C, const Sample&>::value,
+            "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
+        static_assert(std::is_invocable_r<void, D>::value,
+                      "on_drop should be callable with the following signature: void on_drop()");
+        ::z_owned_closure_sample_t c_closure;
+        using Cval = std::remove_reference_t<C>;
+        using Dval = std::remove_reference_t<D>;
+        using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Sample&>;
+        auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
+        ::zc_liveliness_subscriber_options_t opts;
+        zc_liveliness_subscriber_options_default(&opts);
+        opts.history = options.history;
+        ZResult res = ::zc_liveliness_subscriber_declare_background(
+            interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Liveliness Token Subscriber");
     }
 
     /// @brief Declare a subscriber on liveliness tokens that intersect `key_expr`.
@@ -784,7 +875,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     /// @return a ``Subscriber`` object.
     template <class Channel>
-    Subscriber<typename Channel::template HandlerType<Sample>> liveliness_declare_subscriber(
+    [[nodiscard]] Subscriber<typename Channel::template HandlerType<Sample>> liveliness_declare_subscriber(
         const KeyExpr& key_expr, Channel channel,
         LivelinessSubscriberOptions&& options = LivelinessSubscriberOptions::create_default(),
         ZResult* err = nullptr) const {
@@ -793,7 +884,7 @@ class Session : public Owned<::z_owned_session_t> {
         zc_liveliness_subscriber_options_default(&opts);
         opts.history = options.history;
         Subscriber<void> s(zenoh::detail::null_object);
-        ZResult res = ::zc_liveliness_declare_subscriber(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
+        ZResult res = ::zc_liveliness_subscriber_declare(interop::as_owned_c_ptr(s), interop::as_loaned_c_ptr(*this),
                                                          interop::as_loaned_c_ptr(key_expr),
                                                          ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
