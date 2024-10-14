@@ -83,7 +83,7 @@ class Deserializer : public Copyable<::ze_deserializer_t> {
     T deserialize(zenoh::ZResult* err = nullptr);
 
     /// @brief Checks if deserializer has parsed all the data.
-    /// @return `true` if there is no more data to parse, `false` otherwise.
+    /// @return ``true`` if there is no more data to parse, ``false`` otherwise.
     bool is_done() const { return ::ze_deserializer_is_done(&this->_0); }
 };
 

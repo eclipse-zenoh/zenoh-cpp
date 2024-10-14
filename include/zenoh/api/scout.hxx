@@ -26,9 +26,9 @@ struct ScoutOptions {
 };
 
 /// @brief Scout for zenoh entities in the network.
-/// @param config ``ScoutingConfig`` to use.
-/// @param on_hello The callable to process each received ``Hello``message.
-/// @param on_drop The callable that will be called once all ``Hello`` messages are received.
+/// @param config ``Config`` to use for scouting.
+/// @param on_hello the callable to process each received ``Hello``message.
+/// @param on_drop the callable that will be called once all ``Hello`` messages are received.
 template <class C, class D>
 void scout(Config&& config, C&& on_hello, D&& on_drop, ScoutOptions&& options = ScoutOptions::create_default(),
            ZResult* err = nullptr) {

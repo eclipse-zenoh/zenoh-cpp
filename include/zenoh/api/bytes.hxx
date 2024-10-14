@@ -165,7 +165,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     /// The only provided guarantee is on the bytes order that is preserved.
     SliceIterator slice_iter() const;
 
-    /// @brief A reader for Zenoh-serialized data.
+    /// @brief A reader for zenoh payload.
     class Reader : public Copyable<::z_bytes_reader_t> {
         using Copyable::Copyable;
         friend struct interop::detail::Converter;
@@ -223,7 +223,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     /// @return reader instance.
     Reader reader() const { return Reader(*this); }
 
-    /// @brief A writer for Zenoh-serialized data.
+    /// @brief A writer for zenoh payload.
     class Writer : public Owned<::z_owned_bytes_writer_t> {
        public:
         /// @name Constructors

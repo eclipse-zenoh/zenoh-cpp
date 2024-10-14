@@ -99,8 +99,8 @@ struct RingHandlerData<zenoh::Reply> {
 
 class FifoChannel;
 
-/// @brief A FIFO channel handler
-/// @tparam T data entry type
+/// @brief A FIFO channel handler.
+/// @tparam T data entry type.
 template <class T>
 class FifoHandler : public Owned<typename detail::FifoHandlerData<T>::handler_type> {
     FifoHandler(zenoh::detail::null_object_t) : Owned<typename detail::FifoHandlerData<T>::handler_type>(nullptr){};
@@ -108,8 +108,9 @@ class FifoHandler : public Owned<typename detail::FifoHandlerData<T>::handler_ty
    public:
     /// @name Methods
 
-    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will block until new data entry arrives.
-    /// @return received data entry if there were any in the buffer, a receive error otherwise.
+    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty, will block until new data entry
+    /// arrives.
+    /// @return received data entry, if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> recv() const {
         std::variant<T, RecvError> v(interop::detail::null<T>());
         z_result_t res = ::z_recv(interop::as_loaned_c_ptr(*this), zenoh::interop::as_owned_c_ptr(std::get<T>(v)));
@@ -120,8 +121,8 @@ class FifoHandler : public Owned<typename detail::FifoHandlerData<T>::handler_ty
         }
     }
 
-    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will immediately return.
-    /// @return received data entry if there were any in the buffer, a receive error otherwise.
+    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty, will immediately return.
+    /// @return received data entry, if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> try_recv() const {
         std::variant<T, RecvError> v(interop::detail::null<T>());
         z_result_t res = ::z_try_recv(interop::as_loaned_c_ptr(*this), zenoh::interop::as_owned_c_ptr(std::get<T>(v)));
@@ -148,8 +149,9 @@ class RingHandler : public Owned<typename detail::RingHandlerData<T>::handler_ty
    public:
     /// @name Methods
 
-    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will block until new data entry arrives.
-    /// @return received data entry if there were any in the buffer, a receive error otherwise.
+    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty, will block until new data entry
+    /// arrives.
+    /// @return received data, entry if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> recv() const {
         std::variant<T, RecvError> v(interop::detail::null<T>());
         z_result_t res =
@@ -161,8 +163,8 @@ class RingHandler : public Owned<typename detail::RingHandlerData<T>::handler_ty
         }
     }
 
-    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty will immediately return.
-    /// @return received data entry if there were any in the buffer, a receive error otherwise.
+    /// @brief Fetch a data entry from the handler's buffer. If buffer is empty, will immediately return.
+    /// @return received data entry, if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> try_recv() const {
         std::variant<T, RecvError> v(interop::detail::null<T>());
         z_result_t res = ::z_try_recv(interop::as_loaned_c_ptr(*this), zenoh::interop::as_owned_c_ptr(std::get<T>(v)));
@@ -184,7 +186,7 @@ class FifoChannel {
 
    public:
     /// @brief Constructor.
-    /// @param capacity maximum number of entries in the FIFO buffer of the channel. When the buffer is full all
+    /// @param capacity maximum number of entries in the FIFO buffer of the channel. When the buffer is full, all
     /// new attempts to insert data will block, until an entry is fetched and the space is freed in the buffer.
     FifoChannel(size_t capacity) : _capacity(capacity) {}
 

@@ -53,7 +53,7 @@ class Queryable<void> : public detail::QueryableBase {
 /// @brief A Zenoh queryable. Destroying or undeclaring queryable cancels its callback function.
 ///
 /// Constructed by ``Session::declare_queryable`` method.
-/// @tparam Handler Streaming handler exposing data. If `void`, no handler access is provided and instead data is being
+/// @tparam Handler streaming handler exposing data. If `void`, no handler access is provided and instead data is being
 /// processed inside the callback.
 template <class Handler>
 class Queryable : public detail::QueryableBase {
@@ -65,7 +65,7 @@ class Queryable : public detail::QueryableBase {
     /// @brief Construct stream queryable from callback queryable and handler.
     ///
     /// @param q Callback queryable, that should expose data to the handler in its callback.
-    /// @param handler Handler to access data exposed by q. Zenoh handlers implement
+    /// @param handler handler to access data exposed by q. Zenoh handlers implement
     /// recv and try_recv methods, for blocking and non-blocking message reception. But user is free to define his own
     /// interface.
     Queryable(Queryable<void>&& q, Handler handler)
@@ -135,7 +135,7 @@ auto as_moved_c_ptr(std::optional<Queryable<Handler>>& q) -> decltype(as_moved_c
     }
 }
 
-/// @brief Move queryable and its handler to a pair containing corresponding Zenoh-c structs.
+/// @brief Move queryable and its handler to a pair containing corresponding  structs.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto move_to_c_obj(Queryable<Handler>&& q) {
     return std::make_pair(move_to_c_obj(std::move(static_cast<zenoh::detail::QueryableBase&>(q))),

@@ -58,6 +58,7 @@ class AllocLayout : public Owned<::z_owned_alloc_layout_t> {
                              err, "Failed to create SHM Alloc Layout");
     }
 
+    /// @name Methods
     BufAllocResult alloc() const {
         z_buf_alloc_result_t result;
         ::z_alloc_layout_alloc(&result, interop::as_loaned_c_ptr(*this));

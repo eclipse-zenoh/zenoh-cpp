@@ -14,10 +14,6 @@
 
 Serialization/Deserialziation
 =============================
-.. doxygenclass:: zenoh::Bytes
-   :members:
-   :membergroups: Constructors Operators Methods
-
 .. doxygenclass:: zenoh::ext::Serializer
    :members:
    :membergroups: Constructors Operators Methods

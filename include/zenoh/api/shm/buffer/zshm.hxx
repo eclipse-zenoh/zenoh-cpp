@@ -33,24 +33,26 @@ class ZShm : public Owned<::z_owned_shm_t> {
     /// @name Constructors
 
     /// @brief Create a new ZShm from ZShmMut.
-    /// @param mut mutable buffer
+    /// @param mut mutable buffer.
     ZShm(ZShmMut&& mut) : Owned(nullptr) { ::z_shm_from_mut(&this->_0, ::z_move(mut._0)); }
 
     /// @brief Create a new ZShm from ZShm by performing a shallow SHM reference copy.
     /// @param other ZShm to copy
     ZShm(const ZShm& other) : Owned(nullptr) { ::z_shm_clone(&this->_0, interop::as_loaned_c_ptr(other)); }
 
+    /// @name Methods
+
     /// @brief Get buffer's const data. It is completely unsafe to to modify SHM data without using ZShmMut interface.
-    /// @return pointer to the underlying data
+    /// @return pointer to the underlying data.
     const uint8_t* data() const { return ::z_shm_data(interop::as_loaned_c_ptr(*this)); }
 
     /// @brief Get buffer's data size.
-    /// @return underlying data size
+    /// @return underlying data size.
     std::size_t len() const { return ::z_shm_len(interop::as_loaned_c_ptr(*this)); }
 
     /// @brief Create a new ZShmMut from ZShm.
-    /// @param immut immutable buffer, NOTE: the value will not be moved if nullopt returned
-    /// @return mutable buffer or empty option if buffer mutation is impossible
+    /// @param immut immutable buffer, NOTE: the value will not be moved if nullopt returned.
+    /// @return mutable buffer or empty option if buffer mutation is impossible.
     static std::optional<ZShmMut> try_mutate(ZShm&& immut) {
         z_owned_shm_mut_t mut_inner;
         if (Z_OK == ::z_shm_mut_try_from_immut(&mut_inner, z_move(immut._0), &immut._0)) {

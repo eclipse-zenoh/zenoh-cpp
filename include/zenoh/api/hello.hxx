@@ -63,10 +63,10 @@ class Hello : public Owned<::z_owned_hello_t> {
         return locators;
     }
 
-    /// @brief Copy contructor
+    /// @brief Copy constructor.
     Hello(const Hello& other) : Owned(nullptr) { ::z_hello_clone(&this->_0, interop::as_loaned_c_ptr(other)); };
 
-    /// @brief Move constructor
+    /// @brief Move constructor.
     Hello(Hello&& other) = default;
 
     /// @name Operators

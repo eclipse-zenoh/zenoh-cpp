@@ -66,9 +66,9 @@ class Owned {
     typedef ZC_OWNED_TYPE OwnedType;
 
    public:
-    /// Move constructor from other object
+    /// Move constructor.
     Owned(Owned&& v) : Owned(&v._0) {}
-    /// Move assignment from other object
+    /// Move assignmen.
     Owned& operator=(Owned&& v) {
         if (this != &v) {
             ::z_drop(::z_move(this->_0));

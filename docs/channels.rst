@@ -17,6 +17,8 @@ Channels
 
 Classes providing stream interface for Zenoh messages.
 
+.. doxygenenum:: zenoh::channels::RecvError
+
 .. doxygenclass:: zenoh::channels::FifoChannel
     :members:
 

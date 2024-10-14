@@ -37,11 +37,13 @@ class Config : public Owned<::z_owned_config_t> {
 
 #ifdef ZENOHCXX_ZENOHC
     /// @brief Create the configuration from the JSON file.
-    /// @param path path to the config file.
+    /// @param path path to the config file (see <a
+    /// href="https://zenoh.io/docs/manual/configuration/#configuration-files">config file documentation</a> for more
+    /// information).
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return the ``Config`` object.
-    /// @note zenoh-c only.
+    /// @note Zenoh-c only.
     static Config from_file(const std::string& path, ZResult* err = nullptr) {
         Config c(zenoh::detail::null_object);
         __ZENOH_RESULT_CHECK(::zc_config_from_file(&c._0, path.data()), err,
@@ -54,7 +56,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return the ``Config`` object.
-    /// @note zenoh-c only.
+    /// @note Zenoh-c only.
     static Config from_str(const std::string& s, ZResult* err = nullptr) {
         Config c(zenoh::detail::null_object);
         __ZENOH_RESULT_CHECK(::zc_config_from_str(&c._0, s.data()), err,
@@ -66,7 +68,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return the ``Config`` object.
-    /// @note zenoh-pico only.
+    /// @note Zenoh-pico only.
     static Config from_env(ZResult* err = nullptr) {
         Config c(zenoh::detail::null_object);
         __ZENOH_RESULT_CHECK(::zc_config_from_env(&c._0), err, "Failed to create config from environment variable");
@@ -82,7 +84,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return value of the config parameter in JSON format.
-    /// @note zenoh-c only.
+    /// @note Zenoh-c only.
     std::string get(std::string_view key, ZResult* err = nullptr) const {
         ::z_owned_string_t s;
         __ZENOH_RESULT_CHECK(::zc_config_get_from_substr(interop::as_loaned_c_ptr(*this), key.data(), key.size(), &s),
@@ -94,7 +96,7 @@ class Config : public Owned<::z_owned_config_t> {
 
     /// @brief Get the whole config as a JSON string.
     /// @return string with config in json format.
-    /// @note zenoh-c only.
+    /// @note Zenoh-c only.
     std::string to_string() const {
         ::z_owned_string_t s;
         ::zc_config_to_string(interop::as_loaned_c_ptr(*this), &s);
@@ -108,8 +110,8 @@ class Config : public Owned<::z_owned_config_t> {
     /// @param value the JSON string value,
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @return true if the parameter was inserted, false otherwise.
-    /// @note zenoh-c only.
+    /// @return ``true`` if the parameter was inserted, false otherwise.
+    /// @note Zenoh-c only.
     void insert_json5(const std::string& key, const std::string& value, ZResult* err = nullptr) {
         __ZENOH_RESULT_CHECK(::zc_config_insert_json5(interop::as_loaned_c_ptr(*this), key.c_str(), value.c_str()), err,
                              std::string("Failed to insert '")
@@ -125,7 +127,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return pointer to the null-terminated string value of the config parameter.
-    /// @note zenoh-pico only.
+    /// @note Zenoh-pico only.
     const char* get(uint8_t key, ZResult* err = nullptr) const {
         const char* c = ::zp_config_get(interop::as_loaned_c_ptr(*this), key);
         __ZENOH_RESULT_CHECK((c == nullptr ? -1 : Z_OK), err,
@@ -138,7 +140,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @param value the null-terminated string value.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @note zenoh-pico only.
+    /// @note Zenoh-pico only.
     void insert(uint8_t key, const char* value, ZResult* err = nullptr) {
         __ZENOH_RESULT_CHECK(zp_config_insert(interop::as_loaned_c_ptr(*this), key, value), err,
                              std::string("Failed to insert '")

@@ -28,7 +28,7 @@ class Session;
 ///
 /// A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity
 /// between the subscriber and the token's creator is lost.
-/// @note zenoh-c only.
+/// @note Zenoh-c only.
 class LivelinessToken : public Owned<::zc_owned_liveliness_token_t> {
     LivelinessToken(zenoh::detail::null_object_t) : Owned(nullptr){};
     friend struct interop::detail::Converter;
