@@ -68,7 +68,7 @@ class Owned {
    public:
     /// Move constructor.
     Owned(Owned&& v) : Owned(&v._0) {}
-    /// Move assignmen.
+    /// Move assignment.
     Owned& operator=(Owned&& v) {
         if (this != &v) {
             ::z_drop(::z_move(this->_0));

@@ -99,42 +99,42 @@ class Subscriber : public detail::SubscriberBase {
 };
 
 namespace interop {
-/// @brief Return a pair of pointers to owned C representations of subscriber and its callback.
+/// @brief Return a pair of pointers to owned zenoh-c representations of subscriber and its callback.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_owned_c_ptr(Subscriber<Handler>& s) {
     return std::make_pair(as_owned_c_ptr(static_cast<zenoh::detail::SubscriberBase&>(s)),
                           as_owned_c_ptr(const_cast<Handler&>(s.handler())));
 }
 
-/// @brief Return a pair of pointers to owned C representations of subscriber and its callback.
+/// @brief Return a pair of pointers to owned zenoh-c representations of subscriber and its callback.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_owned_c_ptr(const Subscriber<Handler>& s) {
     return std::make_pair(as_owned_c_ptr(static_cast<const zenoh::detail::SubscriberBase&>(s)),
                           as_owned_c_ptr(s.handler()));
 }
 
-/// @brief Return a pair of pointers to loaned C representations of subscriber and its callback.
+/// @brief Return a pair of pointers to loaned zenoh-c representations of subscriber and its callback.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_loaned_c_ptr(Subscriber<Handler>& s) {
     return std::make_pair(as_loaned_c_ptr(static_cast<zenoh::detail::SubscriberBase&>(s)),
                           as_loaned_c_ptr(const_cast<Handler&>(s.handler())));
 }
 
-/// @brief Return a pair of pointers to loaned C representations of subscriber and its callback.
+/// @brief Return a pair of pointers to loaned zenoh-c representations of subscriber and its callback.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_loaned_c_ptr(const Subscriber<Handler>& s) {
     return std::make_pair(as_loaned_c_ptr(static_cast<const zenoh::detail::SubscriberBase&>(s)),
                           as_loaned_c_ptr(s.handler()));
 }
 
-/// @brief Return a pair of pointers to moved C representations of subscriber and its callback.
+/// @brief Return a pair of pointers to moved zenoh-c representations of subscriber and its callback.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_moved_c_ptr(Subscriber<Handler>& s) {
     return std::make_pair(as_moved_c_ptr(static_cast<zenoh::detail::SubscriberBase&>(s)),
                           as_moved_c_ptr(const_cast<Handler&>(s.handler())));
 }
 
-/// @brief Return a pair of pointers to moved C representations of subscriber and its callback.
+/// @brief Return a pair of pointers to moved zenoh-c representations of subscriber and its callback.
 /// Will return a pair of null pointers if option is empty.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_moved_c_ptr(std::optional<Subscriber<Handler>>& s) -> decltype(as_moved_c_ptr(s.value())) {
