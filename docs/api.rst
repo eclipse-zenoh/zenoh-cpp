@@ -30,3 +30,4 @@ API Reference
    serialization_deserialization
    channels
    interop
+   shared_memory

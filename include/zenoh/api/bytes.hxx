@@ -165,7 +165,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     /// The only provided guarantee is on the bytes order that is preserved.
     SliceIterator slice_iter() const;
 
-    /// @brief A reader for Zenoh-serialized data.
+    /// @brief A reader for zenoh payload.
     class Reader : public Copyable<::z_bytes_reader_t> {
         using Copyable::Copyable;
         friend struct interop::detail::Converter;
@@ -191,7 +191,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         /// @return Number of bytes that can still be read.
         size_t remaining() const { return ::z_bytes_reader_remaining(&this->_0); }
 
-        /// @brief Set the `reader` position indicator to the value pointed to by offset, starting from the current
+        /// @brief Set the reader position indicator to the value pointed to by offset, starting from the current
         /// position.
         /// @param offset offset in bytes starting from the current position.
         /// @param err if not null, the result code will be written to this location, otherwise ZException exception
@@ -200,7 +200,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
             __ZENOH_RESULT_CHECK(::z_bytes_reader_seek(&this->_0, offset, SEEK_CUR), err, "seek_from_current failed");
         }
 
-        /// @brief Set the `reader` position indicator to the value pointed to by offset, starting from the start of the
+        /// @brief Set the reader position indicator to the value pointed to by offset, starting from the start of the
         /// data.
         /// @param offset offset in bytes starting from the 0-th byte position.
         /// @param err if not null, the result code will be written to this location, otherwise ZException exception
@@ -209,7 +209,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
             __ZENOH_RESULT_CHECK(::z_bytes_reader_seek(&this->_0, offset, SEEK_SET), err, "seek_from_start failed");
         }
 
-        /// @brief Set the `reader` position indicator to the value pointed to by offset with respect to the end of the
+        /// @brief Set the reader position indicator to the value pointed to by offset with respect to the end of the
         /// data.
         /// @param offset offset in bytes starting from end position.
         /// @param err if not null, the result code will be written to this location, otherwise ZException exception
@@ -223,7 +223,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     /// @return reader instance.
     Reader reader() const { return Reader(*this); }
 
-    /// @brief A writer for Zenoh-serialized data.
+    /// @brief A writer for zenoh payload.
     class Writer : public Owned<::z_owned_bytes_writer_t> {
        public:
         /// @name Constructors
@@ -243,8 +243,8 @@ class Bytes : public Owned<::z_owned_bytes_t> {
                                  "Failed to write data");
         }
 
-        /// @brief Append another `Bytes` instance.
-        /// This allows to compose data out of multiple `Bytes` that may point to different memory regions.
+        /// @brief Append another ``Bytes`` instance.
+        /// This allows to compose data out of multiple ``Bytes`` that may point to different memory regions.
         /// Said in other terms, it allows to create a linear view on different memory regions without copy.
         ///
         /// @param data data to append.
@@ -255,8 +255,8 @@ class Bytes : public Owned<::z_owned_bytes_t> {
                                  "Failed to append data");
         }
 
-        /// @brief Finalize all writes and return underlying `Bytes` object.
-        /// @return Underlying `Bytes` object.
+        /// @brief Finalize all writes and return underlying ``Bytes`` object.
+        /// @return Underlying ``Bytes`` object.
         Bytes finish() && {
             Bytes b;
             ::z_bytes_writer_finish(interop::as_moved_c_ptr(*this), interop::as_owned_c_ptr(b));

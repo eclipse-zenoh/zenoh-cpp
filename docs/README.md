@@ -40,7 +40,7 @@ build the documentation with this command:
 cmake --build build --target docs
 ```
 
-If everrything is ok, the output is
+If everything is ok, the output is
 ```
 ...
 See read-the-docs html in /username/build/docs/docs/sphinx/index.html

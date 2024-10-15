@@ -53,7 +53,7 @@ class Queryable<void> : public detail::QueryableBase {
 /// @brief A Zenoh queryable. Destroying or undeclaring queryable cancels its callback function.
 ///
 /// Constructed by ``Session::declare_queryable`` method.
-/// @tparam Handler Streaming handler exposing data. If `void`, no handler access is provided and instead data is being
+/// @tparam Handler streaming handler exposing data. If `void`, no handler access is provided and instead data is being
 /// processed inside the callback.
 template <class Handler>
 class Queryable : public detail::QueryableBase {
@@ -65,7 +65,7 @@ class Queryable : public detail::QueryableBase {
     /// @brief Construct stream queryable from callback queryable and handler.
     ///
     /// @param q Callback queryable, that should expose data to the handler in its callback.
-    /// @param handler Handler to access data exposed by q. Zenoh handlers implement
+    /// @param handler handler to access data exposed by q. Zenoh handlers implement
     /// recv and try_recv methods, for blocking and non-blocking message reception. But user is free to define his own
     /// interface.
     Queryable(Queryable<void>&& q, Handler handler)
@@ -89,42 +89,42 @@ class Queryable : public detail::QueryableBase {
 };
 
 namespace interop {
-/// @brief Return a pair of pointers to owned C representations of queryable and its callback.
+/// @brief Return a pair of pointers to owned zenoh-c representations of queryable and its callback.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_owned_c_ptr(Queryable<Handler>& q) {
     return std::make_pair(as_owned_c_ptr(static_cast<zenoh::detail::QueryableBase&>(q)),
                           as_owned_c_ptr(const_cast<Handler&>(q.handler())));
 }
 
-/// @brief Return a pair of pointers to owned C representations of queryable and its handler.
+/// @brief Return a pair of pointers to owned zenoh-c representations of queryable and its handler.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_owned_c_ptr(const Queryable<Handler>& q) {
     return std::make_pair(as_owned_c_ptr(static_cast<const zenoh::detail::QueryableBase&>(q)),
                           as_owned_c_ptr(q.handler()));
 }
 
-/// @brief Return a pair of pointers to loaned C representations of queryable and its handler.
+/// @brief Return a pair of pointers to loaned zenoh-c representations of queryable and its handler.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_loaned_c_ptr(Queryable<Handler>& q) {
     return std::make_pair(as_loaned_c_ptr(static_cast<zenoh::detail::QueryableBase&>(q)),
                           as_loaned_c_ptr(const_cast<Handler&>(q.handler())));
 }
 
-/// @brief Return a pair of pointers to loaned C representation of queryable and its handler.
+/// @brief Return a pair of pointers to loaned zenoh-c representation of queryable and its handler.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_loaned_c_ptr(const Queryable<Handler>& q) {
     return std::make_pair(as_loaned_c_ptr(static_cast<const zenoh::detail::QueryableBase&>(q)),
                           as_loaned_c_ptr(q.handler()));
 }
 
-/// @brief Return a pair of pointers to moved C representation of queryable and its handler.
+/// @brief Return a pair of pointers to moved zenoh-c representation of queryable and its handler.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_moved_c_ptr(Queryable<Handler>& q) {
     return std::make_pair(as_moved_c_ptr(static_cast<zenoh::detail::QueryableBase&>(q)),
                           as_moved_c_ptr(const_cast<Handler&>(q.handler())));
 }
 
-/// @brief Return a pair of pointers to moved C representation of queryable and its handler.
+/// @brief Return a pair of pointers to moved zenoh-c representation of queryable and its handler.
 /// Will return a pair of null pointers if optional is empty.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_moved_c_ptr(std::optional<Queryable<Handler>>& q) -> decltype(as_moved_c_ptr(q.value())) {
@@ -135,7 +135,7 @@ auto as_moved_c_ptr(std::optional<Queryable<Handler>>& q) -> decltype(as_moved_c
     }
 }
 
-/// @brief Move queryable and its handler to a pair containing corresponding Zenoh-c structs.
+/// @brief Move queryable and its handler to a pair containing corresponding zenoh-c structs.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto move_to_c_obj(Queryable<Handler>&& q) {
     return std::make_pair(move_to_c_obj(std::move(static_cast<zenoh::detail::QueryableBase&>(q))),

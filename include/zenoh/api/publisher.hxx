@@ -41,7 +41,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
 
         /// @brief The encoding of the data to publish.
         std::optional<Encoding> encoding = {};
-        /// @brief the timestamp of this message.
+        /// @brief The timestamp of this message.
         std::optional<Timestamp> timestamp = {};
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
@@ -58,9 +58,9 @@ class Publisher : public Owned<::z_owned_publisher_t> {
         static PutOptions create_default() { return {}; }
     };
 
-    /// @brief Options to be passed to ``Publisher::delete_resource`` operation
+    /// @brief Options to be passed to ``Publisher::delete_resource`` operation.
     struct DeleteOptions {
-        /// @brief the timestamp of this message
+        /// @brief The timestamp of this message.
         std::optional<Timestamp> timestamp = {};
 
         /// @brief Create default option settings.
@@ -70,8 +70,8 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     /// @name Methods
 
     /// @brief Publish a message on publisher key expression.
-    /// @param payload Data to publish.
-    /// @param options Optional values passed to put operation.
+    /// @param payload data to publish.
+    /// @param options optional parameters to pass to put operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void put(Bytes&& payload, PutOptions&& options = PutOptions::create_default(), ZResult* err = nullptr) const {
@@ -90,7 +90,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     }
 
     /// @brief Undeclare the resource associated with the publisher key expression.
-    /// @param options Optional values to pass to delete operation.
+    /// @param options optional parameters to pass to delete operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void delete_resource(DeleteOptions&& options = DeleteOptions::create_default(), ZResult* err = nullptr) const {

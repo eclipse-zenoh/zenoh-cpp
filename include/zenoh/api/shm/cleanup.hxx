@@ -17,6 +17,7 @@
 namespace zenoh {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+///
 /// @brief Linux: Trigger cleanup for orphaned SHM segments.
 /// If process that created named SHM segment crashes or exits by a signal, the segment persists in the system
 /// disregarding if it is used by other Zenoh processes or not. This is the detail of POSIX specification for
@@ -27,7 +28,7 @@ namespace zenoh {
 /// - process exit via exit() call or return from maint function
 /// It is OK to additionally trigger this function at any time, but be aware that this can be costly.
 ///
-/// For non-linux platforms this function currently does nothing
+/// For non-linux platforms this function currently does nothing.
 inline void cleanup_orphaned_shm_segments() { ::zc_cleanup_orphaned_shm_segments(); }
 
 }  // end of namespace zenoh

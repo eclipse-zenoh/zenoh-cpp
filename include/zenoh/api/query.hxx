@@ -83,7 +83,7 @@ class Query : public Owned<::z_owned_query_t> {
     struct ReplyOptions {
         /// @name Fields
 
-        /// @brief  An optional encoding of the reply message payload and/or attachment.
+        /// @brief An optional encoding of the reply message payload and/or attachment.
         std::optional<Encoding> encoding = {};
         /// @brief The priority of this reply message.
         Priority priority = Z_PRIORITY_DEFAULT;
@@ -188,8 +188,8 @@ class Query : public Owned<::z_owned_query_t> {
     };
 
     /// @brief Send a delete reply to a query.
-    /// @param key_expr: The key of this delete reply.
-    /// @param options: The options to pass to reply del operation.
+    /// @param key_expr: the key of this delete reply.
+    /// @param options: the options to pass to reply del operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void reply_del(const KeyExpr& key_expr, ReplyDelOptions&& options = ReplyDelOptions::create_default(),
@@ -211,6 +211,7 @@ class Query : public Owned<::z_owned_query_t> {
     }
 
     /// @brief Construct a a shallow copy of this Query.
+    /// This can be used, to send query replies outside of ``Queryable`` callback.
     ///
     /// The query responses will be sent only when the last clone is destroyed.
     Query clone() const {

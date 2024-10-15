@@ -50,14 +50,16 @@ class MemoryLayout : public Owned<::z_owned_memory_layout_t> {
     /// @name Constructors
 
     /// @brief Create a new MemoryLayout.
-    /// @param size layout size
-    /// @param alignment layout alignment
+    /// @param size layout size.
+    /// @param alignment layout alignment.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     MemoryLayout(size_t size, AllocAlignment alignment, ZResult* err = nullptr) : Owned(nullptr) {
         __ZENOH_RESULT_CHECK(::z_memory_layout_new(&this->_0, size, alignment), err,
                              "Failed to create MemoryLayout: incorrect arguments!");
     }
+
+    /// @name Methods
 
     size_t size() const {
         size_t size;
@@ -75,7 +77,7 @@ class MemoryLayout : public Owned<::z_owned_memory_layout_t> {
 };
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief SHM chunk allocation result
+/// @brief SHM chunk allocation result.
 class ChunkAllocResult : public Owned<::z_owned_chunk_alloc_result_t> {
     friend class CppShmProviderBackend;
 
@@ -83,20 +85,20 @@ class ChunkAllocResult : public Owned<::z_owned_chunk_alloc_result_t> {
     /// @name Constructors
 
     /// @brief Create a new ChunkAllocResult that carries successfuly allocated chunk.
-    /// @param chunk allocated chunk
+    /// @param chunk allocated chunk.
     ChunkAllocResult(AllocatedChunk chunk) : Owned(nullptr) { ::z_chunk_alloc_result_new_ok(&this->_0, chunk); }
 
     /// @brief Create a new ChunkAllocResult that carries error.
-    /// @param error allocation error
+    /// @param error allocation error.
     ChunkAllocResult(AllocError error) : Owned(nullptr) { ::z_chunk_alloc_result_new_error(&this->_0, error); }
 };
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief SHM buffer allocation result
+/// @brief SHM buffer allocation result.
 typedef std::variant<ZShmMut, AllocError> BufAllocResult;
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief SHM buffer layouting and allocation result
+/// @brief SHM buffer layouting and allocation result.
 typedef std::variant<ZShmMut, AllocError, LayoutError> BufLayoutAllocResult;
 
 }  // end of namespace zenoh

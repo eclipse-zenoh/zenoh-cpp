@@ -48,10 +48,11 @@ class Session : public Owned<::z_owned_session_t> {
     struct SessionOptions {
         /// @name Fields
 #ifdef ZENOHCXX_ZENOHPICO
-        /// @brief For zenoh-pico only. If true, start background threads which handles the network
+        /// @brief If ``true``, start background threads which handle the network
         /// traffic. If false, the threads should be called manually with ``Session::start_read_task`` and
         /// ``Session::start_lease_task`` or methods ``Session::read``, ``Session::send_keep_alive`` and
         /// ``Session::send_join`` should be called in loop.
+        /// @note Zenoh-pico only.
         bool start_background_tasks = true;
 #endif
         static SessionOptions create_default() { return {}; }
@@ -67,7 +68,7 @@ class Session : public Owned<::z_owned_session_t> {
 
     /// @brief Create a new Session.
     /// @param config Zenoh session ``Config``.
-    /// @param options Options to pass to session creation operation.
+    /// @param options options to pass to session creation operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     Session(Config&& config, SessionOptions&& options = SessionOptions::create_default(), ZResult* err = nullptr)
@@ -94,8 +95,8 @@ class Session : public Owned<::z_owned_session_t> {
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
     /// @brief Create a new Session with custom SHM client set.
     /// @param config Zenoh session ``Config``.
-    /// @param shm_storage Storage with custom SHM clients.
-    /// @param options Options to pass to session creation operation.
+    /// @param shm_storage storage with custom SHM clients.
+    /// @param options options to pass to session creation operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     Session(Config&& config, const ShmClientStorage& shm_storage,
@@ -110,7 +111,7 @@ class Session : public Owned<::z_owned_session_t> {
 
     /// @brief A factory method equivalent to a ``Session`` constructor.
     /// @param config Zenoh session ``Config``.
-    /// @param options Options to pass to session creation operation.
+    /// @param options options to pass to session creation operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return ``Session`` object. In case of failure it will be return in invalid state.
@@ -122,8 +123,8 @@ class Session : public Owned<::z_owned_session_t> {
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
     /// @brief A factory method equivalent to a ``Session`` constructor for custom SHM clients list.
     /// @param config Zenoh session ``Config``.
-    /// @param shm_storage Storage with custom SHM clients.
-    /// @param options Options to pass to session creation operation.
+    /// @param shm_storage storage with custom SHM clients.
+    /// @param options options to pass to session creation operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return ``Session`` object. In case of failure it will be return in invalid state.
@@ -241,15 +242,15 @@ class Session : public Owned<::z_owned_session_t> {
     }
 
     /// @brief Query data from the matching queryables in the system. Replies are provided through a channel.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
-    /// `zenoh::channels::RingChannel`).
+    /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
+    /// ``zenoh::channels::RingChannel``).
     /// @param key_expr the key expression matching resources to query.
     /// @param parameters the parameters string in URL format.
     /// @param channel channel instance.
     /// @param options query options.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @return Reply handler.
+    /// @return reply handler.
     template <class Channel>
     typename Channel::template HandlerType<Reply> get(const KeyExpr& key_expr, const std::string& parameters,
                                                       Channel channel,
@@ -299,7 +300,7 @@ class Session : public Owned<::z_owned_session_t> {
     };
 
     /// @brief Undeclare a resource. Equivalent to ``Publisher::delete_resource``.
-    /// @param key_expr  the key expression to delete the resource.
+    /// @param key_expr the key expression to delete the resource.
     /// @param options options to pass to delete operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
@@ -464,8 +465,8 @@ class Session : public Owned<::z_owned_session_t> {
     }
 
     /// @brief Create a ``Queryable`` object to answer to ``Session::get`` requests.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
-    /// `zenoh::channels::RingChannel`).
+    /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
+    /// ``zenoh::channels::RingChannel``).
     /// @param key_expr the key expression to match the ``Session::get`` requests.
     /// @param channel an instance of channel.
     /// @param options options passed to queryable declaration.
@@ -567,8 +568,8 @@ class Session : public Owned<::z_owned_session_t> {
 
     /// @brief Create a ``Subscriber`` object to receive data from matching ``Publisher`` objects or from.
     /// ``Session::put`` and ``Session::delete_resource`` requests.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
-    /// `zenoh::channels::RingChannel`).
+    /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
+    /// ``zenoh::channels::RingChannel``).
     /// @param key_expr the key expression to match the publishers.
     /// @param channel an instance of channel.
     /// @param options options to pass to subscriber declaration.
@@ -601,7 +602,7 @@ class Session : public Owned<::z_owned_session_t> {
         CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
         /// @brief The priority of messages from this publisher.
         Priority priority = Z_PRIORITY_DEFAULT;
-        /// @brief If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
+        /// @brief If ``true``, Zenoh will not wait to batch this message with others to reduce the bandwith.
         bool is_express = false;
 #if defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
@@ -624,8 +625,8 @@ class Session : public Owned<::z_owned_session_t> {
     };
 
     /// @brief Create a ``Publisher`` object to publish data to matching ``Subscriber`` objects.
-    /// @param key_expr The key expression to match the subscribers.
-    /// @param options Options passed to publisher declaration.
+    /// @param key_expr the key expression to match the subscribers.
+    /// @param options options passed to publisher declaration.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``Publisher`` object.
@@ -694,7 +695,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Start a separate task to read from the network and process the messages as soon as they are received.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @note zenoh-pico only
+    /// @note Zenoh-pico only.
     void start_read_task(ZResult* err = nullptr) {
         __ZENOH_RESULT_CHECK(zp_start_read_task(interop::as_loaned_c_ptr(*this), nullptr), err,
                              "Failed to start read task");
@@ -703,7 +704,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Stop the read task.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @note zenoh-pico only
+    /// @note Zenoh-pico only.
     void stop_read_task(ZResult* err = nullptr) {
         __ZENOH_RESULT_CHECK(zp_stop_read_task(interop::as_loaned_c_ptr(*this)), err, "Failed to stop read task");
     }
@@ -713,7 +714,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// periodically sends the Join messages.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @note zenoh-pico only
+    /// @note Zenoh-pico only.
     void start_lease_task(ZResult* err = nullptr) {
         __ZENOH_RESULT_CHECK(zp_start_lease_task(interop::as_loaned_c_ptr(*this), NULL), err,
                              "Failed to start lease task");
@@ -722,7 +723,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Stop the lease task.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @note zenoh-pico only
+    /// @note Zenoh-pico only.
     void stop_lease_task(ZResult* err = nullptr) {
         __ZENOH_RESULT_CHECK(zp_stop_lease_task(interop::as_loaned_c_ptr(*this)), err, "Failed to stop lease task");
     }
@@ -731,7 +732,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// message.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @note zenoh-pico only
+    /// @note Zenoh-pico only.
     void read(ZResult* err = nullptr) {
         __ZENOH_RESULT_CHECK(zp_read(interop::as_loaned_c_ptr(*this), nullptr), err, "Failed to perform read");
     }
@@ -771,8 +772,8 @@ class Session : public Owned<::z_owned_session_t> {
     /// Liveliness token subscribers on an intersecting key expression will receive a PUT sample when connectivity
     /// is achieved, and a DELETE sample if it's lost.
     ///
-    /// @param key_expr: A keyexpr to declare a liveliess token for.
-    /// @param options: Liveliness token declaration properties.
+    /// @param key_expr: a keyexpr to declare a liveliess token for.
+    /// @param options: liveliness token declaration properties.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``LivelinessToken``.
@@ -799,7 +800,7 @@ class Session : public Owned<::z_owned_session_t> {
     };
 
     /// @brief Declares a subscriber on liveliness tokens that intersect `key_expr`.
-    /// @param key_expr  the key expression to subscribe to.
+    /// @param key_expr the key expression to subscribe to.
     /// @param on_sample the callable that will be called each time a liveliness token status is changed.
     /// @param on_drop the callable that will be called once subscriber is destroyed or undeclared.
     /// @param options options to pass to subscriber declaration.
@@ -835,7 +836,7 @@ class Session : public Owned<::z_owned_session_t> {
 
     /// @brief Declares a background subscriber on liveliness tokens that intersect `key_expr`. The subscriber callback
     /// will be run in the background until the corresponding session is closed or destroyed.
-    /// @param key_expr  the key expression to subscribe to.
+    /// @param key_expr the key expression to subscribe to.
     /// @param on_sample the callable that will be called each time a liveliness token status is changed.
     /// @param on_drop the callable that will be called once subscriber is destroyed or undeclared.
     /// @param options options to pass to subscriber declaration.
@@ -866,8 +867,8 @@ class Session : public Owned<::z_owned_session_t> {
     }
 
     /// @brief Declare a subscriber on liveliness tokens that intersect `key_expr`.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
-    /// `zenoh::channels::RingChannel`).
+    /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
+    /// ``zenoh::channels::RingChannel``).
     /// @param key_expr the key expression to subscribe to.
     /// @param channel an instance of channel.
     /// @param options options to pass to subscriber declaration.
@@ -905,12 +906,12 @@ class Session : public Owned<::z_owned_session_t> {
         static LivelinessGetOptions create_default() { return {}; }
     };
 
-    /// @brief Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
+    /// @brief Query liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
     ///
-    /// @param session: The Zenoh session.
-    /// @param key_expr: The key expression to query liveliness tokens for.
-    /// @param callback: The callable that will be called for each received reply.
-    /// @param options: Additional options for the liveliness get operation.
+    /// @param key_expr: the key expression to query liveliness tokens for.
+    /// @param on_reply: the callable that will be called for each received reply.
+    /// @param on_drop the callable that will be called once all replies are received.
+    /// @param options: additional options for the liveliness get operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     template <class C, class D>
@@ -936,15 +937,15 @@ class Session : public Owned<::z_owned_session_t> {
                              err, "Failed to perform liveliness_get operation");
     }
 
-    /// @brief Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
-    /// `zenoh::channels::RingChannel`).
+    /// @brief Query liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
+    /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
+    /// ``zenoh::channels::RingChannel``).
     /// @param key_expr the key expression to query liveliness tokens for.
     /// @param channel channel instance.
-    /// @param options  additional options for the liveliness get operation.
+    /// @param options additional options for the liveliness get operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @return Reply handler.
+    /// @return reply handler.
     template <class Channel>
     typename Channel::template HandlerType<Reply> liveliness_get(
         const KeyExpr& key_expr, Channel channel,
@@ -971,10 +972,10 @@ class Session : public Owned<::z_owned_session_t> {
         return interop::into_copyable_cpp_obj<Timestamp>(t);
     }
 
-    /// @brief Close the session and undeclare all not yet undeclared `Subscriber` and `Queryable`
+    /// @brief Close the session and undeclare all not yet undeclared ``Subscriber`` and ``Queryable``
     /// callbacks. After this, all calls to corresponding session (or session entity) methods will fail.
-    /// It still possible though to process any already received messages using `Subscriber` or
-    /// `Queryable` handlers (but not reply to them).
+    /// It still possible though to process any already received messages using ``Subscriber`` or
+    /// ``Queryable`` handlers (but not reply to them).
     /// @param options options to pass to close operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.

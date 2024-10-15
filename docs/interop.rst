@@ -12,8 +12,11 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-Interoperability with Zenoh-c / Zenoh-pico
+Interoperability with zenoh-c / zenoh-pico
 ==========================================
+This is the list of the functions that can be use for interoperability between zenoh-c/zenoh-pico and
+zenoh-cpp. These functions essentially perform conversion of c-structs into c++ classes and back. They should be used with
+care, and it is up to the user to ensure that all necessary invariants uphold.
 
 .. doxygennamespace:: zenoh::interop
     :content-only:

@@ -76,6 +76,12 @@ Sample
    :members:
    :membergroups: Constructors Operators Methods
 
+Bytes
+------
+.. doxygenclass:: zenoh::Bytes
+   :members:
+   :membergroups: Constructors Operators Methods
+
 Logging
 -------
 
