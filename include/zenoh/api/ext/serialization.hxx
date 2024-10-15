@@ -53,7 +53,7 @@ class Serializer : public Owned<::ze_owned_serializer_t> {
     void serialize(const T& value);
 
     /// @brief Finalize serialization and return the underlying ``Bytes`` object.
-    /// @return underlying``Bytes``object.
+    /// @return underlying ``Bytes`` object.
     Bytes finish() && {
         Bytes b;
         ::ze_serializer_finish(interop::as_moved_c_ptr(*this), interop::as_owned_c_ptr(b));
