@@ -34,7 +34,7 @@ class Id : public Copyable<::z_id_t> {
    public:
     /// @name Methods
 
-    /// Return the byte sequence of the 'Id'.
+    /// Return the byte sequence of the ``Id``.
     const std::array<uint8_t, 16>& bytes() const { return *reinterpret_cast<const std::array<uint8_t, 16>*>(&_0.id); }
 
     /// @brief Formats the ``Id`` into 16-digit hex string (LSB-first order).
