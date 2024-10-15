@@ -48,7 +48,7 @@ class Session : public Owned<::z_owned_session_t> {
     struct SessionOptions {
         /// @name Fields
 #ifdef ZENOHCXX_ZENOHPICO
-        /// @brief If ``true``, start background threads which handles the network
+        /// @brief If ``true``, start background threads which handle the network
         /// traffic. If false, the threads should be called manually with ``Session::start_read_task`` and
         /// ``Session::start_lease_task`` or methods ``Session::read``, ``Session::send_keep_alive`` and
         /// ``Session::send_join`` should be called in loop.
