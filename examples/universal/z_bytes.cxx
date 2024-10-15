@@ -13,7 +13,7 @@
 //
 #include <iostream>
 
-#ifdef ZENOH_CPP_EXMAPLE_WITH_PROTOBUF
+#ifdef ZENOH_CPP_EXAMPLE_WITH_PROTOBUF
 #include "entity.pb.h"
 #endif
 
@@ -115,7 +115,7 @@ int _main(int argc, char** argv) {
         assert(i3 == o3);
     }
 
-#ifdef ZENOH_CPP_EXMAPLE_WITH_PROTOBUF
+#ifdef ZENOH_CPP_EXAMPLE_WITH_PROTOBUF
     // Protobuf
     // This example is conditionally compiled depending on build system being able to find Protobuf installation
     {

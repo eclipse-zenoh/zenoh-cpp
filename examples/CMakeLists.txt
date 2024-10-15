@@ -23,7 +23,7 @@ function(add_protobuf target mode)
 			target_link_libraries(example_message_${mode} PUBLIC protobuf::libprotobuf)
 
 			target_link_libraries(${target} PRIVATE example_message_${mode})
-			target_compile_definitions(${target} PRIVATE -DZENOH_CPP_EXMAPLE_WITH_PROTOBUF)
+			target_compile_definitions(${target} PRIVATE -DZENOH_CPP_EXAMPLE_WITH_PROTOBUF)
 		else()
 			message("Protobuf not found, will build without Protobuf example!")
 		endif()
