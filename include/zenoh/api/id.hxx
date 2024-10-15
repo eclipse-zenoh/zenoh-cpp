@@ -37,7 +37,7 @@ class Id : public Copyable<::z_id_t> {
     /// Return the byte sequence of the 'Id'.
     const std::array<uint8_t, 16>& bytes() const { return *reinterpret_cast<const std::array<uint8_t, 16>*>(&_0.id); }
 
-    /// @brief Formats the `Id` into 16-digit hex string (LSB-first order).
+    /// @brief Formats the ``Id`` into 16-digit hex string (LSB-first order).
     std::string to_string() const {
         ::z_owned_string_t s;
         ::z_id_to_string(interop::as_copyable_c_ptr(*this), &s);
@@ -48,7 +48,7 @@ class Id : public Copyable<::z_id_t> {
 };
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Print `Id` in the hex format.
+/// @brief Print ``Id`` in the hex format.
 inline std::ostream& operator<<(std::ostream& os, const Id& id) {
     ::z_owned_string_t s;
     ::z_id_to_string(interop::as_copyable_c_ptr(id), &s);

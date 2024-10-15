@@ -104,9 +104,9 @@ class Encoding : public Owned<::z_owned_encoding_t> {
         ///
         /// Constant alias for string: `"zenoh/serialized"`.
         ///
-        /// This encoding supposes that the payload was created using `zenoh::ext::serialize` or with the help of
-        /// `zenoh::ext::Serializer` and its data can be accessed via `zenoh::ext::deserialize` or with the help of
-        /// `zenoh::ext::Deserializer`.
+        /// This encoding supposes that the payload was created using ``zenoh::ext::serialize`` or with the help of
+        /// ``zenoh::ext::Serializer`` and its data can be accessed via ``zenoh::ext::deserialize`` or with the help of
+        /// ``zenoh::ext::Deserializer``.
         static const Encoding& zenoh_serialized() {
             return interop::as_owned_cpp_ref<Encoding>(::z_encoding_zenoh_serialized());
         };

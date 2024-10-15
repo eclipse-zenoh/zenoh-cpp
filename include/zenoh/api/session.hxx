@@ -242,8 +242,8 @@ class Session : public Owned<::z_owned_session_t> {
     }
 
     /// @brief Query data from the matching queryables in the system. Replies are provided through a channel.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
-    /// `zenoh::channels::RingChannel`).
+    /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
+    /// ``zenoh::channels::RingChannel``).
     /// @param key_expr the key expression matching resources to query.
     /// @param parameters the parameters string in URL format.
     /// @param channel channel instance.
@@ -465,8 +465,8 @@ class Session : public Owned<::z_owned_session_t> {
     }
 
     /// @brief Create a ``Queryable`` object to answer to ``Session::get`` requests.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
-    /// `zenoh::channels::RingChannel`).
+    /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
+    /// ``zenoh::channels::RingChannel``).
     /// @param key_expr the key expression to match the ``Session::get`` requests.
     /// @param channel an instance of channel.
     /// @param options options passed to queryable declaration.
@@ -568,8 +568,8 @@ class Session : public Owned<::z_owned_session_t> {
 
     /// @brief Create a ``Subscriber`` object to receive data from matching ``Publisher`` objects or from.
     /// ``Session::put`` and ``Session::delete_resource`` requests.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
-    /// `zenoh::channels::RingChannel`).
+    /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
+    /// ``zenoh::channels::RingChannel``).
     /// @param key_expr the key expression to match the publishers.
     /// @param channel an instance of channel.
     /// @param options options to pass to subscriber declaration.
@@ -867,8 +867,8 @@ class Session : public Owned<::z_owned_session_t> {
     }
 
     /// @brief Declare a subscriber on liveliness tokens that intersect `key_expr`.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
-    /// `zenoh::channels::RingChannel`).
+    /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
+    /// ``zenoh::channels::RingChannel``).
     /// @param key_expr the key expression to subscribe to.
     /// @param channel an instance of channel.
     /// @param options options to pass to subscriber declaration.
@@ -938,8 +938,8 @@ class Session : public Owned<::z_owned_session_t> {
     }
 
     /// @brief Query liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
-    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
-    /// `zenoh::channels::RingChannel`).
+    /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
+    /// ``zenoh::channels::RingChannel``).
     /// @param key_expr the key expression to query liveliness tokens for.
     /// @param channel channel instance.
     /// @param options additional options for the liveliness get operation.
@@ -972,10 +972,10 @@ class Session : public Owned<::z_owned_session_t> {
         return interop::into_copyable_cpp_obj<Timestamp>(t);
     }
 
-    /// @brief Close the session and undeclare all not yet undeclared `Subscriber` and `Queryable`
+    /// @brief Close the session and undeclare all not yet undeclared ``Subscriber`` and ``Queryable``
     /// callbacks. After this, all calls to corresponding session (or session entity) methods will fail.
-    /// It still possible though to process any already received messages using `Subscriber` or
-    /// `Queryable` handlers (but not reply to them).
+    /// It still possible though to process any already received messages using ``Subscriber`` or
+    /// ``Queryable`` handlers (but not reply to them).
     /// @param options options to pass to close operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.

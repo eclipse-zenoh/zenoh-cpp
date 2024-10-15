@@ -22,7 +22,7 @@ namespace zenoh {
 
 /// @brief A Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#key-expression"> key expression </a>.
 ///
-/// Key expression can be registered in the `zenoh::Session` object with `zenoh::Session::declare_keyexpr()` method.
+/// Key expression can be registered in the ``zenoh::Session`` object with ``zenoh::Session::declare_keyexpr()`` method.
 /// The unique id is internally assinged to the key expression string in this case. This allows to reduce bandwith usage
 /// when transporting key expressions.
 
