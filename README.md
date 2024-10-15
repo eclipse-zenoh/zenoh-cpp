@@ -16,11 +16,13 @@ Check the website [zenoh.io](http://zenoh.io) and the [roadmap](https://github.c
 
 # C++ API
 
-The Zenoh C++ API is a C++ bindings for [zenoh-c] and [zenoh-pico] libraries. The library is headers only,
-but building [zenoh-c] requires [Rust](rust-lang) installed. Please check [here](https://www.rust-lang.org/tools/install) to learn how to install it.
-
+The Zenoh C++ API are headers only C++ bindings for [zenoh-c] and [zenoh-pico] libraries.
 
 C++ bindings are still under active development so the Zenoh team will highly appreciate any help in testing them on various platforms, system architecture, etc. and to report any issue you might encounter. This will help in greatly improving its maturity and robustness.
+
+## Requirements
+The only hard requirement for building the library is a C++17-compliant compiler.
+Using the library requires either [zenoh-c] or [zenoh-pico] to be installed.
 
 -------------------------------
 ## How to build and install it

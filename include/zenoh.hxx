@@ -12,4 +12,8 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
+#if (__cplusplus < 201703L) && (!defined(_MSVC_LANG) || (_MSVC_LANG < 201703L))
+#error zenoh-cpp requires a C++17-compliant compiler
+#endif
+
 #include "zenoh/api.hxx"
