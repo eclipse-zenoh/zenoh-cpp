@@ -49,8 +49,10 @@ class Serializer : public Owned<::ze_owned_serializer_t> {
 
     /// @brief Serialize specified value and append it to the underlying ``Bytes``.
     /// @param value value to serialize.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception
+    /// will be thrown in case of error.
     template <class T>
-    void serialize(const T& value);
+    void serialize(const T& value, ZResult* err = nullptr);
 
     /// @brief Finalize serialization and return the underlying ``Bytes`` object.
     /// @return underlying ``Bytes`` object.
@@ -89,11 +91,13 @@ class Deserializer : public Copyable<::ze_deserializer_t> {
 
 /// @brief Serialize a single value into ``Bytes``.
 /// @param value value to serialize.
+/// @param err if not null, the result code will be written to this location, otherwise ZException exception
+/// will be thrown in case of error.
 /// @return 'Bytes' containing serialized value.
 template <class T>
-zenoh::Bytes serialize(const T& value) {
+zenoh::Bytes serialize(const T& value, ZResult* err = nullptr) {
     Serializer s;
-    s.serialize(value);
+    s.serialize(value, err);
     return std::move(s).finish();
 }
 
@@ -114,13 +118,15 @@ T deserialize(const zenoh::Bytes& bytes, zenoh::ZResult* err = nullptr) {
 
 namespace detail {
 template <class T>
-void serialize_with_serializer(zenoh::ext::Serializer& serializer, const T& t);
+bool serialize_with_serializer(zenoh::ext::Serializer& serializer, const T& t, ZResult* err = nullptr);
 template <class T>
 bool deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer, T& t, ZResult* err = nullptr);
 
-#define __ZENOH_SERIALIZE_ARITHMETIC(TYPE, EXT)                                                 \
-    inline void __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, TYPE t) { \
-        ::ze_serializer_serialize_##EXT(zenoh::interop::as_loaned_c_ptr(serializer), t);        \
+#define __ZENOH_SERIALIZE_ARITHMETIC(TYPE, EXT)                                                                    \
+    inline bool __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, TYPE t, ZResult* err) {      \
+        __ZENOH_RESULT_CHECK(::ze_serializer_serialize_##EXT(zenoh::interop::as_loaned_c_ptr(serializer), t), err, \
+                             "Failed to serialize " #TYPE);                                                        \
+        return err == nullptr || *err == Z_OK;                                                                     \
     }
 
 __ZENOH_SERIALIZE_ARITHMETIC(uint8_t, uint8)
@@ -136,86 +142,107 @@ __ZENOH_SERIALIZE_ARITHMETIC(double, double)
 __ZENOH_SERIALIZE_ARITHMETIC(bool, bool)
 
 #undef __ZENOH_SERIALIZE_ARITHMETIC
-inline void __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, std::string_view value) {
-    ::z_view_string_t s;
-    z_view_string_from_substr(&s, value.data(), value.size());
-    ::ze_serializer_serialize_string(interop::as_loaned_c_ptr(serializer), ::z_loan(s));
+inline bool __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, std::string_view value,
+                                              ZResult* err) {
+    __ZENOH_RESULT_CHECK(
+        ::ze_serializer_serialize_substr(interop::as_loaned_c_ptr(serializer), value.data(), value.size()), err,
+        "Failed to serialize string");
+    return err == nullptr || *err == Z_OK;
 }
 
-inline void __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const std::string& value) {
-    return __zenoh_serialize_with_serializer(serializer, std::string_view(value));
+inline bool __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const std::string& value,
+                                              ZResult* err) {
+    return __zenoh_serialize_with_serializer(serializer, std::string_view(value), err);
 }
 
-inline void __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const char* value) {
-    return __zenoh_serialize_with_serializer(serializer, std::string_view(value));
+inline bool __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const char* value, ZResult* err) {
+    return __zenoh_serialize_with_serializer(serializer, std::string_view(value), err);
 }
 
 template <class... Types>
-void serialize_with_serializer(zenoh::ext::Serializer& serializer, const std::tuple<Types...>& value) {
-    std::apply([&serializer](const auto&... v) { (serialize_with_serializer(serializer, v), ...); }, value);
+bool __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const std::tuple<Types...>& value,
+                                       ZResult* err) {
+    return std::apply(
+        [&serializer, err](const auto&... v) {
+            bool res = true;
+            res = res && (serialize_with_serializer(serializer, v, err) && ...);
+            return res;
+        },
+        value);
 }
 
 template <class X, class Y>
-void __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const std::pair<X, Y>& value) {
-    serialize_with_serializer(serializer, value.first);
-    serialize_with_serializer(serializer, value.second);
+bool __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const std::pair<X, Y>& value, ZResult* err) {
+    return serialize_with_serializer(serializer, value.first, err) &&
+           serialize_with_serializer(serializer, value.second, err);
 }
 
 template <class It>
-void __serialize_sequence_with_serializer(zenoh::ext::Serializer& serializer, It begin, It end, size_t n) {
-    ::ze_serializer_serialize_sequence_length(zenoh::interop::as_loaned_c_ptr(serializer), n);
-    for (auto it = begin; it != end; ++it) {
-        serialize_with_serializer(serializer, *it);
+bool __serialize_sequence_with_serializer(zenoh::ext::Serializer& serializer, It begin, It end, size_t n,
+                                          ZResult* err) {
+    __ZENOH_RESULT_CHECK(::ze_serializer_serialize_sequence_length(zenoh::interop::as_loaned_c_ptr(serializer), n), err,
+                         "Failed to serialize sequence length");
+    if (err != nullptr || *err != Z_OK) {
+        return false;
     }
+    bool res = true;
+
+    for (auto it = begin; it != end; ++it) {
+        res = res && serialize_with_serializer(serializer, *it);
+    }
+    return res;
 }
 
 template <class T, class Allocator>
-void __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const std::vector<T, Allocator>& value) {
-    __serialize_sequence_with_serializer(serializer, value.begin(), value.end(), value.size());
+bool __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const std::vector<T, Allocator>& value,
+                                       ZResult* err) {
+    return __serialize_sequence_with_serializer(serializer, value.begin(), value.end(), value.size(), err);
 }
 
 template <class T, class Allocator>
-void __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const std::deque<T, Allocator>& value) {
-    __serialize_sequence_with_serializer(serializer, value.begin(), value.end(), value.size());
+bool __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const std::deque<T, Allocator>& value,
+                                       ZResult* err) {
+    return __serialize_sequence_with_serializer(serializer, value.begin(), value.end(), value.size(), err);
 }
 
 template <class K, class H, class E, class Allocator>
-void __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer,
-                                       const std::unordered_set<K, H, E, Allocator>& value) {
-    return __serialize_sequence_with_serializer(serializer, value.begin(), value.end(), value.size());
+bool __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer,
+                                       const std::unordered_set<K, H, E, Allocator>& value, ZResult* err) {
+    return __serialize_sequence_with_serializer(serializer, value.begin(), value.end(), value.size(), err);
 }
 
 template <class K, class Compare, class Allocator>
-void __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer,
-                                       const std::set<K, Compare, Allocator>& value) {
-    return __serialize_sequence_with_serializer(serializer, value.begin(), value.end(), value.size());
+bool __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const std::set<K, Compare, Allocator>& value,
+                                       ZResult* err) {
+    return __serialize_sequence_with_serializer(serializer, value.begin(), value.end(), value.size(), err);
 }
 
 template <class K, class V, class H, class E, class Allocator>
-void __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer,
-                                       const std::unordered_map<K, V, H, E, Allocator>& value) {
-    return __serialize_sequence_with_serializer(serializer, value.begin(), value.end(), value.size());
+bool __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer,
+                                       const std::unordered_map<K, V, H, E, Allocator>& value, ZResult* err) {
+    return __serialize_sequence_with_serializer(serializer, value.begin(), value.end(), value.size(), err);
 }
 
 template <class K, class V, class Compare, class Allocator>
-void __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer,
-                                       const std::map<K, V, Compare, Allocator>& value) {
-    return __serialize_sequence_with_serializer(serializer, value.begin(), value.end(), value.size());
+bool __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer,
+                                       const std::map<K, V, Compare, Allocator>& value, ZResult* err) {
+    return __serialize_sequence_with_serializer(serializer, value.begin(), value.end(), value.size(), err);
 }
 
 template <class T, size_t N>
-void __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const std::array<T, N>& value) {
-    return __serialize_sequence_with_serializer(serializer, value.begin(), value.end(), value.size());
+bool __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const std::array<T, N>& value,
+                                       ZResult* err) {
+    return __serialize_sequence_with_serializer(serializer, value.begin(), value.end(), value.size(), err);
 }
 
 template <class T>
-void serialize_with_serializer(zenoh::ext::Serializer& serializer, const T& t) {
-    __zenoh_serialize_with_serializer(serializer, t);
+bool serialize_with_serializer(zenoh::ext::Serializer& serializer, const T& t, ZResult* err) {
+    return __zenoh_serialize_with_serializer(serializer, t, err);
 }
 
 #define __ZENOH_DESERIALIZE_ARITHMETIC(TYPE, EXT)                                                                    \
     inline bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer, TYPE& t,               \
-                                                      zenoh::ZResult* err = nullptr) {                               \
+                                                      zenoh::ZResult* err) {                                         \
         __ZENOH_RESULT_CHECK(::ze_deserializer_deserialize_##EXT(interop::as_copyable_c_ptr(deserializer), &t), err, \
                              "Deserialization failure");                                                             \
         return err == nullptr || *err == Z_OK;                                                                       \
@@ -235,7 +262,7 @@ __ZENOH_DESERIALIZE_ARITHMETIC(bool, bool)
 
 #undef __ZENOH_DESERIALIZE_ARITHMETIC
 inline bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer, std::string& value,
-                                                  zenoh::ZResult* err = nullptr) {
+                                                  zenoh::ZResult* err) {
     z_owned_string_t s;
     __ZENOH_RESULT_CHECK(::ze_deserializer_deserialize_string(interop::as_copyable_c_ptr(deserializer), &s), err,
                          "Deserialization failure");
@@ -245,7 +272,7 @@ inline bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& dese
 
 template <class... Types>
 bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer, std::tuple<Types...>& t,
-                                           zenoh::ZResult* err = nullptr) {
+                                           zenoh::ZResult* err) {
     return std::apply(
         [&deserializer, err](auto&... v) {
             bool res = true;
@@ -257,7 +284,7 @@ bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserialize
 
 template <class X, class Y>
 bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer, std::pair<X, Y>& value,
-                                           zenoh::ZResult* err = nullptr) {
+                                           zenoh::ZResult* err) {
     return deserialize_with_deserializer(deserializer, value.first, err) &&
            deserialize_with_deserializer(deserializer, value.second, err);
 }
@@ -273,7 +300,7 @@ bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserialize
 
 template <class T, class Allocator>
 bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer, std::vector<T, Allocator>& value,
-                                           zenoh::ZResult* err = nullptr) {
+                                           zenoh::ZResult* err) {
     _ZENOH_DESERIALIZE_SEQUENCE_BEGIN
     value.reserve(value.size() + len);
     for (size_t i = 0; i < len; ++i) {
@@ -286,7 +313,7 @@ bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserialize
 
 template <class T, size_t N>
 bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer, std::array<T, N>& value,
-                                           zenoh::ZResult* err = nullptr) {
+                                           zenoh::ZResult* err) {
     _ZENOH_DESERIALIZE_SEQUENCE_BEGIN
     if (len != N && (err == nullptr || *err == Z_OK)) {
         __ZENOH_RESULT_CHECK(Z_EDESERIALIZE, err, "Incorrect sequence size");
@@ -300,7 +327,7 @@ bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserialize
 
 template <class T, class Allocator>
 bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer, std::deque<T, Allocator>& value,
-                                           zenoh::ZResult* err = nullptr) {
+                                           zenoh::ZResult* err) {
     _ZENOH_DESERIALIZE_SEQUENCE_BEGIN
     for (size_t i = 0; i < len; ++i) {
         T v;
@@ -312,8 +339,7 @@ bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserialize
 
 template <class K, class H, class E, class Allocator>
 bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer,
-                                           std::unordered_set<K, H, E, Allocator>& value,
-                                           zenoh::ZResult* err = nullptr) {
+                                           std::unordered_set<K, H, E, Allocator>& value, zenoh::ZResult* err) {
     _ZENOH_DESERIALIZE_SEQUENCE_BEGIN
     for (size_t i = 0; i < len; ++i) {
         K v;
@@ -325,7 +351,7 @@ bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserialize
 
 template <class K, class Compare, class Allocator>
 bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer,
-                                           std::set<K, Compare, Allocator>& value, zenoh::ZResult* err = nullptr) {
+                                           std::set<K, Compare, Allocator>& value, zenoh::ZResult* err) {
     _ZENOH_DESERIALIZE_SEQUENCE_BEGIN
     for (size_t i = 0; i < len; ++i) {
         K v;
@@ -337,8 +363,7 @@ bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserialize
 
 template <class K, class V, class H, class E, class Allocator>
 bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer,
-                                           std::unordered_map<K, V, H, E, Allocator>& value,
-                                           zenoh::ZResult* err = nullptr) {
+                                           std::unordered_map<K, V, H, E, Allocator>& value, zenoh::ZResult* err) {
     _ZENOH_DESERIALIZE_SEQUENCE_BEGIN
     for (size_t i = 0; i < len; ++i) {
         std::pair<K, V> v;
@@ -350,7 +375,7 @@ bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserialize
 
 template <class K, class V, class Compare, class Allocator>
 bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer,
-                                           std::map<K, V, Compare, Allocator>& value, zenoh::ZResult* err = nullptr) {
+                                           std::map<K, V, Compare, Allocator>& value, zenoh::ZResult* err) {
     _ZENOH_DESERIALIZE_SEQUENCE_BEGIN
     for (size_t i = 0; i < len; ++i) {
         std::pair<K, V> v;
@@ -371,8 +396,8 @@ bool deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer, T& t,
 }  // namespace detail
 
 template <class T>
-void Serializer::serialize(const T& value) {
-    return detail::serialize_with_serializer(*this, value);
+void Serializer::serialize(const T& value, ZResult* err) {
+    detail::serialize_with_serializer(*this, value, err);
 }
 
 template <class T>
