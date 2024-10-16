@@ -47,7 +47,6 @@ class Id : public Copyable<::z_id_t> {
     }
 };
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Print ``Id`` in the hex format.
 inline std::ostream& operator<<(std::ostream& os, const Id& id) {
     ::z_owned_string_t s;

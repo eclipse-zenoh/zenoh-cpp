@@ -15,10 +15,8 @@
 
 #include "../zenohc.hxx"
 #include "base.hxx"
-#include "interop.hxx"
-#if defined Z_FEATURE_UNSTABLE_API
 #include "id.hxx"
-#endif
+#include "interop.hxx"
 
 namespace zenoh {
 #ifdef ZENOHCXX_ZENOHC

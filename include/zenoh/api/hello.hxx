@@ -12,16 +12,14 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #pragma once
+#include <string_view>
+#include <vector>
+
 #include "../zenohc.hxx"
 #include "base.hxx"
 #include "enums.hxx"
-#include "interop.hxx"
-#if defined Z_FEATURE_UNSTABLE_API
 #include "id.hxx"
-#endif
-
-#include <string_view>
-#include <vector>
+#include "interop.hxx"
 
 namespace zenoh {
 /// ``Hello`` message returned by a zenoh entity as a reply to a "scout"
@@ -30,13 +28,9 @@ class Hello : public Owned<::z_owned_hello_t> {
    public:
     /// @name Methods
 
-#if defined Z_FEATURE_UNSTABLE_API
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
     /// @brief Get ``Id`` of the entity.
     /// @return ``Id`` of the entity.
     Id get_id() const { return interop::into_copyable_cpp_obj<Id>(::z_hello_zid(interop::as_loaned_c_ptr(*this))); };
-#endif
 
     /// @brief Get the type of the entity.
     /// @return ``zenoh::WhatAmI`` of the entity.
