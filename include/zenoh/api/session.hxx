@@ -21,14 +21,12 @@
 #include "closures.hxx"
 #include "config.hxx"
 #include "enums.hxx"
-#include "interop.hxx"
-#include "timestamp.hxx"
-#if defined Z_FEATURE_UNSTABLE_API
 #include "id.hxx"
-#endif
+#include "interop.hxx"
 #include "publisher.hxx"
 #include "query_consolidation.hxx"
 #include "subscriber.hxx"
+#include "timestamp.hxx"
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 #include "liveliness.hxx"
 #endif
@@ -135,13 +133,10 @@ class Session : public Owned<::z_owned_session_t> {
 #endif
 
     /// @name Methods
-#if defined Z_FEATURE_UNSTABLE_API
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
+
     /// @brief Get the unique identifier of the zenoh node associated to this ``Session``.
     /// @return the unique identifier ``Id``.
     Id get_zid() const { return interop::into_copyable_cpp_obj<Id>(::z_info_zid(interop::as_loaned_c_ptr(*this))); }
-#endif
 
     /// @brief Create ``KeyExpr`` instance with numeric id registered in ``Session`` routing tables (to reduce bandwith
     /// usage).
@@ -653,9 +648,6 @@ class Session : public Owned<::z_owned_session_t> {
         return p;
     }
 
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
     /// @brief Fetches the Zenoh IDs of all connected routers.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
@@ -689,7 +681,6 @@ class Session : public Owned<::z_owned_session_t> {
                              "Failed to fetch peer Ids");
         return out;
     }
-#endif
 
 #ifdef ZENOHCXX_ZENOHPICO
     /// @brief Start a separate task to read from the network and process the messages as soon as they are received.
@@ -767,7 +758,9 @@ class Session : public Owned<::z_owned_session_t> {
         static LivelinessDeclarationOptions create_default() { return {}; }
     };
 
-    /// Declares a liveliness token on the network.
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Declares a liveliness token on the network.
     ///
     /// Liveliness token subscribers on an intersecting key expression will receive a PUT sample when connectivity
     /// is achieved, and a DELETE sample if it's lost.
@@ -791,6 +784,8 @@ class Session : public Owned<::z_owned_session_t> {
         return t;
     }
 
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Options to pass to ``Session::liveliness_declare_subscriber``.
     struct LivelinessSubscriberOptions {
        public:
@@ -799,6 +794,8 @@ class Session : public Owned<::z_owned_session_t> {
         static LivelinessSubscriberOptions create_default() { return {}; }
     };
 
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Declares a subscriber on liveliness tokens that intersect `key_expr`.
     /// @param key_expr the key expression to subscribe to.
     /// @param on_sample the callable that will be called each time a liveliness token status is changed.
@@ -834,6 +831,8 @@ class Session : public Owned<::z_owned_session_t> {
         return s;
     }
 
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Declares a background subscriber on liveliness tokens that intersect `key_expr`. The subscriber callback
     /// will be run in the background until the corresponding session is closed or destroyed.
     /// @param key_expr the key expression to subscribe to.
@@ -866,6 +865,8 @@ class Session : public Owned<::z_owned_session_t> {
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Liveliness Token Subscriber");
     }
 
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Declare a subscriber on liveliness tokens that intersect `key_expr`.
     /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
     /// ``zenoh::channels::RingChannel``).
@@ -894,6 +895,8 @@ class Session : public Owned<::z_owned_session_t> {
                                                                           std::move(cb_handler_pair.second));
     }
 
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Options to pass to ``Session::liveliness_get``.
     struct LivelinessGetOptions {
         /// @name Fields
@@ -906,6 +909,8 @@ class Session : public Owned<::z_owned_session_t> {
         static LivelinessGetOptions create_default() { return {}; }
     };
 
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Query liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
     ///
     /// @param key_expr: the key expression to query liveliness tokens for.
@@ -937,6 +942,8 @@ class Session : public Owned<::z_owned_session_t> {
                              err, "Failed to perform liveliness_get operation");
     }
 
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Query liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
     /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
     /// ``zenoh::channels::RingChannel``).

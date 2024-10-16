@@ -13,16 +13,14 @@
 
 #pragma once
 
+#include "../api/hello.hxx"
+#include "../api/id.hxx"
 #include "../api/interop.hxx"
 #include "../api/query.hxx"
 #include "../api/reply.hxx"
 #include "../api/sample.hxx"
 #include "../zenohc.hxx"
 #include "closures.hxx"
-#if defined Z_FEATURE_UNSTABLE_API
-#include "../api/id.hxx"
-#endif
-#include "../api/hello.hxx"
 
 // Ensure that function pointers are defined with extern C linkage
 namespace zenoh::detail::closures {
@@ -41,11 +39,9 @@ inline void _zenoh_on_query_call(::z_loaned_query_t* query, void* context) {
     IClosure<void, Query&>::call_from_context(context, interop::as_owned_cpp_ref<Query>(query));
 }
 
-#if defined Z_FEATURE_UNSTABLE_API
 inline void _zenoh_on_id_call(const ::z_id_t* z_id, void* context) {
     IClosure<void, const Id&>::call_from_context(context, interop::as_copyable_cpp_ref<Id>(z_id));
 }
-#endif
 
 inline void _zenoh_on_hello_call(::z_loaned_hello_t* hello, void* context) {
     IClosure<void, Hello&>::call_from_context(context, interop::as_owned_cpp_ref<Hello>(hello));

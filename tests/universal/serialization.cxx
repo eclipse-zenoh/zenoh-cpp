@@ -77,14 +77,13 @@ struct CustomStruct {
     std::string s;
 };
 
-void __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const CustomStruct& s) {
-    serializer.serialize(s.vd);
-    serializer.serialize(s.i);
-    serializer.serialize(s.s);
+bool __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const CustomStruct& s, ZResult* err) {
+    return zenoh::ext::detail::serialize_with_serializer(serializer, s.vd, err) &&
+           zenoh::ext::detail::serialize_with_serializer(serializer, s.i, err) &&
+           zenoh::ext::detail::serialize_with_serializer(serializer, s.s, err);
 }
 
-bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer, CustomStruct& s,
-                                           ZResult* err = nullptr) {
+bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer, CustomStruct& s, ZResult* err) {
     return zenoh::ext::detail::deserialize_with_deserializer(deserializer, s.vd, err) &&
            zenoh::ext::detail::deserialize_with_deserializer(deserializer, s.i, err) &&
            zenoh::ext::detail::deserialize_with_deserializer(deserializer, s.s, err);

@@ -15,11 +15,9 @@
 
 #include "base.hxx"
 #include "bytes.hxx"
+#include "id.hxx"
 #include "interop.hxx"
 #include "sample.hxx"
-#if defined Z_FEATURE_UNSTABLE_API
-#include "id.hxx"
-#endif
 
 namespace zenoh {
 
