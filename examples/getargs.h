@@ -15,14 +15,15 @@
 
 #include <cstring>
 #include <iostream>
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 #include <vector>
+
 #include "zenoh.hxx"
 
 struct CmdArg {
-    const char* name;
-    const char** value;
+    const char *name;
+    const char **value;
 };
 
 inline void getargs(int argc, char **argv, const std::vector<CmdArg> &required,
@@ -64,7 +65,7 @@ inline void getargs(int argc, char **argv, const std::vector<CmdArg> &required,
     }
 
     int position = 0;
-    const char** destination = nullptr;
+    const char **destination = nullptr;
     std::vector<CmdArg> positioned = required;
     positioned.insert(positioned.end(), optional.begin(), optional.end());
     for (int i = 1; i < argc; ++i) {
@@ -91,22 +92,21 @@ inline void getargs(int argc, char **argv, const std::vector<CmdArg> &required,
 }
 
 inline zenoh::Config parse_args(int argc, char **argv, const std::vector<CmdArg> &required,
-                            const std::vector<CmdArg> &optional = {},
-                            const std::unordered_map<std::string, CmdArg> &named = {}) {
-
+                                const std::vector<CmdArg> &optional = {},
+                                const std::unordered_map<std::string, CmdArg> &named = {}) {
     std::unordered_map<std::string, CmdArg> named_with_config = named;
 #ifdef ZENOHCXX_ZENOHC
-    const char* config_file = nullptr;
+    const char *config_file = nullptr;
     named_with_config.emplace("-c", CmdArg{"config file", &config_file});
 #endif
-    const char* locator = nullptr;
+    const char *locator = nullptr;
     named_with_config.emplace("-l", CmdArg{"locator to listen on", &locator});
-    const char* endpoint = nullptr;
+    const char *endpoint = nullptr;
     named_with_config.emplace("-e", CmdArg{"endpoint to connect to", &endpoint});
 #ifdef ZENOHCXX_ZENOHC
-    const char* mode = "peer";
+    const char *mode = "peer";
 #elif defined(ZENOHCXX_ZENOHPICO)
-    const char* mode = "client";
+    const char *mode = "client";
 #endif
     named_with_config.emplace("-m", CmdArg{"mode (peer | client)", &mode});
 
@@ -116,32 +116,34 @@ inline zenoh::Config parse_args(int argc, char **argv, const std::vector<CmdArg>
     if (mode != nullptr && strcmp(mode, "peer") != 0 && strcmp(mode, "client") != 0) {
         throw std::runtime_error("Mode can only be 'peer' or 'client'");
     }
-       
-    #ifdef ZENOHCXX_ZENOHC
-        if (config_file) {
-            config = zenoh::Config::from_file(config_file);
-        }
-        if (locator) {
-            config.insert_json5(Z_CONFIG_CONNECT_KEY, std::string("[\"") + locator + "\"]");
-        }
-        if (mode) {
-            config.insert_json5(Z_CONFIG_MODE_KEY, std::string("'") + mode + "'");
-        }
-    #elif defined(ZENOHCXX_ZENOHPICO)
-        if (mode) {
-            config.insert(Z_CONFIG_MODE_KEY, mode);
-            if (strcmp(mode, "peer") == 0) {
-                if (locator == nullptr) {
-                    throw std::runtime_error("Zenoh-Pico in 'peer' mode requires providing a multicast group locator to listen to (-l option), e. g. 'udp/224.0.0.224:7447#iface=lo'");
-                } else {
-                    config.insert(Z_CONFIG_LISTEN_KEY, locator);
-                }
-            } else if (strcmp(mode, "client") == 0) {
-                if (endpoint != nullptr) {
-                    config.insert(Z_CONFIG_CONNECT_KEY, endpoint);
-                }
+
+#ifdef ZENOHCXX_ZENOHC
+    if (config_file) {
+        config = zenoh::Config::from_file(config_file);
+    }
+    if (locator) {
+        config.insert_json5(Z_CONFIG_CONNECT_KEY, std::string("[\"") + locator + "\"]");
+    }
+    if (mode) {
+        config.insert_json5(Z_CONFIG_MODE_KEY, std::string("'") + mode + "'");
+    }
+#elif defined(ZENOHCXX_ZENOHPICO)
+    if (mode) {
+        config.insert(Z_CONFIG_MODE_KEY, mode);
+        if (strcmp(mode, "peer") == 0) {
+            if (locator == nullptr) {
+                throw std::runtime_error(
+                    "Zenoh-Pico in 'peer' mode requires providing a multicast group locator to listen to (-l option), "
+                    "e. g. 'udp/224.0.0.224:7447#iface=lo'");
+            } else {
+                config.insert(Z_CONFIG_LISTEN_KEY, locator);
+            }
+        } else if (strcmp(mode, "client") == 0) {
+            if (endpoint != nullptr) {
+                config.insert(Z_CONFIG_CONNECT_KEY, endpoint);
             }
         }
-    #endif
+    }
+#endif
     return std::move(config);
 }
