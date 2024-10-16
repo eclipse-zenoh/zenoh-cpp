@@ -69,6 +69,9 @@ class Reply : public Owned<::z_owned_reply_t> {
         return interop::as_owned_cpp_ref<ReplyError>(::z_reply_err(interop::as_loaned_c_ptr(*this)));
     }
 
+#if defined(Z_FEATURE_UNSTABLE_API)
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Get the id of the Zenoh instance that issued this reply.
     /// @return Zenoh instance id, or an empty optional if the id was not set.
     std::optional<Id> get_replier_id() const {
@@ -78,6 +81,7 @@ class Reply : public Owned<::z_owned_reply_t> {
         }
         return {};
     }
+#endif
 };
 
 }  // namespace zenoh
