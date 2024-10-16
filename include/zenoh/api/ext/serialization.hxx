@@ -182,15 +182,16 @@ bool __serialize_sequence_with_serializer(zenoh::ext::Serializer& serializer, It
                                           ZResult* err) {
     __ZENOH_RESULT_CHECK(::ze_serializer_serialize_sequence_length(zenoh::interop::as_loaned_c_ptr(serializer), n), err,
                          "Failed to serialize sequence length");
-    if (err != nullptr || *err != Z_OK) {
+    if (err != nullptr && *err != Z_OK) {
         return false;
     }
-    bool res = true;
 
     for (auto it = begin; it != end; ++it) {
-        res = res && serialize_with_serializer(serializer, *it);
+        if (!serialize_with_serializer(serializer, *it, err)) {
+            return false;
+        }
     }
-    return res;
+    return true;
 }
 
 template <class T, class Allocator>
