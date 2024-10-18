@@ -14,16 +14,15 @@
 #pragma once
 
 #include "api/bytes.hxx"
+#include "api/channels.hxx"
 #include "api/closures.hxx"
 #include "api/config.hxx"
 #include "api/encoding.hxx"
 #include "api/enums.hxx"
 #include "api/hello.hxx"
-#if defined Z_FEATURE_UNSTABLE_API
 #include "api/id.hxx"
-#endif
-#include "api/channels.hxx"
 #include "api/keyexpr.hxx"
+#include "api/liveliness.hxx"
 #include "api/logging.hxx"
 #include "api/publisher.hxx"
 #include "api/query.hxx"

@@ -26,19 +26,19 @@
 namespace zenoh::detail::closures {
 extern "C" {
 inline void _zenoh_on_drop(void* context) { IDroppable::delete_from_context(context); }
-
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1
 inline void _zenoh_on_reply_call(::z_loaned_reply_t* reply, void* context) {
     IClosure<void, Reply&>::call_from_context(context, interop::as_owned_cpp_ref<Reply>(reply));
 }
-
+#endif
 inline void _zenoh_on_sample_call(::z_loaned_sample_t* sample, void* context) {
     IClosure<void, Sample&>::call_from_context(context, interop::as_owned_cpp_ref<Sample>(sample));
 }
-
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERYABLE == 1
 inline void _zenoh_on_query_call(::z_loaned_query_t* query, void* context) {
     IClosure<void, Query&>::call_from_context(context, interop::as_owned_cpp_ref<Query>(query));
 }
-
+#endif
 inline void _zenoh_on_id_call(const ::z_id_t* z_id, void* context) {
     IClosure<void, const Id&>::call_from_context(context, interop::as_copyable_cpp_ref<Id>(z_id));
 }

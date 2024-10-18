@@ -13,6 +13,8 @@
 
 #pragma once
 
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERYABLE == 1
+
 #include <utility>
 
 #include "base.hxx"
@@ -144,3 +146,4 @@ auto move_to_c_obj(Queryable<Handler>&& q) {
 }  // namespace interop
 
 }  // namespace zenoh
+#endif

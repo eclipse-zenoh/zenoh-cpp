@@ -13,6 +13,8 @@
 
 #pragma once
 
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_SUBSCRIPTION == 1
+
 #include <utility>
 
 #include "base.hxx"
@@ -154,3 +156,4 @@ auto move_to_c_obj(Subscriber<Handler>&& s) {
 }  // namespace interop
 
 }  // namespace zenoh
+#endif

@@ -23,5 +23,9 @@ int main(int, char **) {
 #endif
     Config config = Config::create_default();
     auto session = Session::open(std::move(config));
+#if (ZENOHCXX_ZENOHC) ||     \
+    Z_FEATURE_PUBLICATION == \
+        1  // check if zenoh-pico is compiled with publication support (always included for zenoh-c)
     session.put("demo/example/simple", "Simple!");
+#endif
 }

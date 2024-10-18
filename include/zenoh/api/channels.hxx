@@ -48,6 +48,7 @@ struct FifoHandlerData<zenoh::Sample> {
     }
 };
 
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERYABLE == 1
 template <>
 struct FifoHandlerData<zenoh::Query> {
     typedef ::z_owned_fifo_handler_query_t handler_type;
@@ -56,7 +57,9 @@ struct FifoHandlerData<zenoh::Query> {
         ::z_fifo_channel_query_new(cb, h, capacity);
     }
 };
+#endif
 
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1
 template <>
 struct FifoHandlerData<zenoh::Reply> {
     typedef ::z_owned_fifo_handler_reply_t handler_type;
@@ -65,6 +68,7 @@ struct FifoHandlerData<zenoh::Reply> {
         ::z_fifo_channel_reply_new(cb, h, capacity);
     }
 };
+#endif
 
 template <class T>
 struct RingHandlerData {};
@@ -78,6 +82,7 @@ struct RingHandlerData<zenoh::Sample> {
     }
 };
 
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERYABLE == 1
 template <>
 struct RingHandlerData<zenoh::Query> {
     typedef ::z_owned_ring_handler_query_t handler_type;
@@ -86,7 +91,9 @@ struct RingHandlerData<zenoh::Query> {
         ::z_ring_channel_query_new(cb, h, capacity);
     }
 };
+#endif
 
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1
 template <>
 struct RingHandlerData<zenoh::Reply> {
     typedef ::z_owned_ring_handler_reply_t handler_type;
@@ -95,6 +102,7 @@ struct RingHandlerData<zenoh::Reply> {
         ::z_ring_channel_reply_new(cb, h, capacity);
     }
 };
+#endif
 }  // namespace detail
 
 class FifoChannel;

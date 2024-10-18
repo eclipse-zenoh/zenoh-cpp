@@ -13,6 +13,7 @@
 
 #pragma once
 
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERYABLE == 1
 #include <functional>
 #include <optional>
 #include <string_view>
@@ -97,6 +98,7 @@ class Query : public Owned<::z_owned_query_t> {
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The source info of this reply message.
+        /// @note Zenoh-c only.
         std::optional<SourceInfo> source_info = {};
 #endif
         /// @brief An optional attachment to this reply message.
@@ -222,3 +224,4 @@ class Query : public Owned<::z_owned_query_t> {
 };
 
 }  // namespace zenoh
+#endif
