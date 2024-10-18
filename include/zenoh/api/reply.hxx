@@ -13,6 +13,8 @@
 
 #pragma once
 
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1
+
 #include "base.hxx"
 #include "bytes.hxx"
 #include "id.hxx"
@@ -85,3 +87,4 @@ class Reply : public Owned<::z_owned_reply_t> {
 };
 
 }  // namespace zenoh
+#endif

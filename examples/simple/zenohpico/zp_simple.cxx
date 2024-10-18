@@ -19,5 +19,7 @@ using namespace zenoh;
 int main(int, char **) {
     Config config = Config::create_default();
     auto session = Session::open(std::move(config));
+#if Z_FEATURE_PUBLICATION == 1  // check if zenoh-pico is compliled with publication support
     session.put("demo/example/simple", "Simple!");
+#endif
 }

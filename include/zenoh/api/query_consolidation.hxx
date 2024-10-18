@@ -13,6 +13,8 @@
 
 #pragma once
 
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1
+
 #include "base.hxx"
 #include "enums.hxx"
 #include "interop.hxx"
@@ -49,3 +51,4 @@ class QueryConsolidation : public Copyable<::z_query_consolidation_t> {
     bool operator!=(const QueryConsolidation& other) const { return !operator==(other); }
 };
 }  // namespace zenoh
+#endif

@@ -13,6 +13,7 @@
 
 #pragma once
 
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 #include "base.hxx"
 #include "interop.hxx"
 
@@ -44,3 +45,4 @@ class LivelinessToken : public Owned<::zc_owned_liveliness_token_t> {
 };
 
 }  // namespace zenoh
+#endif

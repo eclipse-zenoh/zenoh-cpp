@@ -13,6 +13,8 @@
 
 #pragma once
 
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_PUBLICATION == 1
+
 #include "base.hxx"
 #include "bytes.hxx"
 #include "encoding.hxx"
@@ -47,6 +49,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The source info of this message.
+        /// @note Zenoh-c only.
         std::optional<SourceInfo> source_info = {};
 #endif
         /// @brief The attachment to attach to the publication.
@@ -125,3 +128,4 @@ class Publisher : public Owned<::z_owned_publisher_t> {
 #endif
 };
 }  // namespace zenoh
+#endif

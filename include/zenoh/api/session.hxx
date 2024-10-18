@@ -23,13 +23,11 @@
 #include "enums.hxx"
 #include "id.hxx"
 #include "interop.hxx"
+#include "liveliness.hxx"
 #include "publisher.hxx"
 #include "query_consolidation.hxx"
 #include "subscriber.hxx"
 #include "timestamp.hxx"
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-#include "liveliness.hxx"
-#endif
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
 #include "shm/client_storage/client_storage.hxx"
 #endif
@@ -160,7 +158,7 @@ class Session : public Owned<::z_owned_session_t> {
         __ZENOH_RESULT_CHECK(::z_undeclare_keyexpr(interop::as_loaned_c_ptr(*this), interop::as_moved_c_ptr(key_expr)),
                              err, "Failed to undeclare key expression");
     }
-
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1
     /// @brief Options passed to the ``get`` operation.
     struct GetOptions {
         /// @name Fields
@@ -270,119 +268,8 @@ class Session : public Owned<::z_owned_session_t> {
         if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
         return std::move(cb_handler_pair.second);
     }
-    /// @brief Options to be passed to ``delete_resource`` operation
-    struct DeleteOptions {
-        /// @name Fields
-
-        /// @brief The priority of the delete message.
-        Priority priority = Z_PRIORITY_DEFAULT;
-        /// @brief The congestion control to apply when routing delete message.
-        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
-        /// @brief Whether Zenoh will NOT wait to batch delete message with others to reduce the bandwith.
-        bool is_express = false;
-#if defined(Z_FEATURE_UNSTABLE_API)
-        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-        /// release.
-        /// @brief The delete operation reliability.
-        Reliability reliability = Reliability::Z_RELIABILITY_BEST_EFFORT;
 #endif
-        /// @brief the timestamp of this message.
-        std::optional<Timestamp> timestamp = {};
-
-        /// @name Methods
-        /// @brief Create default option settings.
-        static DeleteOptions create_default() { return {}; }
-    };
-
-    /// @brief Undeclare a resource. Equivalent to ``Publisher::delete_resource``.
-    /// @param key_expr the key expression to delete the resource.
-    /// @param options options to pass to delete operation.
-    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
-    /// thrown in case of error.
-    void delete_resource(const KeyExpr& key_expr, DeleteOptions&& options = DeleteOptions::create_default(),
-                         ZResult* err = nullptr) const {
-        ::z_delete_options_t opts;
-        z_delete_options_default(&opts);
-        opts.congestion_control = options.congestion_control;
-        opts.priority = options.priority;
-        opts.is_express = options.is_express;
-#if defined(Z_FEATURE_UNSTABLE_API)
-        opts.reliability = options.reliability;
-#endif
-
-        __ZENOH_RESULT_CHECK(::z_delete(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr), &opts),
-                             err, "Failed to perform delete operation");
-    }
-
-    /// @brief Options passed to the ``Session::put`` operation.
-    struct PutOptions {
-        /// @name Fields
-
-        /// @brief The priority of this message.
-        Priority priority = Z_PRIORITY_DEFAULT;
-        /// @brief The congestion control to apply when routing this message.
-        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
-        /// @brief Whether Zenoh will NOT wait to batch this message with others to reduce the bandwith.
-        bool is_express = false;
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-        /// release.
-        /// @brief Allowed destination.
-        Locality allowed_destination = ::zc_locality_default();
-#endif
-        /// @brief the timestamp of this message.
-        std::optional<Timestamp> timestamp = {};
-        /// @brief  An optional encoding of the message payload and/or attachment.
-        std::optional<Encoding> encoding = {};
-#if defined(Z_FEATURE_UNSTABLE_API)
-        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-        /// release.
-        /// @brief The put operation reliability.
-        Reliability reliability = Reliability::Z_RELIABILITY_BEST_EFFORT;
-#endif
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-        /// release.
-        /// @brief The source info of this message.
-        std::optional<SourceInfo> source_info = {};
-#endif
-        /// @brief An optional attachment to the message.
-        std::optional<Bytes> attachment = {};
-
-        /// @name Methods
-        /// @brief Create default option settings.
-        static PutOptions create_default() { return {}; }
-    };
-
-    /// @brief Publish data to the matching subscribers in the system. Equivalent to ``Publisher::put``.
-    /// @param key_expr the key expression to put the data.
-    /// @param payload the data to publish.
-    /// @param options options to pass to put operation.
-    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
-    /// thrown in case of error.
-    void put(const KeyExpr& key_expr, Bytes&& payload, PutOptions&& options = PutOptions::create_default(),
-             ZResult* err = nullptr) const {
-        ::z_put_options_t opts;
-        z_put_options_default(&opts);
-        opts.encoding = interop::as_moved_c_ptr(options.encoding);
-        opts.congestion_control = options.congestion_control;
-        opts.priority = options.priority;
-        opts.is_express = options.is_express;
-#if defined(Z_FEATURE_UNSTABLE_API)
-        opts.reliability = options.reliability;
-#endif
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-        opts.allowed_destination = options.allowed_destination;
-        opts.source_info = interop::as_moved_c_ptr(options.source_info);
-#endif
-        opts.attachment = interop::as_moved_c_ptr(options.attachment);
-        opts.timestamp = interop::as_copyable_c_ptr(options.timestamp);
-        auto payload_ptr = interop::as_moved_c_ptr(payload);
-        __ZENOH_RESULT_CHECK(
-            ::z_put(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr), payload_ptr, &opts), err,
-            "Failed to perform put operation");
-    }
-
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERYABLE == 1
     /// @brief Options to be passed when declaring a ``Queryable``
     struct QueryableOptions {
         /// @name Fields
@@ -485,7 +372,8 @@ class Session : public Owned<::z_owned_session_t> {
         return Queryable<typename Channel::template HandlerType<Query>>(std::move(q),
                                                                         std::move(cb_handler_pair.second));
     }
-
+#endif
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_SUBSCRIPTION == 1
     /// @brief Options to be passed when declaring a ``Subscriber``.
     struct SubscriberOptions {
         /// @name Fields
@@ -588,7 +476,122 @@ class Session : public Owned<::z_owned_session_t> {
         return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
                                                                           std::move(cb_handler_pair.second));
     }
+#endif
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_PUBLICATION == 1
+    /// @brief Options to be passed to ``delete_resource`` operation
+    struct DeleteOptions {
+        /// @name Fields
 
+        /// @brief The priority of the delete message.
+        Priority priority = Z_PRIORITY_DEFAULT;
+        /// @brief The congestion control to apply when routing delete message.
+        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
+        /// @brief Whether Zenoh will NOT wait to batch delete message with others to reduce the bandwith.
+        bool is_express = false;
+#if defined(Z_FEATURE_UNSTABLE_API)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
+        /// @brief The delete operation reliability.
+        Reliability reliability = Reliability::Z_RELIABILITY_BEST_EFFORT;
+#endif
+        /// @brief the timestamp of this message.
+        std::optional<Timestamp> timestamp = {};
+
+        /// @name Methods
+        /// @brief Create default option settings.
+        static DeleteOptions create_default() { return {}; }
+    };
+
+    /// @brief Undeclare a resource. Equivalent to ``Publisher::delete_resource``.
+    /// @param key_expr the key expression to delete the resource.
+    /// @param options options to pass to delete operation.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void delete_resource(const KeyExpr& key_expr, DeleteOptions&& options = DeleteOptions::create_default(),
+                         ZResult* err = nullptr) const {
+        ::z_delete_options_t opts;
+        z_delete_options_default(&opts);
+        opts.congestion_control = options.congestion_control;
+        opts.priority = options.priority;
+        opts.is_express = options.is_express;
+#if defined(Z_FEATURE_UNSTABLE_API)
+        opts.reliability = options.reliability;
+#endif
+
+        __ZENOH_RESULT_CHECK(::z_delete(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr), &opts),
+                             err, "Failed to perform delete operation");
+    }
+
+    /// @brief Options passed to the ``Session::put`` operation.
+    struct PutOptions {
+        /// @name Fields
+
+        /// @brief The priority of this message.
+        Priority priority = Z_PRIORITY_DEFAULT;
+        /// @brief The congestion control to apply when routing this message.
+        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
+        /// @brief Whether Zenoh will NOT wait to batch this message with others to reduce the bandwith.
+        bool is_express = false;
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
+        /// @brief Allowed destination.
+        /// @note Zenoh-c only.
+        Locality allowed_destination = ::zc_locality_default();
+#endif
+        /// @brief the timestamp of this message.
+        std::optional<Timestamp> timestamp = {};
+        /// @brief  An optional encoding of the message payload and/or attachment.
+        std::optional<Encoding> encoding = {};
+#if defined(Z_FEATURE_UNSTABLE_API)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
+        /// @brief The put operation reliability.
+        Reliability reliability = Reliability::Z_RELIABILITY_BEST_EFFORT;
+#endif
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
+        /// @brief The source info of this message.
+        /// @note Zenoh-c only.
+        std::optional<SourceInfo> source_info = {};
+#endif
+        /// @brief An optional attachment to the message.
+        std::optional<Bytes> attachment = {};
+
+        /// @name Methods
+        /// @brief Create default option settings.
+        static PutOptions create_default() { return {}; }
+    };
+
+    /// @brief Publish data to the matching subscribers in the system. Equivalent to ``Publisher::put``.
+    /// @param key_expr the key expression to put the data.
+    /// @param payload the data to publish.
+    /// @param options options to pass to put operation.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void put(const KeyExpr& key_expr, Bytes&& payload, PutOptions&& options = PutOptions::create_default(),
+             ZResult* err = nullptr) const {
+        ::z_put_options_t opts;
+        z_put_options_default(&opts);
+        opts.encoding = interop::as_moved_c_ptr(options.encoding);
+        opts.congestion_control = options.congestion_control;
+        opts.priority = options.priority;
+        opts.is_express = options.is_express;
+#if defined(Z_FEATURE_UNSTABLE_API)
+        opts.reliability = options.reliability;
+#endif
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+        opts.allowed_destination = options.allowed_destination;
+        opts.source_info = interop::as_moved_c_ptr(options.source_info);
+#endif
+        opts.attachment = interop::as_moved_c_ptr(options.attachment);
+        opts.timestamp = interop::as_copyable_c_ptr(options.timestamp);
+        auto payload_ptr = interop::as_moved_c_ptr(payload);
+        __ZENOH_RESULT_CHECK(
+            ::z_put(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr), payload_ptr, &opts), err,
+            "Failed to perform put operation");
+    }
     /// @brief Options to be passed when declaring a ``Publisher``.
     struct PublisherOptions {
         /// @name Fields
@@ -609,6 +612,7 @@ class Session : public Owned<::z_owned_session_t> {
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief Allowed destination.
+        /// @note Zenoh-c only.
         Locality allowed_destination = ::zc_locality_default();
 #endif
         /// @brief Default encoding to use for Publisher::put.
@@ -647,7 +651,7 @@ class Session : public Owned<::z_owned_session_t> {
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Publisher");
         return p;
     }
-
+#endif
     /// @brief Fetches the Zenoh IDs of all connected routers.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
@@ -681,7 +685,6 @@ class Session : public Owned<::z_owned_session_t> {
                              "Failed to fetch peer Ids");
         return out;
     }
-
 #ifdef ZENOHCXX_ZENOHPICO
     /// @brief Start a separate task to read from the network and process the messages as soon as they are received.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
@@ -750,6 +753,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Options to pass to ``Session::liveliness_declare_token``.
+    /// @note Zenoh-c only.
     struct LivelinessDeclarationOptions {
        protected:
         uint8_t _dummy = 0;
@@ -770,6 +774,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``LivelinessToken``.
+    /// @note Zenoh-c only.
     LivelinessToken liveliness_declare_token(
         const KeyExpr& key_expr,
         LivelinessDeclarationOptions&& options = LivelinessDeclarationOptions::create_default(),
@@ -787,6 +792,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Options to pass to ``Session::liveliness_declare_subscriber``.
+    /// @note Zenoh-c only.
     struct LivelinessSubscriberOptions {
        public:
         bool history = false;
@@ -804,6 +810,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``Subscriber`` object.
+    /// @note Zenoh-c only.
     template <class C, class D>
     [[nodiscard]] Subscriber<void> liveliness_declare_subscriber(
         const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
@@ -841,6 +848,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param options options to pass to subscriber declaration.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
+    /// @note Zenoh-c only.
     template <class C, class D>
     void liveliness_declare_background_subscriber(
         const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
@@ -876,6 +884,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``Subscriber`` object.
+    /// @note Zenoh-c only.
     template <class Channel>
     [[nodiscard]] Subscriber<typename Channel::template HandlerType<Sample>> liveliness_declare_subscriber(
         const KeyExpr& key_expr, Channel channel,
@@ -898,6 +907,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Options to pass to ``Session::liveliness_get``.
+    /// @note Zenoh-c only.
     struct LivelinessGetOptions {
         /// @name Fields
 
@@ -919,6 +929,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param options: additional options for the liveliness get operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
+    /// @note Zenoh-c only.
     template <class C, class D>
     void liveliness_get(const KeyExpr& key_expr, C&& on_reply, D&& on_drop,
                         LivelinessGetOptions&& options = LivelinessGetOptions::create_default(),
@@ -953,6 +964,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return reply handler.
+    /// @note Zenoh-c only.
     template <class Channel>
     typename Channel::template HandlerType<Reply> liveliness_get(
         const KeyExpr& key_expr, Channel channel,
