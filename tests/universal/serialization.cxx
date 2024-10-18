@@ -12,8 +12,6 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-#include <iostream>
-
 #include "zenoh.hxx"
 #undef NDEBUG
 #include <assert.h>
@@ -98,9 +96,34 @@ void serialize_custom() {
     assert(s.s == s_out.s);
 }
 
+template <class T>
+bool check_serialization(const T& value, const std::vector<uint8_t>& out) {
+    return ext::serialize(value).as_vector() == out;
+}
+
+void binary_format_test() {
+    int32_t i1 = 1234566, i2 = -49245;
+    assert(check_serialization(i1, {134, 214, 18, 0}));
+    assert(check_serialization(i2, {163, 63, 255, 255}));
+
+    std::string s = "test";
+    assert(check_serialization(s, {4, 116, 101, 115, 116}));
+
+    std::tuple<uint16_t, float, std::string> t(500, 1234.0f, "test");
+    assert(check_serialization(t, {244, 1, 0, 64, 154, 68, 4, 116, 101, 115, 116}));
+
+    std::vector<int64_t> v = {-100, 500, 100000, -20000000};
+    assert(check_serialization(v, {4,   156, 255, 255, 255, 255, 255, 255, 255, 244, 1,   0,   0,   0,   0,   0,  0,
+                                   160, 134, 1,   0,   0,   0,   0,   0,   0,   211, 206, 254, 255, 255, 255, 255}));
+
+    std::vector<std::pair<std::string, int16_t>> vp = {{"s1", 10}, {"s2", -10000}};
+    assert(check_serialization(vp, {2, 2, 115, 49, 10, 0, 2, 115, 50, 240, 216}));
+}
+
 int main(int argc, char** argv) {
     serialize_primitive();
     serialize_tuple();
     serialize_container();
     serialize_custom();
+    binary_format_test();
 }
