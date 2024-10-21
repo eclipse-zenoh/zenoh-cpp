@@ -8,7 +8,9 @@ readonly repo=${REPO:?input REPO is required}
 readonly version=${VERSION:-''}
 
 readonly out=$GITHUB_WORKSPACE
-readonly repo_name=${repo#*/}
+# readonly repo_name=${repo#*/}
+# temporary fix - make manual
+readonly repo_name=zenohcpp
 readonly archive_lib=$out/$repo_name-$version.zip
 readonly archive_deb=$out/$repo_name-$version-deb-pkgs.zip
 readonly archive_rpm=$out/$repo_name-$version-rpm-pkgs.zip
