@@ -20,6 +20,7 @@ mkdir -p build
 cd build
 cmake -DZENOHCXX_ZENOHC=OFF ..
 # cmake --build . --target package
+cpack
 cpack -G DEB
 cpack -G RPM
 ls -R
