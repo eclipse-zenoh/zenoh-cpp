@@ -18,10 +18,11 @@ mkdir -p build
 cd build
 cmake -DZENOHCXX_ZENOHC=OFF ..
 cmake --build . --target package
+cpack -G "DEB;RPM"
 ls -R
 
 cd "$GITHUB_WORKSPACE"
-mv "build/packages/$repo_name-$version.zip" "$archive_lib"
+mv $(ls build/packages/zenohcpp-$version*.zip") "$archive_lib"
 zip --verbose --junk-paths "$archive_deb" build/packages/*.deb
 zip --verbose --junk-paths "$archive_rpm" build/packages/*.rpm
 
