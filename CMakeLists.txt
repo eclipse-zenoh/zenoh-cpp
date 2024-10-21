@@ -19,7 +19,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 include(helpers)
 
 set(project_version "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
-if(NOT DEFINED PROJECT_VERSION_TWEAK)
+if(PROJECT_VERSION_TWEAK STREQUAL "")
 	set(project_version "${project_version}")
 elseif(PROJECT_VERSION_TWEAK EQUAL 0)
 	set(project_version "${project_version}-dev")
