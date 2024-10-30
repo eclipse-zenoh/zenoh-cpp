@@ -32,13 +32,33 @@ const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-c-pub";
 int _main(int argc, char **argv) {
     const char *keyexpr = default_keyexpr;
     const char *value = default_value;
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &keyexpr}, {"payload_value", &value}});
+    const char *add_matching_listener = "false";
+    Config config = parse_args(argc, argv, {}, {{"key_expression", &keyexpr}, {"payload_value", &value}}
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+                               ,
+                               {{"--add-matching-listener", {CmdArg{"", &add_matching_listener, true}}}}
+#endif
+    );
 
     std::cout << "Opening session..." << std::endl;
     auto session = Session::open(std::move(config));
 
     std::cout << "Declaring Publisher on '" << keyexpr << "'..." << std::endl;
     auto pub = session.declare_publisher(KeyExpr(keyexpr));
+
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+    if (std::string(add_matching_listener) == "true") {
+        pub.declare_background_matching_listener(
+            [](const Publisher::MatchingStatus &s) {
+                if (s.matching) {
+                    std::cout << "Subscriber matched" << std::endl;
+                } else {
+                    std::cout << "No subscribers matched" << std::endl;
+                }
+            },
+            closures::none);
+    }
+#endif
 
     std::cout << "Publisher on '" << keyexpr << "' declared" << std::endl;
 
