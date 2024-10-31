@@ -54,6 +54,8 @@ set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(CPACK_COMPONENT_DEV_DESCRIPTION "The C++ header wrapper library for Eclipse zenoh-c and zenoh-pico libraries")
 set(CPACK_COMPONENT_DEV_GROUP "dev")
+set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+
 set(CPACK_GENERATOR ZIP)
 # set package name to format <name>-<version>.<extension>
 # platform name doesn't matter for header-only library
@@ -70,7 +72,7 @@ if(NOT CPACK_PACKAGE_VERSION)
     endif()
 endif()
 
-set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
 set(CPACK_PROJECT_CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cpack_project_config.cmake")
 
 include(CPack)

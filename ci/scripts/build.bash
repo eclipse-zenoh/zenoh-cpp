@@ -11,9 +11,9 @@ readonly out=$GITHUB_WORKSPACE
 # readonly repo_name=${repo#*/}
 # temporary fix - make manual
 readonly repo_name=zenohcpp
-readonly archive_lib=$out/$repo_name-$version.zip
-readonly archive_deb=$out/$repo_name-$version-deb-pkgs.zip
-readonly archive_rpm=$out/$repo_name-$version-rpm-pkgs.zip
+readonly archive_lib=$out/$repo_name-$version-standalone.zip
+readonly archive_deb=$out/$repo_name-$version-debian.zip
+readonly archive_rpm=$out/$repo_name-$version-rpm.zip
 
 # Make packages into build/packages
 mkdir -p build
