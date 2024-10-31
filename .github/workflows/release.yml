@@ -109,6 +109,19 @@ jobs:
           name: ${{ steps.build.outputs.archive-rpm }}
           path: ${{ steps.build.outputs.archive-rpm }}
 
+  debian:
+    name: Publish Debian packages
+    needs: [tag, build]
+    uses: eclipse-zenoh/ci/.github/workflows/release-crates-debian.yml@main
+    with:
+      no-build: true
+      live-run: ${{ inputs.live-run || false }}
+      version: ${{ needs.tag.outputs.version }}
+      repo: ${{ github.repository }}
+      branch: ${{ needs.tag.outputs.branch }}
+      installation-test: false
+    secrets: inherit
+
   eclipse:
     needs: [tag, build]
     runs-on: ubuntu-latest
