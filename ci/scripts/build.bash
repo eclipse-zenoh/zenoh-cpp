@@ -26,7 +26,7 @@ cpack -G RPM
 ls -R
 
 cd "$GITHUB_WORKSPACE"
-mv "build/packages/$repo_name-$version.zip" "$archive_lib"
+mv "$(readlink -f build/packages/*.zip)" "$archive_lib"
 zip --verbose --junk-paths "$archive_deb" build/packages/*.deb
 zip --verbose --junk-paths "$archive_rpm" build/packages/*.rpm
 
