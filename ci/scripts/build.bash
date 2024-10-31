@@ -18,7 +18,8 @@ readonly archive_rpm=$out/$repo_name-$version-rpm.zip
 # Make packages into build/packages
 mkdir -p build
 cd build
-cmake -DZENOHCXX_ZENOHC=OFF ..
+# For now we only build for x86_64
+cmake -DDEBARCH=x86_64 -DZENOHCXX_ZENOHC=OFF ..
 cpack
 cpack -G DEB
 cpack -G RPM
