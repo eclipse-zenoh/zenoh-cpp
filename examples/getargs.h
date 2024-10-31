@@ -24,6 +24,7 @@
 struct CmdArg {
     const char *name;
     const char **value;
+    bool only_presence = false;
 };
 
 inline void getargs(int argc, char **argv, const std::vector<CmdArg> &required,
@@ -43,8 +44,12 @@ inline void getargs(int argc, char **argv, const std::vector<CmdArg> &required,
             if (*p.value) defaults = true;
         }
         for (auto &p : named) {
-            std::cout << " " << p.first << " [" << p.second.name << "]";
-            if (*p.second.value) defaults = true;
+            if (p.second.only_presence) {
+                std::cout << " [" << p.first << "]";
+            } else {
+                std::cout << " " << p.first << " [" << p.second.name << "]";
+                if (*p.second.value) defaults = true;
+            }
         }
         std::cout << std::endl;
 
@@ -56,7 +61,7 @@ inline void getargs(int argc, char **argv, const std::vector<CmdArg> &required,
                 }
             }
             for (auto &p : named) {
-                if (*p.second.value) {
+                if (!p.second.only_presence && *p.second.value) {
                     std::cout << "  " << p.second.name << " = " << *p.second.value << std::endl;
                 }
             }
@@ -76,7 +81,11 @@ inline void getargs(int argc, char **argv, const std::vector<CmdArg> &required,
         }
         auto param = named.find(argv[i]);
         if (param != named.end()) {
-            destination = param->second.value;
+            if (param->second.only_presence) {
+                *param->second.value = "true";
+            } else {
+                destination = param->second.value;
+            }
         } else if (position < positioned.size()) {
             *positioned[position].value = argv[i];
             ++position;

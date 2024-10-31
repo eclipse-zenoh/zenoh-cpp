@@ -65,7 +65,7 @@ class Owned {
    protected:
     typedef ZC_OWNED_TYPE OwnedType;
 
-   public:
+   protected:
     /// Move constructor.
     Owned(Owned&& v) : Owned(&v._0) {}
     /// Move assignment.
@@ -80,7 +80,6 @@ class Owned {
     /// Destructor drops owned value using z_drop from zenoh API
     ~Owned() { ::z_drop(::z_move(_0)); }
 
-   protected:
     OwnedType _0;
 
     explicit Owned(OwnedType* pv) {
