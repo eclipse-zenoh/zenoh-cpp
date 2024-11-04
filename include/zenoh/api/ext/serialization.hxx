@@ -13,6 +13,9 @@
 
 #pragma once
 
+#if __cplusplus >= 202002L
+#include <span>
+#endif
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -235,6 +238,15 @@ bool __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const
                                        ZResult* err) {
     return __serialize_sequence_with_serializer(serializer, value.begin(), value.end(), value.size(), err);
 }
+
+#if __cplusplus >= 202002L
+template <class T, std::size_t Extent>
+bool __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, std::span<T, Extent> value,
+                                       ZResult* err) {
+    return __serialize_sequence_with_serializer(serializer, value.begin(), value.end(), value.size(), err);
+}
+#endif
+
 
 template <class T>
 bool serialize_with_serializer(zenoh::ext::Serializer& serializer, const T& t, ZResult* err) {
