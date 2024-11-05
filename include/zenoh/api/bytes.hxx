@@ -188,7 +188,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         int64_t tell() { return ::z_bytes_reader_tell(&this->_0); }
 
         /// @brief Return the number of bytes that can still be read.
-        /// @return Number of bytes that can still be read.
+        /// @return number of bytes that can still be read.
         size_t remaining() const { return ::z_bytes_reader_remaining(&this->_0); }
 
         /// @brief Set the reader position indicator to the value pointed to by offset, starting from the current
@@ -256,7 +256,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         }
 
         /// @brief Finalize all writes and return underlying ``Bytes`` object.
-        /// @return Underlying ``Bytes`` object.
+        /// @return underlying ``Bytes`` object.
         Bytes finish() && {
             Bytes b;
             ::z_bytes_writer_finish(interop::as_moved_c_ptr(*this), interop::as_owned_c_ptr(b));

@@ -144,7 +144,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param key_expr ``KeyExpr`` to declare.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @return Declared ``KeyExpr`` instance.
+    /// @return declared ``KeyExpr`` instance.
     KeyExpr declare_keyexpr(const KeyExpr& key_expr, ZResult* err = nullptr) const {
         KeyExpr k = interop::detail::null<KeyExpr>();
         __ZENOH_RESULT_CHECK(::z_declare_keyexpr(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(k),
@@ -1037,7 +1037,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param options: Additional options for the publication cache.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @return Declared ``zenoh::ext::PublicationCache`` instance.
+    /// @return declared ``zenoh::ext::PublicationCache`` instance.
     [[nodiscard]] ext::PublicationCache declare_publication_cache(
         const KeyExpr& key_expr, PublicationCacheOptions&& options = PublicationCacheOptions::create_default(),
         ZResult* err = nullptr) {

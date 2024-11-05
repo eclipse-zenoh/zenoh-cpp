@@ -31,6 +31,8 @@ class PublicationCache : public Owned<::ze_owned_publication_cache_t> {
     friend struct interop::detail::Converter;
 
    public:
+    /// @name Methods
+
     /// @brief Get the key expression of the publication cache.
     const KeyExpr& get_keyexpr() const {
         return interop::as_owned_cpp_ref<KeyExpr>(::ze_publication_cache_keyexpr(interop::as_loaned_c_ptr(*this)));
