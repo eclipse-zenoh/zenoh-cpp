@@ -53,14 +53,14 @@ const CopyableType* as_copyable_c_ptr(const Copyable<CopyableType>& cpp_obj) {
 }
 
 /// @brief Get zenoh-c representation of std::optional of trivially copyable zenoh-cpp object.
-/// @return Pointer to zenoh-c representation of trivially copyable zenoh-cpp object, or NULL if cpp_obj is empty.
+/// @return pointer to zenoh-c representation of trivially copyable zenoh-cpp object, or NULL if cpp_obj is empty.
 template <class CopyableCppObj>
 auto* as_copyable_c_ptr(std::optional<CopyableCppObj>& cpp_obj) {
     return cpp_obj.has_value() ? as_copyable_c_ptr(cpp_obj.value()) : nullptr;
 }
 
 /// @brief Get zenoh-c representation of std::optional of trivially copyable zenoh-cpp object.
-/// @return Pointer to zenoh-c representation of trivially copyable zenoh-cpp object, or NULL if cpp_obj is empty.
+/// @return pointer to zenoh-c representation of trivially copyable zenoh-cpp object, or NULL if cpp_obj is empty.
 template <class CopyableCppObj>
 const auto* as_copyable_c_ptr(const std::optional<CopyableCppObj>& cpp_obj) {
     return cpp_obj.has_value() ? as_copyable_c_ptr(cpp_obj.value()) : nullptr;
@@ -91,6 +91,13 @@ const Loaned* as_loaned_c_ptr(const Owned<OwnedType>& cpp_obj) {
 }
 
 /// @brief Get loaned zenoh-c representation of owned zenoh-cpp object.
+/// @return pointer to zenoh-c representation of loaned zenoh-cpp object, or NULL if cpp_obj is empty.
+template <class OwnedCppObj>
+const auto* as_loaned_c_ptr(const std::optional<OwnedCppObj>& cpp_obj) {
+    return cpp_obj.has_value() ? as_loaned_c_ptr(*cpp_obj) : nullptr;
+}
+
+/// @brief Get loaned zenoh-c representation of owned zenoh-cpp object.
 template <class OwnedType,
           class Loaned = typename ::z_owned_to_loaned_type_t<OwnedType>::type,  // SFINAE here if no loaned type
                                                                                 // declared
@@ -101,6 +108,13 @@ Loaned* as_loaned_c_ptr(Owned<OwnedType>& cpp_obj) {
     return ::z_loan_mut(*as_owned_c_ptr(cpp_obj));
 }
 
+/// @brief Get loaned zenoh-c representation of owned zenoh-cpp object.
+/// @return pointer to zenoh-c representation of loaned zenoh-cpp object, or NULL if cpp_obj is empty.
+template <class OwnedCppObj>
+auto* as_loaned_c_ptr(std::optional<OwnedCppObj>& cpp_obj) {
+    return cpp_obj.has_value() ? as_loaned_c_ptr(*cpp_obj) : nullptr;
+}
+
 /// @brief Get moved zenoh-c representation of owned zenoh-cpp object.
 template <class OwnedType>
 auto* as_moved_c_ptr(Owned<OwnedType>& cpp_obj) {
@@ -108,7 +122,7 @@ auto* as_moved_c_ptr(Owned<OwnedType>& cpp_obj) {
 }
 
 /// @brief Get moved zenoh-c representation of std::optional of owned zenoh-cpp object.
-/// @return Pointer to zenoh-c representation of moved owned zenoh-cpp object, or NULL if cpp_obj is empty.
+/// @return pointer to zenoh-c representation of moved owned zenoh-cpp object, or NULL if cpp_obj is empty.
 template <class OwnedCppObj>
 auto* as_moved_c_ptr(std::optional<OwnedCppObj>& cpp_obj) {
     return cpp_obj.has_value() ? ::z_move(*as_owned_c_ptr(cpp_obj.value())) : nullptr;

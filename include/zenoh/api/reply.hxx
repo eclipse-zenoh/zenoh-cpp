@@ -29,13 +29,13 @@ class ReplyError : public Owned<::z_owned_reply_err_t> {
     /// @name Methods
 
     /// @brief The payload of this error.
-    /// @return Error payload.
+    /// @return error payload.
     const Bytes& get_payload() const {
         return interop::as_owned_cpp_ref<Bytes>(::z_reply_err_payload(interop::as_loaned_c_ptr(*this)));
     }
 
     /// @brief The encoding of this error.
-    /// @return Error encoding.
+    /// @return error encoding.
     const Encoding& get_encoding() const {
         return interop::as_owned_cpp_ref<Encoding>(::z_reply_err_encoding(interop::as_loaned_c_ptr(*this)));
     }
@@ -54,7 +54,7 @@ class Reply : public Owned<::z_owned_reply_t> {
     bool is_ok() const { return ::z_reply_is_ok(interop::as_loaned_c_ptr(*this)); }
 
     /// @brief Get the reply sample. Will throw a ZException if ``Reply::is_ok`` returns ``false``.
-    /// @return Reply sample.
+    /// @return reply sample.
     const Sample& get_ok() const {
         if (!::z_reply_is_ok(interop::as_loaned_c_ptr(*this))) {
             throw ZException("Reply data sample was requested, but reply contains error", Z_EINVAL);
@@ -63,7 +63,7 @@ class Reply : public Owned<::z_owned_reply_t> {
     }
 
     /// @brief Get the reply error. Will throw a ZException if ``Reply::is_ok`` returns ``true``.
-    /// @return Reply error.
+    /// @return reply error.
     const ReplyError& get_err() const {
         if (::z_reply_is_ok(interop::as_loaned_c_ptr(*this))) {
             throw ZException("Reply error was requested, but reply contains data sample", Z_EINVAL);

@@ -1,5 +1,5 @@
 ..
-.. Copyright (c) 2023 ZettaScale Technology
+.. Copyright (c) 2024 ZettaScale Technology
 ..
 .. This program and the accompanying materials are made available under the
 .. terms of the Eclipse Public License 2.0 which is available at
@@ -12,23 +12,10 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-*************
-API Reference
-*************
+Extensions
+==========
+Extra functionality, which is not a part of core Zenoh API.
 
-.. toctree::
-   :maxdepth: 10
-
-   commons
-   error_handling
-   keyexpr
-   config
-   session
-   scouting
-   publish_subscribe
-   query_reply
-   serialization_deserialization
-   channels
-   interop
-   shared_memory
-   ext
+.. doxygenclass:: zenoh::ext::PublicationCache
+   :members:
+   :membergroups: Constructors Operators Methods
