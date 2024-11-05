@@ -31,6 +31,9 @@
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
 #include "shm/client_storage/client_storage.hxx"
 #endif
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#include "ext/publication_cache.hxx"
+#endif
 
 #include <optional>
 
@@ -1002,5 +1005,83 @@ class Session : public Owned<::z_owned_session_t> {
         (void)options;
         __ZENOH_RESULT_CHECK(::z_close(interop::as_loaned_c_ptr(*this), nullptr), err, "Failed to close the session");
     }
+
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Options passed to the `ze_declare_publication_cache()` function.
+    /// @note Zenoh-c only.
+    struct PublicationCacheOptions {
+        /// The prefix used for queryable.
+        std::optional<KeyExpr> queryable_prefix = {};
+#if defined(Z_FEATURE_UNSTABLE_API)
+        /// The restriction for the matching queries that will be receive by this publication cache.
+        Locality queryable_origin = ::zc_locality_default();
+#endif
+        /// The `complete` option for the queryable.
+        bool queryable_complete = false;
+        /// The the history size (i.e. maximum number of messages to store).
+        size_t history = 1;
+        /// The limit number of cached resources. ``0`` value corresponds to no limit.
+        size_t resources_limit = 0;
+
+        /// @name Methods
+        /// @brief Create default option settings.
+        static PublicationCacheOptions create_default() { return {}; }
+    };
+
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Construct and declare a publication cache.
+    /// @param key_expr: The key expression to publish to.
+    /// @param options: Additional options for the publication cache.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @return Declared ``zenoh::ext::PublicationCache`` instance.
+    [[nodiscard]] ext::PublicationCache declare_publication_cache(
+        const KeyExpr& key_expr, PublicationCacheOptions&& options = PublicationCacheOptions::create_default(),
+        ZResult* err = nullptr) {
+        ::ze_publication_cache_options_t opts;
+        ze_publication_cache_options_default(&opts);
+        opts.queryable_prefix = interop::as_loaned_c_ptr(options.queryable_prefix);
+#if defined(Z_FEATURE_UNSTABLE_API)
+        opts.queryable_origin = options.queryable_origin;
+#endif
+        opts.queryable_complete = options.queryable_complete;
+        opts.history = options.history;
+        opts.resources_limit = options.resources_limit;
+        ext::PublicationCache p = interop::detail::null<ext::PublicationCache>();
+        ZResult res = ::ze_declare_publication_cache(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(p),
+                                                     interop::as_loaned_c_ptr(key_expr), &opts);
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Publication Cache");
+        return p;
+    }
+
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Declare a background publication cache. It will function in background until the corresponding session
+    /// is closed or destoryed.
+    /// @param key_expr: The key expression to publish to.
+    /// @param options: Additional options for the publication cache.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void declare_background_publication_cache(
+        const KeyExpr& key_expr, PublicationCacheOptions&& options = PublicationCacheOptions::create_default(),
+        ZResult* err = nullptr) {
+        ::ze_publication_cache_options_t opts;
+        ze_publication_cache_options_default(&opts);
+        opts.queryable_prefix = interop::as_loaned_c_ptr(options.queryable_prefix);
+#if defined(Z_FEATURE_UNSTABLE_API)
+        opts.queryable_origin = options.queryable_origin;
+#endif
+        opts.queryable_complete = options.queryable_complete;
+        opts.history = options.history;
+        opts.resources_limit = options.resources_limit;
+        ZResult res = ::ze_declare_background_publication_cache(interop::as_loaned_c_ptr(*this),
+                                                                interop::as_loaned_c_ptr(key_expr), &opts);
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Publication Cache");
+    }
+
+#endif
 };
 }  // namespace zenoh
