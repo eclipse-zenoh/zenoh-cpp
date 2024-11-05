@@ -2,6 +2,7 @@
 
 set -xeo pipefail
 
+readonly live_run=${LIVE_RUN:-false}
 # Release number
 readonly version=${VERSION:?input VERSION is required}
 # Branch
@@ -33,7 +34,9 @@ if [[ $zenoh_pico_branch != '' ]]; then
 fi
 
 git commit version.txt -m "chore: Bump version to $version"
-git tag --force "$version" -m "v$version"
+if [[ ${live_run} ]]; then
+  git tag --force "$version" -m "v$version"
+fi
 git log -10
 git show-ref --tags
 git push --force origin
