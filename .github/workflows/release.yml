@@ -68,6 +68,7 @@ jobs:
       - name: Bump and tag project
         run: bash ci/scripts/bump-and-tag.bash
         env:
+          LIVE_RUN: ${{ inputs.live-run || false }}
           VERSION: ${{ steps.create-release-branch.outputs.version }}
           BRANCH: ${{ steps.create-release-branch.outputs.branch }}
           ZENOH_C_BRANCH: ${{ inputs.zenoh-c-version && format('release/{0}', inputs.zenoh-c-version) || '' }}
