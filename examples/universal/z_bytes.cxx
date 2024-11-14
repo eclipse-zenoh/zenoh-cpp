@@ -17,10 +17,6 @@
 #include "entity.pb.h"
 #endif
 
-#if __cplusplus >= 202002L
-#include <span>
-#endif
-
 #include "zenoh.hxx"
 using namespace zenoh;
 
