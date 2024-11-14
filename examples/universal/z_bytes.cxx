@@ -91,6 +91,16 @@ int _main(int argc, char** argv) {
         assert(input == output);
     }
 
+// Span
+#if __cplusplus >= 202002L
+    {
+        double input[] = {1.0, 2.0, 3.0, 4.0};
+        const auto payload = ext::serialize(std::span(input));
+        const auto output = ext::deserialize<std::vector<double>>(payload);
+        assert(std::equal(std::begin(input), std::end(input), std::begin(output)));
+    }
+#endif
+
     // Serializer, deserializer (for struct or tuple serialization)
     {
         // serialization
