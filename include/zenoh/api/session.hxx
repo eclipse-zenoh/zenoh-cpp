@@ -40,7 +40,7 @@
 namespace zenoh {
 /// A Zenoh session.
 class Session : public Owned<::z_owned_session_t> {
-    Session(zenoh::detail::null_object_t) : Owned(nullptr){};
+    Session(zenoh::detail::null_object_t) : Owned(nullptr) {};
 
    public:
     /// @brief Options to be passed when opening a ``Session``.
@@ -787,7 +787,7 @@ class Session : public Owned<::z_owned_session_t> {
         z_liveliness_token_options_default(&opts);
         (void)options;
         __ZENOH_RESULT_CHECK(::z_liveliness_declare_token(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(t),
-                                                           interop::as_loaned_c_ptr(key_expr), &opts),
+                                                          interop::as_loaned_c_ptr(key_expr), &opts),
                              err, "Failed to perform liveliness_declare_token operation");
         return t;
     }
@@ -834,9 +834,8 @@ class Session : public Owned<::z_owned_session_t> {
         z_liveliness_subscriber_options_default(&opts);
         opts.history = options.history;
         Subscriber<void> s(zenoh::detail::null_object);
-        ZResult res =
-            ::z_liveliness_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
-                                               interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
+        ZResult res = ::z_liveliness_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
+                                                        interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
         return s;
     }
@@ -903,8 +902,8 @@ class Session : public Owned<::z_owned_session_t> {
         opts.history = options.history;
         Subscriber<void> s(zenoh::detail::null_object);
         ZResult res = ::z_liveliness_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
-                                                         interop::as_loaned_c_ptr(key_expr),
-                                                         ::z_move(cb_handler_pair.first), &opts);
+                                                        interop::as_loaned_c_ptr(key_expr),
+                                                        ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
         if (res != Z_OK) ::z_drop(::z_move(*interop::as_moved_c_ptr(cb_handler_pair.second)));
         return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
@@ -956,7 +955,7 @@ class Session : public Owned<::z_owned_session_t> {
         opts.timeout_ms = options.timeout_ms;
 
         __ZENOH_RESULT_CHECK(::z_liveliness_get(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr),
-                                                 ::z_move(c_closure), &opts),
+                                                ::z_move(c_closure), &opts),
                              err, "Failed to perform liveliness_get operation");
     }
 
@@ -982,7 +981,7 @@ class Session : public Owned<::z_owned_session_t> {
         opts.timeout_ms = options.timeout_ms;
 
         ZResult res = ::z_liveliness_get(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr),
-                                          ::z_move(cb_handler_pair.first), &opts);
+                                         ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to perform liveliness_get operation");
         if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
         return std::move(cb_handler_pair.second);
