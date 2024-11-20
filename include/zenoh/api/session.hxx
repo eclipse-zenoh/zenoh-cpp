@@ -164,6 +164,7 @@ class Session : public Owned<::z_owned_session_t> {
                              err, "Failed to undeclare key expression");
     }
 #if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1
+    /// @copydoc zenoh::GetOptions
     using GetOptions = zenoh::GetOptions;
 
     /// @brief Query data from the matching queryables in the system. Replies are provided through a callback function.
@@ -176,7 +177,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     template <class C, class D>
     void get(const KeyExpr& key_expr, const std::string& parameters, C&& on_reply, D&& on_drop,
-             GetOptions&& options = GetOptions::create_default(), ZResult* err = nullptr) const {
+             zenoh::GetOptions&& options = zenoh::GetOptions::create_default(), ZResult* err = nullptr) const {
         static_assert(std::is_invocable_r<void, C, const Reply&>::value,
                       "on_reply should be callable with the following signature: void on_reply(zenoh::Reply& reply)");
         static_assert(std::is_invocable_r<void, D>::value,
@@ -222,7 +223,7 @@ class Session : public Owned<::z_owned_session_t> {
     template <class Channel>
     typename Channel::template HandlerType<Reply> get(const KeyExpr& key_expr, const std::string& parameters,
                                                       Channel channel,
-                                                      GetOptions&& options = GetOptions::create_default(),
+                                                      zenoh::GetOptions&& options = zenoh::GetOptions::create_default(),
                                                       ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Reply>();
         ::z_get_options_t opts;
@@ -255,6 +256,7 @@ class Session : public Owned<::z_owned_session_t> {
         bool complete = false;
 
         /// @name Methods
+
         /// @brief Create default option settings.
         static QueryableOptions create_default() { return {}; }
     };
@@ -356,6 +358,7 @@ class Session : public Owned<::z_owned_session_t> {
         /// @name Fields
 
         /// @name Methods
+
         /// @brief Create default option settings.
         static SubscriberOptions create_default() { return {}; }
     };
@@ -475,6 +478,7 @@ class Session : public Owned<::z_owned_session_t> {
         std::optional<Timestamp> timestamp = {};
 
         /// @name Methods
+
         /// @brief Create default option settings.
         static DeleteOptions create_default() { return {}; }
     };
@@ -537,6 +541,7 @@ class Session : public Owned<::z_owned_session_t> {
         std::optional<Bytes> attachment = {};
 
         /// @name Methods
+
         /// @brief Create default option settings.
         static PutOptions create_default() { return {}; }
     };
@@ -596,6 +601,7 @@ class Session : public Owned<::z_owned_session_t> {
         std::optional<Encoding> encoding = {};
 
         /// @name Methods
+
         /// @brief Create default option settings.
         static PublisherOptions create_default() { return {}; }
     };
@@ -892,6 +898,7 @@ class Session : public Owned<::z_owned_session_t> {
         uint32_t timeout_ms = 10000;
 
         /// @name Methods
+
         /// @brief Create default option settings.
         static LivelinessGetOptions create_default() { return {}; }
     };
@@ -1000,6 +1007,7 @@ class Session : public Owned<::z_owned_session_t> {
         size_t resources_limit = 0;
 
         /// @name Methods
+
         /// @brief Create default option settings.
         static PublicationCacheOptions create_default() { return {}; }
     };
@@ -1080,6 +1088,7 @@ class Session : public Owned<::z_owned_session_t> {
         uint64_t query_timeout_ms = 0;
 
         /// @name Methods
+
         /// @brief Create default option settings.
         static QueryingSubscriberOptions create_default() { return {}; }
     };

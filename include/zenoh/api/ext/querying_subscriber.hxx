@@ -31,14 +31,16 @@ class QueryingSubscriberBase : public Owned<::ze_owned_querying_subscriber_t> {
    public:
     /// @name Methods
 
+    ///@copydoc zenoh::GetOptions
     using GetOptions = zenoh::GetOptions;
+
     /// @brief Make querying subscriber perform an additional query on a specified selector.
     /// The queried samples will be merged with the received publications and made available in the subscriber callback.
     /// @param key_expr the key expression matching resources to query.
     /// @param options query options.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    void get(const KeyExpr& key_expr, GetOptions&& options = GetOptions::create_default(),
+    void get(const KeyExpr& key_expr, zenoh::GetOptions&& options = zenoh::GetOptions::create_default(),
              ZResult* err = nullptr) const {
         ::z_get_options_t opts;
         z_get_options_default(&opts);
@@ -72,7 +74,7 @@ class QueryingSubscriber;
 ///
 /// In addition to receiving the data it is subscribed to,
 /// it also will fetch data from a Queryable at startup and peridodically (using  `QueryingSubscriber::get`).
-/// @note Zenoh-c only
+/// @note Zenoh-c only.
 template <>
 class QueryingSubscriber<void> : public detail::QueryingSubscriberBase {
    protected:
@@ -82,8 +84,6 @@ class QueryingSubscriber<void> : public detail::QueryingSubscriberBase {
 
    public:
     /// @name Methods
-    using QueryingSubscriberBase::get;
-    using QueryingSubscriberBase::GetOptions;
 
     /// @brief Undeclare publication cache.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
@@ -94,9 +94,12 @@ class QueryingSubscriber<void> : public detail::QueryingSubscriberBase {
     }
 };
 
-/// @brief A Zenoh subscriber. Destroying or undeclaring subscriber cancels the subscription.
-
-/// Constructed by ``Session::declare_subscriber`` method.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A Zenoh querying subscriber declared by ``zenoh::Session::declare_querying_subscriber``.
+///
+/// In addition to receiving the data it is subscribed to,
+/// it also will fetch data from a Queryable at startup and peridodically (using  ``QueryingSubscriber::get``).
+/// @note Zenoh-c only.
 /// @tparam Handler streaming handler exposing data. If `void`, no handler access is provided and instead data is being
 /// processed inside the callback.
 template <class Handler>
@@ -114,6 +117,8 @@ class QueryingSubscriber : public detail::QueryingSubscriberBase {
     /// interface.
     QueryingSubscriber(QueryingSubscriber<void>&& qs, Handler handler)
         : QueryingSubscriberBase(interop::as_owned_c_ptr(qs)), _handler(std::move(handler)) {}
+
+    /// @name Methods
 
     /// @brief Undeclare querying subscriber, and return its handler, which can still be used to process any messages
     /// received prior to undeclaration.

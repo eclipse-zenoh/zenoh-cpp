@@ -71,8 +71,12 @@ class Publisher : public Owned<::z_owned_publisher_t> {
 
     /// @brief Options to be passed to ``Publisher::delete_resource`` operation.
     struct DeleteOptions {
+        /// @name Fields
+
         /// @brief The timestamp of this message.
         std::optional<Timestamp> timestamp = {};
+
+        /// @name Methods
 
         /// @brief Create default option settings.
         static DeleteOptions create_default() { return {}; }

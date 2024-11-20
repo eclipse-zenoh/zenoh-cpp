@@ -25,3 +25,8 @@ Session
    :members:
    :membergroups: Constructors Operators Methods Fields
 
+
+.. doxygenstruct:: zenoh::GetOptions
+   :members:
+   :membergroups: Constructors Operators Methods Fields
+

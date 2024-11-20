@@ -50,7 +50,6 @@ class Subscriber<void> : public detail::SubscriberBase {
 
    public:
     /// @name Methods
-    using SubscriberBase::get_keyexpr;
 
     /// @brief Undeclare subscriber.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
@@ -83,7 +82,6 @@ class Subscriber : public detail::SubscriberBase {
         : SubscriberBase(interop::as_owned_c_ptr(s)), _handler(std::move(handler)) {}
 
     /// @name Methods
-    using SubscriberBase::get_keyexpr;
 
     /// @brief Undeclare subscriber, and return its handler, which can still be used to process any messages received
     /// prior to undeclaration.

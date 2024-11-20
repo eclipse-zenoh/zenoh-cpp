@@ -65,6 +65,7 @@ struct GetOptions {
     uint64_t timeout_ms = 0;
 
     /// @name Methods
+
     /// @brief Create default option settings.
     static GetOptions create_default() { return {}; }
 };
