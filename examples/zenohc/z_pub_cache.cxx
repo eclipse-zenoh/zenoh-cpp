@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2022 ZettaScale Technology
+// Copyright (c) 2024 ZettaScale Technology
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -46,6 +46,7 @@ int _main(int argc, char **argv) {
     std::cout << "Declaring Publication cache on '" << keyexpr << "'..." << std::endl;
     Session::PublicationCacheOptions opts;
     opts.history = std::atoi(history);
+    opts.queryable_complete = true;
     if (!std::string(prefix).empty()) {
         opts.queryable_prefix = KeyExpr(prefix);
     }

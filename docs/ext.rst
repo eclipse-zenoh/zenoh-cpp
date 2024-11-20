@@ -19,3 +19,7 @@ Extra functionality, which is not a part of core Zenoh API.
 .. doxygenclass:: zenoh::ext::PublicationCache
    :members:
    :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::ext::QueryingSubscriber
+   :members:
+   :membergroups: Constructors Operators Methods
