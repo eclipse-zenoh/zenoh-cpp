@@ -1012,6 +1012,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return declared ``zenoh::ext::PublicationCache`` instance.
+    /// @note Zenoh-c only.
     [[nodiscard]] ext::PublicationCache declare_publication_cache(
         const KeyExpr& key_expr, PublicationCacheOptions&& options = PublicationCacheOptions::create_default(),
         ZResult* err = nullptr) const {
@@ -1205,5 +1206,9 @@ class Session : public Owned<::z_owned_session_t> {
             std::move(qs), std::move(cb_handler_pair.second));
     }
 #endif
+
+    /// @brief Check if session is closed.
+    /// @return ``true`` if session is closed, ``false`` otherwise.
+    bool is_closed() const { return ::z_session_is_closed(interop::as_loaned_c_ptr(*this)); }
 };
 }  // namespace zenoh
