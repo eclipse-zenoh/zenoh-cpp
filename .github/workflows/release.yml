@@ -123,6 +123,23 @@ jobs:
       installation-test: false
     secrets: inherit
 
+  homebrew:
+    name: Publish Homebrew formulae
+    needs: [tag, build]
+    uses: eclipse-zenoh/ci/.github/workflows/release-crates-homebrew.yml@main
+    with:
+      no-build: true
+      repo: ${{ github.repository }}
+      live-run: ${{ inputs.live-run || false }}
+      version: ${{ needs.tag.outputs.version }}
+      branch: ${{ needs.tag.outputs.branch }}
+      # artifact-patterns input is not used when no-build=true, but it's a required argument
+      artifact-patterns: |
+        ^include$
+      formulae: |
+        libzenohcpp
+    secrets: inherit
+
   eclipse:
     needs: [tag, build]
     runs-on: ubuntu-latest
