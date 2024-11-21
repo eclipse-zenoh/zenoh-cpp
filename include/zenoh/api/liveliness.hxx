@@ -13,7 +13,7 @@
 
 #pragma once
 
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LIVELINESS == 1)
 #include "base.hxx"
 #include "interop.hxx"
 

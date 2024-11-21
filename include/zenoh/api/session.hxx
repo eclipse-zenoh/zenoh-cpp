@@ -752,7 +752,7 @@ class Session : public Owned<::z_owned_session_t> {
     }
 #endif
 
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LIVELINESS == 1)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Options to pass to ``Session::liveliness_declare_token``.
@@ -878,7 +878,7 @@ class Session : public Owned<::z_owned_session_t> {
     }
 #endif
 
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LIVELINESS == 1)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Declare a subscriber on liveliness tokens that intersect `key_expr`.
