@@ -24,4 +24,3 @@ Session
 .. doxygenclass:: zenoh::Session
    :members:
    :membergroups: Constructors Operators Methods Fields
-

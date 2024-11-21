@@ -110,6 +110,14 @@ inline std::string_view whatami_as_str(WhatAmI whatami) {
 /// - **ZC_LOCALITY_SESSION_LOCAL**: Only from local sessions.
 /// - **ZC_LOCALITY_SESSION_REMOTE**: Only from remote sessions.
 typedef ::zc_locality_t Locality;
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Key expressions types to which Queryable should reply to.
+///
+/// Values:
+/// - **ZC_REPLY_KEYEXPR_ANY**:  Replies to any key expression queries.
+/// - **ZC_REPLY_KEYEXPR_MATCHING_QUERY**: Replies only to queries with intersecting key expressions.
+typedef ::zc_reply_keyexpr_t ReplyKeyExpr;
 #endif
 
 }  // namespace zenoh

@@ -23,6 +23,7 @@
 #include "enums.hxx"
 #include "id.hxx"
 #include "interop.hxx"
+#include "keyexpr.hxx"
 #include "liveliness.hxx"
 #include "publisher.hxx"
 #include "query_consolidation.hxx"
@@ -35,9 +36,14 @@
 #include "ext/publication_cache.hxx"
 #endif
 
-#include <optional>
-
 namespace zenoh {
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+namespace ext {
+template <class Handler>
+class QueryingSubscriber;
+}
+#endif
+
 /// A Zenoh session.
 class Session : public Owned<::z_owned_session_t> {
     Session(zenoh::detail::null_object_t) : Owned(nullptr){};
@@ -162,12 +168,12 @@ class Session : public Owned<::z_owned_session_t> {
                              err, "Failed to undeclare key expression");
     }
 #if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1
-    /// @brief Options passed to the ``get`` operation.
+    /// @brief Options passed to the ``Session::get`` operation.
     struct GetOptions {
         /// @name Fields
 
         /// @brief The Queryables that should be target of the query.
-        QueryTarget target = QueryTarget::Z_QUERY_TARGET_ALL;
+        QueryTarget target = QueryTarget::Z_QUERY_TARGET_BEST_MATCHING;
         /// @brief The replies consolidation strategy to apply on replies to the query.
         QueryConsolidation consolidation = QueryConsolidation();
         /// @brief The priority of the get message.
@@ -185,13 +191,28 @@ class Session : public Owned<::z_owned_session_t> {
         /// release.
         /// @brief The source info for the query.
         std::optional<SourceInfo> source_info = {};
+
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
+        ///
+        /// @brief The accepted replies for the query.
+        /// @note Zenoh-c only.
+        ReplyKeyExpr accept_replies = ::zc_reply_keyexpr_default();
+
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
+        /// @brief Allowed destination.
+        /// @note Zenoh-c only.
+        Locality allowed_destination = ::zc_locality_default();
 #endif
+
         /// @brief An optional attachment to the query.
         std::optional<Bytes> attachment = {};
         /// @brief The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
         uint64_t timeout_ms = 0;
 
         /// @name Methods
+
         /// @brief Create default option settings.
         static GetOptions create_default() { return {}; }
     };
@@ -228,6 +249,8 @@ class Session : public Owned<::z_owned_session_t> {
         opts.encoding = interop::as_moved_c_ptr(options.encoding);
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         opts.source_info = interop::as_moved_c_ptr(options.source_info);
+        opts.accept_replies = options.accept_replies;
+        opts.allowed_destination = options.allowed_destination;
 #endif
         opts.attachment = interop::as_moved_c_ptr(options.attachment);
         opts.timeout_ms = options.timeout_ms;
@@ -261,6 +284,8 @@ class Session : public Owned<::z_owned_session_t> {
         opts.encoding = interop::as_moved_c_ptr(options.encoding);
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         opts.source_info = interop::as_moved_c_ptr(options.source_info);
+        opts.accept_replies = options.accept_replies;
+        opts.allowed_destination = options.allowed_destination;
 #endif
         opts.attachment = interop::as_moved_c_ptr(options.attachment);
         opts.timeout_ms = options.timeout_ms;
@@ -281,6 +306,7 @@ class Session : public Owned<::z_owned_session_t> {
         bool complete = false;
 
         /// @name Methods
+
         /// @brief Create default option settings.
         static QueryableOptions create_default() { return {}; }
     };
@@ -382,6 +408,7 @@ class Session : public Owned<::z_owned_session_t> {
         /// @name Fields
 
         /// @name Methods
+
         /// @brief Create default option settings.
         static SubscriberOptions create_default() { return {}; }
     };
@@ -501,6 +528,7 @@ class Session : public Owned<::z_owned_session_t> {
         std::optional<Timestamp> timestamp = {};
 
         /// @name Methods
+
         /// @brief Create default option settings.
         static DeleteOptions create_default() { return {}; }
     };
@@ -563,6 +591,7 @@ class Session : public Owned<::z_owned_session_t> {
         std::optional<Bytes> attachment = {};
 
         /// @name Methods
+
         /// @brief Create default option settings.
         static PutOptions create_default() { return {}; }
     };
@@ -622,6 +651,7 @@ class Session : public Owned<::z_owned_session_t> {
         std::optional<Encoding> encoding = {};
 
         /// @name Methods
+
         /// @brief Create default option settings.
         static PublisherOptions create_default() { return {}; }
     };
@@ -918,6 +948,7 @@ class Session : public Owned<::z_owned_session_t> {
         uint32_t timeout_ms = 10000;
 
         /// @name Methods
+
         /// @brief Create default option settings.
         static LivelinessGetOptions create_default() { return {}; }
     };
@@ -1009,7 +1040,7 @@ class Session : public Owned<::z_owned_session_t> {
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
-    /// @brief Options passed to the `ze_declare_publication_cache()` function.
+    /// @brief Options passed to the ``Session::declare_publication_cache``.
     /// @note Zenoh-c only.
     struct PublicationCacheOptions {
         /// The prefix used for queryable.
@@ -1026,6 +1057,7 @@ class Session : public Owned<::z_owned_session_t> {
         size_t resources_limit = 0;
 
         /// @name Methods
+
         /// @brief Create default option settings.
         static PublicationCacheOptions create_default() { return {}; }
     };
@@ -1041,7 +1073,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @note Zenoh-c only.
     [[nodiscard]] ext::PublicationCache declare_publication_cache(
         const KeyExpr& key_expr, PublicationCacheOptions&& options = PublicationCacheOptions::create_default(),
-        ZResult* err = nullptr) {
+        ZResult* err = nullptr) const {
         ::ze_publication_cache_options_t opts;
         ze_publication_cache_options_default(&opts);
         opts.queryable_prefix = interop::as_loaned_c_ptr(options.queryable_prefix);
@@ -1062,13 +1094,13 @@ class Session : public Owned<::z_owned_session_t> {
     /// release.
     /// @brief Declare a background publication cache. It will function in background until the corresponding session
     /// is closed or destoryed.
-    /// @param key_expr: The key expression to publish to.
-    /// @param options: Additional options for the publication cache.
+    /// @param key_expr the key expression to publish to.
+    /// @param options additional options for the publication cache.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void declare_background_publication_cache(
         const KeyExpr& key_expr, PublicationCacheOptions&& options = PublicationCacheOptions::create_default(),
-        ZResult* err = nullptr) {
+        ZResult* err = nullptr) const {
         ::ze_publication_cache_options_t opts;
         ze_publication_cache_options_default(&opts);
         opts.queryable_prefix = interop::as_loaned_c_ptr(options.queryable_prefix);
@@ -1082,6 +1114,83 @@ class Session : public Owned<::z_owned_session_t> {
                                                                 interop::as_loaned_c_ptr(key_expr), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Publication Cache");
     }
+
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Options passed to the ``Session::declare_querying_subscriber``.
+    /// @note Zenoh-c only.
+    struct QueryingSubscriberOptions {
+        /// @name Fields
+
+        /// The key expression to be used for queries.
+        std::optional<KeyExpr> query_keyexpr = {};
+#if defined(Z_FEATURE_UNSTABLE_API)
+        /// The restriction for the matching publications that will be received by this publication cache.
+        Locality allowed_origin = ::zc_locality_default();
+        /// The accepted replies for queries.
+        ReplyKeyExpr query_accept_replies = ::zc_reply_keyexpr_default();
+#endif
+        /// @brief The target to be used for queries.
+        QueryTarget query_target = QueryTarget::Z_QUERY_TARGET_BEST_MATCHING;
+        /// @brief The consolidation mode to be used for queries.
+        QueryConsolidation query_consolidation = QueryConsolidation(ConsolidationMode::Z_CONSOLIDATION_MODE_NONE);
+        /// @brief The timeout to be used for queries.
+        uint64_t query_timeout_ms = 0;
+
+        /// @name Methods
+
+        /// @brief Create default option settings.
+        static QueryingSubscriberOptions create_default() { return {}; }
+    };
+
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Construct and declare a querying subscriber.
+    /// @param key_expr the key expression to subscribe to.
+    /// @param on_sample the callback that will be called for each received sample.
+    /// @param on_drop the callback that will be called once subscriber is destroyed or undeclared.
+    /// @param options additional options for querying subscriber.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @return declared ``zenoh::ext::QueryingSubscriber`` instance.
+    template <class C, class D>
+    [[nodiscard]] ext::QueryingSubscriber<void> declare_querying_subscriber(
+        const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
+        QueryingSubscriberOptions&& options = QueryingSubscriberOptions::create_default(),
+        ZResult* err = nullptr) const;
+
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Declare a background querying subscriber for a given key expression. Subscriber callback will be called
+    /// to process the messages, until the corresponding session is closed or dropped.
+    /// @param key_expr the key expression to subscribe to.
+    /// @param on_sample the callback that will be called for each received sample.
+    /// @param on_drop the callback that will be called once subscriber is destroyed or undeclared.
+    /// @param options additional options for querying subscriber.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    template <class C, class D>
+    void declare_background_querying_subscriber(
+        const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
+        QueryingSubscriberOptions&& options = QueryingSubscriberOptions::create_default(),
+        ZResult* err = nullptr) const;
+
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Construct and declare a querying subscriber.
+    /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
+    /// ``zenoh::channels::RingChannel``).
+    /// @param key_expr the key expression to subscriber to.
+    /// @param channel an instance of channel.
+    /// @param options options to pass to querying subscriber declaration.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @return a ``zenoh::ext::QueryingSubscriber`` object.
+    template <class Channel>
+    [[nodiscard]] ext::QueryingSubscriber<typename Channel::template HandlerType<Sample>> declare_querying_subscriber(
+        const KeyExpr& key_expr, Channel channel,
+        QueryingSubscriberOptions&& options = QueryingSubscriberOptions::create_default(),
+        ZResult* err = nullptr) const;
 #endif
 
     /// @brief Check if session is closed.
