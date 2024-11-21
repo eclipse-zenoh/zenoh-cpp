@@ -20,7 +20,7 @@ if [ "$#" -ge 3 ]; then
     USE_SHARED_MEMORY=$3
 fi
 
-if ("$USE_UNSTABLE" == "TRUE"); then
+if [ "$USE_UNSTABLE" == "TRUE" ]; then
     USE_UNSTABLE_PICO="1"
 fi
 
