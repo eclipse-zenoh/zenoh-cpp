@@ -23,6 +23,8 @@ using namespace std::chrono_literals;
 #undef NDEBUG
 #include <assert.h>
 
+#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LIVELINESS == 1)
+
 void test_liveliness_get() {
     KeyExpr ke("zenoh/liveliness/test/*");
     KeyExpr token_ke("zenoh/liveliness/test/1");
@@ -90,7 +92,11 @@ void test_liveliness_subscriber() {
     assert(delete_tokens.count("zenoh/liveliness/test/2") == 1);
 }
 
+#endif
+
 int main(int argc, char** argv) {
+#if defined Z_FEATURE_UNSTABLE_API
     test_liveliness_get();
     test_liveliness_subscriber();
+#endif
 };

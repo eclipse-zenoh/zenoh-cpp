@@ -782,7 +782,7 @@ class Session : public Owned<::z_owned_session_t> {
     }
 #endif
 
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LIVELINESS == 1)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Options to pass to ``Session::liveliness_declare_token``.
@@ -813,11 +813,11 @@ class Session : public Owned<::z_owned_session_t> {
         LivelinessDeclarationOptions&& options = LivelinessDeclarationOptions::create_default(),
         ZResult* err = nullptr) {
         LivelinessToken t = interop::detail::null<LivelinessToken>();
-        ::zc_liveliness_declaration_options_t opts;
-        zc_liveliness_declaration_options_default(&opts);
+        ::z_liveliness_token_options_t opts;
+        z_liveliness_token_options_default(&opts);
         (void)options;
-        __ZENOH_RESULT_CHECK(::zc_liveliness_declare_token(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(t),
-                                                           interop::as_loaned_c_ptr(key_expr), &opts),
+        __ZENOH_RESULT_CHECK(::z_liveliness_declare_token(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(t),
+                                                          interop::as_loaned_c_ptr(key_expr), &opts),
                              err, "Failed to perform liveliness_declare_token operation");
         return t;
     }
@@ -860,17 +860,18 @@ class Session : public Owned<::z_owned_session_t> {
         using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
-        ::zc_liveliness_subscriber_options_t opts;
-        zc_liveliness_subscriber_options_default(&opts);
+        ::z_liveliness_subscriber_options_t opts;
+        z_liveliness_subscriber_options_default(&opts);
         opts.history = options.history;
         Subscriber<void> s(zenoh::detail::null_object);
-        ZResult res =
-            ::zc_liveliness_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
-                                               interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
+        ZResult res = ::z_liveliness_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
+                                                        interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
         return s;
     }
+#endif
 
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Declares a background subscriber on liveliness tokens that intersect `key_expr`. The subscriber callback
@@ -898,14 +899,16 @@ class Session : public Owned<::z_owned_session_t> {
         using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
-        ::zc_liveliness_subscriber_options_t opts;
-        zc_liveliness_subscriber_options_default(&opts);
+        ::z_liveliness_subscriber_options_t opts;
+        z_liveliness_subscriber_options_default(&opts);
         opts.history = options.history;
         ZResult res = ::zc_liveliness_declare_background_subscriber(
             interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Liveliness Token Subscriber");
     }
+#endif
 
+#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LIVELINESS == 1)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Declare a subscriber on liveliness tokens that intersect `key_expr`.
@@ -924,13 +927,13 @@ class Session : public Owned<::z_owned_session_t> {
         LivelinessSubscriberOptions&& options = LivelinessSubscriberOptions::create_default(),
         ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Sample>();
-        ::zc_liveliness_subscriber_options_t opts;
-        zc_liveliness_subscriber_options_default(&opts);
+        ::z_liveliness_subscriber_options_t opts;
+        z_liveliness_subscriber_options_default(&opts);
         opts.history = options.history;
         Subscriber<void> s(zenoh::detail::null_object);
-        ZResult res = ::zc_liveliness_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
-                                                         interop::as_loaned_c_ptr(key_expr),
-                                                         ::z_move(cb_handler_pair.first), &opts);
+        ZResult res = ::z_liveliness_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
+                                                        interop::as_loaned_c_ptr(key_expr),
+                                                        ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
         if (res != Z_OK) ::z_drop(::z_move(*interop::as_moved_c_ptr(cb_handler_pair.second)));
         return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
@@ -978,12 +981,12 @@ class Session : public Owned<::z_owned_session_t> {
         using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Reply&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_reply), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_reply_call, detail::closures::_zenoh_on_drop, closure);
-        ::zc_liveliness_get_options_t opts;
-        zc_liveliness_get_options_default(&opts);
+        ::z_liveliness_get_options_t opts;
+        z_liveliness_get_options_default(&opts);
         opts.timeout_ms = options.timeout_ms;
 
-        __ZENOH_RESULT_CHECK(::zc_liveliness_get(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr),
-                                                 ::z_move(c_closure), &opts),
+        __ZENOH_RESULT_CHECK(::z_liveliness_get(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr),
+                                                ::z_move(c_closure), &opts),
                              err, "Failed to perform liveliness_get operation");
     }
 
@@ -1004,12 +1007,12 @@ class Session : public Owned<::z_owned_session_t> {
         const KeyExpr& key_expr, Channel channel,
         LivelinessGetOptions&& options = LivelinessGetOptions::create_default(), ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Reply>();
-        ::zc_liveliness_get_options_t opts;
-        zc_liveliness_get_options_default(&opts);
+        ::z_liveliness_get_options_t opts;
+        z_liveliness_get_options_default(&opts);
         opts.timeout_ms = options.timeout_ms;
 
-        ZResult res = ::zc_liveliness_get(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr),
-                                          ::z_move(cb_handler_pair.first), &opts);
+        ZResult res = ::z_liveliness_get(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr),
+                                         ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to perform liveliness_get operation");
         if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
         return std::move(cb_handler_pair.second);
