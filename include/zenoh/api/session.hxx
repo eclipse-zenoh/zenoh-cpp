@@ -21,9 +21,9 @@
 #include "closures.hxx"
 #include "config.hxx"
 #include "enums.hxx"
-#include "get.hxx"
 #include "id.hxx"
 #include "interop.hxx"
+#include "keyexpr.hxx"
 #include "liveliness.hxx"
 #include "publisher.hxx"
 #include "query_consolidation.hxx"
@@ -34,12 +34,16 @@
 #endif
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 #include "ext/publication_cache.hxx"
-#include "ext/querying_subscriber.hxx"
 #endif
 
-#include <optional>
-
 namespace zenoh {
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+namespace ext {
+template <class Handler>
+class QueryingSubscriber;
+}
+#endif
+
 /// A Zenoh session.
 class Session : public Owned<::z_owned_session_t> {
     Session(zenoh::detail::null_object_t) : Owned(nullptr){};
@@ -164,8 +168,54 @@ class Session : public Owned<::z_owned_session_t> {
                              err, "Failed to undeclare key expression");
     }
 #if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1
-    /// @copydoc zenoh::GetOptions
-    using GetOptions = zenoh::GetOptions;
+    /// @brief Options passed to the ``Session::get`` operation.
+    struct GetOptions {
+        /// @name Fields
+
+        /// @brief The Queryables that should be target of the query.
+        QueryTarget target = QueryTarget::Z_QUERY_TARGET_BEST_MATCHING;
+        /// @brief The replies consolidation strategy to apply on replies to the query.
+        QueryConsolidation consolidation = QueryConsolidation();
+        /// @brief The priority of the get message.
+        Priority priority = Z_PRIORITY_DEFAULT;
+        /// @brief The congestion control to apply when routing get message.
+        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
+        /// @brief Whether Zenoh will NOT wait to batch get message with others to reduce the bandwith.
+        bool is_express = false;
+        /// @brief An optional payload of the query.
+        std::optional<Bytes> payload = {};
+        /// @brief  An optional encoding of the query payload and/or attachment.
+        std::optional<Encoding> encoding = {};
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
+        /// @brief The source info for the query.
+        std::optional<SourceInfo> source_info = {};
+
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
+        ///
+        /// @brief The accepted replies for the query.
+        /// @note Zenoh-c only.
+        ReplyKeyExpr accept_replies = ::zc_reply_keyexpr_default();
+
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
+        /// @brief Allowed destination.
+        /// @note Zenoh-c only.
+        Locality allowed_destination = ::zc_locality_default();
+#endif
+
+        /// @brief An optional attachment to the query.
+        std::optional<Bytes> attachment = {};
+        /// @brief The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
+        uint64_t timeout_ms = 0;
+
+        /// @name Methods
+
+        /// @brief Create default option settings.
+        static GetOptions create_default() { return {}; }
+    };
 
     /// @brief Query data from the matching queryables in the system. Replies are provided through a callback function.
     /// @param key_expr ``KeyExpr`` the key expression matching resources to query.
@@ -177,7 +227,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// thrown in case of error.
     template <class C, class D>
     void get(const KeyExpr& key_expr, const std::string& parameters, C&& on_reply, D&& on_drop,
-             zenoh::GetOptions&& options = zenoh::GetOptions::create_default(), ZResult* err = nullptr) const {
+             GetOptions&& options = GetOptions::create_default(), ZResult* err = nullptr) const {
         static_assert(std::is_invocable_r<void, C, const Reply&>::value,
                       "on_reply should be callable with the following signature: void on_reply(zenoh::Reply& reply)");
         static_assert(std::is_invocable_r<void, D>::value,
@@ -223,7 +273,7 @@ class Session : public Owned<::z_owned_session_t> {
     template <class Channel>
     typename Channel::template HandlerType<Reply> get(const KeyExpr& key_expr, const std::string& parameters,
                                                       Channel channel,
-                                                      zenoh::GetOptions&& options = zenoh::GetOptions::create_default(),
+                                                      GetOptions&& options = GetOptions::create_default(),
                                                       ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Reply>();
         ::z_get_options_t opts;
@@ -1107,34 +1157,7 @@ class Session : public Owned<::z_owned_session_t> {
     [[nodiscard]] ext::QueryingSubscriber<void> declare_querying_subscriber(
         const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
         QueryingSubscriberOptions&& options = QueryingSubscriberOptions::create_default(),
-        ZResult* err = nullptr) const {
-        static_assert(
-            std::is_invocable_r<void, C, const Sample&>::value,
-            "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
-        static_assert(std::is_invocable_r<void, D>::value,
-                      "on_drop should be callable with the following signature: void on_drop()");
-        ::z_owned_closure_sample_t c_closure;
-        using Cval = std::remove_reference_t<C>;
-        using Dval = std::remove_reference_t<D>;
-        using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Sample&>;
-        auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
-        ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
-        ::ze_querying_subscriber_options_t opts;
-        ze_querying_subscriber_options_default(&opts);
-        opts.query_selector = interop::as_loaned_c_ptr(options.query_keyexpr);
-#if defined(Z_FEATURE_UNSTABLE_API)
-        opts.allowed_origin = options.allowed_origin;
-        opts.query_accept_replies = options.query_accept_replies;
-#endif
-        opts.query_target = options.query_target;
-        opts.query_consolidation = *interop::as_copyable_c_ptr(options.query_consolidation);
-        opts.query_timeout_ms = options.query_timeout_ms;
-        ext::QueryingSubscriber<void> qs = interop::detail::null<ext::QueryingSubscriber<void>>();
-        ZResult res = ::ze_declare_querying_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(qs),
-                                                       interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
-        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Querying Subscriber");
-        return qs;
-    }
+        ZResult* err = nullptr) const;
 
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
@@ -1150,33 +1173,7 @@ class Session : public Owned<::z_owned_session_t> {
     void declare_background_querying_subscriber(
         const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
         QueryingSubscriberOptions&& options = QueryingSubscriberOptions::create_default(),
-        ZResult* err = nullptr) const {
-        static_assert(
-            std::is_invocable_r<void, C, const Sample&>::value,
-            "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
-        static_assert(std::is_invocable_r<void, D>::value,
-                      "on_drop should be callable with the following signature: void on_drop()");
-        ::z_owned_closure_sample_t c_closure;
-        using Cval = std::remove_reference_t<C>;
-        using Dval = std::remove_reference_t<D>;
-        using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Sample&>;
-        auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
-        ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
-        ::ze_querying_subscriber_options_t opts;
-        ze_querying_subscriber_options_default(&opts);
-        opts.query_selector = interop::as_loaned_c_ptr(options.query_keyexpr);
-#if defined(Z_FEATURE_UNSTABLE_API)
-        opts.allowed_origin = options.allowed_origin;
-        opts.query_accept_replies = options.query_accept_replies;
-#endif
-        opts.query_target = options.query_target;
-        opts.query_consolidation = *interop::as_copyable_c_ptr(options.query_consolidation);
-        ;
-        opts.query_timeout_ms = options.query_timeout_ms;
-        ZResult res = ::ze_declare_background_querying_subscriber(
-            interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
-        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Querying Subscriber");
-    }
+        ZResult* err = nullptr) const;
 
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
@@ -1193,27 +1190,7 @@ class Session : public Owned<::z_owned_session_t> {
     [[nodiscard]] ext::QueryingSubscriber<typename Channel::template HandlerType<Sample>> declare_querying_subscriber(
         const KeyExpr& key_expr, Channel channel,
         QueryingSubscriberOptions&& options = QueryingSubscriberOptions::create_default(),
-        ZResult* err = nullptr) const {
-        auto cb_handler_pair = channel.template into_cb_handler_pair<Sample>();
-        ::ze_querying_subscriber_options_t opts;
-        ze_querying_subscriber_options_default(&opts);
-        opts.query_selector = interop::as_loaned_c_ptr(options.query_keyexpr);
-#if defined(Z_FEATURE_UNSTABLE_API)
-        opts.allowed_origin = options.allowed_origin;
-        opts.query_accept_replies = options.query_accept_replies;
-#endif
-        opts.query_target = options.query_target;
-        opts.query_consolidation = *interop::as_copyable_c_ptr(options.query_consolidation);
-        opts.query_timeout_ms = options.query_timeout_ms;
-        ext::QueryingSubscriber<void> qs = interop::detail::null<ext::QueryingSubscriber<void>>();
-        ZResult res = ::ze_declare_querying_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(qs),
-                                                       interop::as_loaned_c_ptr(key_expr),
-                                                       ::z_move(cb_handler_pair.first), &opts);
-        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Querying Subscriber");
-        if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
-        return ext::QueryingSubscriber<typename Channel::template HandlerType<Sample>>(
-            std::move(qs), std::move(cb_handler_pair.second));
-    }
+        ZResult* err = nullptr) const;
 #endif
 
     /// @brief Check if session is closed.

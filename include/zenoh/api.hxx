@@ -40,4 +40,5 @@
 #include "api/ext/serialization.hxx"
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 #include "api/ext/publication_cache.hxx"
+#include "api/ext/querying_subscriber.hxx"
 #endif
