@@ -84,6 +84,16 @@ class Reply : public Owned<::z_owned_reply_t> {
         return {};
     }
 #endif
+
+    /// @brief Construct a a shallow copy of this Reply.
+    /// This can be used, to send reply replies outside of ``Queryable`` callback.
+    ///
+    /// The reply will be sent only when the last clone is destroyed.
+    Reply clone() const {
+        Reply q(zenoh::detail::null_object);
+        ::z_reply_clone(&q._0, interop::as_loaned_c_ptr(*this));
+        return q;
+    };
 };
 
 }  // namespace zenoh
