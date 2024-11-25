@@ -86,7 +86,6 @@ class Reply : public Owned<::z_owned_reply_t> {
 #endif
 
     /// @brief Construct a a shallow copy of this Reply.
-    /// This can be used, to send reply replies outside of ``Queryable`` callback.
     ///
     /// The reply will be sent only when the last clone is destroyed.
     Reply clone() const {
