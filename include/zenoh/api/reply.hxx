@@ -85,7 +85,7 @@ class Reply : public Owned<::z_owned_reply_t> {
     }
 #endif
 
-    /// @brief Construct a a shallow copy of this Reply.
+    /// @brief Construct a shallow copy of this Reply.
     ///
     /// The reply will be sent only when the last clone is destroyed.
     Reply clone() const {
