@@ -29,7 +29,7 @@
 #include "query_consolidation.hxx"
 #include "subscriber.hxx"
 #include "timestamp.hxx"
-#if defined(ZENOHCXX_ZENOHC)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 #include "querier.hxx"
 #endif
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
@@ -692,7 +692,9 @@ class Session : public Owned<::z_owned_session_t> {
     }
 #endif
 
-#if defined(ZENOHCXX_ZENOHC)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Options to be passed when declaring a ``Querier``.
     struct QuerierOptions {
         /// @name Fields
@@ -732,6 +734,8 @@ class Session : public Owned<::z_owned_session_t> {
         static QuerierOptions create_default() { return {}; }
     };
 
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Create a ``Querier`` object to send queries to matching ``Queryable`` objects.
     /// @param key_expr the key expression to match the queryables.
     /// @param options options passed to querier declaration.

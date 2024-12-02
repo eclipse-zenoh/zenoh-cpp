@@ -32,6 +32,8 @@
 namespace zenoh {
 class Session;
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+/// release.
 /// A Zenoh Querier. Constructed by ``Session::declare_querier`` method. Queriers allow to send queries to a queryable.
 class Querier : public Owned<::z_owned_querier_t> {
     Querier(zenoh::detail::null_object_t) : Owned(nullptr){};
