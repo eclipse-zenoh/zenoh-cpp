@@ -18,7 +18,7 @@ Classes related to publish-subscribe pattern.
 
 .. doxygenclass:: zenoh::Publisher
    :members:
-   :membergroups: Constructors Operators Methods
+   :membergroups: Constructors Operators Methods Fields
    
 .. doxygenclass:: zenoh::Subscriber
    :members:

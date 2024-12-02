@@ -16,6 +16,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -155,4 +156,30 @@ inline zenoh::Config parse_args(int argc, char **argv, const std::vector<CmdArg>
     }
 #endif
     return std::move(config);
+}
+
+zenoh::QueryTarget parse_query_target(std::string_view v) {
+    if (v == "BEST_MATCHING") {
+        return zenoh::QueryTarget::Z_QUERY_TARGET_BEST_MATCHING;
+    } else if (v == "ALL") {
+        return zenoh::QueryTarget::Z_QUERY_TARGET_ALL;
+    } else if (v == "ALL_COMPLETE") {
+        return zenoh::QueryTarget::Z_QUERY_TARGET_ALL_COMPLETE;
+    }
+
+    throw std::runtime_error(std::string("Unsupported QueryTarget: ") + std::string(v));
+}
+
+struct Selector {
+    std::string key_expr;
+    std::string parameters;
+};
+
+Selector parse_selector(const std::string &selector_string) {
+    size_t pos = selector_string.find('?');
+    if (pos == std::string::npos) {
+        return Selector{selector_string, ""};
+    } else {
+        return Selector{selector_string.substr(0, pos), selector_string.substr(pos + 1)};
+    }
 }

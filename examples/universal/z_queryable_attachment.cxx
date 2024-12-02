@@ -35,7 +35,9 @@ const char *value = "Queryable from C++ zenoh-pico!";
 #endif
 
 int _main(int argc, char **argv) {
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &expr}, {"payload_value", &value}});
+    const char *complete = "false";
+    Config config = parse_args(argc, argv, {}, {{"key_expression", &expr}, {"payload_value", &value}},
+                               {{"--complete", {CmdArg{"", &complete, true}}}});
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
@@ -71,7 +73,10 @@ int _main(int argc, char **argv) {
     };
 
     auto on_drop_queryable = []() { std::cout << "Destroying queryable\n"; };
-    auto queryable = session.declare_queryable(keyexpr, on_query, on_drop_queryable);
+
+    Session::QueryableOptions opts;
+    opts.complete = std::string(complete) == "true";
+    auto queryable = session.declare_queryable(keyexpr, on_query, on_drop_queryable, std::move(opts));
 
     printf("Press CTRL-C to quit...\n");
     while (true) {

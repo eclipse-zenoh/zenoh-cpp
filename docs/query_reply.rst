@@ -16,6 +16,10 @@ Query-Reply
 ===========
 Classes related to query-reply pattern.
 
+.. doxygenclass:: zenoh::Querier
+   :members:
+   :membergroups: Constructors Operators Methods Fields
+
 .. doxygenclass:: zenoh::Queryable
    :members:
    :membergroups: Constructors Operators Methods

@@ -36,7 +36,7 @@ int _main(int argc, char **argv) {
     Config config = parse_args(argc, argv, {}, {{"key_expression", &keyexpr}, {"payload_value", &value}}
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
                                ,
-                               {{"--add-matching-listener", {CmdArg{"", &add_matching_listener, true}}}}
+                               {{"--add-matching-listener", CmdArg{"", &add_matching_listener, true}}}
 #endif
     );
 
@@ -49,7 +49,7 @@ int _main(int argc, char **argv) {
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     if (std::string(add_matching_listener) == "true") {
         pub.declare_background_matching_listener(
-            [](const Publisher::MatchingStatus &s) {
+            [](const MatchingStatus &s) {
                 if (s.matching) {
                     std::cout << "Subscriber matched" << std::endl;
                 } else {

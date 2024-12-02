@@ -29,6 +29,9 @@
 #include "query_consolidation.hxx"
 #include "subscriber.hxx"
 #include "timestamp.hxx"
+#if defined(ZENOHCXX_ZENOHC)
+#include "querier.hxx"
+#endif
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
 #include "shm/client_storage/client_storage.hxx"
 #endif
@@ -280,6 +283,9 @@ class Session : public Owned<::z_owned_session_t> {
         z_get_options_default(&opts);
         opts.target = options.target;
         opts.consolidation = *interop::as_copyable_c_ptr(options.consolidation);
+        opts.congestion_control = options.congestion_control;
+        opts.priority = options.priority;
+        opts.is_express = options.is_express;
         opts.payload = interop::as_moved_c_ptr(options.payload);
         opts.encoding = interop::as_moved_c_ptr(options.encoding);
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
@@ -685,6 +691,77 @@ class Session : public Owned<::z_owned_session_t> {
         return p;
     }
 #endif
+
+#if defined(ZENOHCXX_ZENOHC)
+    /// @brief Options to be passed when declaring a ``Querier``.
+    struct QuerierOptions {
+        /// @name Fields
+
+        /// @brief The Queryables that should be target of the querier queries.
+        QueryTarget target = QueryTarget::Z_QUERY_TARGET_BEST_MATCHING;
+        /// @brief The replies consolidation strategy to apply on replies to the querier queries.
+        QueryConsolidation consolidation = QueryConsolidation();
+        /// @brief The priority of the querier queries.
+        Priority priority = Z_PRIORITY_DEFAULT;
+        /// @brief The congestion control to apply when routing querier queries.
+        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
+        /// @brief Whether Zenoh will NOT wait to batch querier queries with other messages to reduce the bandwith.
+        bool is_express = false;
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
+        ///
+        /// @brief The accepted replies for the querier queries.
+        /// @note Zenoh-c only.
+        ReplyKeyExpr accept_replies = ::zc_reply_keyexpr_default();
+
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
+        /// @brief Allowed destination for querier queries.
+        /// @note Zenoh-c only.
+        Locality allowed_destination = ::zc_locality_default();
+#endif
+
+        /// @brief The timeout for the querier queries in milliseconds. 0 means default query timeout from zenoh
+        /// configuration.
+        uint64_t timeout_ms = 0;
+
+        /// @name Methods
+
+        /// @brief Create default option settings.
+        static QuerierOptions create_default() { return {}; }
+    };
+
+    /// @brief Create a ``Querier`` object to send queries to matching ``Queryable`` objects.
+    /// @param key_expr the key expression to match the queryables.
+    /// @param options options passed to querier declaration.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @return a ``Querier`` object.
+    Querier declare_querier(const KeyExpr& key_expr, QuerierOptions&& options = QuerierOptions::create_default(),
+                            ZResult* err = nullptr) const {
+        ::z_querier_options_t opts;
+        z_querier_options_default(&opts);
+        opts.target = options.target;
+        opts.consolidation = *interop::as_copyable_c_ptr(options.consolidation);
+        opts.congestion_control = options.congestion_control;
+        opts.priority = options.priority;
+        opts.is_express = options.is_express;
+        ;
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+        opts.accept_replies = options.accept_replies;
+        opts.allowed_destination = options.allowed_destination;
+#endif
+        opts.timeout_ms = options.timeout_ms;
+
+        Querier q = interop::detail::null<Querier>();
+        ZResult res = ::z_declare_querier(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(q),
+                                          interop::as_loaned_c_ptr(key_expr), &opts);
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Querier");
+        return q;
+    }
+#endif
+
     /// @brief Fetches the Zenoh IDs of all connected routers.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.

@@ -27,6 +27,7 @@ API Reference
    scouting
    publish_subscribe
    query_reply
+   matching
    serialization_deserialization
    channels
    interop
