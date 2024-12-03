@@ -98,6 +98,20 @@ jobs:
           name: ${{ steps.build.outputs.archive-lib }}
           path: ${{ steps.build.outputs.archive-lib }}
 
+      # Hack to upload header-only package in a format that homebrew release action can use.
+      - name: Upload archive for Homebrew (x86_64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: zenoh-cpp-${{ inputs.version || '0.0.0'}}-x86_64-apple-darwin-standalone.zip
+          path: ${{ steps.build.outputs.archive-lib }}
+
+      # Hack to upload header-only package in a format that homebrew release action can use.
+      - name: Upload archive for Homebrew (aarch64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: zenoh-cpp-${{ inputs.version || '0.0.0'}}-aarch64-apple-darwin-standalone.zip
+          path: ${{ steps.build.outputs.archive-lib }}
+
       - name: Upload DEB archive
         uses: actions/upload-artifact@v4
         with:
