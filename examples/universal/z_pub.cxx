@@ -43,7 +43,7 @@ int _main(int argc, char **argv) {
     Config config = parse_args(argc, argv, {}, {{"key_expression", &keyexpr}, {"payload_value", &value}}
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
                                ,
-                               {{"--add-matching-listener", {CmdArg{"", &add_matching_listener, true}}}}
+                               {{"--add-matching-listener", CmdArg{"", &add_matching_listener, true}}}
 #endif
     );
 
@@ -53,15 +53,14 @@ int _main(int argc, char **argv) {
     std::cout << "Declaring Publisher on '" << keyexpr << "'..." << std::endl;
     auto pub = session.declare_publisher(KeyExpr(keyexpr));
 
-    std::cout << "Publisher on '" << keyexpr << "' declared" << std::endl;
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     if (std::string(add_matching_listener) == "true") {
         pub.declare_background_matching_listener(
-            [](const Publisher::MatchingStatus &s) {
+            [](const MatchingStatus &s) {
                 if (s.matching) {
-                    std::cout << "Subscriber matched" << std::endl;
+                    std::cout << "Publisher has matching subscribers." << std::endl;
                 } else {
-                    std::cout << "No subscribers matched" << std::endl;
+                    std::cout << "Publisher has NO MORE matching subscribers." << std::endl;
                 }
             },
             closures::none);
@@ -75,13 +74,10 @@ int _main(int argc, char **argv) {
         ss << "[" << idx << "] " << value;
         auto s = ss.str();
         std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
-#if __cpp_designated_initializers >= 201707L
-        pub.put(s, {.encoding = Encoding("text/plain")});
-#else
+
         auto put_options = Publisher::PutOptions{};
         put_options.encoding = Encoding("text/plain");
         pub.put(s, std::move(put_options));
-#endif
     }
     return 0;
 }

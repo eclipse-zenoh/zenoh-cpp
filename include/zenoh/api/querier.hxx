@@ -13,7 +13,7 @@
 
 #pragma once
 
-#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_PUBLICATION == 1
+#if defined(ZENOHCXX_ZENOHC)
 
 #include "../detail/closures_concrete.hxx"
 #include "base.hxx"
@@ -22,7 +22,7 @@
 #include "enums.hxx"
 #include "interop.hxx"
 #include "keyexpr.hxx"
-#include "timestamp.hxx"
+#include "reply.hxx"
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 #include "matching.hxx"
 #include "source_info.hxx"
@@ -32,114 +32,130 @@
 namespace zenoh {
 class Session;
 
-/// A Zenoh publisher. Constructed by ``Session::declare_publisher`` method.
-class Publisher : public Owned<::z_owned_publisher_t> {
-    Publisher(zenoh::detail::null_object_t) : Owned(nullptr){};
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+/// release.
+/// A Zenoh Querier. Constructed by ``Session::declare_querier`` method. Queriers allow to send queries to a queryable.
+class Querier : public Owned<::z_owned_querier_t> {
+    Querier(zenoh::detail::null_object_t) : Owned(nullptr){};
     friend struct interop::detail::Converter;
 
    public:
-    /// @brief Options to be passed to ``Publisher::put`` operation.
-    struct PutOptions {
+    /// @brief Options passed to the ``Querier::get`` operation.
+    struct GetOptions {
         /// @name Fields
 
-        /// @brief The encoding of the data to publish.
+        /// @brief An optional payload of the query.
+        std::optional<Bytes> payload = {};
+        /// @brief  An optional encoding of the query payload and/or attachment.
         std::optional<Encoding> encoding = {};
-        /// @brief The timestamp of this message.
-        std::optional<Timestamp> timestamp = {};
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
-        /// @brief The source info of this message.
-        /// @note Zenoh-c only.
+        /// @brief The source info for the query.
         std::optional<SourceInfo> source_info = {};
 #endif
-        /// @brief The attachment to attach to the publication.
+
+        /// @brief An optional attachment to the query.
         std::optional<Bytes> attachment = {};
 
         /// @name Methods
 
         /// @brief Create default option settings.
-        static PutOptions create_default() { return {}; }
-    };
-
-    /// @brief Options to be passed to ``Publisher::delete_resource`` operation.
-    struct DeleteOptions {
-        /// @name Fields
-
-        /// @brief The timestamp of this message.
-        std::optional<Timestamp> timestamp = {};
-
-        /// @name Methods
-
-        /// @brief Create default option settings.
-        static DeleteOptions create_default() { return {}; }
+        static GetOptions create_default() { return {}; }
     };
 
     /// @name Methods
 
-    /// @brief Publish a message on publisher key expression.
-    /// @param payload data to publish.
-    /// @param options optional parameters to pass to put operation.
+    /// @brief Query data from the matching queryables in the system. Replies are provided through a callback function.
+    /// @param parameters the parameters string in URL format.
+    /// @param options Options to pass to get operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    void put(Bytes&& payload, PutOptions&& options = PutOptions::create_default(), ZResult* err = nullptr) const {
-        auto payload_ptr = interop::as_moved_c_ptr(payload);
-        ::z_publisher_put_options_t opts;
-        z_publisher_put_options_default(&opts);
+    template <class C, class D>
+    void get(const std::string& parameters, C&& on_reply, D&& on_drop,
+             GetOptions&& options = GetOptions::create_default(), ZResult* err = nullptr) const {
+        static_assert(std::is_invocable_r<void, C, const Reply&>::value,
+                      "on_reply should be callable with the following signature: void on_reply(zenoh::Reply& reply)");
+        static_assert(std::is_invocable_r<void, D>::value,
+                      "on_drop should be callable with the following signature: void on_drop()");
+        ::z_owned_closure_reply_t c_closure;
+        using Cval = std::remove_reference_t<C>;
+        using Dval = std::remove_reference_t<D>;
+        using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Reply&>;
+        auto closure = ClosureType::into_context(std::forward<C>(on_reply), std::forward<D>(on_drop));
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_reply_call, detail::closures::_zenoh_on_drop, closure);
+        ::z_querier_get_options_t opts;
+        z_querier_get_options_default(&opts);
+        opts.payload = interop::as_moved_c_ptr(options.payload);
         opts.encoding = interop::as_moved_c_ptr(options.encoding);
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         opts.source_info = interop::as_moved_c_ptr(options.source_info);
 #endif
         opts.attachment = interop::as_moved_c_ptr(options.attachment);
-        opts.timestamp = interop::as_copyable_c_ptr(options.timestamp);
 
-        __ZENOH_RESULT_CHECK(::z_publisher_put(interop::as_loaned_c_ptr(*this), payload_ptr, &opts), err,
-                             "Failed to perform put operation");
+        __ZENOH_RESULT_CHECK(
+            ::z_querier_get(interop::as_loaned_c_ptr(*this), parameters.c_str(), ::z_move(c_closure), &opts), err,
+            "Failed to perform Querier::get operation");
     }
 
-    /// @brief Undeclare the resource associated with the publisher key expression.
-    /// @param options optional parameters to pass to delete operation.
+    /// @brief Query data from the matching queryables in the system. Replies are provided through a channel.
+    /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
+    /// ``zenoh::channels::RingChannel``).
+    /// @param parameters the parameters string in URL format.
+    /// @param channel channel instance.
+    /// @param options Options to pass to get operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    void delete_resource(DeleteOptions&& options = DeleteOptions::create_default(), ZResult* err = nullptr) const {
-        ::z_publisher_delete_options_t opts;
-        z_publisher_delete_options_default(&opts);
-        opts.timestamp = interop::as_copyable_c_ptr(options.timestamp);
-        __ZENOH_RESULT_CHECK(::z_publisher_delete(interop::as_loaned_c_ptr(*this), &opts), err,
-                             "Failed to perform delete_resource operation");
+    /// @return reply handler.
+    template <class Channel>
+    typename Channel::template HandlerType<Reply> get(const std::string& parameters, Channel channel,
+                                                      GetOptions&& options = GetOptions::create_default(),
+                                                      ZResult* err = nullptr) const {
+        auto cb_handler_pair = channel.template into_cb_handler_pair<Reply>();
+        ::z_querier_get_options_t opts;
+        z_querier_get_options_default(&opts);
+        opts.payload = interop::as_moved_c_ptr(options.payload);
+        opts.encoding = interop::as_moved_c_ptr(options.encoding);
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+        opts.source_info = interop::as_moved_c_ptr(options.source_info);
+#endif
+        opts.attachment = interop::as_moved_c_ptr(options.attachment);
+
+        ZResult res = ::z_querier_get(interop::as_loaned_c_ptr(*this), parameters.c_str(),
+                                      ::z_move(cb_handler_pair.first), &opts);
+        __ZENOH_RESULT_CHECK(res, err, "Failed to perform Querier::get operation");
+        if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
+        return std::move(cb_handler_pair.second);
     }
 
-    /// @brief Get the key expression of the publisher.
+    /// @brief Get the key expression of the querier.
     const KeyExpr& get_keyexpr() const {
-        return interop::as_owned_cpp_ref<KeyExpr>(::z_publisher_keyexpr(interop::as_loaned_c_ptr(*this)));
+        return interop::as_owned_cpp_ref<KeyExpr>(::z_querier_keyexpr(interop::as_loaned_c_ptr(*this)));
     }
 
-    /// @brief Undeclares publisher.
+    /// @brief Undeclares querier.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void undeclare(ZResult* err = nullptr) && {
-        __ZENOH_RESULT_CHECK(::z_undeclare_publisher(interop::as_moved_c_ptr(*this)), err,
-                             "Failed to undeclare publisher");
+        __ZENOH_RESULT_CHECK(::z_undeclare_querier(interop::as_moved_c_ptr(*this)), err, "Failed to undeclare querier");
     }
 
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
-    /// @brief Get the id of the publisher.
-    /// @return id of this publisher.
+    /// @brief Get the id of the querier.
+    /// @return id of this querier.
     EntityGlobalId get_id() const {
-        return interop::into_copyable_cpp_obj<EntityGlobalId>(::z_publisher_id(interop::as_loaned_c_ptr(*this)));
+        return interop::into_copyable_cpp_obj<EntityGlobalId>(::z_querier_id(interop::as_loaned_c_ptr(*this)));
     }
-#endif
 
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
-    /// @brief Construct matching listener, registering a callback for notifying subscribers matching with a given
-    /// publisher.
+    /// @brief Construct matching listener, registering a callback for notifying queryables matching with a given
+    /// querier's key expression and target.
     ///
-    /// @param on_status_change: the callable that will be called every time the matching status of the publisher
-    /// changes (i.e. if last subscriber disconnects or when the first subscriber connects).
+    /// @param on_status_change: the callable that will be called every time the matching status of the querier
+    /// changes (i.e. if last querier disconnects or when the first querier connects).
     /// @param on_drop the callable that will be called once matching listener is destroyed or undeclared.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
@@ -161,15 +177,15 @@ class Publisher : public Owned<::z_owned_publisher_t> {
         ::z_closure(&c_closure, detail::closures::_zenoh_on_status_change_call, detail::closures::_zenoh_on_drop,
                     closure);
         MatchingListener<void> m(zenoh::detail::null_object);
-        ZResult res = ::zc_publisher_declare_matching_listener(interop::as_loaned_c_ptr(*this),
-                                                               interop::as_owned_c_ptr(m), ::z_move(c_closure));
+        ZResult res = ::zc_querier_declare_matching_listener(interop::as_loaned_c_ptr(*this),
+                                                             interop::as_owned_c_ptr(m), ::z_move(c_closure));
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Matching Listener");
         return m;
     }
 
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
-    /// @brief Construct matching listener, delivering notification on publisher status change through a streaming
+    /// @brief Construct matching listener, delivering notification on querier status change through a streaming
     /// handler.
     /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
     /// ``zenoh::channels::RingChannel``).
@@ -183,7 +199,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
         Channel channel, ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Query>();
         MatchingListener<void> m(zenoh::detail::null_object);
-        ZResult res = ::zc_publisher_declare_matching_listener(
+        ZResult res = ::zc_querier_declare_matching_listener(
             interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(m), ::z_move(cb_handler_pair.first));
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Matching Listener");
         if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
@@ -193,12 +209,12 @@ class Publisher : public Owned<::z_owned_publisher_t> {
 
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
-    /// @brief Declare matching listener, registering a callback for notifying subscribers matching with a given
-    /// publisher. The callback will be run in the background until the corresponding publisher is destroyed.
+    /// @brief Declare matching listener, registering a callback for notifying queryables matching with a given
+    /// querier. The callback will be run in the background until the corresponding querier is destroyed.
     ///
-    /// @param on_status_change: the callable that will be called every time the matching status of the publisher
-    /// changes (i.e. if last subscriber disconnects or when the first subscriber connects).
-    /// @param on_drop the callable that will be called once publisher is destroyed or undeclared.
+    /// @param on_status_change: the callable that will be called every time the matching status of the querier
+    /// changes (i.e. if last queryable disconnects or when the first queryable connects).
+    /// @param on_drop the callable that will be called once querier is destroyed or undeclared.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @note Zenoh-c only.
@@ -217,19 +233,19 @@ class Publisher : public Owned<::z_owned_publisher_t> {
         ::z_closure(&c_closure, detail::closures::_zenoh_on_status_change_call, detail::closures::_zenoh_on_drop,
                     closure);
         ZResult res =
-            ::zc_publisher_declare_background_matching_listener(interop::as_loaned_c_ptr(*this), ::z_move(c_closure));
+            ::zc_querier_declare_background_matching_listener(interop::as_loaned_c_ptr(*this), ::z_move(c_closure));
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare background Matching Listener");
     }
 
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
-    /// @brief Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
+    /// @brief Gets querier matching status - i.e. if there are any queryables matching its key expression.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @note Zenoh-c only.
     MatchingStatus get_matching_status(ZResult* err = nullptr) const {
         ::zc_matching_status_t m;
-        ZResult res = ::zc_publisher_get_matching_status(interop::as_loaned_c_ptr(*this), &m);
+        ZResult res = ::zc_querier_get_matching_status(interop::as_loaned_c_ptr(*this), &m);
         __ZENOH_RESULT_CHECK(res, err, "Failed to get matching status");
         return {m.matching};
     }

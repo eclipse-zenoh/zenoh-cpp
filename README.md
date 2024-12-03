@@ -120,7 +120,16 @@ The `z_pub` should receive message sent by `z_sub`.
 ./z_get
 ```
 
-The `z_get` should receive the data from `z_queryable`.
+### Queryable and Querier Example
+```bash
+./z_queryable
+```
+
+```bash
+./z_querier
+```
+
+The `z_querier` should continuously send queries and receive replies from `z_queryable`.
 
 ### Throughput Examples
 ```bash

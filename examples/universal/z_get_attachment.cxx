@@ -25,10 +25,18 @@ using namespace zenoh;
 
 int _main(int argc, char **argv) {
     const char *expr = "demo/example/**";
-    const char *value = "Get from C++";
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &expr}, {"payload value", &value}});
+    const char *value = nullptr;
+    const char *target = "BEST_MATCHING";
+    const char *timeout = "10000";
 
-    KeyExpr keyexpr(expr);
+    Config config = parse_args(argc, argv, {}, {},
+                               {{"-s", CmdArg{"Query selector (string)", &expr}},
+                                {"-p", CmdArg{"Query payload (string)", &value}},
+                                {"-t", CmdArg{"Query target (BEST_MATCHING | ALL | ALL_COMPLETE)", &target}},
+                                {"-o", CmdArg{"Timeout in ms (number)", &timeout}}});
+    uint64_t timeout_ms = std::stoi(timeout);
+    QueryTarget query_target = parse_query_target(target);
+    Selector selector = parse_selector(expr);
 
     printf("Opening session...\n");
     auto session = Session::open(std::move(config));
@@ -66,10 +74,13 @@ int _main(int argc, char **argv) {
     std::unordered_map<std::string, std::string> attachment = {{"Source", "C++"}};
 
     Session::GetOptions options;
-    options.target = QueryTarget::Z_QUERY_TARGET_ALL;
-    options.payload = value;
+    options.target = query_target;
+    if (value != nullptr) {
+        options.payload = value;
+    }
+    options.timeout_ms = timeout_ms;
     options.attachment = ext::serialize(attachment);
-    session.get(keyexpr, "", on_reply, on_done, std::move(options));
+    session.get(selector.key_expr, selector.parameters, on_reply, on_done, std::move(options));
 
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });

@@ -23,24 +23,31 @@ using namespace zenoh;
 
 int _main(int argc, char **argv) {
     const char *expr = "demo/example/**";
-    const char *value = "Get from C++";
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &expr}, {"payload value", &value}});
+    const char *value = nullptr;
+    const char *target = "BEST_MATCHING";
+    const char *timeout = "10000";
 
-    KeyExpr keyexpr(expr);
+    Config config = parse_args(argc, argv, {}, {},
+                               {{"-s", CmdArg{"Query selector (string)", &expr}},
+                                {"-p", CmdArg{"Query payload (string)", &value}},
+                                {"-t", CmdArg{"Query target (BEST_MATCHING | ALL | ALL_COMPLETE)", &target}},
+                                {"-o", CmdArg{"Timeout in ms (number)", &timeout}}});
+    uint64_t timeout_ms = std::stoi(timeout);
+    QueryTarget query_target = parse_query_target(target);
+    Selector selector = parse_selector(expr);
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
     std::cout << "Sending Query '" << expr << "'...\n";
-#if __cpp_designated_initializers >= 201707L
-    auto replies = session.get(keyexpr, "", channels::FifoChannel(16),
-                               {.target = QueryTarget::Z_QUERY_TARGET_ALL, .payload = value});
-#else
+
     Session::GetOptions options;
-    options.target = QueryTarget::Z_QUERY_TARGET_ALL;
-    options.payload = value;
-    auto replies = session.get(keyexpr, "", channels::FifoChannel(16), std::move(options));
-#endif
+    options.target = query_target;
+    if (value != nullptr) {
+        options.payload = value;
+    }
+    options.timeout_ms = timeout_ms;
+    auto replies = session.get(selector.key_expr, selector.parameters, channels::FifoChannel(16), std::move(options));
 
     for (auto res = replies.recv(); std::holds_alternative<Reply>(res); res = replies.recv()) {
         const auto &sample = std::get<Reply>(res).get_ok();

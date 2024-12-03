@@ -34,6 +34,9 @@
 #include "api/session.hxx"
 #include "api/subscriber.hxx"
 #include "api/timestamp.hxx"
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#include "api/querier.hxx"
+#endif
 #if defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
 #include "api/shm/shm.hxx"
 #endif
@@ -41,4 +44,5 @@
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 #include "api/ext/publication_cache.hxx"
 #include "api/ext/querying_subscriber.hxx"
+#include "api/matching.hxx"
 #endif
