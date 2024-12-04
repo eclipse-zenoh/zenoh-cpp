@@ -92,11 +92,33 @@ jobs:
           REPO: ${{ github.repository }}
           VERSION: ${{ needs.tag.outputs.version }}
 
+      # Hack to upload header-only package in a format that homebrew release action can use.
+      - name: Prepare standalone archives
+        shell: bash
+        run: |
+          zip_filename=$(readlink -f ${{ steps.build.outputs.archive-lib }})
+          cp ${zip_filename} zenoh-cpp-${{ inputs.version || '0.0.0'}}-x86_64-apple-darwin-standalone.zip
+          cp ${zip_filename} zenoh-cpp-${{ inputs.version || '0.0.0'}}-aarch64-apple-darwin-standalone.zip
+
       - name: Upload library archive
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.build.outputs.archive-lib }}
           path: ${{ steps.build.outputs.archive-lib }}
+
+      # Hack to upload header-only package in a format that homebrew release action can use.
+      - name: Upload archive for Homebrew (x86_64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: zenoh-cpp-${{ inputs.version || '0.0.0'}}-x86_64-apple-darwin-standalone.zip
+          path: zenoh-cpp-${{ inputs.version || '0.0.0'}}-x86_64-apple-darwin-standalone.zip
+
+      # Hack to upload header-only package in a format that homebrew release action can use.
+      - name: Upload archive for Homebrew (aarch64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: zenoh-cpp-${{ inputs.version || '0.0.0'}}-aarch64-apple-darwin-standalone.zip
+          path: zenoh-cpp-${{ inputs.version || '0.0.0'}}-aarch64-apple-darwin-standalone.zip
 
       - name: Upload DEB archive
         uses: actions/upload-artifact@v4
