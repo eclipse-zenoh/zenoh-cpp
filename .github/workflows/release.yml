@@ -92,10 +92,11 @@ jobs:
           REPO: ${{ github.repository }}
           VERSION: ${{ needs.tag.outputs.version }}
 
+      # Hack to upload header-only package in a format that homebrew release action can use.
       - name: Prepare standalone archives
         shell: bash
         run: |
-          zip_filename=$(readlink -f ./build/packages/*.zip)
+          zip_filename=$(readlink -f ${{ steps.build.outputs.archive-lib }})
           cp ${zip_filename} zenoh-cpp-${{ inputs.version || '0.0.0'}}-x86_64-apple-darwin-standalone.zip
           cp ${zip_filename} zenoh-cpp-${{ inputs.version || '0.0.0'}}-aarch64-apple-darwin-standalone.zip
 
