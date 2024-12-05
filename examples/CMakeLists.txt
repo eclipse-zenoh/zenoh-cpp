@@ -56,12 +56,6 @@ function(add_examples glob mode lib)
 			endif()
 		endif()
 
-		if(NOT(ZENOHC_BUILD_WITH_UNSTABLE_API))
-			if(${file} MATCHES ".*liveliness.*$")
-				continue()
-			endif()
-		endif()
-
 		if(("${mode}" STREQUAL "zenohc") AND (NOT(ZENOHC_BUILD_WITH_UNSTABLE_API)))
 			if(${file} MATCHES ".*liveliness.*$")
 				continue()
