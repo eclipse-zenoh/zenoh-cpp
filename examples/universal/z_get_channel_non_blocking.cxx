@@ -18,35 +18,33 @@
 #include <iostream>
 #include <thread>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 using namespace zenoh;
 using namespace std::chrono_literals;
 
 int _main(int argc, char **argv) {
-    const char *expr = "demo/example/**";
-    const char *value = nullptr;
-    const char *target = "BEST_MATCHING";
-    const char *timeout = "10000";
+    auto&& [config, args] = ConfigCliArgParser(argc, argv)
+        .named_value({"s", "selector"}, "SELECTOR", "Query selector (string)", "demo/example/**")
+        .named_value({"p", "payload"}, "PAYLOAD", "Query payload (string)", "")
+        .named_value({"t", "target"}, "TARGET", "Query target (BEST_MATCHING | ALL | ALL_COMPLETE)", "BEST_MATCHING")
+        .named_value({"o", "timeout"}, "TIMEOUT", "Timeout in ms (number)", "10000")
+        .run();
 
-    Config config = parse_args(argc, argv, {}, {},
-                               {{"-s", CmdArg{"Query selector (string)", &expr}},
-                                {"-p", CmdArg{"Query payload (string)", &value}},
-                                {"-t", CmdArg{"Query target (BEST_MATCHING | ALL | ALL_COMPLETE)", &target}},
-                                {"-o", CmdArg{"Timeout in ms (number)", &timeout}}});
-    uint64_t timeout_ms = std::stoi(timeout);
-    QueryTarget query_target = parse_query_target(target);
+    uint64_t timeout_ms = std::atoi(args.value("timeout").data());
+    QueryTarget query_target = parse_query_target(args.value("target"));
+    Selector selector = parse_selector(args.value("selector"));
+    auto payload = args.value("payload");
 
-    Selector selector = parse_selector(expr);
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
-    std::cout << "Sending Query '" << expr << "'...\n";
+    std::cout << "Sending Query '" << args.value("selector") << "'...\n";
 
     Session::GetOptions options;
     options.target = query_target;
-    if (value != nullptr) {
-        options.payload = value;
+    if (!payload.empty()) {
+        options.payload = payload;
     }
     options.timeout_ms = timeout_ms;
     auto replies = session.get(selector.key_expr, selector.parameters, channels::FifoChannel(16), std::move(options));
