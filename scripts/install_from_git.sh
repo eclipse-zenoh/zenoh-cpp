@@ -38,7 +38,7 @@ absolute_install_location=$(cd $1; pwd)
 bash $SCRIPT_DIR/install_local.sh $SCRIPT_DIR/../zenoh-c $absolute_install_location -DZENOHC_BUILD_WITH_UNSTABLE_API=$USE_UNSTABLE -DZENOHC_BUILD_WITH_SHARED_MEMORY=$USE_SHARED_MEMORY
 if [ "$BUILD_PICO" == "ON" ]; then
     #build zenoh-pico
-    bash $SCRIPT_DIR/install_local.sh $SCRIPT_DIR/../zenoh-pico $absolute_install_location -DZ_FEATURE_UNSTABLE_API=$USE_UNSTABLE_PICO -DZ_FEATURE_LIVELINESS=$USE_UNSTABLE_PICO
+    bash $SCRIPT_DIR/install_local.sh $SCRIPT_DIR/../zenoh-pico $absolute_install_location -DZ_FEATURE_UNSTABLE_API=$USE_UNSTABLE_PICO
 fi
 
 rm -rf ./build
