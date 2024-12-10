@@ -20,7 +20,7 @@
 #include <sstream>
 #include <thread>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
@@ -28,16 +28,26 @@ using namespace std::chrono_literals;
 
 const char *default_value = "Pub from C++ zenoh-c!";
 const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-c-pub";
-const char *default_history = "1";
 const char *default_prefix = "";
 
 int _main(int argc, char **argv) {
-    const char *keyexpr = default_keyexpr;
-    const char *value = default_value;
-    const char *history = default_history;
-    const char *prefix = default_prefix;
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &keyexpr}, {"payload_value", &value}},
-                               {{"-i", {"history", &history}}, {"-x", {"query prefix", &prefix}}});
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .named_value({"k", "key"}, "KEY_EXPRESSION", "Key expression to write to (string)", default_keyexpr)
+            .named_value({"v", "value"}, "VALUE", "Value to publish (string)", default_value)
+            .named_value({"i", "history"}, "HISTORY", "Number of publications to keep in cache (number)", "1")
+            .named_flag({"o", "complete"},
+                        "Set `complete` option to true. This means that this queryable is ultimate data source, no "
+                        "need to scan other queryables")
+            .named_value({"x", "prefix"}, "PREFIX", "Queryable prefix", "")
+            .run();
+
+    auto keyexpr = args.value("key");
+    auto value = args.value("value");
+    auto history = std::atoi(args.value("history").data());
+    auto complete = args.flag("complete");
+    auto prefix = args.value("prefix");
+
     config.insert_json5(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");
 
     std::cout << "Opening session..." << std::endl;
@@ -45,14 +55,15 @@ int _main(int argc, char **argv) {
 
     std::cout << "Declaring Publication cache on '" << keyexpr << "'..." << std::endl;
     Session::PublicationCacheOptions opts;
-    opts.history = std::atoi(history);
-    opts.queryable_complete = true;
+    opts.history = history;
+    opts.queryable_complete = complete;
+    if (!prefix.empty()) {
+        opts.queryable_prefix = KeyExpr(prefix);
+    }
     if (!std::string(prefix).empty()) {
         opts.queryable_prefix = KeyExpr(prefix);
     }
     auto pub_cache = session.declare_publication_cache(keyexpr, std::move(opts));
-
-    std::cout << "Publication cache on '" << keyexpr << "' declared" << std::endl;
 
     std::cout << "Press CTRL-C to quit..." << std::endl;
     for (int idx = 0; idx < std::numeric_limits<int>::max(); ++idx) {
@@ -61,9 +72,7 @@ int _main(int argc, char **argv) {
         ss << "[" << idx << "] " << value;
         auto s = ss.str();
         std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
-        Session::PutOptions put_options;
-        put_options.encoding = Encoding("text/plain");
-        session.put(keyexpr, std::move(s), std::move(put_options));
+        session.put(keyexpr, std::move(s));
     }
     return 0;
 }

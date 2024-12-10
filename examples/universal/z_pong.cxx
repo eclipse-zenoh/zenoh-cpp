@@ -15,18 +15,20 @@
 #include <cstdio>
 #include <iostream>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
 
 int _main(int argc, char **argv) {
-    Config config = parse_args(argc, argv, {});
+    auto &&[config, args] = ConfigCliArgParser(argc, argv).named_flag({"no-express"}, "Disable message batching").run();
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
-    auto pub = session.declare_publisher(KeyExpr("test/pong"));
+    Session::PublisherOptions opts;
+    opts.is_express = args.flag("no-express");
+    auto pub = session.declare_publisher(KeyExpr("test/pong"), std::move(opts));
     session.declare_background_subscriber(
         KeyExpr("test/ping"),
         [pub = std::move(pub)](const Sample &sample) mutable { pub.put(sample.get_payload().clone()); },

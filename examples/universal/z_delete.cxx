@@ -19,14 +19,18 @@ const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-c-put";
 const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-pico-put";
 #endif
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "stdio.h"
 #include "zenoh.hxx"
 using namespace zenoh;
 
 int _main(int argc, char **argv) {
-    const char *keyexpr = default_keyexpr;
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &keyexpr}});
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .named_value({"k", "key"}, "KEY_EXPRESSION", "The key expression to write to", default_keyexpr)
+            .run();
+
+    std::string_view keyexpr = args.value("key");
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));

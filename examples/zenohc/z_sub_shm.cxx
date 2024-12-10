@@ -17,7 +17,7 @@
 #include <iostream>
 #include <thread>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
@@ -63,17 +63,18 @@ void data_handler(const Sample &sample) {
 }
 
 int _main(int argc, char **argv) {
-    const char *expr = "demo/example/**";
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &expr}});
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .named_value({"k", "key"}, "KEY_EXPRESSION", "Key expression to subscribe to (string)", "demo/example/**")
+            .run();
 
-    KeyExpr keyexpr(expr);
+    KeyExpr keyexpr(args.value("key"));
 
     std::cout << "Opening session..." << std::endl;
     auto session = Session::open(std::move(config));
 
     std::cout << "Declaring Subscriber on '" << keyexpr.as_string_view() << "'..." << std::endl;
     auto subscriber = session.declare_subscriber(keyexpr, &data_handler, closures::none);
-    std::cout << "Subscriber on '" << subscriber.get_keyexpr().as_string_view() << "' declared" << std::endl;
 
     std::cout << "Press CTRL-C to quit...\n";
     while (true) {

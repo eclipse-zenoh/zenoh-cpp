@@ -20,7 +20,7 @@
 #include <sstream>
 #include <thread>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
@@ -30,15 +30,17 @@ const char *default_value = "Pub from C++ zenoh-c SHM!";
 const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-c-pub";
 
 int _main(int argc, char **argv) {
-    const char *keyexpr = default_keyexpr;
-    const char *value = default_value;
-    const char *add_matching_listener = "false";
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &keyexpr}, {"payload_value", &value}}
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-                               ,
-                               {{"--add-matching-listener", CmdArg{"", &add_matching_listener, true}}}
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .named_value({"k", "key"}, "KEY_EXPRESSION", "Key expression to publish to (string)", default_keyexpr)
+            .named_value({"p", "payload"}, "PAYLOAD", "Payload to publish (string)", default_value)
+#if defined(Z_FEATURE_UNSTABLE_API)
+            .named_flag({"add-matching-listener"}, "Add matching listener")
 #endif
-    );
+            .run();
+
+    auto keyexpr = args.value("key");
+    auto payload = args.value("payload");
 
     std::cout << "Opening session..." << std::endl;
     auto session = Session::open(std::move(config));
@@ -47,13 +49,13 @@ int _main(int argc, char **argv) {
     auto pub = session.declare_publisher(KeyExpr(keyexpr));
 
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-    if (std::string(add_matching_listener) == "true") {
+    if (args.flag("add-matching-listener")) {
         pub.declare_background_matching_listener(
             [](const MatchingStatus &s) {
                 if (s.matching) {
-                    std::cout << "Subscriber matched" << std::endl;
+                    std::cout << "Publisher has matching subscribers." << std::endl;
                 } else {
-                    std::cout << "No subscribers matched" << std::endl;
+                    std::cout << "Publisher has NO MORE matching subscribers." << std::endl;
                 }
             },
             closures::none);
@@ -69,8 +71,8 @@ int _main(int argc, char **argv) {
     for (int idx = 0; idx < std::numeric_limits<int>::max(); ++idx) {
         std::this_thread::sleep_for(1s);
         std::ostringstream ss;
-        ss << "[" << idx << "] " << value;
-        auto s = ss.str();  // in C++20 use .view() instead
+        ss << "[" << idx << "] " << payload;
+        auto s = ss.str();
         std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
 
         std::cout << "Allocating SHM buffer...\n";
@@ -79,13 +81,7 @@ int _main(int argc, char **argv) {
         ZShmMut &&buf = std::get<ZShmMut>(std::move(alloc_result));
         memcpy(buf.data(), s.data(), len);
 
-#if __cpp_designated_initializers >= 201707L
-        pub.put(std::move(buf), {.encoding = Encoding("text/plain")});
-#else
-        Publisher::PutOptions options;
-        options.encoding = Encoding("text/plain");
-        pub.put(std::move(buf), std::move(options));
-#endif
+        pub.put(std::move(buf));
     }
     return 0;
 }

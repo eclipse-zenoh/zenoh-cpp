@@ -20,34 +20,29 @@
 #include <sstream>
 #include <thread>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
 using namespace std::chrono_literals;
 
 int _main(int argc, char **argv) {
-    const char *expr = "demo/example/**";
-    const char *value = nullptr;
-    const char *target = "BEST_MATCHING";
-    const char *timeout = "10000";
-    const char *add_matching_listener = "false";
-
-    Config config = parse_args(argc, argv, {}, {},
-                               {{"-s", CmdArg{"Query selector (string)", &expr}},
-                                {"-p", CmdArg{"Query payload (string)", &value}},
-                                {"-t", CmdArg{"Query target (BEST_MATCHING | ALL | ALL_COMPLETE)", &target}},
-                                {"-o", CmdArg{"Timeout in ms (number)", &timeout}}
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-                                ,
-                                {"--add-matching-listener", CmdArg{"", &add_matching_listener, true}}
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .named_value({"s", "selector"}, "SELECTOR", "Query selector (string)", "demo/example/**")
+            .named_value({"p", "payload"}, "PAYLOAD", "Query payload (string)", "")
+            .named_value({"t", "target"}, "TARGET", "Query target (BEST_MATCHING | ALL | ALL_COMPLETE)",
+                         "BEST_MATCHING")
+            .named_value({"o", "timeout"}, "TIMEOUT", "Timeout in ms (number)", "10000")
+#if defined(Z_FEATURE_UNSTABLE_API)
+            .named_flag({"add-matching-listener"}, "Add matching listener")
 #endif
-                               }
+            .run();
 
-    );
-    uint64_t timeout_ms = std::stoi(timeout);
-    QueryTarget query_target = parse_query_target(target);
-    Selector selector = parse_selector(expr);
+    uint64_t timeout_ms = std::atoi(args.value("timeout").data());
+    QueryTarget query_target = parse_query_target(args.value("target"));
+    Selector selector = parse_selector(args.value("selector"));
+    auto payload = args.value("payload");
 
     std::cout << "Opening session..." << std::endl;
     auto session = Session::open(std::move(config));
@@ -59,7 +54,7 @@ int _main(int argc, char **argv) {
     auto querier = session.declare_querier(selector.key_expr, std::move(options));
 
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-    if (std::string(add_matching_listener) == "true") {
+    if (args.flag("add-matching-listener")) {
         querier.declare_background_matching_listener(
             [](const MatchingStatus &s) {
                 if (s.matching) {
@@ -77,11 +72,11 @@ int _main(int argc, char **argv) {
         std::this_thread::sleep_for(1s);
         std::ostringstream ss;
         ss << "[" << idx << "] ";
-        if (value != nullptr) {
-            ss << value;
+        if (!payload.empty()) {
+            ss << payload;
         }
         auto s = ss.str();
-        std::cout << "Querying '" << expr << "' with payload '" << s << "'...\n";
+        std::cout << "Querying '" << args.value("selector") << "' with payload '" << s << "'...\n";
 
         Querier::GetOptions get_options;
         get_options.payload = std::move(s);

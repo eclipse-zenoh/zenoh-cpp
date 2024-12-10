@@ -17,15 +17,22 @@
 #include <numeric>
 #include <vector>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 using namespace zenoh;
 
 int _main(int argc, char **argv) {
-    const char *keyexpr = "test/thr";
-    const char *payload_size = nullptr;
-    Config config = parse_args(argc, argv, {{"payload_size", &payload_size}}, {{"key_expression", &keyexpr}});
-    size_t len = atoi(payload_size);
+    std::string_view keyexpr = "test/thr";
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .positional("PAYLOAD_SIZE", "Size of the payload to publish (number)")
+            .named_value({"p", "priority"}, "PRIOIRTY", "Priority for sending data (number [2 - 7])", "5")
+            .named_flag({"express"}, "Batch messages")
+            .run();
+
+    auto len = std::atoi(args.positional(0).data());
+    auto priority = parse_priority(args.value("priority"));
+    auto express = args.flag("express");
 
     std::vector<uint8_t> data(len);
     std::iota(data.begin(), data.end(), uint8_t{0});
@@ -35,13 +42,12 @@ int _main(int argc, char **argv) {
     auto session = Session::open(std::move(config));
 
     std::cout << "Declaring Publisher on " << keyexpr << "...\n";
-#if __cpp_designated_initializers >= 201707L
-    auto pub = session.declare_publisher(KeyExpr(keyexpr), {.congestion_control = Z_CONGESTION_CONTROL_BLOCK});
-#else
-    auto pub_options = Session::PublisherOptions::create_default();
+
+    Session::PublisherOptions pub_options;
     pub_options.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
+    pub_options.priority = priority;
+    pub_options.is_express = express;
     auto pub = session.declare_publisher(KeyExpr(keyexpr), std::move(pub_options));
-#endif
 
     printf("Press CTRL-C to quit...\n");
     while (1) pub.put(payload.clone());

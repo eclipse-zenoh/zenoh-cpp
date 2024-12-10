@@ -16,13 +16,11 @@
 #include <chrono>
 #include <thread>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
 using namespace std::chrono_literals;
-
-#define N 1000000
 
 struct Stats {
     volatile unsigned long count = 0;
@@ -30,6 +28,10 @@ struct Stats {
     std::chrono::high_resolution_clock::time_point start = {};
     std::chrono::high_resolution_clock::time_point first_start = {};
     std::chrono::high_resolution_clock::time_point end = {};
+    size_t max_rounds;
+    size_t messages_per_round;
+
+    Stats(size_t samples, size_t messages) : max_rounds(samples), messages_per_round(messages) {}
 
     void operator()(const Sample &) {
         if (count == 0) {
@@ -38,15 +40,19 @@ struct Stats {
                 first_start = start;
             }
             count++;
-        } else if (count < N) {
+        } else if (count < messages_per_round) {
             count++;
         } else {
             finished_rounds++;
             auto elapsed_us =
                 std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start)
                     .count();
-            std::cout << static_cast<double>(N) * 1000000.0 / static_cast<double>(elapsed_us) << " msg/s\n";
+            std::cout << static_cast<double>(messages_per_round) * 1000000.0 / static_cast<double>(elapsed_us)
+                      << " msg/s\n";
             count = 0;
+            if (finished_rounds > max_rounds) {
+                std::exit(0);
+            }
         }
     }
 
@@ -59,21 +65,28 @@ struct Stats {
         auto elapsed_s =
             static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(end - first_start).count()) /
             1000000.0;
-        const unsigned long sent_messages = N * finished_rounds + count;
+        const unsigned long sent_messages = messages_per_round * finished_rounds + count;
         std::cout << "Sent " << sent_messages << " messages over " << elapsed_s << " seconds ("
                   << static_cast<double>(sent_messages) / elapsed_s << " msg/s)\n";
     }
 };
 
 int _main(int argc, char **argv) {
-    Config config = parse_args(argc, argv, {});
+    auto &&[config, args] = ConfigCliArgParser(argc, argv)
+                                .named_value({"s", "samples"}, "MESUREMENTS", "Number of throughput measurements", "10")
+                                .named_value({"n", "number"}, "NUM_MESSAGES",
+                                             "Number of messages in each throughput measurements", "1000000")
+                                .run();
+
+    auto samples = std::atoi(args.value("samples").data());
+    auto num_messages = std::atoi(args.value("number").data());
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
     KeyExpr keyexpr = session.declare_keyexpr(KeyExpr("test/thr"));
 
-    Stats stats;
+    Stats stats(samples, num_messages);
     auto on_receive = [&stats](const Sample &s) { stats(s); };
     auto on_drop = [&stats]() { stats(); };
     session.declare_background_subscriber(keyexpr, on_receive, on_drop);

@@ -14,13 +14,13 @@
 
 #include <iostream>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 using namespace zenoh;
 
 int _main(int argc, char** argv) {
     const char* value = "Get from C++";
-    Config config = parse_args(argc, argv, {});
+    auto&& [config, args] = ConfigCliArgParser(argc, argv).run();
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));

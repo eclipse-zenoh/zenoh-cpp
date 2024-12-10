@@ -39,7 +39,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param autocanonize if ``true`` the key_expr will be autocanonized, prior to constructing key expression.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    explicit KeyExpr(std::string_view key_expr, bool autocanonize = true, ZResult* err = nullptr) : Owned(nullptr) {
+    KeyExpr(std::string_view key_expr, bool autocanonize = true, ZResult* err = nullptr) : Owned(nullptr) {
         if (autocanonize) {
             size_t s = key_expr.size();
             __ZENOH_RESULT_CHECK(::z_keyexpr_from_substr_autocanonize(&this->_0, key_expr.data(), &s), err,

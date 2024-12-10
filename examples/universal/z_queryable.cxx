@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2022 ZettaScale Technology
+// Copyright (c) 2023 ZettaScale Technology
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -18,59 +18,58 @@
 #include <iostream>
 #include <thread>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
+
 using namespace zenoh;
 using namespace std::chrono_literals;
 
 #ifdef ZENOHCXX_ZENOHC
-const char *expr = "demo/example/zenoh-cpp-zenoh-c-queryable";
-const char *value = "Queryable from C++ zenoh-c!";
+const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-c-queryable";
+const char *default_payload = "Queryable from C++ zenoh-c!";
 #elif ZENOHCXX_ZENOHPICO
-const char *expr = "demo/example/zenoh-cpp-zenoh-pico-queryable";
-const char *value = "Queryable from C++ zenoh-pico!";
+const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-pico-queryable";
+const char *default_payload = "Queryable from C++ zenoh-pico!";
 #else
 #error "Unknown zenoh backend"
 #endif
-const char *locator = nullptr;
 
 int _main(int argc, char **argv) {
-    const char *complete = "false";
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &expr}, {"payload_value", &value}},
-                               {{"--complete", {CmdArg{"", &complete, true}}}});
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .named_value({"k", "key"}, "KEY_EXPRESSION", "Key expression matching queries to reply to (string)",
+                         default_keyexpr)
+            .named_value({"p", "payload"}, "PAYLOAD", "Value to reply to queries with (string)", default_payload)
+            .named_flag({"complete"}, "Flag to indicate whether queryable is complete or not")
+            .run();
 
-    printf("Opening session...\n");
+    auto keyexpr = args.value("key");
+    auto payload = args.value("payload");
+
+    std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
-    KeyExpr keyexpr(expr);
+    std::cout << "Declaring Queryable on '" << keyexpr << "'...\n";
 
-    std::cout << "Declaring Queryable on '" << expr << "'...\n";
-
-    auto on_query = [](const Query &query) {
-        const KeyExpr &keyexpr = query.get_keyexpr();
+    auto on_query = [payload, keyexpr](const Query &query) {
         auto params = query.get_parameters();
-        std::cout << ">> [Queryable ] Received Query '" << keyexpr.as_string_view() << "?" << params;
-        auto payload = query.get_payload();
-        if (payload.has_value()) {
-            std::cout << "' value = '" << payload->get().as_string();
+        auto query_payload = query.get_payload();
+        std::cout << ">> [Queryable ] Received Query '" << keyexpr << "?" << params;
+        if (query_payload.has_value()) {
+            std::cout << "' with value = '" << query_payload->get().as_string();
         }
         std::cout << "'\n";
-#if __cpp_designated_initializers >= 201707L
-        query.reply(KeyExpr(expr), value, {.encoding = Encoding("text/plain")});
-#else
-        Query::ReplyOptions reply_options;
-        reply_options.encoding = Encoding("text/plain");
-        query.reply(KeyExpr(expr), value, std::move(reply_options));
-#endif
+        std::cout << "[Queryable ] Responding ('" << keyexpr << "': '" << payload << "')\n";
+        query.reply(keyexpr, payload);
     };
 
     auto on_drop_queryable = []() { std::cout << "Destroying queryable\n"; };
 
     Session::QueryableOptions opts;
-    opts.complete = std::string(complete) == "true";
+    opts.complete = args.flag("complete");
     auto queryable = session.declare_queryable(keyexpr, on_query, on_drop_queryable, std::move(opts));
 
-    std::cout << "Press CTRL-C to quit...\n";
+    printf("Press CTRL-C to quit...\n");
     while (true) {
         std::this_thread::sleep_for(1s);
     }
