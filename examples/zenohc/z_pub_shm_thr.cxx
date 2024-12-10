@@ -16,31 +16,32 @@
 
 #include <vector>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 using namespace zenoh;
 
 int _main(int argc, char **argv) {
     const char *keyexpr = "test/thr";
-    const char *payload_size = nullptr;
-    Config config = parse_args(argc, argv, {{"payload size", &payload_size}}, {{"key expression", &keyexpr}});
-    size_t len = atoi(payload_size);
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .positional("PAYLOAD_SIZE", "Size of the payload to publish (number)")
+            .named_value({"s", "shared-memory"}, "SHARED_MEMORY_SIZE", "Shared memory size in MBytes", "32")
+            .run();
+
+    size_t len = std::atoi(args.positional(0).data());
+    size_t shared_memory_size_mb = std::atoi(args.value("s").data());
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
     std::cout << "Declaring Publisher on " << keyexpr << "...\n";
 
-#if __cpp_designated_initializers >= 201707L
-    auto pub = session.declare_publisher(KeyExpr(keyexpr), {.congestion_control = Z_CONGESTION_CONTROL_BLOCK});
-#else
     Session::PublisherOptions options;
     options.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
     auto pub = session.declare_publisher(keyexpr, std::move(options));
-#endif
+
     std::cout << "Preparing SHM Provider...\n";
-    constexpr auto buffers_count = 4;
-    PosixShmProvider provider(MemoryLayout(buffers_count * len, AllocAlignment({2})));
+    PosixShmProvider provider(MemoryLayout(shared_memory_size_mb * 1024 * 1024, AllocAlignment({2})));
 
     std::cout << "Allocating SHM buffer...\n";
     auto alloc_result = provider.alloc_gc_defrag_blocking(len, AllocAlignment({0}));

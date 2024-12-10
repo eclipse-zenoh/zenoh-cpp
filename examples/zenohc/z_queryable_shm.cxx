@@ -18,36 +18,44 @@
 #include <iostream>
 #include <thread>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 using namespace zenoh;
 using namespace std::chrono_literals;
 
-const char *expr = "demo/example/zenoh-cpp-zenoh-c-queryable";
-const char *value = "Queryable from C++ zenoh-c SHM!";
+const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-c-queryable";
+const char *default_payload = "Queryable from C++ zenoh-c SHM!";
 
 const char *locator = nullptr;
 
 int _main(int argc, char **argv) {
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &expr}, {"payload_value", &value}});
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .named_value({"k", "key"}, "KEY_EXPRESSION", "Key expression matching queries to reply to (string)",
+                         default_keyexpr)
+            .named_value({"p", "payload"}, "PAYLOAD", "Value to reply to queries with (string)", default_payload)
+            .named_flag({"complete"}, "Flag to indicate whether queryable is complete or not")
+            .run();
+
+    auto keyexpr = args.value("key");
+    auto payload = args.value("payload");
+    auto complete = args.flag("complete");
 
     printf("Opening session...\n");
     auto session = Session::open(std::move(config));
 
-    KeyExpr keyexpr(expr);
-
-    std::cout << "Declaring Queryable on '" << expr << "'...\n";
+    std::cout << "Declaring Queryable on '" << keyexpr << "'...\n";
 
     std::cout << "Preparing SHM Provider...\n";
     PosixShmProvider provider(MemoryLayout(65536, AllocAlignment({0})));
 
-    auto on_query = [provider = std::move(provider)](const Query &query) {
-        auto payload = query.get_payload();
+    auto on_query = [provider = std::move(provider), payload](const Query &query) {
+        auto query_payload = query.get_payload();
 
         const char *payload_type = "";
-        if (payload.has_value()) {
+        if (query_payload.has_value()) {
             ZResult result;
-            payload->get().as_shm(&result);
+            query_payload->get().as_shm(&result);
             if (result == Z_OK) {
                 payload_type = "SHM";
             } else {
@@ -59,28 +67,25 @@ int _main(int argc, char **argv) {
         auto params = query.get_parameters();
         std::cout << ">> [Queryable ] Received Query [" << payload_type << "] '" << keyexpr.as_string_view() << "?"
                   << params;
-        if (payload.has_value()) {
-            std::cout << "' value = '" << payload->get().as_string();
+        if (query_payload.has_value()) {
+            std::cout << "' value = '" << query_payload->get().as_string();
         }
         std::cout << "'\n";
 
-        const auto len = strlen(value) + 1;  // + NULL terminator
+        const auto len = payload.size() + 1;  // + NULL terminator
         auto alloc_result = provider.alloc_gc_defrag_blocking(len, AllocAlignment({0}));
         ZShmMut &&buf = std::get<ZShmMut>(std::move(alloc_result));
-        memcpy(buf.data(), value, len);
+        memcpy(buf.data(), payload.data(), len);
 
-#if __cpp_designated_initializers >= 201707L
-        query.reply(KeyExpr(expr), std::move(buf), {.encoding = Encoding("text/plain")});
-#else
-        Query::ReplyOptions options;
-        options.encoding = Encoding("text/plain");
-        query.reply(KeyExpr(expr), std::move(buf), std::move(options));
-#endif
+        query.reply(keyexpr, std::move(buf));
     };
 
     auto on_drop_queryable = []() { std::cout << "Destroying queryable\n"; };
 
-    auto queryable = session.declare_queryable(keyexpr, std::move(on_query), std::move(on_drop_queryable));
+    Session::QueryableOptions opts;
+    opts.complete = complete;
+    auto queryable =
+        session.declare_queryable(keyexpr, std::move(on_query), std::move(on_drop_queryable), std::move(opts));
 
     std::cout << "Press CTRL-C to quit...\n";
     while (true) {

@@ -17,21 +17,28 @@
 #include <iostream>
 #include <string>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 using namespace zenoh;
 
 int _main(int argc, char **argv) {
-    const char *expr = "group1/**";
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &expr}});
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .named_value({"k", "key"}, "KEY_EXPRESSION", "Key expression to query (string)", "group1/**")
+            .named_value({"o", "timeout"}, "TIMEOUT", "Timeout in ms (number)", "10000")
+            .run();
 
-    KeyExpr keyexpr(expr);
+    uint64_t timeout_ms = std::atoi(args.value("timeout").data());
+
+    KeyExpr keyexpr(args.value("key"));
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
-    std::cout << "Sending Liveliness Query '" << expr << "'...\n";
-    auto replies = session.liveliness_get(keyexpr, channels::FifoChannel(16));
+    std::cout << "Sending Liveliness Query '" << keyexpr.as_string_view() << "'...\n";
+    Session::LivelinessGetOptions opts;
+    opts.timeout_ms = timeout_ms;
+    auto replies = session.liveliness_get(keyexpr, channels::FifoChannel(16), std::move(opts));
 
     for (auto res = replies.recv(); std::holds_alternative<Reply>(res); res = replies.recv()) {
         const Reply &reply = std::get<Reply>(res);

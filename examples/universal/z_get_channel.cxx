@@ -22,12 +22,14 @@
 using namespace zenoh;
 
 int _main(int argc, char **argv) {
-    auto&& [config, args] = ConfigCliArgParser(argc, argv)
-        .named_value({"s", "selector"}, "SELECTOR", "Query selector (string)", "demo/example/**")
-        .named_value({"p", "payload"}, "PAYLOAD", "Query payload (string)", "")
-        .named_value({"t", "target"}, "TARGET", "Query target (BEST_MATCHING | ALL | ALL_COMPLETE)", "BEST_MATCHING")
-        .named_value({"o", "timeout"}, "TIMEOUT", "Timeout in ms (number)", "10000")
-        .run();
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .named_value({"s", "selector"}, "SELECTOR", "Query selector (string)", "demo/example/**")
+            .named_value({"p", "payload"}, "PAYLOAD", "Query payload (string)", "")
+            .named_value({"t", "target"}, "TARGET", "Query target (BEST_MATCHING | ALL | ALL_COMPLETE)",
+                         "BEST_MATCHING")
+            .named_value({"o", "timeout"}, "TIMEOUT", "Timeout in ms (number)", "10000")
+            .run();
 
     uint64_t timeout_ms = std::atoi(args.value("timeout").data());
     QueryTarget query_target = parse_query_target(args.value("target"));

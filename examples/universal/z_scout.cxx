@@ -19,7 +19,7 @@
 #include <mutex>
 #include <thread>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 using namespace zenoh;
 using namespace std::chrono_literals;
@@ -45,7 +45,7 @@ void printhello(const Hello &hello) {
 }
 
 int _main(int argc, char **argv) {
-    Config config = parse_args(argc, argv, {});
+    auto &&[config, args] = ConfigCliArgParser(argc, argv).run();
 
     size_t count = 0;
     std::mutex m;

@@ -20,14 +20,11 @@
 #include <sstream>
 #include <thread>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
 using namespace std::chrono_literals;
-
-const char *default_keyexpr = "demo/example/**";
-const char *default_query = "";
 
 const char *kind_to_str(SampleKind kind) {
     switch (kind) {
@@ -41,9 +38,15 @@ const char *kind_to_str(SampleKind kind) {
 }
 
 int _main(int argc, char **argv) {
-    const char *keyexpr = default_keyexpr;
-    const char *query = default_query;
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &keyexpr}}, {{"-q", {"query", &query}}});
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .named_value({"k", "key"}, "KEY_EXPRESSION", "Key expression to subscriber to (string)", "demo/example/**")
+            .named_value({"q", "query"}, "Query",
+                         "Selector to use for queries (by default it's same as 'KEY_EXPRESSION') (string)", "")
+            .run();
+
+    auto keyexpr = args.value("key");
+    auto query = args.value("query");
 
     std::cout << "Opening session..." << std::endl;
     auto session = Session::open(std::move(config));
@@ -52,7 +55,7 @@ int _main(int argc, char **argv) {
               << std::endl;
     Session::QueryingSubscriberOptions opts;
 
-    if (!std::string(query).empty()) {
+    if (!query.empty()) {
         opts.query_keyexpr = KeyExpr(query);
         opts.query_accept_replies = ReplyKeyExpr::ZC_REPLY_KEYEXPR_ANY;
     }

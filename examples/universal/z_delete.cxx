@@ -25,11 +25,12 @@ const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-pico-put";
 using namespace zenoh;
 
 int _main(int argc, char **argv) {
-    auto&& [config, args] = ConfigCliArgParser(argc, argv)
-        .named_value({"k", "key"}, "KEY_EXPRESSION", "The key expression to write to", default_keyexpr)
-        .run();
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .named_value({"k", "key"}, "KEY_EXPRESSION", "The key expression to write to", default_keyexpr)
+            .run();
 
-    std::string_view keyexpr = args("key").value;
+    std::string_view keyexpr = args.value("key");
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
