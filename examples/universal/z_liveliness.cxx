@@ -19,7 +19,7 @@
 #include <string>
 #include <thread>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
@@ -28,8 +28,11 @@ using namespace std::chrono_literals;
 const char *default_keyexpr = "group1/zenoh-cpp-c";
 
 int _main(int argc, char **argv) {
-    const char *keyexpr = default_keyexpr;
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &keyexpr}});
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .named_value({"k", "key"}, "KEY_EXPRESSION", "Key expression of the liveliness (string)", default_keyexpr)
+            .run();
+    auto keyexpr = args.value("key");
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2022 ZettaScale Technology
+// Copyright (c) 2023 ZettaScale Technology
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -20,7 +20,7 @@
 #include <sstream>
 #include <thread>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
@@ -37,24 +37,27 @@ const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-pico-pub";
 #endif
 
 int _main(int argc, char **argv) {
-    const char *keyexpr = default_keyexpr;
-    const char *value = default_value;
-    const char *add_matching_listener = "false";
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &keyexpr}, {"payload_value", &value}}
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-                               ,
-                               {{"--add-matching-listener", CmdArg{"", &add_matching_listener, true}}}
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .named_value({"k", "key"}, "KEY_EXPRESSION", "Key expression to publish to (string)", default_keyexpr)
+            .named_value({"p", "payload"}, "PAYLOAD", "Payload to publish (string)", default_value)
+            .named_value({"a", "attach"}, "ATTACHMENT", "Attachment to add to each put (string)", "")
+#if defined(Z_FEATURE_UNSTABLE_API) && defined(ZENOHCXX_ZENOHC)
+            .named_flag({"add-matching-listener"}, "Add matching listener")
 #endif
-    );
+            .run();
+
+    auto keyexpr = args.value("key");
+    auto payload = args.value("payload");
+    auto attachment = args.value("attach");
 
     std::cout << "Opening session..." << std::endl;
     auto session = Session::open(std::move(config));
 
     std::cout << "Declaring Publisher on '" << keyexpr << "'..." << std::endl;
     auto pub = session.declare_publisher(KeyExpr(keyexpr));
-
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-    if (std::string(add_matching_listener) == "true") {
+#if defined(Z_FEATURE_UNSTABLE_API) && defined(ZENOHCXX_ZENOHC)
+    if (args.flag("add-matching-listener")) {
         pub.declare_background_matching_listener(
             [](const MatchingStatus &s) {
                 if (s.matching) {
@@ -71,13 +74,15 @@ int _main(int argc, char **argv) {
     for (int idx = 0; idx < std::numeric_limits<int>::max(); ++idx) {
         std::this_thread::sleep_for(1s);
         std::ostringstream ss;
-        ss << "[" << idx << "] " << value;
+        ss << "[" << idx << "] " << payload;
         auto s = ss.str();
         std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
+        Publisher::PutOptions options;
+        if (!attachment.empty()) {
+            options.attachment = attachment;
+        }
 
-        auto put_options = Publisher::PutOptions{};
-        put_options.encoding = Encoding("text/plain");
-        pub.put(s, std::move(put_options));
+        pub.put(s, std::move(options));
     }
     return 0;
 }

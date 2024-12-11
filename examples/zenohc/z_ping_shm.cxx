@@ -18,7 +18,7 @@
 #include <iostream>
 #include <mutex>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
@@ -27,27 +27,28 @@ int _main(int argc, char** argv) {
     using namespace std::literals;
     std::mutex mutex;
     std::condition_variable condvar;
-    const char* number_of_pings_str = "100";
-    const char* payload_size_str = "8";
-    const char* warmup_ms_str = "1000";
-    const char* timeout_ms_str = "100";
-    Config config = parse_args(
-        argc, argv, {}, {},
-        {{"-n", {"number of pings to be attempted", &number_of_pings_str}},
-         {"-s", {"size of the payload embedded in the ping and repeated by the pong", &payload_size_str}},
-         {"-w", {"the warmup time in ms during which pings will be emitted but not measured", &warmup_ms_str}},
-         {"-t", {"timeout for any individual ping, in ms", &timeout_ms_str}}});
-    unsigned int number_of_pings = std::atoi(number_of_pings_str);
-    unsigned int payload_size = std::atoi(payload_size_str);
-    unsigned int warmup_ms = std::atoi(warmup_ms_str);
-    unsigned int timeout_ms = std::atoi(timeout_ms_str);
+
+    auto&& [config, args] =
+        ConfigCliArgParser(argc, argv)
+            .positional("PAYLOAD_SIZE", "Size of the payload to publish (number)")
+            .named_value({"n", "samples"}, "SAMPLES", "The number of pings to be attempted (number)", "100")
+            .named_value({"w", "warmup"}, "WARMUP",
+                         "The warmup time in ms during which pings will be emitted but not measured (number)", "1000")
+            .named_flag({"no-express"}, "Disable message batching")
+            .run();
+
+    size_t payload_size = std::atoi(args.positional(0).data());
+    size_t number_of_pings = std::atoi(args.value("samples").data());
+    size_t warmup_ms = std::atoi(args.value("warmup").data());
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
     auto sub = session.declare_subscriber(
         KeyExpr("test/pong"), [&condvar](const Sample&) mutable { condvar.notify_one(); }, closures::none);
-    auto pub = session.declare_publisher(KeyExpr("test/ping"));
+    Session::PublisherOptions opts;
+    opts.is_express = !args.flag("no-express");
+    auto pub = session.declare_publisher(KeyExpr("test/ping"), std::move(opts));
 
     std::cout << "Preparing SHM Provider...\n";
     constexpr auto buffers_count = 32;
@@ -57,8 +58,10 @@ int _main(int argc, char** argv) {
     auto alloc_result = provider.alloc_gc_defrag_blocking(payload_size, AllocAlignment({0}));
     ZShmMut&& buf_mut = std::get<ZShmMut>(std::move(alloc_result));
     ZShm buf(std::move(buf_mut));
-
-    std::vector<uint8_t> data(payload_size);
+    auto data = buf_mut.data();
+    for (size_t i = 0; i < payload_size; i++) {
+        data[i] = i % 10;
+    }
     std::unique_lock lock(mutex);
     if (warmup_ms) {
         auto end = std::chrono::steady_clock::now() + (1ms * warmup_ms);

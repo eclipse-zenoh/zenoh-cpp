@@ -17,7 +17,7 @@
 #include <iostream>
 #include <thread>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
@@ -34,22 +34,30 @@ const char *kind_to_str(SampleKind kind) {
     }
 }
 
-void data_handler(const Sample &sample) {
-    std::cout << ">> [Subscriber] Received " << kind_to_str(sample.get_kind()) << " ('"
-              << sample.get_keyexpr().as_string_view() << "' : '" << sample.get_payload().as_string() << "')\n";
-}
-
 int _main(int argc, char **argv) {
-    const char *expr = "demo/example/**";
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &expr}});
-    KeyExpr keyexpr(expr);
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .named_value({"k", "key"}, "KEY_EXPRESSION", "Key expression to subscribe to (string)", "demo/example/**")
+            .run();
+
+    KeyExpr keyexpr(args.value("key"));
 
     std::cout << "Opening session..." << std::endl;
     auto session = Session::open(std::move(config));
 
+    auto data_handler = [](const Sample &sample) {
+        std::cout << ">> [Subscriber] Received " << kind_to_str(sample.get_kind()) << " ('"
+                  << sample.get_keyexpr().as_string_view() << "' : '" << sample.get_payload().as_string() << "')";
+
+        auto attachment = sample.get_attachment();
+        if (attachment.has_value()) {
+            std::cout << "  (" << attachment->get().as_string() << ")";
+        }
+        std::cout << std::endl;
+    };
+
     std::cout << "Declaring Subscriber on '" << keyexpr.as_string_view() << "'..." << std::endl;
-    auto subscriber = session.declare_subscriber(keyexpr, &data_handler, closures::none);
-    std::cout << "Subscriber on '" << subscriber.get_keyexpr().as_string_view() << "' declared" << std::endl;
+    auto subscriber = session.declare_subscriber(keyexpr, data_handler, closures::none);
 
     std::cout << "Press CTRL-C to quit...\n";
     while (true) {

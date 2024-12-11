@@ -13,7 +13,7 @@
 //
 #include <iostream>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "stdio.h"
 #include "zenoh.hxx"
 using namespace zenoh;
@@ -29,23 +29,21 @@ const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-pico-put";
 #endif
 
 int _main(int argc, char **argv) {
-    const char *keyexpr = default_keyexpr;
-    const char *value = default_value;
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &keyexpr}, {"payload_value", &value}});
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .named_value({"k", "key"}, "KEY_EXPRESSION", "Key expression to publish to (string)", default_keyexpr)
+            .named_value({"p", "payload"}, "PAYLOAD", "Payload to publish (string)", default_value)
+            .run();
+
+    auto keyexpr = args.value("key");
+    auto payload = args.value("payload");
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
-    std::cout << "Putting Data (" << "'" << keyexpr << "': '" << value << "')...\n";
+    std::cout << "Putting Data (" << "'" << keyexpr << "': '" << payload << "')...\n";
 
-    Session::PutOptions put_options;
-    put_options.encoding = Encoding("text/plain");
-
-    std::unordered_map<std::string, std::string> attachment_map = {{"serial_number", "123"},
-                                                                   {"coordinates", "48.7082,2.1498"}};
-    put_options.attachment = ext::serialize(attachment_map);
-
-    session.put(KeyExpr(keyexpr), value, std::move(put_options));
+    session.put(KeyExpr(keyexpr), payload);
     return 0;
 }
 

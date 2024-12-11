@@ -19,16 +19,24 @@
 #include <map>
 #include <mutex>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 using namespace zenoh;
 
 int _main(int argc, char **argv) {
-    const char *expr = "demo/example/**";
-    const char *value = "Get from C++";
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &expr}, {"payload_value", &value}});
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .named_value({"s", "selector"}, "SELECTOR", "Query selector (string)", "demo/example/**")
+            .named_value({"p", "payload"}, "PAYLOAD", "Query payload (string)", "")
+            .named_value({"t", "target"}, "TARGET", "Query target (BEST_MATCHING | ALL | ALL_COMPLETE)",
+                         "BEST_MATCHING")
+            .named_value({"o", "timeout"}, "TIMEOUT", "Timeout in ms (number)", "10000")
+            .run();
 
-    KeyExpr keyexpr(expr);
+    uint64_t timeout_ms = std::atoi(args.value("timeout").data());
+    QueryTarget query_target = parse_query_target(args.value("target"));
+    Selector selector = parse_selector(args.value("selector"));
+    auto payload = args.value("payload");
 
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
@@ -57,21 +65,17 @@ int _main(int argc, char **argv) {
     PosixShmProvider provider(MemoryLayout(1024 * 1024, AllocAlignment({2})));
 
     std::cout << "Allocating SHM buffer...\n";
-    const auto len = strlen(value) + 1;
+    const auto len = payload.size() + 1;
     auto alloc_result = provider.alloc_gc_defrag_blocking(len, AllocAlignment({0}));
     ZShmMut &&buf = std::get<ZShmMut>(std::move(alloc_result));
-    memcpy(buf.data(), value, len);
+    memcpy(buf.data(), payload.data(), len);
 
-    std::cout << "Sending Query '" << expr << "'...\n";
-#if __cpp_designated_initializers >= 201707L
-    session.get(keyexpr, "", on_reply, on_done,
-                {.target = Z_QUERY_TARGET_ALL, .payload = Bytes::serialize(std::move(buf))});
-#else
+    std::cout << "Sending Query '" << args.value("selector") << "'...\n";
+
     Session::GetOptions options;
-    options.target = Z_QUERY_TARGET_ALL;
+    options.target = query_target;
     options.payload = std::move(buf);
-    session.get(keyexpr, "", on_reply, on_done, std::move(options));
-#endif
+    session.get(selector.key_expr, selector.parameters, on_reply, on_done, std::move(options));
 
     std::unique_lock lock(m);
     done_signal.wait(lock, [&done] { return done; });

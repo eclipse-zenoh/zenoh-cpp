@@ -18,7 +18,7 @@
 #include <iostream>
 #include <thread>
 
-#include "../getargs.h"
+#include "../getargs.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
@@ -33,16 +33,23 @@ void data_handler(const Sample &sample) {
 }
 
 int _main(int argc, char **argv) {
-    const char *expr = "group1/**";
-    Config config = parse_args(argc, argv, {}, {{"key_expression", &expr}});
+    auto &&[config, args] =
+        ConfigCliArgParser(argc, argv)
+            .named_value({"k", "key"}, "KEY_EXPRESSION",
+                         "The key expression matching liveliness tokens to subscribe t (string)", "group1/**")
+            .named_flag({"history"}, "Get historical liveliness tokens")
+            .run();
 
-    KeyExpr keyexpr(expr);
+    auto history = args.flag("history");
+    KeyExpr keyexpr(args.value("key"));
 
     std::cout << "Opening session..." << std::endl;
     auto session = Session::open(std::move(config));
 
     std::cout << "Declaring Liveliness Subscriber on '" << keyexpr.as_string_view() << "'..." << std::endl;
-    auto subscriber = session.liveliness_declare_subscriber(keyexpr, &data_handler, closures::none);
+    Session::LivelinessSubscriberOptions opts;
+    opts.history = history;
+    auto subscriber = session.liveliness_declare_subscriber(keyexpr, &data_handler, closures::none, std::move(opts));
 
     std::cout << "Press CTRL-C to quit...\n";
     while (true) {
