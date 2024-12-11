@@ -54,7 +54,7 @@ int _main(int argc, char **argv) {
     auto on_query = [payload, keyexpr](const Query &query) {
         auto params = query.get_parameters();
         auto query_payload = query.get_payload();
-        std::cout << ">> [Queryable ] Received Query '" << keyexpr << "?" << params;
+        std::cout << ">> [Queryable ] Received Query '" << query.get_keyexpr().as_string_view() << "?" << params;
         if (query_payload.has_value()) {
             std::cout << "' with value = '" << query_payload->get().as_string();
         }
