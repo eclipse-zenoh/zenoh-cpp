@@ -22,7 +22,9 @@
 #include "api/hello.hxx"
 #include "api/id.hxx"
 #include "api/keyexpr.hxx"
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LIVELINESS == 1
 #include "api/liveliness.hxx"
+#endif
 #include "api/logging.hxx"
 #include "api/publisher.hxx"
 #include "api/query.hxx"

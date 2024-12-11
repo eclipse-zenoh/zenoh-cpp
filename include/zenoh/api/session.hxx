@@ -863,6 +863,7 @@ class Session : public Owned<::z_owned_session_t> {
     }
 #endif
 
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LIVELINESS == 1
     /// @brief Options to pass to ``Session::liveliness_declare_token``.
     struct LivelinessDeclarationOptions {
        protected:
@@ -937,6 +938,7 @@ class Session : public Owned<::z_owned_session_t> {
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
         return s;
     }
+#endif
 
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
@@ -975,6 +977,7 @@ class Session : public Owned<::z_owned_session_t> {
     }
 #endif
 
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LIVELINESS == 1
     /// @brief Declare a subscriber on liveliness tokens that intersect `key_expr`.
     /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
     /// ``zenoh::channels::RingChannel``).
@@ -1092,6 +1095,7 @@ class Session : public Owned<::z_owned_session_t> {
         (void)options;
         __ZENOH_RESULT_CHECK(::z_close(interop::as_loaned_c_ptr(*this), nullptr), err, "Failed to close the session");
     }
+#endif
 
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
