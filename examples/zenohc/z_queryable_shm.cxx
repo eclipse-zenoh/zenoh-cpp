@@ -49,7 +49,7 @@ int _main(int argc, char **argv) {
     std::cout << "Preparing SHM Provider...\n";
     PosixShmProvider provider(MemoryLayout(65536, AllocAlignment({0})));
 
-    auto on_query = [provider = std::move(provider), payload](const Query &query) {
+    auto on_query = [provider = std::move(provider), payload, keyexpr](const Query &query) {
         auto query_payload = query.get_payload();
 
         const char *payload_type = "";
@@ -63,10 +63,9 @@ int _main(int argc, char **argv) {
             }
         }
 
-        const KeyExpr &keyexpr = query.get_keyexpr();
         auto params = query.get_parameters();
-        std::cout << ">> [Queryable ] Received Query [" << payload_type << "] '" << keyexpr.as_string_view() << "?"
-                  << params;
+        std::cout << ">> [Queryable ] Received Query [" << payload_type << "] '" << query.get_keyexpr().as_string_view()
+                  << "?" << params;
         if (query_payload.has_value()) {
             std::cout << "' value = '" << query_payload->get().as_string();
         }
@@ -77,6 +76,7 @@ int _main(int argc, char **argv) {
         ZShmMut &&buf = std::get<ZShmMut>(std::move(alloc_result));
         memcpy(buf.data(), payload.data(), len);
 
+        std::cout << "[Queryable ] Responding ('" << keyexpr << "': '" << payload << "')\n";
         query.reply(keyexpr, std::move(buf));
     };
 
