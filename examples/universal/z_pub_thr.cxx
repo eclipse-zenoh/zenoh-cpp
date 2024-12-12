@@ -26,7 +26,7 @@ int _main(int argc, char **argv) {
     auto &&[config, args] =
         ConfigCliArgParser(argc, argv)
             .positional("PAYLOAD_SIZE", "Size of the payload to publish (number)")
-            .named_value({"p", "priority"}, "PRIOIRTY", "Priority for sending data (number [2 - 7])", "5")
+            .named_value({"p", "priority"}, "PRIOIRTY", "Priority for sending data (number [1 - 7])", "5")
             .named_flag({"express"}, "Batch messages")
             .run();
 

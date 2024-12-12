@@ -171,14 +171,41 @@ class CliArgParser {
         }
     };
 
-    Result run() {
-        // Show help if help option is passed or if no parameters are passed when some are required
-        if ((_argc == 2 && (strcmp(_argv[1], "--help") == 0 || strcmp(_argv[1], "-h") == 0)) ||
-            _argc == 1 && _required.size() > 0) {
-            print_help(std::cout);
-            exit(0);
+   private:
+    std::vector<std::string_view> parse_required(size_t& current_arg) {
+        std::vector<std::string_view> required_out(_required.size());
+        for (size_t i = 0; i < _required.size(); i++) {
+            if (i + 1 >= _argc) {
+                throw std::runtime_error(std::string("Missing required argument <") + _required[i].name + ">");
+            } else {
+                required_out[i] = _argv[i + current_arg];
+            }
+        }
+        current_arg += required_out.size();
+        return required_out;
+    }
+
+    std::vector<std::string_view> parse_optional(size_t& current_arg) {
+        std::vector<std::string_view> optional_out(_optional.size());
+        for (size_t i = 0; i < _optional.size(); i++) {
+            optional_out[i] = _optional[i].value;
         }
 
+        for (size_t i = 0; i < _optional.size(); i++) {
+            if (current_arg >= _argc) {
+                break;
+            } else if (_argv[current_arg][0] == '-') {  // start of named arguments
+                break;
+            } else {
+                optional_out[i] = _argv[i + _required.size() + 1];
+            }
+            current_arg += 1;
+        }
+        return optional_out;
+    }
+
+    std::tuple<std::vector<Result::NamedArgValue>, std::unordered_map<std::string, size_t>> parse_named(
+        size_t& current_arg) {
         std::unordered_map<std::string, size_t> opt_to_named_arg_index;
         for (size_t i = 0; i < _named.size(); i++) {
             const auto& opts = std::visit([](const auto& arg) { return arg.opts; }, _named[i]);
@@ -187,11 +214,6 @@ class CliArgParser {
             }
         }
 
-        std::vector<std::string_view> required_out(_required.size());
-        std::vector<std::string_view> optional_out(_optional.size());
-        for (size_t i = 0; i < _optional.size(); i++) {
-            optional_out[i] = _optional[i].value;
-        }
         std::vector<Result::NamedArgValue> named_out;
         named_out.reserve(_named.size());
         for (size_t i = 0; i < _named.size(); i++) {
@@ -204,34 +226,20 @@ class CliArgParser {
             }
         }
 
-        for (size_t i = 0; i < _required.size(); i++) {
-            if (i + 1 >= _argc) {
-                throw std::runtime_error(std::string("Missing required argument <") + _required[i].name + ">");
-            } else {
-                required_out[i] = _argv[i + 1];
-            }
-        }
-
-        size_t current_arg = _required.size() + 1;
-        for (size_t i = 0; i < _optional.size(); i++) {
-            if (current_arg >= _argc) {
-                return Result(std::move(required_out), std::move(optional_out), std::move(named_out),
-                              std::move(opt_to_named_arg_index));
-            } else if (_argv[current_arg][0] == '-') {  // start of named arguments
-                break;
-            } else {
-                optional_out[i] = _argv[i + _required.size() + 1];
-            }
-            current_arg += 1;
-        }
-
         while (current_arg < _argc) {
             std::string_view a = _argv[current_arg];
             if (a.size() < 2 || a[0] != '-' || (a.size() > 2 && a[1] != '-')) {
                 throw std::runtime_error(std::string("Unexpected option: ") + _argv[current_arg]);
             }
-            auto it = (a[1] == '-') ? opt_to_named_arg_index.find(std::string(a.substr(2)))
-                                    : opt_to_named_arg_index.find(std::string(a.substr(1)));
+            std::string_view val = "";
+            size_t pos = a.find('=');
+            if (pos != std::string_view::npos) {
+                _argv[current_arg][pos] = '\0';
+                a = _argv[current_arg];
+                val = _argv[current_arg] + pos + 1;
+            }
+            auto it =
+                (a[1] == '-') ? opt_to_named_arg_index.find(a.data() + 2) : opt_to_named_arg_index.find(a.data() + 1);
             if (it == opt_to_named_arg_index.end()) {
                 throw std::runtime_error(std::string("Unexpected option: ") + _argv[current_arg]);
             }
@@ -240,14 +248,39 @@ class CliArgParser {
             const auto& named_arg = _named[arg_index];
             if (const auto named_flag = std::get_if<NamedFlag>(&named_arg); named_flag != nullptr) {
                 std::get<Result::ArgFlagValue>(named_out[arg_index]).value = true;
-            } else if (current_arg >= _argc) {
+                if (!val.empty()) {
+                    throw std::runtime_error(std::string("Option: ") + it->first +
+                                             " is a flag and does not require a value");
+                }
+            } else if (current_arg >= _argc && val.empty()) {
                 throw std::runtime_error(std::string("Option: ") + it->first + " requires a value");
-            } else if (const auto named_value = std::get_if<NamedValue>(&named_arg); named_value != nullptr) {
-                std::get<Result::ArgValue>(named_out[arg_index]).value = _argv[current_arg++];
-            } else if (const auto named_values = std::get_if<NamedValues>(&named_arg); named_values != nullptr) {
-                std::get<Result::ArgValues>(named_out[arg_index]).values.push_back(_argv[current_arg++]);
+            } else {
+                val = val.empty() ? _argv[current_arg++] : val;
+                if (const auto named_value = std::get_if<NamedValue>(&named_arg); named_value != nullptr) {
+                    std::get<Result::ArgValue>(named_out[arg_index]).value = val;
+                } else if (const auto named_values = std::get_if<NamedValues>(&named_arg); named_values != nullptr) {
+                    std::get<Result::ArgValues>(named_out[arg_index]).values.push_back(val);
+                }
             }
         }
+
+        return {std::move(named_out), std::move(opt_to_named_arg_index)};
+    }
+
+   public:
+    Result run() {
+        // Show help if help option is passed or if no parameters are passed when some are required
+        if ((_argc == 2 && (strcmp(_argv[1], "--help") == 0 || strcmp(_argv[1], "-h") == 0)) ||
+            _argc == 1 && _required.size() > 0) {
+            print_help(std::cout);
+            exit(0);
+        }
+
+        size_t current_arg = 1;
+        auto required_out = parse_required(current_arg);
+        auto optional_out = parse_optional(current_arg);
+        auto&& [named_out, opt_to_named_arg_index] = parse_named(current_arg);
+
         return Result(std::move(required_out), std::move(optional_out), std::move(named_out),
                       std::move(opt_to_named_arg_index));
     }
@@ -316,6 +349,10 @@ class ConfigCliArgParser : public CliArgParser {
         named_value({"c", "config"}, "CONFIG_FILE", "Configuration file", "");
         named_values({"e", "connect"}, "CONNECT", "Endpoints to connect to");
         named_values({"l", "listen"}, "LISTEN", "Endpoints to listen to");
+        named_values({"cfg"}, "CFG",
+                     "Allows arbitrary configuration changes as column-separated KEY:VALUE pairs. Where KEY must be a "
+                     "valid config path and VALUE must be a valid JSON5 string that can be deserialized to the "
+                     "expected type for the KEY field. Example: --cfg='transport/unicast/max_links:2'");
 #elif defined(ZENOHCXX_ZENOHPICO)
         named_value({"e", "connect"}, "CONNECT", "Endpoint to connect to", "");
         named_value({"l", "listen"}, "LISTEN", "Endpoint to listen to", "");
@@ -353,6 +390,15 @@ class ConfigCliArgParser : public CliArgParser {
         config.insert_json5(Z_CONFIG_MODE_KEY, std::string("\"") + mode.data() + "\"");
         if (result.flag("no-multicast-scouting")) {
             config.insert_json5(Z_CONFIG_MULTICAST_SCOUTING_KEY, "false");
+        }
+
+        for (auto c : result.values("cfg")) {
+            auto pos = c.find(':');
+            if (pos == std::string_view::npos) {
+                throw std::runtime_error(std::string("--cfg` argument: expected KEY:VALUE pair, got ") +
+                                         std::string(c));
+            }
+            config.insert_json5(std::string(c.substr(0, pos)), std::string(c.substr(pos + 1)));
         }
 #elif defined(ZENOHCXX_ZENOHPICO)
         if (!mode.empty()) {
@@ -424,7 +470,7 @@ inline Selector parse_selector(std::string_view selector_string) {
 
 inline zenoh::Priority parse_priority(std::string_view arg) {
     int p = std::atoi(arg.data());
-    if (p < zenoh::Priority::Z_PRIORITY_INTERACTIVE_HIGH || p > zenoh::Priority::Z_PRIORITY_BACKGROUND) {
+    if (p < zenoh::Priority::Z_PRIORITY_REAL_TIME || p > zenoh::Priority::Z_PRIORITY_BACKGROUND) {
         throw std::runtime_error(std::string("Unsupported Priority: ") + std::to_string(p));
     }
     return (zenoh::Priority)p;
