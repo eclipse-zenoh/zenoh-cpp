@@ -137,7 +137,7 @@ The `z_querier` should continuously send queries and receive replies from `z_que
 ```
 
 ```bash
-./z_pub_thr_cpp 1024
+./z_pub_thr_cpp 8
 ```
 
 After 30-40 seconds delay the `z_sub_thr` will start to show the throughput measure results.
