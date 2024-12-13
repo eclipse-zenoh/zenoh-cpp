@@ -53,13 +53,14 @@ int _main(int argc, char **argv) {
 
     std::cout << "Declaring Querying Subscriber on '" << keyexpr << "' with initial query on '" << query << "'"
               << std::endl;
-    Session::QueryingSubscriberOptions opts;
+    ext::SessionExt::QueryingSubscriberOptions opts;
 
     if (!query.empty()) {
         opts.query_keyexpr = KeyExpr(query);
         opts.query_accept_replies = ReplyKeyExpr::ZC_REPLY_KEYEXPR_ANY;
     }
-    auto querying_subscriber = session.declare_querying_subscriber(keyexpr, channels::FifoChannel(16), std::move(opts));
+    auto querying_subscriber =
+        session.ext().declare_querying_subscriber(keyexpr, channels::FifoChannel(16), std::move(opts));
 
     std::cout << "Press CTRL-C to quit..." << std::endl;
     for (auto res = querying_subscriber.handler().recv(); std::holds_alternative<Sample>(res);

@@ -28,7 +28,6 @@ API Reference
    publish_subscribe
    query_reply
    matching
-   serialization_deserialization
    channels
    interop
    shared_memory
