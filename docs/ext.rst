@@ -16,10 +16,34 @@ Extensions
 ==========
 Extra functionality, which is not a part of core Zenoh API.
 
-.. doxygenclass:: zenoh::ext::PublicationCache
+Serialization / Deserialization
+-------------------------------
+Support for data serialization and deserialization.
+
+.. doxygenclass:: zenoh::ext::Serializer
    :members:
    :membergroups: Constructors Operators Methods
 
-.. doxygenclass:: zenoh::ext::QueryingSubscriber
+.. doxygenclass:: zenoh::ext::Deserializer
    :members:
    :membergroups: Constructors Operators Methods
+
+.. doxygenfunction:: zenoh::ext::serialize
+.. doxygenfunction:: zenoh::ext::deserialize
+
+
+Session Extension
+-----------------
+Extra Zenoh entities.
+
+.. doxygenclass:: zenoh::ext::SessionExt
+   :members:
+   :membergroups: Constructors Operators Methods Fields
+
+.. doxygenclass:: zenoh::ext::PublicationCache
+   :members:
+   :membergroups: Constructors Operators Methods Fields
+
+.. doxygenclass:: zenoh::ext::QueryingSubscriber
+   :members:
+   :membergroups: Constructors Operators Methods Fields
