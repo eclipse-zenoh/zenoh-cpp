@@ -54,7 +54,7 @@ void data_handler(Sample &sample) {
         // only if payload is carrying underlying SHM buffer
         auto shm = sample.get_payload().as_shm();
         if (shm.has_value()) {
-            // try to get mutable access to SHM buffer 
+            // try to get mutable access to SHM buffer
             payload_type = ZShm::try_mutate(shm.value()).has_value() ? "SHM (MUT)" : "SHM (IMMUT)";
         }
     }
