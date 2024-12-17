@@ -54,9 +54,7 @@ int _main(int argc, char **argv) {
 
         const char *payload_type = "";
         if (query_payload.has_value()) {
-            ZResult result;
-            query_payload->get().as_shm(&result);
-            if (result == Z_OK) {
+            if (query_payload->get().as_shm().has_value()) {
                 payload_type = "SHM";
             } else {
                 payload_type = "RAW";

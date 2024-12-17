@@ -433,14 +433,14 @@ class Session : public Owned<::z_owned_session_t> {
                                                       SubscriberOptions&& options = SubscriberOptions::create_default(),
                                                       ZResult* err = nullptr) const {
         static_assert(
-            std::is_invocable_r<void, C, const Sample&>::value,
+            std::is_invocable_r<void, C, Sample&>::value,
             "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_sample_t c_closure;
         using Cval = std::remove_reference_t<C>;
         using Dval = std::remove_reference_t<D>;
-        using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Sample&>;
+        using ClosureType = typename detail::closures::Closure<Cval, Dval, void, Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
         ::z_subscriber_options_t opts;

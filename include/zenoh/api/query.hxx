@@ -32,7 +32,7 @@
 namespace zenoh {
 /// The query to be answered by a ``Queryable``.
 class Query : public Owned<::z_owned_query_t> {
-    Query(zenoh::detail::null_object_t) : Owned(nullptr){};
+    Query(zenoh::detail::null_object_t) : Owned(nullptr) {};
     friend struct interop::detail::Converter;
 
    public:
@@ -61,6 +61,15 @@ class Query : public Owned<::z_owned_query_t> {
         if (payload == nullptr) return {};
         return std::cref(interop::as_owned_cpp_ref<Bytes>(payload));
     }
+#if defined(ZENOHCXX_ZENOHC)
+    /// @brief Get the payload of the query.
+    /// @return payload of the query.
+    std::optional<std::reference_wrapper<Bytes>> get_payload() {
+        auto payload = ::z_query_payload_mut(interop::as_loaned_c_ptr(*this));
+        if (payload == nullptr) return {};
+        return std::ref(interop::as_owned_cpp_ref<Bytes>(payload));
+    }
+#endif
 
     /// @brief Get the encoding of the query.
     /// @return encoding of the query.
