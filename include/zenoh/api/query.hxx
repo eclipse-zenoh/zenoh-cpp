@@ -89,7 +89,8 @@ class Query : public Owned<::z_owned_query_t> {
         return std::cref(interop::as_owned_cpp_ref<Bytes>(attachment));
     }
 
-    /// @brief Get the attachment of the query.
+#if defined(ZENOHCXX_ZENOHC)
+    /// @brief Get the mutable attachment of the query.
     /// @return attachment of the query.
     std::optional<std::reference_wrapper<Bytes>> get_attachment() {
         auto attachment = ::z_query_attachment_mut(interop::as_loaned_c_ptr(*this));
@@ -98,6 +99,7 @@ class Query : public Owned<::z_owned_query_t> {
         }
         return std::ref(interop::as_owned_cpp_ref<Bytes>(attachment));
     }
+#endif
 
     /// @brief Options passed to the ``Query::reply`` operation.
     struct ReplyOptions {
