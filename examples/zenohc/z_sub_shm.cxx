@@ -34,7 +34,7 @@ const char *kind_to_str(SampleKind kind) {
     }
 }
 
-void data_handler(const Sample &sample) {
+void data_handler(Sample &sample) {
 // if Zenoh is built without SHM support, the only buffer type it can receive is RAW
 #if !defined(Z_FEATURE_SHARED_MEMORY)
     const char *payload_type = "RAW";
@@ -50,10 +50,12 @@ void data_handler(const Sample &sample) {
 #if defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
     const char *payload_type = "RAW";
     {
-        ZResult result;
-        sample.get_payload().as_shm(&result);
-        if (result == Z_OK) {
-            payload_type = "SHM";
+        // try to convert sample payload into SHM buffer. The conversion will succeed
+        // only if payload is carrying underlying SHM buffer
+        auto shm = sample.get_payload().as_shm();
+        if (shm.has_value()) {
+            // try to get mutable access to SHM buffer
+            payload_type = ZShm::try_mutate(shm.value()).has_value() ? "SHM (MUT)" : "SHM (IMMUT)";
         }
     }
 #endif

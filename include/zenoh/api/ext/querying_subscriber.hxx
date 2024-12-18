@@ -139,14 +139,14 @@ template <class C, class D>
                                                                                D&& on_drop,
                                                                                QueryingSubscriberOptions&& options,
                                                                                ZResult* err) const {
-    static_assert(std::is_invocable_r<void, C, const Sample&>::value,
+    static_assert(std::is_invocable_r<void, C, Sample&>::value,
                   "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
     static_assert(std::is_invocable_r<void, D>::value,
                   "on_drop should be callable with the following signature: void on_drop()");
     ::z_owned_closure_sample_t c_closure;
     using Cval = std::remove_reference_t<C>;
     using Dval = std::remove_reference_t<D>;
-    using ClosureType = typename ::zenoh::detail::closures::Closure<Cval, Dval, void, const Sample&>;
+    using ClosureType = typename ::zenoh::detail::closures::Closure<Cval, Dval, void, Sample&>;
     auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
     ::z_closure(&c_closure, ::zenoh::detail::closures::_zenoh_on_sample_call, ::zenoh::detail::closures::_zenoh_on_drop,
                 closure);
@@ -171,14 +171,14 @@ template <class C, class D>
 template <class C, class D>
 void SessionExt::declare_background_querying_subscriber(const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
                                                         QueryingSubscriberOptions&& options, ZResult* err) const {
-    static_assert(std::is_invocable_r<void, C, const Sample&>::value,
+    static_assert(std::is_invocable_r<void, C, Sample&>::value,
                   "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
     static_assert(std::is_invocable_r<void, D>::value,
                   "on_drop should be callable with the following signature: void on_drop()");
     ::z_owned_closure_sample_t c_closure;
     using Cval = std::remove_reference_t<C>;
     using Dval = std::remove_reference_t<D>;
-    using ClosureType = typename ::zenoh::detail::closures::Closure<Cval, Dval, void, const Sample&>;
+    using ClosureType = typename ::zenoh::detail::closures::Closure<Cval, Dval, void, Sample&>;
     auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
     ::z_closure(&c_closure, ::zenoh::detail::closures::_zenoh_on_sample_call, ::zenoh::detail::closures::_zenoh_on_drop,
                 closure);

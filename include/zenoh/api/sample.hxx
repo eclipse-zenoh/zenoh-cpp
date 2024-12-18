@@ -48,6 +48,13 @@ class Sample : public Owned<::z_owned_sample_t> {
     const Bytes& get_payload() const {
         return interop::as_owned_cpp_ref<Bytes>(::z_sample_payload(interop::as_loaned_c_ptr(*this)));
     }
+#if defined(ZENOHCXX_ZENOHC)
+    /// @brief Get the data of this sample.
+    /// @return ``Bytes`` object representing the sample payload.
+    Bytes& get_payload() {
+        return interop::as_owned_cpp_ref<Bytes>(::z_sample_payload_mut(interop::as_loaned_c_ptr(*this)));
+    }
+#endif
 
     /// @brief Get the encoding of the data of this sample.
     /// @return ``Encoding`` object.

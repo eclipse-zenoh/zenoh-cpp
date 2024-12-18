@@ -60,6 +60,16 @@ class ZShm : public Owned<::z_owned_shm_t> {
         }
         return std::nullopt;
     }
+
+    /// @brief Create a new ZShmMut& from ZShm&.
+    /// @param immut immutable buffer, NOTE: the value will not be moved if nullopt returned.
+    /// @return mutable buffer or empty option if buffer mutation is impossible.
+    static std::optional<std::reference_wrapper<ZShmMut>> try_mutate(ZShm& immut) {
+        if (z_loaned_shm_mut_t* shm_mut = ::z_shm_try_reloan_mut(z_loan_mut(immut._0))) {
+            return std::ref(interop::as_owned_cpp_ref<ZShmMut>(shm_mut));
+        }
+        return std::nullopt;
+    }
 };
 
 }  // end of namespace zenoh

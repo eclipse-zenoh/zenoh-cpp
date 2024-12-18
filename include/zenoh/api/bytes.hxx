@@ -163,11 +163,21 @@ class Bytes : public Owned<::z_owned_bytes_t> {
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
-    ZShm as_shm(ZResult* err = nullptr) const {
-        ZShm shm = interop::detail::null<ZShm>();
-        __ZENOH_RESULT_CHECK(::z_bytes_to_owned_shm(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(shm)), err,
-                             "Failed to deserialize into ZShm!");
-        return shm;
+    std::optional<std::reference_wrapper<const ZShm>> as_shm() const {
+        const z_loaned_shm_t* shm;
+        if (::z_bytes_as_loaned_shm(interop::as_loaned_c_ptr(*this), &shm) != Z_OK) {
+            return std::nullopt;
+        }
+        return std::cref(interop::as_owned_cpp_ref<const ZShm>(shm));
+    }
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    std::optional<std::reference_wrapper<ZShm>> as_shm() {
+        z_loaned_shm_t* shm;
+        if (::z_bytes_as_mut_loaned_shm(interop::as_loaned_c_ptr(*this), &shm) != Z_OK) {
+            return std::nullopt;
+        }
+        return std::ref(interop::as_owned_cpp_ref<ZShm>(shm));
     }
 #endif
 
