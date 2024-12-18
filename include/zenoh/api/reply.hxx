@@ -79,6 +79,7 @@ class Reply : public Owned<::z_owned_reply_t> {
         }
         return interop::as_owned_cpp_ref<Sample>(::z_reply_ok_mut(interop::as_loaned_c_ptr(*this)));
     }
+
    public:
 
     /// @brief Get the reply error. Will throw a ZException if ``Reply::is_ok`` returns ``true``.
@@ -100,6 +101,7 @@ class Reply : public Owned<::z_owned_reply_t> {
         }
         return interop::as_owned_cpp_ref<ReplyError>(::z_reply_err_mut(interop::as_loaned_c_ptr(*this)));
     }
+
    public:
 
 #if defined(Z_FEATURE_UNSTABLE_API)
