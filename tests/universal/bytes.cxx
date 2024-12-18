@@ -21,7 +21,6 @@
 using namespace zenoh;
 
 void reader_writer() {
-    std::cout << "running reader_writer\n";
     std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     Bytes::Writer writer;
     writer.write_all(data.data(), 5);
@@ -39,7 +38,6 @@ void reader_writer() {
 }
 
 void reader_seek_tell() {
-    std::cout << "running reader_seek_tell\n";
     std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     Bytes::Writer writer;
     writer.write_all(data.data(), 5);
@@ -73,7 +71,6 @@ void reader_seek_tell() {
 }
 
 void reader_writer_append() {
-    std::cout << "running reader_writer_append\n";
     std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     std::vector<uint8_t> data2 = {11, 12, 13, 14};
     Bytes b, b2;
@@ -116,9 +113,28 @@ void from_into() {
     assert(bs2.as_string() == s);
 }
 
+void custom_deleter() {
+    uint8_t* ptr = new uint8_t[10];
+    for (size_t i = 0; i < 10; i++) {
+        ptr[i] = i;
+    }
+
+    bool deleted = false;
+    auto deleter = [&deleted](uint8_t* data) {
+        deleted = true;
+        delete[] data;
+    };
+    {
+        Bytes b(ptr, 10, deleter);
+        assert(b.as_vector() == std::vector<uint8_t>(ptr, ptr + 10));
+    }
+    assert(deleted);
+}
+
 int main(int argc, char** argv) {
     reader_writer();
     reader_seek_tell();
     reader_writer_append();
     from_into();
+    custom_deleter();
 }

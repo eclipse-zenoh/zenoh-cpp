@@ -98,6 +98,24 @@ class Bytes : public Owned<::z_owned_bytes_t> {
                            detail::closures::_zenoh_drop_with_context, drop);
     }
 
+    /// @brief Construct by taking ownership of sequence of bytes.
+    /// @tparam Deleter callable with signature void Deleter(uint8_t*).
+    /// @param ptr pointer to data.
+    /// @param len number of bytes to consider.
+    /// @param deleter a thread-safe delete function to be invoked once corresponding ``Bytes`` object and all of its
+    /// clones are destroyed.
+    template <class Deleter>
+    Bytes(uint8_t* ptr, size_t len, Deleter deleter) : Bytes() {
+        static_assert(std::is_invocable_r<void, Deleter, uint8_t*>::value,
+                      "deleter should be callable with the following signature: void deleter(uint8_t* data)");
+        auto d = [p = ptr, del = std::move(deleter)]() mutable { del(p); };
+        using D = decltype(d);
+        using Dval = std::remove_reference_t<D>;
+        using DroppableType = typename detail::closures::Droppable<Dval>;
+        auto drop = DroppableType::into_context(std::forward<D>(d));
+        ::z_bytes_from_buf(interop::as_owned_c_ptr(*this), ptr, len, detail::closures::_zenoh_drop_with_context, drop);
+    }
+
     /// @brief Construct a shallow copy of this data.
     Bytes clone() const {
         Bytes b;
