@@ -160,6 +160,25 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         return s;
     }
 
+#if defined(Z_FEATURE_UNSTABLE_API)
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Attempt to get a contiguous view to the underlying bytes
+    ///
+    /// This is only possible if data is not fragmented, otherwise the function will fail. In case of fragmented data,
+    /// consider using ``Bytes::slice_iter``.
+    /// @return A ``Slice`` containing pointer to underlying data and its length if data is non fragmented, an empty
+    /// value otherwise.
+    std::optional<Slice> get_contiguous_view() const {
+        ::z_view_slice_t view;
+        if (::z_bytes_get_contiguous_view(interop::as_loaned_c_ptr(*this), &view) == Z_OK) {
+            return make_slice(::z_slice_data(z_loan(view)), ::z_slice_len(z_loan(view)));
+        } else {
+            return {};
+        }
+    }
+#endif
+
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
