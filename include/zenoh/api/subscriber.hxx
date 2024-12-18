@@ -35,7 +35,6 @@ class SubscriberBase : public Owned<::z_owned_subscriber_t> {
     const KeyExpr& get_keyexpr() const {
         return interop::as_owned_cpp_ref<KeyExpr>(::z_subscriber_keyexpr(interop::as_loaned_c_ptr(*this)));
     }
-    friend class zenoh::Session;
 };
 
 }  // namespace detail
@@ -46,7 +45,7 @@ template <>
 class Subscriber<void> : public detail::SubscriberBase {
    protected:
     using SubscriberBase::SubscriberBase;
-    friend class Session;
+    friend struct interop::detail::Converter;
 
    public:
     /// @name Methods

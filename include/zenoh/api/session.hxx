@@ -405,12 +405,28 @@ class Session : public Owned<::z_owned_session_t> {
 #if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_SUBSCRIPTION == 1
     /// @brief Options to be passed when declaring a ``Subscriber``.
     struct SubscriberOptions {
-        /// @name Fields
+/// @name Fields
 
+/// Restrict the matching publications that will be received by this Subscribers to the ones
+/// that have the compatible allowed_destination.
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+        Locality allowed_origin = ::zc_locality_default();
+#endif
         /// @name Methods
 
         /// @brief Create default option settings.
         static SubscriberOptions create_default() { return {}; }
+
+       private:
+        friend struct interop::detail::Converter;
+        ::z_subscriber_options_t to_c_opts() {
+            ::z_subscriber_options_t opts;
+            z_subscriber_options_default(&opts);
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+            opts.allowed_origin = this->allowed_origin;
+#endif
+            return opts;
+        }
     };
 
     /// @brief Create a ``Subscriber`` object to receive data from matching ``Publisher`` objects or from
@@ -437,10 +453,8 @@ class Session : public Owned<::z_owned_session_t> {
         using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
-        ::z_subscriber_options_t opts;
-        z_subscriber_options_default(&opts);
-        (void)options;
-        Subscriber<void> s(zenoh::detail::null_object);
+        ::z_subscriber_options_t opts = interop::detail::Converter::to_c_opts(options);
+        Subscriber<void> s = interop::detail::null<Subscriber<void>>();
         ZResult res = ::z_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
                                              interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Subscriber");
@@ -471,9 +485,7 @@ class Session : public Owned<::z_owned_session_t> {
         using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
-        ::z_subscriber_options_t opts;
-        z_subscriber_options_default(&opts);
-        (void)options;
+        ::z_subscriber_options_t opts = interop::detail::Converter::to_c_opts(options);
         ZResult res = ::z_declare_background_subscriber(interop::as_loaned_c_ptr(*this),
                                                         interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Subscriber");
@@ -494,10 +506,8 @@ class Session : public Owned<::z_owned_session_t> {
         const KeyExpr& key_expr, Channel channel, SubscriberOptions&& options = SubscriberOptions::create_default(),
         ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Sample>();
-        ::z_subscriber_options_t opts;
-        z_subscriber_options_default(&opts);
-        (void)options;
-        Subscriber<void> s(zenoh::detail::null_object);
+        ::z_subscriber_options_t opts = interop::detail::Converter::to_c_opts(options);
+        Subscriber<void> s = interop::detail::null<Subscriber<void>>();
         ZResult res =
             ::z_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
                                    interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
@@ -654,6 +664,24 @@ class Session : public Owned<::z_owned_session_t> {
 
         /// @brief Create default option settings.
         static PublisherOptions create_default() { return {}; }
+
+       private:
+        friend struct interop::detail::Converter;
+        ::z_publisher_options_t to_c_opts() {
+            ::z_publisher_options_t opts;
+            z_publisher_options_default(&opts);
+            opts.congestion_control = this->congestion_control;
+            opts.priority = this->priority;
+            opts.is_express = this->is_express;
+#if defined(Z_FEATURE_UNSTABLE_API)
+            opts.reliability = this->reliability;
+#endif
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+            opts.allowed_destination = this->allowed_destination;
+#endif
+            opts.encoding = interop::as_moved_c_ptr(this->encoding);
+            return opts;
+        }
     };
 
     /// @brief Create a ``Publisher`` object to publish data to matching ``Subscriber`` objects.
@@ -665,20 +693,8 @@ class Session : public Owned<::z_owned_session_t> {
     Publisher declare_publisher(const KeyExpr& key_expr,
                                 PublisherOptions&& options = PublisherOptions::create_default(),
                                 ZResult* err = nullptr) const {
-        ::z_publisher_options_t opts;
-        z_publisher_options_default(&opts);
-        opts.congestion_control = options.congestion_control;
-        opts.priority = options.priority;
-        opts.is_express = options.is_express;
-#if defined(Z_FEATURE_UNSTABLE_API)
-        opts.reliability = options.reliability;
-#endif
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-        opts.allowed_destination = options.allowed_destination;
-#endif
-        opts.encoding = interop::as_moved_c_ptr(options.encoding);
-
         Publisher p = interop::detail::null<Publisher>();
+        ::z_publisher_options_t opts = interop::detail::Converter::to_c_opts(options);
         ZResult res = ::z_declare_publisher(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(p),
                                             interop::as_loaned_c_ptr(key_expr), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Publisher");
@@ -926,7 +942,7 @@ class Session : public Owned<::z_owned_session_t> {
         ::z_liveliness_subscriber_options_t opts;
         z_liveliness_subscriber_options_default(&opts);
         opts.history = options.history;
-        Subscriber<void> s(zenoh::detail::null_object);
+        Subscriber<void> s = interop::detail::null<Subscriber<void>>();
         ZResult res = ::z_liveliness_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
                                                         interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
@@ -990,7 +1006,7 @@ class Session : public Owned<::z_owned_session_t> {
         ::z_liveliness_subscriber_options_t opts;
         z_liveliness_subscriber_options_default(&opts);
         opts.history = options.history;
-        Subscriber<void> s(zenoh::detail::null_object);
+        Subscriber<void> s = interop::detail::null<Subscriber<void>>();
         ZResult res = ::z_liveliness_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
                                                         interop::as_loaned_c_ptr(key_expr),
                                                         ::z_move(cb_handler_pair.first), &opts);
@@ -1107,4 +1123,5 @@ class Session : public Owned<::z_owned_session_t> {
     }
 #endif
 };
+
 }  // namespace zenoh

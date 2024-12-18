@@ -19,7 +19,6 @@
 #include "../interop.hxx"
 #include "../keyexpr.hxx"
 #include "../sample.hxx"
-#include "session_ext.hxx"
 
 namespace zenoh::ext {
 
@@ -49,41 +48,6 @@ class PublicationCache : public Owned<::ze_owned_publication_cache_t> {
                              "Failed to undeclare Publication Cache");
     }
 };
-
-[[nodiscard]] PublicationCache SessionExt::declare_publication_cache(const KeyExpr& key_expr,
-                                                                     PublicationCacheOptions&& options,
-                                                                     ZResult* err) const {
-    ::ze_publication_cache_options_t opts;
-    ze_publication_cache_options_default(&opts);
-    opts.queryable_prefix = interop::as_loaned_c_ptr(options.queryable_prefix);
-#if defined(Z_FEATURE_UNSTABLE_API)
-    opts.queryable_origin = options.queryable_origin;
-#endif
-    opts.queryable_complete = options.queryable_complete;
-    opts.history = options.history;
-    opts.resources_limit = options.resources_limit;
-    ext::PublicationCache p = interop::detail::null<ext::PublicationCache>();
-    ZResult res = ::ze_declare_publication_cache(interop::as_loaned_c_ptr(this->_session), interop::as_owned_c_ptr(p),
-                                                 interop::as_loaned_c_ptr(key_expr), &opts);
-    __ZENOH_RESULT_CHECK(res, err, "Failed to declare Publication Cache");
-    return p;
-}
-
-void SessionExt::declare_background_publication_cache(const KeyExpr& key_expr, PublicationCacheOptions&& options,
-                                                      ZResult* err) const {
-    ::ze_publication_cache_options_t opts;
-    ze_publication_cache_options_default(&opts);
-    opts.queryable_prefix = interop::as_loaned_c_ptr(options.queryable_prefix);
-#if defined(Z_FEATURE_UNSTABLE_API)
-    opts.queryable_origin = options.queryable_origin;
-#endif
-    opts.queryable_complete = options.queryable_complete;
-    opts.history = options.history;
-    opts.resources_limit = options.resources_limit;
-    ZResult res = ::ze_declare_background_publication_cache(interop::as_loaned_c_ptr(this->_session),
-                                                            interop::as_loaned_c_ptr(key_expr), &opts);
-    __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Publication Cache");
-}
 
 }  // namespace zenoh::ext
 #endif

@@ -214,6 +214,11 @@ struct Converter {
     static T copyable_to_cpp(const Inner& i) {
         return T(i);
     }
+
+    template <class OPTIONS>
+    static auto to_c_opts(OPTIONS& options) {
+        return options.to_c_opts();
+    }
 };
 
 template <class T>
