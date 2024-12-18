@@ -102,8 +102,8 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     /// @tparam Deleter callable with signature void Deleter(uint8_t*).
     /// @param ptr pointer to data.
     /// @param len number of bytes to consider.
-    /// @param deleter delete function to be invoked once corresponding ``Bytes`` object and all of its clones are
-    /// destroyed.
+    /// @param deleter a thread-safe delete function to be invoked once corresponding ``Bytes`` object and all of its
+    /// clones are destroyed.
     template <class Deleter>
     Bytes(uint8_t* ptr, size_t len, Deleter deleter) : Bytes() {
         static_assert(std::is_invocable_r<void, Deleter, uint8_t*>::value,
