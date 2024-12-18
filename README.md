@@ -8,6 +8,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # Eclipse Zenoh
+
 The Eclipse Zenoh: Zero Overhead Pub/sub, Store/Query and Compute.
 
 Zenoh (pronounce _/zeno/_) unifies data in motion, data at rest and computations. It carefully blends traditional pub/sub with geo-distributed storages, queries and computations, while retaining a level of time and space efficiency that is well beyond any of the mainstream stacks.
@@ -21,10 +22,12 @@ The Zenoh C++ API are headers only C++ bindings for [zenoh-c] and [zenoh-pico] l
 C++ bindings are still under active development so the Zenoh team will highly appreciate any help in testing them on various platforms, system architecture, etc. and to report any issue you might encounter. This will help in greatly improving its maturity and robustness.
 
 ## Requirements
+
 The only hard requirement for building the library is a C++17-compliant compiler.
 Using the library requires either [zenoh-c] or [zenoh-pico] to be installed.
 
 -------------------------------
+
 ## How to build and install it
 
 > :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in mantaining compatibility between the various git repositories in the Zenoh project.
@@ -93,6 +96,7 @@ Change current directory to the variant you want (`examples/zenohc` or `examples
 See example sources for command line arguments (key expression, value, router address).
 
 `zenohc` examples can work standalone, but for `zenohpico` examples the working zenoh router is required. So to run `zenohpico` examples download [zenoh] project and run the router ([Rust](rust-lang) should be installed):
+
 ```bash
 git clone https://github.com/eclipse-zenoh/zenoh
 cd zenoh
@@ -112,6 +116,7 @@ cargo run
 The `z_pub` should receive message sent by `z_sub`.
 
 ### Queryable and Query Example
+
 ```bash
 ./z_queryable
 ```
@@ -121,6 +126,7 @@ The `z_pub` should receive message sent by `z_sub`.
 ```
 
 ### Queryable and Querier Example
+
 ```bash
 ./z_queryable
 ```
@@ -132,6 +138,7 @@ The `z_pub` should receive message sent by `z_sub`.
 The `z_querier` should continuously send queries and receive replies from `z_queryable`.
 
 ### Throughput Examples
+
 ```bash
 ./z_sub_thr_cpp
 ```
@@ -150,36 +157,40 @@ Below are the steps to include [zenoh-cpp] into CMake project. See also [example
   This is important as the library targets you need (`zenohcxx::zenohpico`, `zenohcxx::zenohc::lib`) are defined only if their backend library targets (`zenohpico::lib` and/or `zenohc::lib` are defined)
 
 - include [zenoh-cpp] using [find_package] CMake function:
-  ```
+
+  ```cmake
   find_package(zenohc) #if using zenoh-c backend
   find_package(zenohpico) #if using zenoh-pico backend
   find_package(zenohcxx)
   ```
+
 - add dependency on zenoh-cpp to your project:
-   ```
-   target_link_libraries(yourproject PUBLIC zenohcxx::zenohc) #if using zenoh-c backend
-   target_link_libraries(yourproject PUBLIC zenohcxx::zenohpico) #if using zenoh-pico backend
-   ```
+
+  ```cmake
+  target_link_libraries(yourproject PUBLIC zenohcxx::zenohc) #if using zenoh-c backend
+  target_link_libraries(yourproject PUBLIC zenohcxx::zenohpico) #if using zenoh-pico backend
+  ```
 
 - include the [zenoh.hxx] header. All zenoh functionality is available under the namespace `zenoh`:
-    ```C++
-    #include "zenoh.hxx"
-    using namespace zenoh;
-    ```
+
+  ```c++
+  #include "zenoh.hxx"
+  using namespace zenoh;
+  ```
 
 ### Documentation
 
-The documentation is on [zenoh-cpp.readthedocs.io]. 
+The documentation is on [zenoh-cpp.readthedocs.io].
 Instruction how to build documentation locally is at [docs/README.md].
 
-[rust-lang]: https://www.rust-lang.org
-[zenoh]: https://github.com/eclipse-zenoh/zenoh
-[zenoh-c]: https://github.com/eclipse-zenoh/zenoh-c
-[zenoh-cpp]: https://github.com/eclipse-zenoh/zenoh-cpp
-[zenoh-pico]: https://github.com/eclipse-zenoh/zenoh-pico
-[zenoh.hxx]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenoh.hxx
-[add_subdirectory]: https://cmake.org/cmake/help/latest/command/add_subdirectory.html
-[find_package]: https://cmake.org/cmake/help/latest/command/find_package.html
-[FetchContent]: https://cmake.org/cmake/help/latest/module/FetchContent.html
-[zenoh-cpp.readthedocs.io]: https://zenoh-cpp.readthedocs.io
-[docs/README.md]: https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/docs/README.md
+- [rust-lang](https://www.rust-lang.org)
+- [zenoh](https://github.com/eclipse-zenoh/zenoh)
+- [zenoh-c](https://github.com/eclipse-zenoh/zenoh-c)
+- [zenoh-cpp](https://github.com/eclipse-zenoh/zenoh-cpp)
+- [zenoh-pico](https://github.com/eclipse-zenoh/zenoh-pico)
+- [zenoh.hxx](https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/include/zenoh.hxx)
+- [add_subdirectory](https://cmake.org/cmake/help/latest/command/add_subdirectory.html)
+- [find_package](https://cmake.org/cmake/help/latest/command/find_package.html)
+- [FetchContent](https://cmake.org/cmake/help/latest/module/FetchContent.html)
+- [zenoh-cpp.readthedocs.io](https://zenoh-cpp.readthedocs.io)
+- [docs/README.md](https://github.com/eclipse-zenoh/zenoh-cpp/blob/main/docs/README.md)
