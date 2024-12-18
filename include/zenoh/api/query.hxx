@@ -89,7 +89,6 @@ class Query : public Owned<::z_owned_query_t> {
         return std::cref(interop::as_owned_cpp_ref<Bytes>(attachment));
     }
 
-
     /// @brief Get the attachment of the query.
     /// @return attachment of the query.
     std::optional<std::reference_wrapper<Bytes>> get_attachment() {

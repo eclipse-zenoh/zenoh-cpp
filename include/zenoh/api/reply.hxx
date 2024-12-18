@@ -81,7 +81,6 @@ class Reply : public Owned<::z_owned_reply_t> {
     }
 
    public:
-
     /// @brief Get the reply error. Will throw a ZException if ``Reply::is_ok`` returns ``true``.
     /// @return reply error.
     const ReplyError& get_err() const {
@@ -103,7 +102,6 @@ class Reply : public Owned<::z_owned_reply_t> {
     }
 
    public:
-
 #if defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
