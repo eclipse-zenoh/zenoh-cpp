@@ -50,9 +50,9 @@ class PublicationCache : public Owned<::ze_owned_publication_cache_t> {
     }
 };
 
-[[nodiscard]] PublicationCache SessionExt::declare_publication_cache(const KeyExpr& key_expr,
-                                                                     PublicationCacheOptions&& options,
-                                                                     ZResult* err) const {
+[[nodiscard]] inline PublicationCache SessionExt::declare_publication_cache(const KeyExpr& key_expr,
+                                                                            PublicationCacheOptions&& options,
+                                                                            ZResult* err) const {
     ::ze_publication_cache_options_t opts;
     ze_publication_cache_options_default(&opts);
     opts.queryable_prefix = interop::as_loaned_c_ptr(options.queryable_prefix);
@@ -69,8 +69,8 @@ class PublicationCache : public Owned<::ze_owned_publication_cache_t> {
     return p;
 }
 
-void SessionExt::declare_background_publication_cache(const KeyExpr& key_expr, PublicationCacheOptions&& options,
-                                                      ZResult* err) const {
+inline void SessionExt::declare_background_publication_cache(const KeyExpr& key_expr, PublicationCacheOptions&& options,
+                                                             ZResult* err) const {
     ::ze_publication_cache_options_t opts;
     ze_publication_cache_options_default(&opts);
     opts.queryable_prefix = interop::as_loaned_c_ptr(options.queryable_prefix);
