@@ -98,6 +98,24 @@ class Bytes : public Owned<::z_owned_bytes_t> {
                            detail::closures::_zenoh_drop_with_context, drop);
     }
 
+    /// @brief Construct by taking ownership of sequence of bytes.
+    /// @tparam Deleter callable with signature void Deleter(uint8_t*).
+    /// @param ptr pointer to data.
+    /// @param len number of bytes to consider.
+    /// @param deleter a thread-safe delete function to be invoked once corresponding ``Bytes`` object and all of its
+    /// clones are destroyed.
+    template <class Deleter>
+    Bytes(uint8_t* ptr, size_t len, Deleter deleter) : Bytes() {
+        static_assert(std::is_invocable_r<void, Deleter, uint8_t*>::value,
+                      "deleter should be callable with the following signature: void deleter(uint8_t* data)");
+        auto d = [p = ptr, del = std::move(deleter)]() mutable { del(p); };
+        using D = decltype(d);
+        using Dval = std::remove_reference_t<D>;
+        using DroppableType = typename detail::closures::Droppable<Dval>;
+        auto drop = DroppableType::into_context(std::forward<D>(d));
+        ::z_bytes_from_buf(interop::as_owned_c_ptr(*this), ptr, len, detail::closures::_zenoh_drop_with_context, drop);
+    }
+
     /// @brief Construct a shallow copy of this data.
     Bytes clone() const {
         Bytes b;
@@ -142,14 +160,43 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         return s;
     }
 
+#if defined(Z_FEATURE_UNSTABLE_API)
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Attempt to get a contiguous view to the underlying bytes
+    ///
+    /// This is only possible if data is not fragmented, otherwise the function will fail. In case of fragmented data,
+    /// consider using ``Bytes::slice_iter``.
+    /// @return A ``Slice`` containing pointer to underlying data and its length if data is non fragmented, an empty
+    /// value otherwise.
+    std::optional<Slice> get_contiguous_view() const {
+        ::z_view_slice_t view;
+        if (::z_bytes_get_contiguous_view(interop::as_loaned_c_ptr(*this), &view) == Z_OK) {
+            return make_slice(::z_slice_data(z_loan(view)), ::z_slice_len(z_loan(view)));
+        } else {
+            return {};
+        }
+    }
+#endif
+
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
-    ZShm as_shm(ZResult* err = nullptr) const {
-        ZShm shm = interop::detail::null<ZShm>();
-        __ZENOH_RESULT_CHECK(::z_bytes_to_owned_shm(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(shm)), err,
-                             "Failed to deserialize into ZShm!");
-        return shm;
+    std::optional<std::reference_wrapper<const ZShm>> as_shm() const {
+        const z_loaned_shm_t* shm;
+        if (::z_bytes_as_loaned_shm(interop::as_loaned_c_ptr(*this), &shm) != Z_OK) {
+            return std::nullopt;
+        }
+        return std::cref(interop::as_owned_cpp_ref<const ZShm>(shm));
+    }
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    std::optional<std::reference_wrapper<ZShm>> as_shm() {
+        z_loaned_shm_t* shm;
+        if (::z_bytes_as_mut_loaned_shm(interop::as_loaned_c_ptr(*this), &shm) != Z_OK) {
+            return std::nullopt;
+        }
+        return std::ref(interop::as_owned_cpp_ref<ZShm>(shm));
     }
 #endif
 
