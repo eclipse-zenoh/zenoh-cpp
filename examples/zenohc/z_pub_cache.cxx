@@ -54,7 +54,7 @@ int _main(int argc, char **argv) {
     auto session = Session::open(std::move(config));
 
     std::cout << "Declaring Publication cache on '" << keyexpr << "'..." << std::endl;
-    Session::PublicationCacheOptions opts;
+    ext::SessionExt::PublicationCacheOptions opts;
     opts.history = history;
     opts.queryable_complete = complete;
     if (!prefix.empty()) {
@@ -63,7 +63,7 @@ int _main(int argc, char **argv) {
     if (!std::string(prefix).empty()) {
         opts.queryable_prefix = KeyExpr(prefix);
     }
-    auto pub_cache = session.declare_publication_cache(keyexpr, std::move(opts));
+    auto pub_cache = session.ext().declare_publication_cache(keyexpr, std::move(opts));
 
     std::cout << "Press CTRL-C to quit..." << std::endl;
     for (int idx = 0; idx < std::numeric_limits<int>::max(); ++idx) {
