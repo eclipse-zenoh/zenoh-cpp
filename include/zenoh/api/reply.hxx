@@ -69,6 +69,7 @@ class Reply : public Owned<::z_owned_reply_t> {
         return interop::as_owned_cpp_ref<Sample>(::z_reply_ok(interop::as_loaned_c_ptr(*this)));
     }
 
+   private: // TODO: this is temporary private because of this: https://github.com/eclipse-zenoh/zenoh-c/pull/718
     /// @brief Get the mutable reply sample. Will throw a ZException if ``Reply::is_ok`` returns ``false``.
     /// @return reply sample.
     Sample& get_ok() {
@@ -77,6 +78,7 @@ class Reply : public Owned<::z_owned_reply_t> {
         }
         return interop::as_owned_cpp_ref<Sample>(::z_reply_ok_mut(interop::as_loaned_c_ptr(*this)));
     }
+   public:
 
     /// @brief Get the reply error. Will throw a ZException if ``Reply::is_ok`` returns ``true``.
     /// @return reply error.
@@ -87,6 +89,7 @@ class Reply : public Owned<::z_owned_reply_t> {
         return interop::as_owned_cpp_ref<ReplyError>(::z_reply_err(interop::as_loaned_c_ptr(*this)));
     }
 
+   private: // TODO: this is temporary private because of this: https://github.com/eclipse-zenoh/zenoh-c/pull/718
     /// @brief Get the mutable reply error. Will throw a ZException if ``Reply::is_ok`` returns ``true``.
     /// @return reply error.
     ReplyError& get_err() {
@@ -95,6 +98,7 @@ class Reply : public Owned<::z_owned_reply_t> {
         }
         return interop::as_owned_cpp_ref<ReplyError>(::z_reply_err_mut(interop::as_loaned_c_ptr(*this)));
     }
+   public:
 
 #if defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
