@@ -88,6 +88,98 @@ class AdvancedSubscriberBase : public Owned<::ze_owned_advanced_subscriber_t> {
             ::zenoh::interop::as_loaned_c_ptr(*this), ::z_move(c_closure));
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare background Sample Miss Listener");
     }
+
+    /// @brief Declares a liveliness token listener for matching publishers detection. Only advanced publishers,
+    /// enabling publisher detection can be detected.
+    /// @param on_sample the callable that will be called each time a liveliness token status is changed.
+    /// @param on_drop the callable that will be called once subscriber is destroyed or undeclared.
+    /// @param options options to pass to listener declaration.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @return a ``::zenoh::Subscriber`` object.
+    template <class C, class D>
+    [[nodiscard]] ::zenoh::Subscriber<void> detect_publishers(
+        C&& on_sample, D&& on_drop,
+        ::zenoh::Session::LivelinessSubscriberOptions&& options =
+            ::zenoh::Session::LivelinessSubscriberOptions::create_default(),
+        ZResult* err = nullptr) const {
+        static_assert(
+            std::is_invocable_r<void, C, ::zenoh::Sample&>::value,
+            "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
+        static_assert(std::is_invocable_r<void, D>::value,
+                      "on_drop should be callable with the following signature: void on_drop()");
+        ::z_owned_closure_sample_t c_closure;
+        using Cval = std::remove_reference_t<C>;
+        using Dval = std::remove_reference_t<D>;
+        using ClosureType = typename ::zenoh::detail::closures::Closure<Cval, Dval, void, ::zenoh::Sample&>;
+        auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
+        ::z_closure(&c_closure, ::zenoh::detail::closures::_zenoh_on_sample_call,
+                    ::zenoh::detail::closures::_zenoh_on_drop, closure);
+        ::z_liveliness_subscriber_options_t opts = ::zenoh::interop::detail::Converter::to_c_opts(options);
+        ::zenoh::Subscriber<void> s = ::zenoh::interop::detail::null<::zenoh::Subscriber<void>>();
+        ::zenoh::ZResult res = ::ze_advanced_subscriber_detect_publishers(
+            ::zenoh::interop::as_loaned_c_ptr(*this), ::zenoh::interop::as_owned_c_ptr(s), ::z_move(c_closure), &opts);
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
+        return s;
+    }
+
+    /// @brief Declares a background liveliness token listener for matching publishers detection. Only advanced
+    /// publishers, enabling publisher detection can be detected. The subscriber callback will be run in the background
+    /// until the corresponding session is closed or destroyed.
+    /// @param on_sample the callable that will be called each time a liveliness token status is changed.
+    /// @param on_drop the callable that will be called once subscriber is destroyed or undeclared.
+    /// @param options options to pass to subscriber declaration.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @note Zenoh-c only.
+    template <class C, class D>
+    void detect_publishers_background(
+        C&& on_sample, D&& on_drop,
+        ::zenoh::Session::LivelinessSubscriberOptions&& options = ::zenoh::Session::LivelinessSubscriberOptions::create_default(),
+        ::zenoh::ZResult* err = nullptr) const {
+        static_assert(
+            std::is_invocable_r<void, C, ::zenoh::Sample&>::value,
+            "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
+        static_assert(std::is_invocable_r<void, D>::value,
+                      "on_drop should be callable with the following signature: void on_drop()");
+        ::z_owned_closure_sample_t c_closure;
+        using Cval = std::remove_reference_t<C>;
+        using Dval = std::remove_reference_t<D>;
+        using ClosureType = typename ::zenoh::detail::closures::Closure<Cval, Dval, void, ::zenoh::Sample&>;
+        auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
+        ::z_closure(&c_closure, ::zenoh::detail::closures::_zenoh_on_sample_call,
+                    ::zenoh::detail::closures::_zenoh_on_drop, closure);
+        ::z_liveliness_subscriber_options_t opts = ::zenoh::interop::detail::Converter::to_c_opts(options);
+        ::zenoh::ZResult res = ::ze_advanced_subscriber_detect_publishers_background(
+            ::zenoh::interop::as_loaned_c_ptr(*this), ::z_move(c_closure), &opts);
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Liveliness Token Subscriber");
+    }
+
+    /// @brief  Declares a liveliness token listener for matching publishers detection. Only advanced publishers,
+    /// enabling publisher detection can be detected.
+    /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
+    /// ``zenoh::channels::RingChannel``).
+    /// @param channel an instance of channel.
+    /// @param options options to pass to subscriber declaration.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @return a ``Subscriber`` object.
+    template <class Channel>
+    [[nodiscard]] ::zenoh::Subscriber<typename Channel::template HandlerType<Sample>> detect_publishers(
+        Channel channel,
+        ::zenoh::Session::LivelinessSubscriberOptions&& options = ::zenoh::Session::LivelinessSubscriberOptions::create_default(),
+        ::zenoh::ZResult* err = nullptr) const {
+        auto cb_handler_pair = channel.template into_cb_handler_pair<::zenoh::Sample>();
+        ::z_liveliness_subscriber_options_t opts = ::zenoh::interop::detail::Converter::to_c_opts(options);
+        ::zenoh::Subscriber<void> s = ::zenoh::interop::detail::null<::zenoh::Subscriber<void>>();
+        ::zenoh::ZResult res = ::z_liveliness_declare_subscriber(
+            ::zenoh::interop::as_loaned_c_ptr(*this), ::zenoh::interop::as_owned_c_ptr(s),
+            ::z_move(cb_handler_pair.first), &opts);
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
+        if (res != Z_OK) ::z_drop(::z_move(*::zenoh::interop::as_moved_c_ptr(cb_handler_pair.second)));
+        return ::zenoh::Subscriber<typename Channel::template HandlerType<::zenoh::Sample>>(
+            std::move(s), std::move(cb_handler_pair.second));
+    }
 };
 }  // namespace detail
 

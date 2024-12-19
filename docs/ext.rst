@@ -47,3 +47,11 @@ Extra Zenoh entities.
 .. doxygenclass:: zenoh::ext::QueryingSubscriber
    :members:
    :membergroups: Constructors Operators Methods Fields
+
+.. doxygenclass:: zenoh::ext::AdvancedPublisher
+   :members:
+   :membergroups: Constructors Operators Methods Fields
+
+.. doxygenclass:: zenoh::ext::AdvancedSubscriber
+   :members:
+   :membergroups: Constructors Operators Methods Fields

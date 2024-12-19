@@ -880,6 +880,9 @@ class Session : public Owned<::z_owned_session_t> {
         uint8_t _dummy = 0;
 
        public:
+        /// @name Methods
+
+        /// @brief Create default option settings.
         static LivelinessDeclarationOptions create_default() { return {}; }
     };
 
@@ -910,9 +913,25 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Options to pass to ``Session::liveliness_declare_subscriber``.
     struct LivelinessSubscriberOptions {
        public:
+        /// @name Fields
+
+        /// If true, subscriber will receive the state change notifications for liveliness tokens that were declared
+        /// before its declaration.
         bool history = false;
 
+        /// @name Methods
+
+        /// @brief Create default option settings.
         static LivelinessSubscriberOptions create_default() { return {}; }
+
+       private:
+        friend struct interop::detail::Converter;
+        ::z_liveliness_subscriber_options_t to_c_opts() {
+            ::z_liveliness_subscriber_options_t opts;
+            ::z_liveliness_subscriber_options_default(&opts);
+            opts.history = this->history;
+            return opts;
+        }
     };
 
     /// @brief Declares a subscriber on liveliness tokens that intersect `key_expr`.
@@ -939,9 +958,7 @@ class Session : public Owned<::z_owned_session_t> {
         using ClosureType = typename detail::closures::Closure<Cval, Dval, void, Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
-        ::z_liveliness_subscriber_options_t opts;
-        z_liveliness_subscriber_options_default(&opts);
-        opts.history = options.history;
+        ::z_liveliness_subscriber_options_t opts = interop::detail::Converter::to_c_opts(options);
         Subscriber<void> s = interop::detail::null<Subscriber<void>>();
         ZResult res = ::z_liveliness_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
                                                         interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
@@ -978,9 +995,7 @@ class Session : public Owned<::z_owned_session_t> {
         using ClosureType = typename detail::closures::Closure<Cval, Dval, void, Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
-        ::z_liveliness_subscriber_options_t opts;
-        z_liveliness_subscriber_options_default(&opts);
-        opts.history = options.history;
+        ::z_liveliness_subscriber_options_t opts = interop::detail::Converter::to_c_opts(options);
         ZResult res = ::zc_liveliness_declare_background_subscriber(
             interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Liveliness Token Subscriber");
@@ -1003,9 +1018,7 @@ class Session : public Owned<::z_owned_session_t> {
         LivelinessSubscriberOptions&& options = LivelinessSubscriberOptions::create_default(),
         ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Sample>();
-        ::z_liveliness_subscriber_options_t opts;
-        z_liveliness_subscriber_options_default(&opts);
-        opts.history = options.history;
+        ::z_liveliness_subscriber_options_t opts = interop::detail::Converter::to_c_opts(options);
         Subscriber<void> s = interop::detail::null<Subscriber<void>>();
         ZResult res = ::z_liveliness_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
                                                         interop::as_loaned_c_ptr(key_expr),
