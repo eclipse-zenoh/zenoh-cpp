@@ -94,7 +94,9 @@ class Bytes : public Owned<::z_owned_bytes_t> {
         using Dval = std::remove_reference_t<D>;
         using DroppableType = typename detail::closures::Droppable<Dval>;
         auto drop = DroppableType::into_context(std::forward<D>(d));
-        ::z_bytes_from_str(interop::as_owned_c_ptr(*this), const_cast<char*>(ptr->c_str()),
+        ::z_bytes_from_buf(interop::as_owned_c_ptr(*this),
+                           reinterpret_cast<uint8_t*>(ptr->data()),
+                           ptr->size(),
                            detail::closures::_zenoh_drop_with_context, drop);
     }
 
