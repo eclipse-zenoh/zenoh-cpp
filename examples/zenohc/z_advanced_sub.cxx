@@ -11,9 +11,6 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-#include <stdio.h>
-#include <string.h>
-
 #include <chrono>
 #include <iostream>
 #include <limits>
@@ -41,34 +38,40 @@ int _main(int argc, char **argv) {
     auto &&[config, args] =
         ConfigCliArgParser(argc, argv)
             .named_value({"k", "key"}, "KEY_EXPRESSION", "Key expression to subscriber to (string)", "demo/example/**")
-            .named_value({"q", "query"}, "Query",
-                         "Selector to use for queries (by default it's same as 'KEY_EXPRESSION') (string)", "")
             .run();
 
     auto keyexpr = args.value("key");
-    auto query = args.value("query");
 
     std::cout << "Opening session..." << std::endl;
     auto session = Session::open(std::move(config));
 
-    std::cout << "Declaring Querying Subscriber on '" << keyexpr << "' with initial query on '" << query << "'"
-              << std::endl;
-    ext::SessionExt::QueryingSubscriberOptions opts;
+    ext::SessionExt::AdvancedSubscriberOptions opts;
+    opts.history = ext::SessionExt::AdvancedSubscriberOptions::HistoryOptions{};
+    opts.history->detect_late_publishers = true;
+    opts.recovery = ext::SessionExt::AdvancedSubscriberOptions::RecoveryOptions{};
+    opts.recovery->periodic_queries_period_ms = 1000;
+    opts.subscriber_detection = true;
 
-    if (!query.empty()) {
-        opts.query_keyexpr = KeyExpr(query);
-        opts.query_accept_replies = ReplyKeyExpr::ZC_REPLY_KEYEXPR_ANY;
-    }
-    auto querying_subscriber =
-        session.ext().declare_querying_subscriber(keyexpr, channels::FifoChannel(16), std::move(opts));
+    auto data_handler = [](const Sample &sample) {
+        std::cout << ">> [Subscriber] Received " << kind_to_str(sample.get_kind()) << " ('"
+                  << sample.get_keyexpr().as_string_view() << "' : '" << sample.get_payload().as_string() << "')";
+        std::cout << std::endl;
+    };
+
+    auto missed_sample_handler = [](const ext::Miss &miss) {
+        std::cout << ">> [Subscriber] Missed " << miss.nb << " samples from '" << miss.source.id() << "' !!!"
+                  << std::endl;
+    };
+
+    std::cout << "Declaring AdvancedSubscriber on '" << keyexpr << "'" << std::endl;
+    auto advanced_subscriber =
+        session.ext().declare_advanced_subscriber(keyexpr, data_handler, closures::none, std::move(opts));
+
+    advanced_subscriber.declare_background_sample_miss_listener(missed_sample_handler, closures::none);
 
     std::cout << "Press CTRL-C to quit..." << std::endl;
-    for (auto res = querying_subscriber.handler().recv(); std::holds_alternative<Sample>(res);
-         res = querying_subscriber.handler().recv()) {
-        const auto &sample = std::get<Sample>(res);
-        std::cout << ">> [Subscriber] Received " << kind_to_str(sample.get_kind()) << " ('"
-                  << sample.get_keyexpr().as_string_view() << "': '" << sample.get_payload().as_string() << "')"
-                  << std::endl;
+    while (true) {
+        std::this_thread::sleep_for(1s);
     }
 
     return 0;

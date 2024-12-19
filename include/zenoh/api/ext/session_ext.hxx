@@ -274,7 +274,7 @@ class SessionExt {
         struct CacheOptions {
             /// @name Fields
 
-            /// Number of samples to keep for each resource
+            /// Number of samples to keep for each resource.
             size_t max_samples = 1;
             /// The congestion control to apply to replies.
             ::zenoh::CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
@@ -322,8 +322,8 @@ class SessionExt {
                 opts.cache.priority = this->cache->priority;
                 opts.cache.is_express = this->cache->is_express;
             }
-            opts.publisher_detection = this->sample_miss_detection;
-            opts.sample_miss_detection = this->publisher_detection;
+            opts.publisher_detection = this->publisher_detection;
+            opts.sample_miss_detection = this->sample_miss_detection;
             opts.publisher_detection_metadata = ::zenoh::interop::as_loaned_c_ptr(this->publisher_detection_metadata);
             return opts;
         }
