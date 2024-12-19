@@ -65,7 +65,7 @@ class QueryingSubscriberBase : public Owned<::ze_owned_querying_subscriber_t> {
 }  // namespace detail
 
 template <class Handler>
-class QueryingSubscriber;
+class [[deprecated("Use zenoh::ext::AdvancedSubscriber instead.")]] QueryingSubscriber;
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A Zenoh querying subscriber.

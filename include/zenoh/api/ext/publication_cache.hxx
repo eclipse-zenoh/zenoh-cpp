@@ -28,7 +28,8 @@ namespace zenoh::ext {
 /// Used to store publications on intersecting key expressions. Can be queried later via `zenoh::Session::get` to
 /// retrieve this data.
 /// @note Zenoh-c only
-class PublicationCache : public Owned<::ze_owned_publication_cache_t> {
+class [[deprecated("Use zenoh::ext::AdvancedPublisher instead.")]] PublicationCache
+    : public Owned<::ze_owned_publication_cache_t> {
     PublicationCache(zenoh::detail::null_object_t) : Owned(nullptr){};
     friend struct interop::detail::Converter;
 

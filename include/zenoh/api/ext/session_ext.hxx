@@ -91,7 +91,7 @@ class SessionExt {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return declared ``PublicationCache`` instance.
-    [[nodiscard]] PublicationCache declare_publication_cache(
+    [[deprecated("Use declare_advanced_publisher instead.")]] [[nodiscard]] PublicationCache declare_publication_cache(
         const KeyExpr& key_expr, PublicationCacheOptions&& options = PublicationCacheOptions::create_default(),
         zenoh::ZResult* err = nullptr) const {
         ::ze_publication_cache_options_t opts = zenoh::interop::detail::Converter::to_c_opts(options);
@@ -112,6 +112,7 @@ class SessionExt {
     /// @param options additional options for the publication cache.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
+    [[deprecated]]
     void declare_background_publication_cache(
         const KeyExpr& key_expr, PublicationCacheOptions&& options = PublicationCacheOptions::create_default(),
         zenoh::ZResult* err = nullptr) const {
@@ -176,10 +177,10 @@ class SessionExt {
     /// thrown in case of error.
     /// @return declared ``QueryingSubscriber`` instance.
     template <class C, class D>
-    [[nodiscard]] QueryingSubscriber<void> declare_querying_subscriber(
-        const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
-        QueryingSubscriberOptions&& options = QueryingSubscriberOptions::create_default(),
-        zenoh::ZResult* err = nullptr) const {
+    [[nodiscard]] [[deprecated("Use declare_advanced_subscriber instead.")]] QueryingSubscriber<void>
+    declare_querying_subscriber(const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
+                                QueryingSubscriberOptions&& options = QueryingSubscriberOptions::create_default(),
+                                zenoh::ZResult* err = nullptr) const {
         static_assert(
             std::is_invocable_r<void, C, zenoh::Sample&>::value,
             "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
@@ -212,6 +213,7 @@ class SessionExt {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     template <class C, class D>
+    [[deprecated("Use declare_background_advanced_subscriber instead.")]]
     void declare_background_querying_subscriber(
         const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
         QueryingSubscriberOptions&& options = QueryingSubscriberOptions::create_default(),
@@ -247,10 +249,11 @@ class SessionExt {
     /// thrown in case of error.
     /// @return a ``QueryingSubscriber`` object.
     template <class Channel>
-    [[nodiscard]] QueryingSubscriber<typename Channel::template HandlerType<zenoh::Sample>> declare_querying_subscriber(
-        const KeyExpr& key_expr, Channel channel,
-        QueryingSubscriberOptions&& options = QueryingSubscriberOptions::create_default(),
-        zenoh::ZResult* err = nullptr) const {
+    [[deprecated("Use declare_advanced_subscriber instead.")]] [[nodiscard]] QueryingSubscriber<
+        typename Channel::template HandlerType<zenoh::Sample>>
+    declare_querying_subscriber(const KeyExpr& key_expr, Channel channel,
+                                QueryingSubscriberOptions&& options = QueryingSubscriberOptions::create_default(),
+                                zenoh::ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Sample>();
         ::ze_querying_subscriber_options_t opts = zenoh::interop::detail::Converter::to_c_opts(options);
         QueryingSubscriber<void> qs = zenoh::interop::detail::null<QueryingSubscriber<void>>();
