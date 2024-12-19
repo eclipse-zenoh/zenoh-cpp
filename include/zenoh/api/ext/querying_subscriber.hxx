@@ -44,18 +44,18 @@ class QueryingSubscriberBase : public Owned<::ze_owned_querying_subscriber_t> {
         z_get_options_default(&opts);
         opts.target = options.target;
         opts.consolidation = *interop::as_copyable_c_ptr(options.consolidation);
-        opts.payload = ::zenoh::interop::as_moved_c_ptr(options.payload);
-        opts.encoding = ::zenoh::interop::as_moved_c_ptr(options.encoding);
+        opts.payload = zenoh::interop::as_moved_c_ptr(options.payload);
+        opts.encoding = zenoh::interop::as_moved_c_ptr(options.encoding);
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-        opts.source_info = ::zenoh::interop::as_moved_c_ptr(options.source_info);
+        opts.source_info = zenoh::interop::as_moved_c_ptr(options.source_info);
         opts.accept_replies = options.accept_replies;
         opts.allowed_destination = options.allowed_destination;
 #endif
-        opts.attachment = ::zenoh::interop::as_moved_c_ptr(options.attachment);
+        opts.attachment = zenoh::interop::as_moved_c_ptr(options.attachment);
         opts.timeout_ms = options.timeout_ms;
 
         ZResult res = ::ze_querying_subscriber_get(interop::as_loaned_c_ptr(*this),
-                                                   ::zenoh::interop::as_loaned_c_ptr(key_expr), &opts);
+                                                   zenoh::interop::as_loaned_c_ptr(key_expr), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to perform get operation");
     }
 
@@ -78,7 +78,7 @@ class QueryingSubscriber<void> : public detail::QueryingSubscriberBase {
    protected:
     using QueryingSubscriberBase::QueryingSubscriberBase;
     friend class Session;
-    friend struct ::zenoh::interop::detail::Converter;
+    friend struct zenoh::interop::detail::Converter;
 
    public:
     /// @name Methods

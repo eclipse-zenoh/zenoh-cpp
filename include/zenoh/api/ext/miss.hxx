@@ -30,7 +30,7 @@ struct Miss {
     /// @name Fields
 
     /// The source of missed samples.
-    ::zenoh::EntityGlobalId source;
+    zenoh::EntityGlobalId source;
     /// The number of missed samples.
     uint32_t nb;
 };
@@ -39,9 +39,9 @@ struct Miss {
 namespace zenoh::detail::closures {
 extern "C" {
 inline void _zenoh_on_miss_detected_call(const ::ze_miss_t* miss, void* context) {
-    IClosure<void, const ::zenoh::ext::Miss&>::call_from_context(
+    IClosure<void, const zenoh::ext::Miss&>::call_from_context(
         context,
-        zenoh::ext::Miss{::zenoh::interop::into_copyable_cpp_obj<::zenoh::EntityGlobalId>(miss->source), miss->nb});
+        zenoh::ext::Miss{zenoh::interop::into_copyable_cpp_obj<zenoh::EntityGlobalId>(miss->source), miss->nb});
 }
 }
 }  // namespace zenoh::detail::closures
@@ -52,7 +52,7 @@ class SampleMissListenerBase : public Owned<::ze_owned_sample_miss_listener_t> {
    protected:
     SampleMissListenerBase(zenoh::detail::null_object_t) : Owned(nullptr){};
     SampleMissListenerBase(::ze_owned_sample_miss_listener_t* m) : Owned(m){};
-    friend struct ::zenoh::interop::detail::Converter;
+    friend struct zenoh::interop::detail::Converter;
 };
 }  // namespace detail
 
@@ -63,7 +63,7 @@ template <>
 class SampleMissListener<void> : public detail::SampleMissListenerBase {
    protected:
     using SampleMissListenerBase::SampleMissListenerBase;
-    friend struct ::zenoh::interop::detail::Converter;
+    friend struct zenoh::interop::detail::Converter;
 
    public:
     /// @name Methods
@@ -71,8 +71,8 @@ class SampleMissListener<void> : public detail::SampleMissListenerBase {
     /// @brief Undeclare sample miss listener.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    void undeclare(::zenoh::ZResult* err = nullptr) && {
-        __ZENOH_RESULT_CHECK(::ze_undeclare_sample_miss_listener(::zenoh::interop::as_moved_c_ptr(*this)), err,
+    void undeclare(zenoh::ZResult* err = nullptr) && {
+        __ZENOH_RESULT_CHECK(::ze_undeclare_sample_miss_listener(zenoh::interop::as_moved_c_ptr(*this)), err,
                              "Failed to undeclare Sample Miss Listener");
     }
 };
@@ -99,7 +99,7 @@ class SampleMissListener : public detail::SampleMissListenerBase {
     /// recv and try_recv methods, for blocking and non-blocking message reception. But user is free to define his own
     /// interface.
     SampleMissListener(SampleMissListener<void>&& m, Handler handler)
-        : SampleMissListenerBase(::zenoh::interop::as_owned_c_ptr(m)), _handler(std::move(handler)) {}
+        : SampleMissListenerBase(zenoh::interop::as_owned_c_ptr(m)), _handler(std::move(handler)) {}
 
     /// @name Methods
 
@@ -122,21 +122,21 @@ class SampleMissListener : public detail::SampleMissListenerBase {
 namespace zenoh::interop {
 /// @brief Return a pair of pointers to owned zenoh-c representations of sample miss listener and its callback.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
-auto as_owned_c_ptr(::zenoh::ext::SampleMissListener<Handler>& m) {
+auto as_owned_c_ptr(zenoh::ext::SampleMissListener<Handler>& m) {
     return std::make_pair(as_owned_c_ptr(static_cast<zenoh::ext::detail::SampleMissListenerBase&>(m)),
                           as_owned_c_ptr(const_cast<Handler&>(m.handler())));
 }
 
 /// @brief Return a pair of pointers to owned zenoh-c representations of sample miss listener and its callback.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
-auto as_owned_c_ptr(const ::zenoh::ext::SampleMissListener<Handler>& m) {
+auto as_owned_c_ptr(const zenoh::ext::SampleMissListener<Handler>& m) {
     return std::make_pair(as_owned_c_ptr(static_cast<const zenoh::ext::detail::SampleMissListenerBase&>(m)),
                           as_owned_c_ptr(m.handler()));
 }
 
 /// @brief Return a pair of pointers to moved zenoh-c representations of sample miss listener and its callback.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
-auto as_moved_c_ptr(::zenoh::ext::SampleMissListener<Handler>& m) {
+auto as_moved_c_ptr(zenoh::ext::SampleMissListener<Handler>& m) {
     return std::make_pair(as_moved_c_ptr(static_cast<zenoh::ext::detail::SampleMissListenerBase&>(m)),
                           as_moved_c_ptr(const_cast<Handler&>(m.handler())));
 }
@@ -144,8 +144,7 @@ auto as_moved_c_ptr(::zenoh::ext::SampleMissListener<Handler>& m) {
 /// @brief Return a pair of pointers to moved zenoh-c representations of sample miss listener and its callback.
 /// Will return a pair of null pointers if option is empty.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
-auto as_moved_c_ptr(std::optional<::zenoh::ext::SampleMissListener<Handler>>& m)
-    -> decltype(as_moved_c_ptr(m.value())) {
+auto as_moved_c_ptr(std::optional<zenoh::ext::SampleMissListener<Handler>>& m) -> decltype(as_moved_c_ptr(m.value())) {
     if (!m.has_value()) {
         return as_moved_c_ptr(m.value());
     } else {
@@ -155,7 +154,7 @@ auto as_moved_c_ptr(std::optional<::zenoh::ext::SampleMissListener<Handler>>& m)
 
 /// @brief Move sample miss listener and its handler to a pair containing corresponding zenoh-c structs.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
-auto move_to_c_obj(::zenoh::ext::SampleMissListener<Handler>&& m) {
+auto move_to_c_obj(zenoh::ext::SampleMissListener<Handler>&& m) {
     return std::make_pair(move_to_c_obj(std::move(static_cast<zenoh::ext::detail::SampleMissListenerBase&>(m))),
                           move_to_c_obj(std::move(const_cast<Handler&>(m))));
 }

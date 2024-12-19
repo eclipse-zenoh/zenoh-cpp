@@ -34,12 +34,12 @@ namespace zenoh::ext {
 /// @brief Zenoh Session interface extension.
 /// @note Zenoh-c only.
 class SessionExt {
-    const ::zenoh::Session& _session;
+    const zenoh::Session& _session;
 
    public:
     /// @name Constructors
 
-    /// @brief Get extension interface for `::zenoh::Session`. Its lifetime is bound that of the session.
+    /// @brief Get extension interface for `zenoh::Session`. Its lifetime is bound that of the session.
     /// @param session
     SessionExt(const zenoh::Session& session) : _session(session){};
 
@@ -68,11 +68,11 @@ class SessionExt {
         static PublicationCacheOptions create_default() { return {}; }
 
        private:
-        friend struct ::zenoh::interop::detail::Converter;
+        friend struct zenoh::interop::detail::Converter;
         ::ze_publication_cache_options_t to_c_opts() {
             ::ze_publication_cache_options_t opts;
             ze_publication_cache_options_default(&opts);
-            opts.queryable_prefix = ::zenoh::interop::as_loaned_c_ptr(this->queryable_prefix);
+            opts.queryable_prefix = zenoh::interop::as_loaned_c_ptr(this->queryable_prefix);
 #if defined(Z_FEATURE_UNSTABLE_API)
             opts.queryable_origin = this->queryable_origin;
 #endif
@@ -93,13 +93,13 @@ class SessionExt {
     /// @return declared ``PublicationCache`` instance.
     [[nodiscard]] PublicationCache declare_publication_cache(
         const KeyExpr& key_expr, PublicationCacheOptions&& options = PublicationCacheOptions::create_default(),
-        ::zenoh::ZResult* err = nullptr) const {
-        ::ze_publication_cache_options_t opts = ::zenoh::interop::detail::Converter::to_c_opts(options);
+        zenoh::ZResult* err = nullptr) const {
+        ::ze_publication_cache_options_t opts = zenoh::interop::detail::Converter::to_c_opts(options);
 
-        PublicationCache p = ::zenoh::interop::detail::null<ext::PublicationCache>();
-        ::zenoh::ZResult res = ::ze_declare_publication_cache(::zenoh::interop::as_loaned_c_ptr(this->_session),
-                                                              ::zenoh::interop::as_owned_c_ptr(p),
-                                                              ::zenoh::interop::as_loaned_c_ptr(key_expr), &opts);
+        PublicationCache p = zenoh::interop::detail::null<ext::PublicationCache>();
+        zenoh::ZResult res = ::ze_declare_publication_cache(zenoh::interop::as_loaned_c_ptr(this->_session),
+                                                            zenoh::interop::as_owned_c_ptr(p),
+                                                            zenoh::interop::as_loaned_c_ptr(key_expr), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Publication Cache");
         return p;
     }
@@ -114,10 +114,10 @@ class SessionExt {
     /// thrown in case of error.
     void declare_background_publication_cache(
         const KeyExpr& key_expr, PublicationCacheOptions&& options = PublicationCacheOptions::create_default(),
-        ::zenoh::ZResult* err = nullptr) const {
-        ::ze_publication_cache_options_t opts = ::zenoh::interop::detail::Converter::to_c_opts(options);
-        ::zenoh::ZResult res = ::ze_declare_background_publication_cache(
-            ::zenoh::interop::as_loaned_c_ptr(this->_session), ::zenoh::interop::as_loaned_c_ptr(key_expr), &opts);
+        zenoh::ZResult* err = nullptr) const {
+        ::ze_publication_cache_options_t opts = zenoh::interop::detail::Converter::to_c_opts(options);
+        zenoh::ZResult res = ::ze_declare_background_publication_cache(
+            zenoh::interop::as_loaned_c_ptr(this->_session), zenoh::interop::as_loaned_c_ptr(key_expr), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Publication Cache");
     }
 
@@ -131,14 +131,14 @@ class SessionExt {
         std::optional<KeyExpr> query_keyexpr = {};
 #if defined(Z_FEATURE_UNSTABLE_API)
         /// The restriction for the matching publications that will be received by this publication cache.
-        ::zenoh::Locality allowed_origin = ::zc_locality_default();
+        zenoh::Locality allowed_origin = ::zc_locality_default();
         /// The accepted replies for queries.
-        ::zenoh::ReplyKeyExpr query_accept_replies = ::zc_reply_keyexpr_default();
+        zenoh::ReplyKeyExpr query_accept_replies = ::zc_reply_keyexpr_default();
 #endif
         /// @brief The target to be used for queries.
-        ::zenoh::QueryTarget query_target = QueryTarget::Z_QUERY_TARGET_BEST_MATCHING;
+        zenoh::QueryTarget query_target = QueryTarget::Z_QUERY_TARGET_BEST_MATCHING;
         /// @brief The consolidation mode to be used for queries.
-        ::zenoh::QueryConsolidation query_consolidation =
+        zenoh::QueryConsolidation query_consolidation =
             QueryConsolidation(ConsolidationMode::Z_CONSOLIDATION_MODE_NONE);
         /// @brief The timeout to be used for queries.
         uint64_t query_timeout_ms = 0;
@@ -149,17 +149,17 @@ class SessionExt {
         static QueryingSubscriberOptions create_default() { return {}; }
 
        private:
-        friend struct ::zenoh::interop::detail::Converter;
+        friend struct zenoh::interop::detail::Converter;
         ::ze_querying_subscriber_options_t to_c_opts() {
             ::ze_querying_subscriber_options_t opts;
             ze_querying_subscriber_options_default(&opts);
-            opts.query_selector = ::zenoh::interop::as_loaned_c_ptr(this->query_keyexpr);
+            opts.query_selector = zenoh::interop::as_loaned_c_ptr(this->query_keyexpr);
 #if defined(Z_FEATURE_UNSTABLE_API)
             opts.allowed_origin = this->allowed_origin;
             opts.query_accept_replies = this->query_accept_replies;
 #endif
             opts.query_target = this->query_target;
-            opts.query_consolidation = *::zenoh::interop::as_copyable_c_ptr(this->query_consolidation);
+            opts.query_consolidation = *zenoh::interop::as_copyable_c_ptr(this->query_consolidation);
             opts.query_timeout_ms = this->query_timeout_ms;
             return opts;
         };
@@ -179,24 +179,24 @@ class SessionExt {
     [[nodiscard]] QueryingSubscriber<void> declare_querying_subscriber(
         const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
         QueryingSubscriberOptions&& options = QueryingSubscriberOptions::create_default(),
-        ::zenoh::ZResult* err = nullptr) const {
+        zenoh::ZResult* err = nullptr) const {
         static_assert(
-            std::is_invocable_r<void, C, ::zenoh::Sample&>::value,
+            std::is_invocable_r<void, C, zenoh::Sample&>::value,
             "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
-        ::ze_querying_subscriber_options_t opts = ::zenoh::interop::detail::Converter::to_c_opts(options);
+        ::ze_querying_subscriber_options_t opts = zenoh::interop::detail::Converter::to_c_opts(options);
         ::z_owned_closure_sample_t c_closure;
         using Cval = std::remove_reference_t<C>;
         using Dval = std::remove_reference_t<D>;
-        using ClosureType = typename ::zenoh::detail::closures::Closure<Cval, Dval, void, ::zenoh::Sample&>;
+        using ClosureType = typename zenoh::detail::closures::Closure<Cval, Dval, void, zenoh::Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
-        ::z_closure(&c_closure, ::zenoh::detail::closures::_zenoh_on_sample_call,
-                    ::zenoh::detail::closures::_zenoh_on_drop, closure);
-        QueryingSubscriber<void> qs = ::zenoh::interop::detail::null<QueryingSubscriber<void>>();
-        ::zenoh::ZResult res = ::ze_declare_querying_subscriber(
-            ::zenoh::interop::as_loaned_c_ptr(this->_session), ::zenoh::interop::as_owned_c_ptr(qs),
-            ::zenoh::interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
+        ::z_closure(&c_closure, zenoh::detail::closures::_zenoh_on_sample_call, zenoh::detail::closures::_zenoh_on_drop,
+                    closure);
+        QueryingSubscriber<void> qs = zenoh::interop::detail::null<QueryingSubscriber<void>>();
+        zenoh::ZResult res = ::ze_declare_querying_subscriber(
+            zenoh::interop::as_loaned_c_ptr(this->_session), zenoh::interop::as_owned_c_ptr(qs),
+            zenoh::interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Querying Subscriber");
         return qs;
     }
@@ -215,22 +215,22 @@ class SessionExt {
     void declare_background_querying_subscriber(
         const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
         QueryingSubscriberOptions&& options = QueryingSubscriberOptions::create_default(),
-        ::zenoh::ZResult* err = nullptr) const {
+        zenoh::ZResult* err = nullptr) const {
         static_assert(
-            std::is_invocable_r<void, C, ::zenoh::Sample&>::value,
+            std::is_invocable_r<void, C, zenoh::Sample&>::value,
             "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_sample_t c_closure;
         using Cval = std::remove_reference_t<C>;
         using Dval = std::remove_reference_t<D>;
-        using ClosureType = typename ::zenoh::detail::closures::Closure<Cval, Dval, void, const ::zenoh::Sample&>;
+        using ClosureType = typename zenoh::detail::closures::Closure<Cval, Dval, void, const zenoh::Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
-        ::z_closure(&c_closure, ::zenoh::detail::closures::_zenoh_on_sample_call,
-                    ::zenoh::detail::closures::_zenoh_on_drop, closure);
-        ::ze_querying_subscriber_options_t opts = ::zenoh::interop::detail::Converter::to_c_opts(options);
-        ::zenoh::ZResult res = ::ze_declare_background_querying_subscriber(
-            ::zenoh::interop::as_loaned_c_ptr(this->_session), ::zenoh::interop::as_loaned_c_ptr(key_expr),
+        ::z_closure(&c_closure, zenoh::detail::closures::_zenoh_on_sample_call, zenoh::detail::closures::_zenoh_on_drop,
+                    closure);
+        ::ze_querying_subscriber_options_t opts = zenoh::interop::detail::Converter::to_c_opts(options);
+        zenoh::ZResult res = ::ze_declare_background_querying_subscriber(
+            zenoh::interop::as_loaned_c_ptr(this->_session), zenoh::interop::as_loaned_c_ptr(key_expr),
             ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Querying Subscriber");
     }
@@ -247,19 +247,19 @@ class SessionExt {
     /// thrown in case of error.
     /// @return a ``QueryingSubscriber`` object.
     template <class Channel>
-    [[nodiscard]] QueryingSubscriber<typename Channel::template HandlerType<::zenoh::Sample>>
-    declare_querying_subscriber(const KeyExpr& key_expr, Channel channel,
-                                QueryingSubscriberOptions&& options = QueryingSubscriberOptions::create_default(),
-                                ::zenoh::ZResult* err = nullptr) const {
+    [[nodiscard]] QueryingSubscriber<typename Channel::template HandlerType<zenoh::Sample>> declare_querying_subscriber(
+        const KeyExpr& key_expr, Channel channel,
+        QueryingSubscriberOptions&& options = QueryingSubscriberOptions::create_default(),
+        zenoh::ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Sample>();
-        ::ze_querying_subscriber_options_t opts = ::zenoh::interop::detail::Converter::to_c_opts(options);
-        QueryingSubscriber<void> qs = ::zenoh::interop::detail::null<QueryingSubscriber<void>>();
-        ::zenoh::ZResult res = ::ze_declare_querying_subscriber(
-            ::zenoh::interop::as_loaned_c_ptr(this->_session), ::zenoh::interop::as_owned_c_ptr(qs),
-            ::zenoh::interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
+        ::ze_querying_subscriber_options_t opts = zenoh::interop::detail::Converter::to_c_opts(options);
+        QueryingSubscriber<void> qs = zenoh::interop::detail::null<QueryingSubscriber<void>>();
+        zenoh::ZResult res = ::ze_declare_querying_subscriber(
+            zenoh::interop::as_loaned_c_ptr(this->_session), zenoh::interop::as_owned_c_ptr(qs),
+            zenoh::interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Querying Subscriber");
-        if (res != Z_OK) ::z_drop(::zenoh::interop::as_moved_c_ptr(cb_handler_pair.second));
-        return QueryingSubscriber<typename Channel::template HandlerType<::zenoh::Sample>>(
+        if (res != Z_OK) ::z_drop(zenoh::interop::as_moved_c_ptr(cb_handler_pair.second));
+        return QueryingSubscriber<typename Channel::template HandlerType<zenoh::Sample>>(
             std::move(qs), std::move(cb_handler_pair.second));
     }
 
@@ -277,9 +277,9 @@ class SessionExt {
             /// Number of samples to keep for each resource.
             size_t max_samples = 1;
             /// The congestion control to apply to replies.
-            ::zenoh::CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
+            zenoh::CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
             /// The priority of replies.
-            ::zenoh::Priority priority = ::z_priority_default();
+            zenoh::Priority priority = ::z_priority_default();
             /// If set to ``true``, this cache replies will not be batched. This usually has a positive impact on
             /// latency but negative impact on throughput.
             bool is_express = false;
@@ -291,7 +291,7 @@ class SessionExt {
         };
 
         /// Base publisher options.
-        ::zenoh::Session::PublisherOptions publisher_options = {};
+        zenoh::Session::PublisherOptions publisher_options = {};
         /// Optional settings for publisher cache.
         std::optional<CacheOptions> cache;
         /// Allow matching Subscribers to detect lost samples and optionally ask for retransimission.
@@ -302,7 +302,7 @@ class SessionExt {
         bool publisher_detection = false;
         /// An optional key expression to be added to the liveliness token key expression.
         /// It can be used to convey meta data.
-        std::optional<::zenoh::KeyExpr> publisher_detection_metadata = {};
+        std::optional<zenoh::KeyExpr> publisher_detection_metadata = {};
 
         /// @name Methods
 
@@ -310,11 +310,11 @@ class SessionExt {
         static AdvancedPublisherOptions create_default() { return {}; }
 
        private:
-        friend struct ::zenoh::interop::detail::Converter;
+        friend struct zenoh::interop::detail::Converter;
         ::ze_advanced_publisher_options_t to_c_opts() {
             ::ze_advanced_publisher_options_t opts;
             ::ze_advanced_publisher_options_default(&opts);
-            opts.publisher_options = ::zenoh::interop::detail::Converter::to_c_opts(this->publisher_options);
+            opts.publisher_options = zenoh::interop::detail::Converter::to_c_opts(this->publisher_options);
             if (this->cache.has_value()) {
                 opts.cache.is_enabled = true;
                 opts.cache.max_samples = this->cache->max_samples;
@@ -324,7 +324,7 @@ class SessionExt {
             }
             opts.publisher_detection = this->publisher_detection;
             opts.sample_miss_detection = this->sample_miss_detection;
-            opts.publisher_detection_metadata = ::zenoh::interop::as_loaned_c_ptr(this->publisher_detection_metadata);
+            opts.publisher_detection_metadata = zenoh::interop::as_loaned_c_ptr(this->publisher_detection_metadata);
             return opts;
         }
     };
@@ -338,12 +338,12 @@ class SessionExt {
     /// @return an ``AdvancedPublisher`` object.
     AdvancedPublisher declare_advanced_publisher(
         const KeyExpr& key_expr, AdvancedPublisherOptions&& options = AdvancedPublisherOptions::create_default(),
-        ::zenoh::ZResult* err = nullptr) const {
-        ::ze_advanced_publisher_options_t opts = ::zenoh::interop::detail::Converter::to_c_opts(options);
-        AdvancedPublisher p = ::zenoh::interop::detail::null<AdvancedPublisher>();
-        ::zenoh::ZResult res = ::ze_declare_advanced_publisher(::zenoh::interop::as_loaned_c_ptr(this->_session),
-                                                               ::zenoh::interop::as_owned_c_ptr(p),
-                                                               ::zenoh::interop::as_loaned_c_ptr(key_expr), &opts);
+        zenoh::ZResult* err = nullptr) const {
+        ::ze_advanced_publisher_options_t opts = zenoh::interop::detail::Converter::to_c_opts(options);
+        AdvancedPublisher p = zenoh::interop::detail::null<AdvancedPublisher>();
+        zenoh::ZResult res = ::ze_declare_advanced_publisher(zenoh::interop::as_loaned_c_ptr(this->_session),
+                                                             zenoh::interop::as_owned_c_ptr(p),
+                                                             zenoh::interop::as_loaned_c_ptr(key_expr), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Advanced Publisher");
         return p;
     }
@@ -393,7 +393,7 @@ class SessionExt {
         };
 
         /// Base subscriber options.
-        ::zenoh::Session::SubscriberOptions subscriber_options;
+        zenoh::Session::SubscriberOptions subscriber_options;
         /// Optional settings for querying historical data. History can only be retransmitted by Publishers that enable
         /// caching.
         std::optional<HistoryOptions> history = {};
@@ -407,7 +407,7 @@ class SessionExt {
         bool subscriber_detection = false;
         /// An optional key expression to be added to the liveliness token key expression.
         /// It can be used to convey meta data.
-        std::optional<::zenoh::KeyExpr> subscriber_detection_metadata = {};
+        std::optional<zenoh::KeyExpr> subscriber_detection_metadata = {};
 
         /// @name Methods
 
@@ -415,11 +415,11 @@ class SessionExt {
         static AdvancedSubscriberOptions create_default() { return {}; }
 
        private:
-        friend struct ::zenoh::interop::detail::Converter;
+        friend struct zenoh::interop::detail::Converter;
         ::ze_advanced_subscriber_options_t to_c_opts() {
             ::ze_advanced_subscriber_options_t opts;
             ::ze_advanced_subscriber_options_default(&opts);
-            opts.subscriber_options = ::zenoh::interop::detail::Converter::to_c_opts(this->subscriber_options);
+            opts.subscriber_options = zenoh::interop::detail::Converter::to_c_opts(this->subscriber_options);
             if (this->history.has_value()) {
                 opts.history.is_enabled = true;
                 opts.history.detect_late_publishers = this->history->detect_late_publishers;
@@ -432,7 +432,7 @@ class SessionExt {
             }
             opts.query_timeout_ms = this->query_timeout_ms;
             opts.subscriber_detection = this->subscriber_detection;
-            opts.subscriber_detection_metadata = ::zenoh::interop::as_loaned_c_ptr(this->subscriber_detection_metadata);
+            opts.subscriber_detection_metadata = zenoh::interop::as_loaned_c_ptr(this->subscriber_detection_metadata);
             return opts;
         }
     };
@@ -450,7 +450,7 @@ class SessionExt {
     [[nodiscard]] AdvancedSubscriber<void> declare_advanced_subscriber(
         const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
         AdvancedSubscriberOptions&& options = AdvancedSubscriberOptions::create_default(),
-        ::zenoh::ZResult* err = nullptr) const {
+        zenoh::ZResult* err = nullptr) const {
         static_assert(
             std::is_invocable_r<void, C, const Sample&>::value,
             "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
@@ -459,15 +459,15 @@ class SessionExt {
         ::z_owned_closure_sample_t c_closure;
         using Cval = std::remove_reference_t<C>;
         using Dval = std::remove_reference_t<D>;
-        using ClosureType = typename ::zenoh::detail::closures::Closure<Cval, Dval, void, const Sample&>;
+        using ClosureType = typename zenoh::detail::closures::Closure<Cval, Dval, void, const Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
-        ::z_closure(&c_closure, ::zenoh::detail::closures::_zenoh_on_sample_call,
-                    ::zenoh::detail::closures::_zenoh_on_drop, closure);
-        ::ze_advanced_subscriber_options_t opts = ::zenoh::interop::detail::Converter::to_c_opts(options);
-        AdvancedSubscriber<void> s = ::zenoh::interop::detail::null<AdvancedSubscriber<void>>();
-        ::zenoh::ZResult res = ::ze_declare_advanced_subscriber(
-            ::zenoh::interop::as_loaned_c_ptr(this->_session), ::zenoh::interop::as_owned_c_ptr(s),
-            ::zenoh::interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
+        ::z_closure(&c_closure, zenoh::detail::closures::_zenoh_on_sample_call, zenoh::detail::closures::_zenoh_on_drop,
+                    closure);
+        ::ze_advanced_subscriber_options_t opts = zenoh::interop::detail::Converter::to_c_opts(options);
+        AdvancedSubscriber<void> s = zenoh::interop::detail::null<AdvancedSubscriber<void>>();
+        zenoh::ZResult res = ::ze_declare_advanced_subscriber(
+            zenoh::interop::as_loaned_c_ptr(this->_session), zenoh::interop::as_owned_c_ptr(s),
+            zenoh::interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Advanced Subscriber");
         return s;
     }
@@ -486,22 +486,22 @@ class SessionExt {
     void declare_background_advanced_subscriber(
         const KeyExpr& key_expr, C&& on_sample, D&& on_drop,
         AdvancedSubscriberOptions&& options = AdvancedSubscriberOptions::create_default(),
-        ::zenoh::ZResult* err = nullptr) const {
+        zenoh::ZResult* err = nullptr) const {
         static_assert(
-            std::is_invocable_r<void, C, const ::zenoh::Sample&>::value,
+            std::is_invocable_r<void, C, const zenoh::Sample&>::value,
             "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_sample_t c_closure;
         using Cval = std::remove_reference_t<C>;
         using Dval = std::remove_reference_t<D>;
-        using ClosureType = typename ::zenoh::detail::closures::Closure<Cval, Dval, void, const ::zenoh::Sample&>;
+        using ClosureType = typename zenoh::detail::closures::Closure<Cval, Dval, void, const zenoh::Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
-        ::z_closure(&c_closure, ::zenoh::detail::closures::_zenoh_on_sample_call,
-                    ::zenoh::detail::closures::_zenoh_on_drop, closure);
-        ::ze_advanced_subscriber_options_t opts = ::zenoh::interop::detail::Converter::to_c_opts(options);
-        ZResult res = ::ze_declare_background_advanced_subscriber(::zenoh::interop::as_loaned_c_ptr(this->_session),
-                                                                  ::zenoh::interop::as_loaned_c_ptr(key_expr),
+        ::z_closure(&c_closure, zenoh::detail::closures::_zenoh_on_sample_call, zenoh::detail::closures::_zenoh_on_drop,
+                    closure);
+        ::ze_advanced_subscriber_options_t opts = zenoh::interop::detail::Converter::to_c_opts(options);
+        ZResult res = ::ze_declare_background_advanced_subscriber(zenoh::interop::as_loaned_c_ptr(this->_session),
+                                                                  zenoh::interop::as_loaned_c_ptr(key_expr),
                                                                   ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Advanced Subscriber");
     }
@@ -520,15 +520,15 @@ class SessionExt {
     [[nodiscard]] AdvancedSubscriber<typename Channel::template HandlerType<Sample>> declare_advanced_subscriber(
         const KeyExpr& key_expr, Channel channel,
         AdvancedSubscriberOptions&& options = AdvancedSubscriberOptions::create_default(),
-        ::zenoh::ZResult* err = nullptr) const {
+        zenoh::ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Sample>();
-        ::ze_advanced_subscriber_options_t opts = ::zenoh::interop::detail::Converter::to_c_opts(options);
-        AdvancedSubscriber<void> s = ::zenoh::interop::detail::null<AdvancedSubscriber<void>>();
-        ::zenoh::ZResult res = ::ze_declare_advanced_subscriber(
-            ::zenoh::interop::as_loaned_c_ptr(this->_session), ::zenoh::interop::as_owned_c_ptr(s),
-            ::zenoh::interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
+        ::ze_advanced_subscriber_options_t opts = zenoh::interop::detail::Converter::to_c_opts(options);
+        AdvancedSubscriber<void> s = zenoh::interop::detail::null<AdvancedSubscriber<void>>();
+        zenoh::ZResult res = ::ze_declare_advanced_subscriber(
+            zenoh::interop::as_loaned_c_ptr(this->_session), zenoh::interop::as_owned_c_ptr(s),
+            zenoh::interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Advanced Subscriber");
-        if (res != Z_OK) ::z_drop(::zenoh::interop::as_moved_c_ptr(cb_handler_pair.second));
+        if (res != Z_OK) ::z_drop(zenoh::interop::as_moved_c_ptr(cb_handler_pair.second));
         return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
                                                                           std::move(cb_handler_pair.second));
     }

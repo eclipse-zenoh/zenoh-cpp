@@ -1130,7 +1130,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Get access to extension functionality.
     /// @tparam Ext Session interface extension.
     /// @return Session interface extension providing access to non-core Zenoh functionality.
-    template <class Ext = ::zenoh::ext::SessionExt>
+    template <class Ext = zenoh::ext::SessionExt>
     Ext ext() const {
         return Ext(*this);
     }

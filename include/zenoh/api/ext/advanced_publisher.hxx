@@ -75,7 +75,7 @@ class AdvancedPublisher : public Owned<::ze_owned_advanced_publisher_t> {
         /// @name Fields
 
         /// Base put options.
-        ::zenoh::Publisher::PutOptions put_options = {};
+        zenoh::Publisher::PutOptions put_options = {};
 
         /// @name Methods
 
@@ -83,11 +83,11 @@ class AdvancedPublisher : public Owned<::ze_owned_advanced_publisher_t> {
         static PutOptions create_default() { return {}; }
 
        private:
-        friend struct ::zenoh::interop::detail::Converter;
+        friend struct zenoh::interop::detail::Converter;
         ::ze_advanced_publisher_put_options_t to_c_opts() {
             ::ze_advanced_publisher_put_options_t opts;
             ze_advanced_publisher_put_options_default(&opts);
-            opts.put_options = ::zenoh::interop::detail::Converter::to_c_opts(this->put_options);
+            opts.put_options = zenoh::interop::detail::Converter::to_c_opts(this->put_options);
             return opts;
         }
     };
@@ -97,7 +97,7 @@ class AdvancedPublisher : public Owned<::ze_owned_advanced_publisher_t> {
         /// @name Fields
 
         /// Base delete options.
-        ::zenoh::Publisher::DeleteOptions delete_options = {};
+        zenoh::Publisher::DeleteOptions delete_options = {};
 
         /// @name Methods
 
@@ -105,11 +105,11 @@ class AdvancedPublisher : public Owned<::ze_owned_advanced_publisher_t> {
         static DeleteOptions create_default() { return {}; }
 
        private:
-        friend struct ::zenoh::interop::detail::Converter;
+        friend struct zenoh::interop::detail::Converter;
         ::ze_advanced_publisher_delete_options_t to_c_opts() {
             ::ze_advanced_publisher_delete_options_t opts;
             ze_advanced_publisher_delete_options_default(&opts);
-            opts.delete_options = ::zenoh::interop::detail::Converter::to_c_opts(this->delete_options);
+            opts.delete_options = zenoh::interop::detail::Converter::to_c_opts(this->delete_options);
             return opts;
         }
     };
@@ -121,9 +121,9 @@ class AdvancedPublisher : public Owned<::ze_owned_advanced_publisher_t> {
     /// @param options optional parameters to pass to put operation.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    void put(Bytes&& payload, PutOptions&& options = PutOptions::create_default(), ::zenoh::ZResult* err = nullptr) {
+    void put(Bytes&& payload, PutOptions&& options = PutOptions::create_default(), zenoh::ZResult* err = nullptr) {
         auto payload_ptr = interop::as_moved_c_ptr(payload);
-        ::ze_advanced_publisher_put_options_t opts = ::zenoh::interop::detail::Converter::to_c_opts(options);
+        ::ze_advanced_publisher_put_options_t opts = zenoh::interop::detail::Converter::to_c_opts(options);
         __ZENOH_RESULT_CHECK(::ze_advanced_publisher_put(interop::as_loaned_c_ptr(*this), payload_ptr, &opts), err,
                              "Failed to perform put operation");
     }
@@ -133,8 +133,8 @@ class AdvancedPublisher : public Owned<::ze_owned_advanced_publisher_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void delete_resource(DeleteOptions&& options = DeleteOptions::create_default(),
-                         ::zenoh::ZResult* err = nullptr) const {
-        ::ze_advanced_publisher_delete_options_t opts = ::zenoh::interop::detail::Converter::to_c_opts(options);
+                         zenoh::ZResult* err = nullptr) const {
+        ::ze_advanced_publisher_delete_options_t opts = zenoh::interop::detail::Converter::to_c_opts(options);
         __ZENOH_RESULT_CHECK(::ze_advanced_publisher_delete(interop::as_loaned_c_ptr(*this), &opts), err,
                              "Failed to perform delete_resource operation");
     }
@@ -154,8 +154,8 @@ class AdvancedPublisher : public Owned<::ze_owned_advanced_publisher_t> {
     /// @note Zenoh-c only.
     template <class C, class D>
     [[nodiscard]] MatchingListener<void> declare_matching_listener(C&& on_status_change, D&& on_drop,
-                                                                   ::zenoh::ZResult* err = nullptr) const {
-        static_assert(std::is_invocable_r<void, C, const ::zenoh::MatchingStatus&>::value,
+                                                                   zenoh::ZResult* err = nullptr) const {
+        static_assert(std::is_invocable_r<void, C, const zenoh::MatchingStatus&>::value,
                       "on_status_change should be callable with the following signature: void on_status_change(const "
                       "zenoh::MatchingStatus& status)");
         static_assert(std::is_invocable_r<void, D>::value,
@@ -163,14 +163,13 @@ class AdvancedPublisher : public Owned<::ze_owned_advanced_publisher_t> {
         ::zc_owned_closure_matching_status_t c_closure;
         using Cval = std::remove_reference_t<C>;
         using Dval = std::remove_reference_t<D>;
-        using ClosureType =
-            typename ::zenoh::detail::closures::Closure<Cval, Dval, void, const ::zenoh::MatchingStatus&>;
+        using ClosureType = typename zenoh::detail::closures::Closure<Cval, Dval, void, const zenoh::MatchingStatus&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_status_change), std::forward<D>(on_drop));
-        ::z_closure(&c_closure, ::zenoh::detail::closures::_zenoh_on_status_change_call,
-                    ::zenoh::detail::closures::_zenoh_on_drop, closure);
-        auto m = ::zenoh::interop::detail::null<MatchingListener<void>>();
-        ::zenoh::ZResult res = ::ze_advanced_publisher_declare_matching_listener(
-            ::zenoh::interop::as_loaned_c_ptr(*this), ::zenoh::interop::as_owned_c_ptr(m), ::z_move(c_closure));
+        ::z_closure(&c_closure, zenoh::detail::closures::_zenoh_on_status_change_call,
+                    zenoh::detail::closures::_zenoh_on_drop, closure);
+        auto m = zenoh::interop::detail::null<MatchingListener<void>>();
+        zenoh::ZResult res = ::ze_advanced_publisher_declare_matching_listener(
+            zenoh::interop::as_loaned_c_ptr(*this), zenoh::interop::as_owned_c_ptr(m), ::z_move(c_closure));
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Matching Listener");
         return m;
     }
@@ -188,13 +187,13 @@ class AdvancedPublisher : public Owned<::ze_owned_advanced_publisher_t> {
     /// @note Zenoh-c only.
     template <class Channel>
     [[nodiscard]] MatchingListener<typename Channel::template HandlerType<MatchingStatus>> declare_matching_listener(
-        Channel channel, ::zenoh::ZResult* err = nullptr) const {
+        Channel channel, zenoh::ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Query>();
-        auto m = ::zenoh::interop::detail::null<MatchingListener<void>>();
-        ::zenoh::ZResult res = ::zc_publisher_declare_matching_listener(
+        auto m = zenoh::interop::detail::null<MatchingListener<void>>();
+        zenoh::ZResult res = ::zc_publisher_declare_matching_listener(
             interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(m), ::z_move(cb_handler_pair.first));
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Matching Listener");
-        if (res != Z_OK) ::z_drop(::zenoh::interop::as_moved_c_ptr(cb_handler_pair.second));
+        if (res != Z_OK) ::z_drop(zenoh::interop::as_moved_c_ptr(cb_handler_pair.second));
         return MatchingListener<typename Channel::template HandlerType<MatchingStatus>>(
             std::move(m), std::move(cb_handler_pair.second));
     }
@@ -211,8 +210,7 @@ class AdvancedPublisher : public Owned<::ze_owned_advanced_publisher_t> {
     /// thrown in case of error.
     /// @note Zenoh-c only.
     template <class C, class D>
-    void declare_background_matching_listener(C&& on_status_change, D&& on_drop,
-                                              ::zenoh::ZResult* err = nullptr) const {
+    void declare_background_matching_listener(C&& on_status_change, D&& on_drop, zenoh::ZResult* err = nullptr) const {
         static_assert(std::is_invocable_r<void, C, const zenoh::MatchingStatus&>::value,
                       "on_status_change should be callable with the following signature: void on_status_change(const "
                       "zenoh::MatchingStatus& status)");
@@ -221,13 +219,12 @@ class AdvancedPublisher : public Owned<::ze_owned_advanced_publisher_t> {
         ::zc_owned_closure_matching_status_t c_closure;
         using Cval = std::remove_reference_t<C>;
         using Dval = std::remove_reference_t<D>;
-        using ClosureType =
-            typename ::zenoh::detail::closures::Closure<Cval, Dval, void, const ::zenoh::MatchingStatus&>;
+        using ClosureType = typename zenoh::detail::closures::Closure<Cval, Dval, void, const zenoh::MatchingStatus&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_status_change), std::forward<D>(on_drop));
-        ::z_closure(&c_closure, ::zenoh::detail::closures::_zenoh_on_status_change_call,
-                    ::zenoh::detail::closures::_zenoh_on_drop, closure);
-        ::zenoh::ZResult res = ::ze_advanced_publisher_declare_background_matching_listener(
-            ::zenoh::interop::as_loaned_c_ptr(*this), ::z_move(c_closure));
+        ::z_closure(&c_closure, zenoh::detail::closures::_zenoh_on_status_change_call,
+                    zenoh::detail::closures::_zenoh_on_drop, closure);
+        zenoh::ZResult res = ::ze_advanced_publisher_declare_background_matching_listener(
+            zenoh::interop::as_loaned_c_ptr(*this), ::z_move(c_closure));
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare background Matching Listener");
     }
 
@@ -237,10 +234,9 @@ class AdvancedPublisher : public Owned<::ze_owned_advanced_publisher_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @note Zenoh-c only.
-    MatchingStatus get_matching_status(::zenoh::ZResult* err = nullptr) const {
+    MatchingStatus get_matching_status(zenoh::ZResult* err = nullptr) const {
         ::zc_matching_status_t m;
-        ::zenoh::ZResult res =
-            ::ze_advanced_publisher_get_matching_status(::zenoh::interop::as_loaned_c_ptr(*this), &m);
+        zenoh::ZResult res = ::ze_advanced_publisher_get_matching_status(zenoh::interop::as_loaned_c_ptr(*this), &m);
         __ZENOH_RESULT_CHECK(res, err, "Failed to get matching status");
         return {m.matching};
     }

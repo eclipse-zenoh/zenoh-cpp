@@ -40,7 +40,7 @@ class AdvancedSubscriberBase : public Owned<::ze_owned_advanced_subscriber_t> {
     /// @note Zenoh-c only.
     template <class C, class D>
     [[nodiscard]] SampleMissListener<void> declare_sample_miss_listener(C&& on_miss_detected, D&& on_drop,
-                                                                        ::zenoh::ZResult* err = nullptr) const {
+                                                                        zenoh::ZResult* err = nullptr) const {
         static_assert(std::is_invocable_r<void, C, const Miss&>::value,
                       "on_miss_detected should be callable with the following signature: void on_status_change(const "
                       "zenoh::ext::Miss& miss)");
@@ -49,13 +49,13 @@ class AdvancedSubscriberBase : public Owned<::ze_owned_advanced_subscriber_t> {
         ::ze_owned_closure_miss_t c_closure;
         using Cval = std::remove_reference_t<C>;
         using Dval = std::remove_reference_t<D>;
-        using ClosureType = typename ::zenoh::detail::closures::Closure<Cval, Dval, void, const Miss&>;
+        using ClosureType = typename zenoh::detail::closures::Closure<Cval, Dval, void, const Miss&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_miss_detected), std::forward<D>(on_drop));
-        ::z_closure(&c_closure, ::zenoh::detail::closures::_zenoh_on_miss_detected_call,
-                    ::zenoh::detail::closures::_zenoh_on_drop, closure);
-        auto m = ::zenoh::interop::detail::null<SampleMissListener<void>>();
+        ::z_closure(&c_closure, zenoh::detail::closures::_zenoh_on_miss_detected_call,
+                    zenoh::detail::closures::_zenoh_on_drop, closure);
+        auto m = zenoh::interop::detail::null<SampleMissListener<void>>();
         ZResult res = ::ze_advanced_subscriber_declare_sample_miss_listener(
-            ::zenoh::interop::as_loaned_c_ptr(*this), ::zenoh::interop::as_owned_c_ptr(m), ::z_move(c_closure));
+            zenoh::interop::as_loaned_c_ptr(*this), zenoh::interop::as_owned_c_ptr(m), ::z_move(c_closure));
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Sample Miss Listener");
         return m;
     }
@@ -70,7 +70,7 @@ class AdvancedSubscriberBase : public Owned<::ze_owned_advanced_subscriber_t> {
     /// @note Zenoh-c only.
     template <class C, class D>
     void declare_background_sample_miss_listener(C&& on_miss_detected, D&& on_drop,
-                                                 ::zenoh::ZResult* err = nullptr) const {
+                                                 zenoh::ZResult* err = nullptr) const {
         static_assert(std::is_invocable_r<void, C, const Miss&>::value,
                       "on_miss_detected should be callable with the following signature: void on_status_change(const "
                       "zenoh::ext::Miss& miss)");
@@ -79,13 +79,13 @@ class AdvancedSubscriberBase : public Owned<::ze_owned_advanced_subscriber_t> {
         ::ze_owned_closure_miss_t c_closure;
         using Cval = std::remove_reference_t<C>;
         using Dval = std::remove_reference_t<D>;
-        using ClosureType = typename ::zenoh::detail::closures::Closure<Cval, Dval, void, const Miss&>;
+        using ClosureType = typename zenoh::detail::closures::Closure<Cval, Dval, void, const Miss&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_miss_detected), std::forward<D>(on_drop));
-        ::z_closure(&c_closure, ::zenoh::detail::closures::_zenoh_on_miss_detected_call,
-                    ::zenoh::detail::closures::_zenoh_on_drop, closure);
+        ::z_closure(&c_closure, zenoh::detail::closures::_zenoh_on_miss_detected_call,
+                    zenoh::detail::closures::_zenoh_on_drop, closure);
 
         ZResult res = ::ze_advanced_subscriber_declare_background_sample_miss_listener(
-            ::zenoh::interop::as_loaned_c_ptr(*this), ::z_move(c_closure));
+            zenoh::interop::as_loaned_c_ptr(*this), ::z_move(c_closure));
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare background Sample Miss Listener");
     }
 
@@ -96,29 +96,29 @@ class AdvancedSubscriberBase : public Owned<::ze_owned_advanced_subscriber_t> {
     /// @param options options to pass to listener declaration.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @return a ``::zenoh::Subscriber`` object.
+    /// @return a ``zenoh::Subscriber`` object.
     template <class C, class D>
-    [[nodiscard]] ::zenoh::Subscriber<void> detect_publishers(
+    [[nodiscard]] zenoh::Subscriber<void> detect_publishers(
         C&& on_sample, D&& on_drop,
-        ::zenoh::Session::LivelinessSubscriberOptions&& options =
-            ::zenoh::Session::LivelinessSubscriberOptions::create_default(),
+        zenoh::Session::LivelinessSubscriberOptions&& options =
+            zenoh::Session::LivelinessSubscriberOptions::create_default(),
         ZResult* err = nullptr) const {
         static_assert(
-            std::is_invocable_r<void, C, ::zenoh::Sample&>::value,
+            std::is_invocable_r<void, C, zenoh::Sample&>::value,
             "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_sample_t c_closure;
         using Cval = std::remove_reference_t<C>;
         using Dval = std::remove_reference_t<D>;
-        using ClosureType = typename ::zenoh::detail::closures::Closure<Cval, Dval, void, ::zenoh::Sample&>;
+        using ClosureType = typename zenoh::detail::closures::Closure<Cval, Dval, void, zenoh::Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
-        ::z_closure(&c_closure, ::zenoh::detail::closures::_zenoh_on_sample_call,
-                    ::zenoh::detail::closures::_zenoh_on_drop, closure);
-        ::z_liveliness_subscriber_options_t opts = ::zenoh::interop::detail::Converter::to_c_opts(options);
-        ::zenoh::Subscriber<void> s = ::zenoh::interop::detail::null<::zenoh::Subscriber<void>>();
-        ::zenoh::ZResult res = ::ze_advanced_subscriber_detect_publishers(
-            ::zenoh::interop::as_loaned_c_ptr(*this), ::zenoh::interop::as_owned_c_ptr(s), ::z_move(c_closure), &opts);
+        ::z_closure(&c_closure, zenoh::detail::closures::_zenoh_on_sample_call, zenoh::detail::closures::_zenoh_on_drop,
+                    closure);
+        ::z_liveliness_subscriber_options_t opts = zenoh::interop::detail::Converter::to_c_opts(options);
+        zenoh::Subscriber<void> s = zenoh::interop::detail::null<zenoh::Subscriber<void>>();
+        zenoh::ZResult res = ::ze_advanced_subscriber_detect_publishers(
+            zenoh::interop::as_loaned_c_ptr(*this), zenoh::interop::as_owned_c_ptr(s), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
         return s;
     }
@@ -133,25 +133,25 @@ class AdvancedSubscriberBase : public Owned<::ze_owned_advanced_subscriber_t> {
     /// thrown in case of error.
     /// @note Zenoh-c only.
     template <class C, class D>
-    void detect_publishers_background(
-        C&& on_sample, D&& on_drop,
-        ::zenoh::Session::LivelinessSubscriberOptions&& options = ::zenoh::Session::LivelinessSubscriberOptions::create_default(),
-        ::zenoh::ZResult* err = nullptr) const {
+    void detect_publishers_background(C&& on_sample, D&& on_drop,
+                                      zenoh::Session::LivelinessSubscriberOptions&& options =
+                                          zenoh::Session::LivelinessSubscriberOptions::create_default(),
+                                      zenoh::ZResult* err = nullptr) const {
         static_assert(
-            std::is_invocable_r<void, C, ::zenoh::Sample&>::value,
+            std::is_invocable_r<void, C, zenoh::Sample&>::value,
             "on_sample should be callable with the following signature: void on_sample(zenoh::Sample& sample)");
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
         ::z_owned_closure_sample_t c_closure;
         using Cval = std::remove_reference_t<C>;
         using Dval = std::remove_reference_t<D>;
-        using ClosureType = typename ::zenoh::detail::closures::Closure<Cval, Dval, void, ::zenoh::Sample&>;
+        using ClosureType = typename zenoh::detail::closures::Closure<Cval, Dval, void, zenoh::Sample&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
-        ::z_closure(&c_closure, ::zenoh::detail::closures::_zenoh_on_sample_call,
-                    ::zenoh::detail::closures::_zenoh_on_drop, closure);
-        ::z_liveliness_subscriber_options_t opts = ::zenoh::interop::detail::Converter::to_c_opts(options);
-        ::zenoh::ZResult res = ::ze_advanced_subscriber_detect_publishers_background(
-            ::zenoh::interop::as_loaned_c_ptr(*this), ::z_move(c_closure), &opts);
+        ::z_closure(&c_closure, zenoh::detail::closures::_zenoh_on_sample_call, zenoh::detail::closures::_zenoh_on_drop,
+                    closure);
+        ::z_liveliness_subscriber_options_t opts = zenoh::interop::detail::Converter::to_c_opts(options);
+        zenoh::ZResult res = ::ze_advanced_subscriber_detect_publishers_background(
+            zenoh::interop::as_loaned_c_ptr(*this), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Liveliness Token Subscriber");
     }
 
@@ -165,19 +165,20 @@ class AdvancedSubscriberBase : public Owned<::ze_owned_advanced_subscriber_t> {
     /// thrown in case of error.
     /// @return a ``Subscriber`` object.
     template <class Channel>
-    [[nodiscard]] ::zenoh::Subscriber<typename Channel::template HandlerType<Sample>> detect_publishers(
+    [[nodiscard]] zenoh::Subscriber<typename Channel::template HandlerType<Sample>> detect_publishers(
         Channel channel,
-        ::zenoh::Session::LivelinessSubscriberOptions&& options = ::zenoh::Session::LivelinessSubscriberOptions::create_default(),
-        ::zenoh::ZResult* err = nullptr) const {
-        auto cb_handler_pair = channel.template into_cb_handler_pair<::zenoh::Sample>();
-        ::z_liveliness_subscriber_options_t opts = ::zenoh::interop::detail::Converter::to_c_opts(options);
-        ::zenoh::Subscriber<void> s = ::zenoh::interop::detail::null<::zenoh::Subscriber<void>>();
-        ::zenoh::ZResult res = ::z_liveliness_declare_subscriber(
-            ::zenoh::interop::as_loaned_c_ptr(*this), ::zenoh::interop::as_owned_c_ptr(s),
-            ::z_move(cb_handler_pair.first), &opts);
+        zenoh::Session::LivelinessSubscriberOptions&& options =
+            zenoh::Session::LivelinessSubscriberOptions::create_default(),
+        zenoh::ZResult* err = nullptr) const {
+        auto cb_handler_pair = channel.template into_cb_handler_pair<zenoh::Sample>();
+        ::z_liveliness_subscriber_options_t opts = zenoh::interop::detail::Converter::to_c_opts(options);
+        zenoh::Subscriber<void> s = zenoh::interop::detail::null<zenoh::Subscriber<void>>();
+        zenoh::ZResult res =
+            ::z_liveliness_declare_subscriber(zenoh::interop::as_loaned_c_ptr(*this), zenoh::interop::as_owned_c_ptr(s),
+                                              ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
-        if (res != Z_OK) ::z_drop(::z_move(*::zenoh::interop::as_moved_c_ptr(cb_handler_pair.second)));
-        return ::zenoh::Subscriber<typename Channel::template HandlerType<::zenoh::Sample>>(
+        if (res != Z_OK) ::z_drop(::z_move(*zenoh::interop::as_moved_c_ptr(cb_handler_pair.second)));
+        return zenoh::Subscriber<typename Channel::template HandlerType<zenoh::Sample>>(
             std::move(s), std::move(cb_handler_pair.second));
     }
 };
@@ -196,7 +197,7 @@ template <>
 class AdvancedSubscriber<void> : public detail::AdvancedSubscriberBase {
    protected:
     using AdvancedSubscriberBase::AdvancedSubscriberBase;
-    friend struct ::zenoh::interop::detail::Converter;
+    friend struct zenoh::interop::detail::Converter;
 
    public:
     /// @name Methods
