@@ -1,5 +1,5 @@
 Matching
-=================
+========
 Classes related to getting information about matching Zenoh entities.
 
 .. doxygenstruct:: zenoh::MatchingStatus

@@ -55,3 +55,11 @@ Extra Zenoh entities.
 .. doxygenclass:: zenoh::ext::AdvancedSubscriber
    :members:
    :membergroups: Constructors Operators Methods Fields
+
+.. doxygenstruct:: zenoh::ext::Miss
+   :members:
+   :membergroups: Constructors Operators Methods Fields
+   
+.. doxygenclass:: zenoh::ext::SampleMissListener
+   :members:
+   :membergroups: Constructors Operators Methods

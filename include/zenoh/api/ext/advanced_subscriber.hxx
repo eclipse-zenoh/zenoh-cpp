@@ -30,6 +30,8 @@ class AdvancedSubscriberBase : public Owned<::ze_owned_advanced_subscriber_t> {
     AdvancedSubscriberBase(::ze_owned_advanced_subscriber_t* s) : Owned(s){};
 
    public:
+    /// @name Methods
+    
     /// @brief Construct sample miss listener, registering a callback for notifying about missed samples.
     ///
     /// @param on_miss_detected: the callable that will be called every time when missed samples are detected.
