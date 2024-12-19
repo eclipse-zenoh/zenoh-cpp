@@ -37,7 +37,7 @@ jobs:
       - name: Clone this repository
         uses: actions/checkout@v4
 
-      - name: install zenoh-cpp
+      - name: install zenoh-cpp and its dependencies
         shell: bash
         run: |
           ./scripts/install_from_git.sh ~/local ${{ matrix.unstable }} ${{ matrix.shm }}
@@ -46,7 +46,6 @@ jobs:
         shell: bash
         run: |
           cd build
-          cmake .. -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
           cmake --build . --target examples --config Release
 
       - name: make stand-alone examples
