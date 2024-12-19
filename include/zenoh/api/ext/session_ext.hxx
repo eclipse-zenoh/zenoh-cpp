@@ -45,8 +45,7 @@ class SessionExt {
 
     /// @name Methods
 
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
+    /// @warning This API is deprecated. Please use zenoh::ext::AdvancedPublisher.
     /// @brief Options passed to the ``SessionExt::declare_publication_cache``.
     struct PublicationCacheOptions {
         /// The prefix used for queryable.
@@ -83,8 +82,7 @@ class SessionExt {
         }
     };
 
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
+    /// @warning This API is deprecated. Please use zenoh::ext::SessionExt::declare_advanced_publisher.
     /// @brief Construct and declare a publication cache.
     /// @param key_expr: The key expression to publish to.
     /// @param options: Additional options for the publication cache.
@@ -104,8 +102,7 @@ class SessionExt {
         return p;
     }
 
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
+    /// @warning This API is deprecated. Please use zenoh::ext::SessionExt::declare_advanced_publisher.
     /// @brief Declare a background publication cache. It will function in background until the corresponding session
     /// is closed or destoryed.
     /// @param key_expr the key expression to publish to.
@@ -122,8 +119,7 @@ class SessionExt {
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Publication Cache");
     }
 
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
+    /// @warning This API is deprecated. Please use zenoh::ext::AdvancedSubscriber.
     /// @brief Options passed to the ``SessionExt::declare_querying_subscriber``.
     struct QueryingSubscriberOptions {
         /// @name Fields
@@ -166,8 +162,7 @@ class SessionExt {
         };
     };
 
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
+    /// @warning This API is deprecated. Please use zenoh::ext::SessionExt::declare_advanced_subscriber.
     /// @brief Construct and declare a querying subscriber.
     /// @param key_expr the key expression to subscribe to.
     /// @param on_sample the callback that will be called for each received sample.
@@ -202,8 +197,7 @@ class SessionExt {
         return qs;
     }
 
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
+    /// @warning This API is deprecated. Please use zenoh::ext::SessionExt::declare_background_advanced_subscriber.
     /// @brief Declare a background querying subscriber for a given key expression. Subscriber callback will be called
     /// to process the messages, until the corresponding session is closed or dropped.
     /// @param key_expr the key expression to subscribe to.
@@ -237,8 +231,7 @@ class SessionExt {
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Querying Subscriber");
     }
 
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
+    /// @warning This API is deprecated. Please use zenoh::ext::SessionExt::declare_advanced_subscriber.
     /// @brief Construct and declare a querying subscriber.
     /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
     /// ``zenoh::channels::RingChannel``).

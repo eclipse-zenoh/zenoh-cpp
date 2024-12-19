@@ -22,14 +22,13 @@
 
 namespace zenoh::ext {
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use zenoh::ext::AdvancedPublisher.
 /// @brief A Zenoh publication cache.
 ///
 /// Used to store publications on intersecting key expressions. Can be queried later via `zenoh::Session::get` to
 /// retrieve this data.
 /// @note Zenoh-c only
-class [[deprecated("Use zenoh::ext::AdvancedPublisher instead.")]] PublicationCache
-    : public Owned<::ze_owned_publication_cache_t> {
+class PublicationCache : public Owned<::ze_owned_publication_cache_t> {
     PublicationCache(zenoh::detail::null_object_t) : Owned(nullptr){};
     friend struct interop::detail::Converter;
 

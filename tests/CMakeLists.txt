@@ -91,7 +91,7 @@ function(set_strict_warnings file mode)
 		target_compile_options(${target} PRIVATE 
 			/W4 # show all warning
 			/WX # consider all warning as errors
-			/wd4996 # allow deprecated
+			#/wd4996 # allow deprecated
 		)
 	else()
 		target_compile_options(${target} PRIVATE 
@@ -99,7 +99,7 @@ function(set_strict_warnings file mode)
 			-Wextra 
 			-Wpedantic
 			-Wold-style-cast
-			-Wno-deprecated-declarations
+			#-Wno-deprecated-declarations
 			-Werror)
 	endif()
 endfunction()

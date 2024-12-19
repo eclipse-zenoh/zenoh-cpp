@@ -65,17 +65,16 @@ class QueryingSubscriberBase : public Owned<::ze_owned_querying_subscriber_t> {
 }  // namespace detail
 
 template <class Handler>
-class [[deprecated("Use zenoh::ext::AdvancedSubscriber instead.")]] QueryingSubscriber;
+class QueryingSubscriber;
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use zenoh::ext::AdvancedSubscriber.
 /// @brief A Zenoh querying subscriber.
 ///
 /// In addition to receiving the data it is subscribed to,
 /// it also will fetch data from a Queryable at startup and peridodically (using  `QueryingSubscriber::get`).
 /// @note Zenoh-c only.
 template <>
-class [[deprecated("Use zenoh::ext::AdvancedSubscriber instead.")]] QueryingSubscriber<void>
-    : public detail::QueryingSubscriberBase {
+class QueryingSubscriber<void> : public detail::QueryingSubscriberBase {
    protected:
     using QueryingSubscriberBase::QueryingSubscriberBase;
     friend class Session;
@@ -93,7 +92,7 @@ class [[deprecated("Use zenoh::ext::AdvancedSubscriber instead.")]] QueryingSubs
     }
 };
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use zenoh::ext::AdvancedSubscriber.
 /// @brief A Zenoh querying subscriber declared by ``SessionExt::declare_querying_subscriber``.
 ///
 /// In addition to receiving the data it is subscribed to,
@@ -102,8 +101,7 @@ class [[deprecated("Use zenoh::ext::AdvancedSubscriber instead.")]] QueryingSubs
 /// @tparam Handler streaming handler exposing data. If `void`, no handler access is provided and instead data is being
 /// processed inside the callback.
 template <class Handler>
-class [[deprecated("Use zenoh::ext::AdvancedSubscriber instead.")]] QueryingSubscriber
-    : public detail::QueryingSubscriberBase {
+class QueryingSubscriber : public detail::QueryingSubscriberBase {
     Handler _handler;
 
    public:
@@ -140,7 +138,6 @@ class [[deprecated("Use zenoh::ext::AdvancedSubscriber instead.")]] QueryingSubs
 namespace zenoh::interop {
 /// @brief Return a pair of pointers to owned zenoh-c representations of querying subscriber and its callback.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
-[[deprecated]]
 auto as_owned_c_ptr(zenoh::ext::QueryingSubscriber<Handler>& s) {
     return std::make_pair(as_owned_c_ptr(static_cast<zenoh::ext::detail::QueryingSubscriberBase&>(s)),
                           as_owned_c_ptr(const_cast<Handler&>(s.handler())));
@@ -148,7 +145,6 @@ auto as_owned_c_ptr(zenoh::ext::QueryingSubscriber<Handler>& s) {
 
 /// @brief Return a pair of pointers to owned zenoh-c representations of querying subscriber and its callback.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
-[[deprecated]]
 auto as_owned_c_ptr(const zenoh::ext::QueryingSubscriber<Handler>& s) {
     return std::make_pair(as_owned_c_ptr(static_cast<const zenoh::ext::detail::QueryingSubscriberBase&>(s)),
                           as_owned_c_ptr(s.handler()));
@@ -164,7 +160,6 @@ auto as_loaned_c_ptr(zenoh::ext::QueryingSubscriber<Handler>& s) {
 
 /// @brief Return a pair of pointers to loaned zenoh-c representations of querying subscriber and its callback.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
-[[deprecated]]
 auto as_loaned_c_ptr(const zenoh::ext::QueryingSubscriber<Handler>& s) {
     return std::make_pair(as_loaned_c_ptr(static_cast<const zenoh::ext::detail::QueryingSubscriberBase&>(s)),
                           as_loaned_c_ptr(s.handler()));
@@ -172,7 +167,6 @@ auto as_loaned_c_ptr(const zenoh::ext::QueryingSubscriber<Handler>& s) {
 
 /// @brief Return a pair of pointers to moved zenoh-c representations of querying subscriber and its callback.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
-[[deprecated]]
 auto as_moved_c_ptr(zenoh::ext::QueryingSubscriber<Handler>& s) {
     return std::make_pair(as_moved_c_ptr(static_cast<zenoh::ext::detail::QueryingSubscriberBase&>(s)),
                           as_moved_c_ptr(const_cast<Handler&>(s.handler())));
@@ -181,7 +175,6 @@ auto as_moved_c_ptr(zenoh::ext::QueryingSubscriber<Handler>& s) {
 /// @brief Return a pair of pointers to moved zenoh-c representations of querying subscriber and its callback.
 /// Will return a pair of null pointers if option is empty.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
-[[deprecated]]
 auto as_moved_c_ptr(std::optional<zenoh::ext::QueryingSubscriber<Handler>>& s) -> decltype(as_moved_c_ptr(s.value())) {
     if (!s.has_value()) {
         return as_moved_c_ptr(s.value());
@@ -192,7 +185,6 @@ auto as_moved_c_ptr(std::optional<zenoh::ext::QueryingSubscriber<Handler>>& s) -
 
 /// @brief Move querying subscriber and its handler to a pair containing corresponding zenoh-c structs.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
-[[deprecated]]
 auto move_to_c_obj(zenoh::ext::QueryingSubscriber<Handler>&& s) {
     return std::make_pair(move_to_c_obj(std::move(static_cast<zenoh::ext::detail::QueryingSubscriberBase&>(s))),
                           move_to_c_obj(std::move(const_cast<Handler&>(s))));
