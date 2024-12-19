@@ -233,7 +233,7 @@ class Query : public Owned<::z_owned_query_t> {
             "Failed to send reply del");
     }
 
-    /// @brief Construct a a shallow copy of this Query.
+    /// @brief Construct a shallow copy of this Query.
     /// This can be used, to send query replies outside of ``Queryable`` callback.
     ///
     /// The query responses will be sent only when the last clone is destroyed.

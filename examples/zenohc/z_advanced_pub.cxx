@@ -11,10 +11,8 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-#include <stdio.h>
-#include <string.h>
-
 #include <chrono>
+#include <cstdlib>
 #include <iostream>
 #include <limits>
 #include <sstream>
@@ -26,60 +24,57 @@
 using namespace zenoh;
 using namespace std::chrono_literals;
 
+#ifdef ZENOHCXX_ZENOHC
 const char *default_value = "Pub from C++ zenoh-c!";
 const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-c-pub";
-const char *default_prefix = "";
+#elif ZENOHCXX_ZENOHPICO
+const char *default_value = "Pub from C++ zenoh-pico!";
+const char *default_keyexpr = "demo/example/zenoh-cpp-zenoh-pico-pub";
+#else
+#error "Unknown zenoh backend"
+#endif
 
 int _main(int argc, char **argv) {
     auto &&[config, args] =
         ConfigCliArgParser(argc, argv)
-            .named_value({"k", "key"}, "KEY_EXPRESSION", "Key expression to write to (string)", default_keyexpr)
-            .named_value({"v", "value"}, "VALUE", "Value to publish (string)", default_value)
-            .named_value({"i", "history"}, "HISTORY", "Number of publications to keep in cache (number)", "1")
-            .named_flag({"o", "complete"},
-                        "Set `complete` option to true. This means that this queryable is ultimate data source, no "
-                        "need to scan other queryables")
-            .named_value({"x", "prefix"}, "PREFIX", "Queryable prefix", "")
+            .named_value({"k", "key"}, "KEY_EXPRESSION", "Key expression to publish to (string)", default_keyexpr)
+            .named_value({"p", "payload"}, "PAYLOAD", "Payload to publish (string)", default_value)
+            .named_value({"i", "history"}, "HISTORY_SIZE", "The number of publications to keep in cache (number)", "1")
             .run();
 
     auto keyexpr = args.value("key");
-    auto value = args.value("value");
+    auto payload = args.value("payload");
     auto history = std::atoi(args.value("history").data());
-    auto complete = args.flag("complete");
-    auto prefix = args.value("prefix");
-
-    config.insert_json5(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");
 
     std::cout << "Opening session..." << std::endl;
     auto session = Session::open(std::move(config));
 
-    std::cout << "Declaring Publication cache on '" << keyexpr << "'..." << std::endl;
-    ext::SessionExt::PublicationCacheOptions opts;
-    opts.history = history;
-    opts.queryable_complete = complete;
-    if (!prefix.empty()) {
-        opts.queryable_prefix = KeyExpr(prefix);
-    }
-    if (!std::string(prefix).empty()) {
-        opts.queryable_prefix = KeyExpr(prefix);
-    }
-    auto pub_cache = session.ext().declare_publication_cache(keyexpr, std::move(opts));
+    ext::SessionExt::AdvancedPublisherOptions opts;
+    opts.cache = ext::SessionExt::AdvancedPublisherOptions::CacheOptions{};
+    opts.cache->max_samples = history;
+    opts.publisher_detection = true;
+    opts.sample_miss_detection = true;
+
+    std::cout << "Declaring AdvancedPublisher on '" << keyexpr << "'..." << std::endl;
+    auto pub = session.ext().declare_advanced_publisher(KeyExpr(keyexpr), std::move(opts));
 
     std::cout << "Press CTRL-C to quit..." << std::endl;
     for (int idx = 0; idx < std::numeric_limits<int>::max(); ++idx) {
         std::this_thread::sleep_for(1s);
         std::ostringstream ss;
-        ss << "[" << idx << "] " << value;
+        ss << "[" << idx << "] " << payload;
         auto s = ss.str();
-        std::cout << "Putting Data ('" << keyexpr << "': '" << s << "')...\n";
-        session.put(keyexpr, std::move(s));
+        std::cout << "Put Data ('" << keyexpr << "': '" << s << "')...\n";
+        pub.put(s);
     }
     return 0;
 }
 
 int main(int argc, char **argv) {
     try {
+#ifdef ZENOHCXX_ZENOHC
         init_log_from_env_or("error");
+#endif
         _main(argc, argv);
     } catch (ZException e) {
         std::cout << "Received an error :" << e.what() << "\n";
