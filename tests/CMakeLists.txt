@@ -88,13 +88,18 @@ function(set_strict_warnings file mode)
 	# Enable all warnings and treat warnings as errors
 	# to check that library can be built in maximally strict mode
 	if(MSVC)
-		target_compile_options(${target} PRIVATE /W4 /WX)
+		target_compile_options(${target} PRIVATE 
+			/W4 # show all warning
+			/WX # consider all warning as errors
+			/wd4996 # allow deprecated
+		)
 	else()
 		target_compile_options(${target} PRIVATE 
 			-Wall 
 			-Wextra 
 			-Wpedantic
-			-Wold-style-cast 
+			-Wold-style-cast
+			-Wno-deprecated-declarations
 			-Werror)
 	endif()
 endfunction()
