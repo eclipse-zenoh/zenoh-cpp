@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <functional>
 #include <optional>
 
 #include "../../base.hxx"
