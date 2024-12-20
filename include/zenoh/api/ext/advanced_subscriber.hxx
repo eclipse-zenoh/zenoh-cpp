@@ -19,6 +19,7 @@
 #include "../interop.hxx"
 #include "../keyexpr.hxx"
 #include "../sample.hxx"
+#include "../source_info.hxx"
 #include "miss.hxx"
 
 namespace zenoh::ext {
@@ -182,6 +183,19 @@ class AdvancedSubscriberBase : public Owned<::ze_owned_advanced_subscriber_t> {
         if (res != Z_OK) ::z_drop(::z_move(*zenoh::interop::as_moved_c_ptr(cb_handler_pair.second)));
         return zenoh::Subscriber<typename Channel::template HandlerType<zenoh::Sample>>(
             std::move(s), std::move(cb_handler_pair.second));
+    }
+
+    /// @brief Get the key expression of the advanced subscriber.
+    const KeyExpr& get_keyexpr() const {
+        return zenoh::interop::as_owned_cpp_ref<zenoh::KeyExpr>(
+            ::ze_advanced_subscriber_keyexpr(zenoh::interop::as_loaned_c_ptr(*this)));
+    }
+
+    /// @brief Get the id of the advanced subscriber.
+    /// @return id of this advanced subscriber.
+    EntityGlobalId get_id() const {
+        return zenoh::interop::into_copyable_cpp_obj<zenoh::EntityGlobalId>(
+            ::ze_advanced_subscriber_id(zenoh::interop::as_loaned_c_ptr(*this)));
     }
 };
 }  // namespace detail
