@@ -1034,7 +1034,7 @@ class Session : public Owned<::z_owned_session_t> {
         /// @name Fields
 
         /// @brief The timeout for the query in milliseconds.
-        uint32_t timeout_ms = 10000;
+        uint64_t timeout_ms = 10000;
 
         /// @name Methods
 
