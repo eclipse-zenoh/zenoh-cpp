@@ -1,0 +1,33 @@
+diff --git a/examples/universal/z_queryable.cxx b/examples/universal/z_queryable.cxx
+index ac145ee..b334608 100644
+--- a/examples/universal/z_queryable.cxx
++++ b/examples/universal/z_queryable.cxx
+@@ -60,14 +60,14 @@ int _main(int argc, char **argv) {
+         }
+         std::cout << "'\n";
+         std::cout << "[Queryable ] Responding ('" << keyexpr << "': '" << payload << "')\n";
+-        query.reply(keyexpr, payload);
++        query.reply(KeyExpr(keyexpr), payload);
+     };
+ 
+     auto on_drop_queryable = []() { std::cout << "Destroying queryable\n"; };
+ 
+     Session::QueryableOptions opts;
+     opts.complete = args.flag("complete");
+-    auto queryable = session.declare_queryable(keyexpr, on_query, on_drop_queryable, std::move(opts));
++    auto queryable = session.declare_queryable(KeyExpr(keyexpr), on_query, on_drop_queryable, std::move(opts));
+ 
+     printf("Press CTRL-C to quit...\n");
+     while (true) {
+diff --git a/include/zenoh/api/session.hxx b/include/zenoh/api/session.hxx
+index f22c26b..563d183 100644
+--- a/include/zenoh/api/session.hxx
++++ b/include/zenoh/api/session.hxx
+@@ -26,6 +26,7 @@
+ #include "keyexpr.hxx"
+ #include "liveliness.hxx"
+ #include "publisher.hxx"
++#include "queryable.hxx"
+ #include "query_consolidation.hxx"
+ #include "subscriber.hxx"
+ #include "timestamp.hxx"
