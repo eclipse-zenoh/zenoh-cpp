@@ -26,6 +26,7 @@
 #include "keyexpr.hxx"
 #include "liveliness.hxx"
 #include "publisher.hxx"
+#include "queryable.hxx"
 #include "query_consolidation.hxx"
 #include "subscriber.hxx"
 #include "timestamp.hxx"
