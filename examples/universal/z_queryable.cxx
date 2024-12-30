@@ -60,14 +60,14 @@ int _main(int argc, char **argv) {
         }
         std::cout << "'\n";
         std::cout << "[Queryable ] Responding ('" << keyexpr << "': '" << payload << "')\n";
-        query.reply(keyexpr, payload);
+        query.reply(KeyExpr(keyexpr), payload);
     };
 
     auto on_drop_queryable = []() { std::cout << "Destroying queryable\n"; };
 
     Session::QueryableOptions opts;
     opts.complete = args.flag("complete");
-    auto queryable = session.declare_queryable(keyexpr, on_query, on_drop_queryable, std::move(opts));
+    auto queryable = session.declare_queryable(KeyExpr(keyexpr), on_query, on_drop_queryable, std::move(opts));
 
     printf("Press CTRL-C to quit...\n");
     while (true) {

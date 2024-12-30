@@ -1,0 +1,39 @@
+context:
+  name: zenoh-cpp
+  version: 1.1.0
+
+package:
+  name: ${{ name }}
+  version: ${{ version }}
+
+source:
+  - git: https://github.com/eclipse-zenoh/zenoh-cpp.git
+    tag: ${{ version }}
+    patches:
+      - fix_queryable.patch
+
+build:
+  number: 1000
+
+requirements:
+  build:
+    - ${{ compiler('c') }}
+    - ${{ compiler('cxx') }}
+    - cmake
+    - pkg-config
+    - ninja
+  host:
+    - zenoh-c ${{ version }}.*
+
+tests:
+  - script:
+      - if: unix
+        then: test -f ${PREFIX}/include/zenoh.hxx
+      - if: win
+        then: if not exist %LIBRARY_PREFIX%\\include\\zenoh.hxx exit 1
+
+about:
+  license: Apache-2.0 OR EPL-2.0
+  license_file: LICENSE
+  summary: C++ API for zenoh
+  homepage: https://github.com/eclipse-zenoh/zenoh-cpp
