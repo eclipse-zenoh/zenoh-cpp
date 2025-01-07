@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <zenoh.h>
 #include <optional>
 
 #include "../detail/closures_concrete.hxx"
@@ -532,7 +533,7 @@ class Session : public Owned<::z_owned_session_t> {
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The delete operation reliability.
-        Reliability reliability = Reliability::Z_RELIABILITY_RELIABLE;
+        Reliability reliability = z_reliability_default();
 #endif
         /// @brief the timestamp of this message.
         std::optional<Timestamp> timestamp = {};
@@ -588,7 +589,7 @@ class Session : public Owned<::z_owned_session_t> {
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The put operation reliability.
-        Reliability reliability = Reliability::Z_RELIABILITY_RELIABLE;
+        Reliability reliability = z_reliability_default();
 #endif
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
@@ -648,7 +649,7 @@ class Session : public Owned<::z_owned_session_t> {
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The publisher reliability.
-        Reliability reliability = Reliability::Z_RELIABILITY_RELIABLE;
+        Reliability reliability = z_reliability_default();
 #endif
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
