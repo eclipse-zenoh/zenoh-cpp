@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include <zenoh.h>
-
 #include <optional>
 
 #include "../detail/closures_concrete.hxx"
