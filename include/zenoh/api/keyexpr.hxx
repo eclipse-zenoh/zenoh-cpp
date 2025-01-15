@@ -68,6 +68,13 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     KeyExpr(const char* key_expr, bool autocanonize = true, ZResult* err = nullptr)
         : KeyExpr(std::string_view(key_expr), autocanonize, err){};
 
+    /// @brief Copy constructor.
+    KeyExpr(const KeyExpr& other) : KeyExpr(zenoh::detail::null_object) {
+        ::z_keyexpr_clone(&this->_0, interop::as_loaned_c_ptr(other));
+    };
+
+    KeyExpr(KeyExpr&& other) = default;
+
     /// @name Methods
     /// @brief Get underlying key expression string.
     std::string_view as_string_view() const {
@@ -186,6 +193,17 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @return ``false`` if both key expressions are equal (i.e. they represent the same set of resources), ``true``
     /// otherwise.
     bool operator!=(const KeyExpr& other) const { return !(*this == other); }
+
+    /// @brief Assignment operator.
+    KeyExpr& operator=(const KeyExpr& other) {
+        if (this != &other) {
+            ::z_drop(z_move(this->_0));
+            ::z_keyexpr_clone(&this->_0, interop::as_loaned_c_ptr(other));
+        }
+        return *this;
+    };
+
+    KeyExpr& operator=(KeyExpr&& other) = default;
 };
 
 }  // namespace zenoh
