@@ -42,6 +42,7 @@ int _main(int argc, char **argv) {
             .named_value({"i", "history"}, "HISTORY_SIZE", "The number of publications to keep in cache (number)", "1")
             .run();
 
+    config.insert_json5(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");
     auto keyexpr = args.value("key");
     auto payload = args.value("payload");
     auto history = std::atoi(args.value("history").data());
@@ -50,10 +51,11 @@ int _main(int argc, char **argv) {
     auto session = Session::open(std::move(config));
 
     ext::SessionExt::AdvancedPublisherOptions opts;
-    opts.cache = ext::SessionExt::AdvancedPublisherOptions::CacheOptions{};
-    opts.cache->max_samples = history;
+    opts.cache.emplace().max_samples = history;
     opts.publisher_detection = true;
-    opts.sample_miss_detection = true;
+    opts.sample_miss_detection.emplace().heartbeat_period_ms = 500;
+    // alternatively sample miss detection can be done in response to subscriber's periodic queries:
+    // opts.sample_miss_detection.emplace();
 
     std::cout << "Declaring AdvancedPublisher on '" << keyexpr << "'..." << std::endl;
     auto pub = session.ext().declare_advanced_publisher(KeyExpr(keyexpr), std::move(opts));
