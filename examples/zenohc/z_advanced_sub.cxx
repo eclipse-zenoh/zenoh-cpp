@@ -46,10 +46,11 @@ int _main(int argc, char **argv) {
     auto session = Session::open(std::move(config));
 
     ext::SessionExt::AdvancedSubscriberOptions opts;
-    opts.history = ext::SessionExt::AdvancedSubscriberOptions::HistoryOptions{};
+    opts.history.emplace().detect_late_publishers = true;
     opts.history->detect_late_publishers = true;
-    opts.recovery = ext::SessionExt::AdvancedSubscriberOptions::RecoveryOptions{};
-    opts.recovery->periodic_queries_period_ms = 1000;
+    opts.recovery.emplace();  // enable recovery based on received heartbeats from ext::AdvancedPublisher
+    // alternatively recovery can be triggered based on missed sample detection via periodic queries:
+    // opts.recovery.emplace().periodic_queries_period_ms = 1000;
     opts.subscriber_detection = true;
 
     auto data_handler = [](const Sample &sample) {

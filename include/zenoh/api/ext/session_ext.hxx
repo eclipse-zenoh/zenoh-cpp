@@ -14,6 +14,7 @@
 #pragma once
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 
+#include <algorithm>
 #include <optional>
 
 #include "../base.hxx"
@@ -285,6 +286,15 @@ class SessionExt {
             /// @brief Create default option settings.
             static CacheOptions create_default() { return {}; }
         };
+        // @brief Settings allowing matching Subscribers to detect lost samples and optionally ask for retransimission.
+        struct SampleMissDetectionOptions {
+            // The period of publisher heartbeats in ms, which can be used by ``AdvancedSubscriber`` for missed sample
+            // detection (if heartbeat-based recovery is enabled). If this value is unset, the subscribers will only be
+            // notified about missed samples if they opt to send periodic queries.
+            std::optional<uint64_t> heartbeat_period_ms = {};
+            /// @brief Create default option settings.
+            static SampleMissDetectionOptions create_default() { return {}; }
+        };
 
         /// Base publisher options.
         zenoh::Session::PublisherOptions publisher_options = {};
@@ -292,8 +302,8 @@ class SessionExt {
         std::optional<CacheOptions> cache;
         /// Allow matching Subscribers to detect lost samples and optionally ask for retransimission.
         ///
-        /// Retransmission can only be done if history is enabled on subscriber side.
-        bool sample_miss_detection = false;
+        /// Retransmission can only be done if cache is enabled.
+        std::optional<SampleMissDetectionOptions> sample_miss_detection = {};
         /// Allow this publisher to be detected through liveliness.
         bool publisher_detection = false;
         /// An optional key expression to be added to the liveliness token key expression.
@@ -319,7 +329,16 @@ class SessionExt {
                 opts.cache.is_express = this->cache->is_express;
             }
             opts.publisher_detection = this->publisher_detection;
-            opts.sample_miss_detection = this->sample_miss_detection;
+            if (this->sample_miss_detection.has_value()) {
+                opts.sample_miss_detection.is_enabled = true;
+                if (this->sample_miss_detection->heartbeat_period_ms.has_value()) {
+                    // treat 0 as very small delay
+                    opts.sample_miss_detection.heartbeat_period_ms =
+                        std::max<uint64_t>(1, this->sample_miss_detection->heartbeat_period_ms.value());
+                } else {
+                    opts.sample_miss_detection.heartbeat_period_ms = 0;
+                }
+            }
             opts.publisher_detection_metadata = zenoh::interop::as_loaned_c_ptr(this->publisher_detection_metadata);
             return opts;
         }
@@ -378,9 +397,9 @@ class SessionExt {
             /// These queries allow to retrieve the last Sample(s) if the last Sample(s) is/are lost.
             /// So it is useful for sporadic publications but useless for periodic publications
             /// with a period smaller or equal to this period.
-            /// Retransmission can only be achieved by Publishers that also activate retransmission.
-            /// ``0`` corresponds to default query period value.
-            uint64_t periodic_queries_period_ms = 0;
+            /// If unset, the subscriber will be instead notified about missed samples through ``AdvancedPublisher``
+            /// heartbeats (if enabled on publisher side).
+            std::optional<uint64_t> periodic_queries_period_ms = {};
 
             /// @name Methods
 
@@ -424,7 +443,13 @@ class SessionExt {
             }
             if (this->recovery.has_value()) {
                 opts.recovery.is_enabled = true;
-                opts.recovery.periodic_queries_period_ms = this->recovery->periodic_queries_period_ms;
+                if (this->recovery->periodic_queries_period_ms.has_value()) {
+                    // treat 0 as very small delay
+                    opts.recovery.periodic_queries_period_ms =
+                        std::max<uint64_t>(1, this->recovery->periodic_queries_period_ms.value());
+                } else {
+                    opts.recovery.periodic_queries_period_ms = 0;
+                }
             }
             opts.query_timeout_ms = this->query_timeout_ms;
             opts.subscriber_detection = this->subscriber_detection;
