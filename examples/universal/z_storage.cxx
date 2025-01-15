@@ -15,7 +15,9 @@
 
 #include <chrono>
 #include <iostream>
+#include <mutex>
 #include <thread>
+#include <unordered_map>
 
 #include "../getargs.hxx"
 #include "zenoh.hxx"
