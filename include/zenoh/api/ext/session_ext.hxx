@@ -14,6 +14,7 @@
 #pragma once
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 
+#include <algorithm>
 #include <optional>
 
 #include "../base.hxx"
@@ -330,8 +331,13 @@ class SessionExt {
             opts.publisher_detection = this->publisher_detection;
             if (this->sample_miss_detection.has_value()) {
                 opts.sample_miss_detection.is_enabled = true;
-                opts.sample_miss_detection.heartbeat_period_ms =
-                    this->sample_miss_detection->heartbeat_period_ms.value_or(0);
+                if (this->sample_miss_detection->heartbeat_period_ms.has_value()) {
+                    // treat 0 as very small delay
+                    opts.sample_miss_detection.heartbeat_period_ms =
+                        std::max<uint64_t>(1, this->sample_miss_detection->heartbeat_period_ms.value());
+                } else {
+                    opts.sample_miss_detection.heartbeat_period_ms = 0;
+                }
             }
             opts.publisher_detection_metadata = zenoh::interop::as_loaned_c_ptr(this->publisher_detection_metadata);
             return opts;
@@ -437,7 +443,13 @@ class SessionExt {
             }
             if (this->recovery.has_value()) {
                 opts.recovery.is_enabled = true;
-                opts.recovery.periodic_queries_period_ms = this->recovery->periodic_queries_period_ms.value_or(0);
+                if (this->recovery->periodic_queries_period_ms.has_value()) {
+                    // treat 0 as very small delay
+                    opts.recovery.periodic_queries_period_ms =
+                        std::max<uint64_t>(1, this->recovery->periodic_queries_period_ms.value());
+                } else {
+                    opts.recovery.periodic_queries_period_ms = 0;
+                }
             }
             opts.query_timeout_ms = this->query_timeout_ms;
             opts.subscriber_detection = this->subscriber_detection;
