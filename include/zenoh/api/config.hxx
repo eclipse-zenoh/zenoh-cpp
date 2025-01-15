@@ -19,7 +19,7 @@
 #include "base.hxx"
 
 namespace zenoh {
-/// A Zenoh Session config
+/// A Zenoh Session config.
 class Config : public Owned<::z_owned_config_t> {
     Config(zenoh::detail::null_object_t) : Owned(nullptr){};
 

@@ -91,63 +91,9 @@ Examples are placed into `build/examples/zenohc` and `build/examples/zenohpico` 
 
 ## Running the examples
 
-Change current directory to the variant you want (`examples/zenohc` or `examples/zenohpico` in the build directory).
+See information about running examples [here](./examples/README.md).
 
-See example sources for command line arguments (key expression, value, router address).
-
-`zenohc` examples can work standalone, but for `zenohpico` examples the working zenoh router is required. So to run `zenohpico` examples download [zenoh] project and run the router ([Rust](rust-lang) should be installed):
-
-```bash
-git clone https://github.com/eclipse-zenoh/zenoh
-cd zenoh
-cargo run
-```
-
-### Basic Pub/Sub Example
-
-```bash
-./z_sub
-```
-
-```bash
-./z_pub
-```
-
-The `z_pub` should receive message sent by `z_sub`.
-
-### Queryable and Query Example
-
-```bash
-./z_queryable
-```
-
-```bash
-./z_get
-```
-
-### Queryable and Querier Example
-
-```bash
-./z_queryable
-```
-
-```bash
-./z_querier
-```
-
-The `z_querier` should continuously send queries and receive replies from `z_queryable`.
-
-### Throughput Examples
-
-```bash
-./z_sub_thr_cpp
-```
-
-```bash
-./z_pub_thr_cpp 1024
-```
-
-After 30-40 seconds delay the `z_sub_thr` will start to show the throughput measure results.
+Examples of linking [zenoh-cpp] to an external project can be found [here](./examples/simple/Readme.md).
 
 ## Library usage
 

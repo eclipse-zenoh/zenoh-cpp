@@ -75,7 +75,7 @@ int _main(int argc, char **argv) {
     auto &&[config, args] = ConfigCliArgParser(argc, argv)
                                 .named_value({"s", "samples"}, "MESUREMENTS", "Number of throughput measurements", "10")
                                 .named_value({"n", "number"}, "NUM_MESSAGES",
-                                             "Number of messages in each throughput measurements", "1000000")
+                                             "Number of messages in each throughput measurement", "1000000")
                                 .run();
 
     auto samples = std::atoi(args.value("samples").data());
@@ -84,19 +84,15 @@ int _main(int argc, char **argv) {
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
-    KeyExpr keyexpr = session.declare_keyexpr(KeyExpr("test/thr"));
-
     Stats stats(samples, num_messages);
     auto on_receive = [&stats](const Sample &s) { stats(s); };
     auto on_drop = [&stats]() { stats(); };
-    session.declare_background_subscriber(keyexpr, on_receive, on_drop);
+    session.declare_background_subscriber("test/thr", on_receive, on_drop);
 
     std::cout << "Press CTRL-C to quit...\n";
     while (true) {
         std::this_thread::sleep_for(1s);
     }
-
-    session.undeclare_keyexpr(std::move(keyexpr));
 
     return 0;
 }
