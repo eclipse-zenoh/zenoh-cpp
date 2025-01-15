@@ -104,6 +104,11 @@ void from_into() {
     std::vector<uint8_t> v = {1, 2, 4, 5, 6, 7, 8, 9, 10};
     std::vector<uint8_t> v2 = v;
     std::string s = "abcdefg";
+    // add a couple of null terminators to ensure that they are also moved into payload
+    s.push_back('\0');
+    s.push_back('h');
+    s.push_back('\0');
+    s.push_back('i');
     std::string s2 = s;
 
     Bytes bv(v), bs(s), bv2(std::move(v2)), bs2(std::move(s2));
