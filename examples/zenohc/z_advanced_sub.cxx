@@ -48,9 +48,12 @@ int _main(int argc, char **argv) {
     ext::SessionExt::AdvancedSubscriberOptions opts;
     opts.history.emplace().detect_late_publishers = true;
     opts.history->detect_late_publishers = true;
-    opts.recovery.emplace();  // enable recovery based on received heartbeats from ext::AdvancedPublisher
+    // enable recovery based on received heartbeats from ext::AdvancedPublisher
+    opts.recovery.emplace().last_sample_miss_detection =
+        ext::SessionExt::AdvancedSubscriberOptions::RecoveryOptions::Heartbeat{};
     // alternatively recovery can be triggered based on missed sample detection via periodic queries:
-    // opts.recovery.emplace().periodic_queries_period_ms = 1000;
+    // opts.recovery.emplace().last_sample_miss_detection =
+    // ext::SessionExt::AdvancedSubscriberOptions::RecoveryOptions::PeriodicQueriesOptions{1000};
     opts.subscriber_detection = true;
 
     auto data_handler = [](const Sample &sample) {
