@@ -965,11 +965,7 @@ class Session : public Owned<::z_owned_session_t> {
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
         return s;
     }
-#endif
 
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
     /// @brief Declares a background subscriber on liveliness tokens that intersect `key_expr`. The subscriber callback
     /// will be run in the background until the corresponding session is closed or destroyed.
     /// @param key_expr the key expression to subscribe to.
@@ -996,13 +992,11 @@ class Session : public Owned<::z_owned_session_t> {
         auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_sample_call, detail::closures::_zenoh_on_drop, closure);
         ::z_liveliness_subscriber_options_t opts = interop::detail::Converter::to_c_opts(options);
-        ZResult res = ::zc_liveliness_declare_background_subscriber(
+        ZResult res = ::z_liveliness_declare_background_subscriber(
             interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Background Liveliness Token Subscriber");
     }
-#endif
 
-#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LIVELINESS == 1
     /// @brief Declare a subscriber on liveliness tokens that intersect `key_expr`.
     /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
     /// ``zenoh::channels::RingChannel``).
@@ -1097,6 +1091,7 @@ class Session : public Owned<::z_owned_session_t> {
         if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
         return std::move(cb_handler_pair.second);
     }
+#endif
 
     /// @brief Create Timestamp from session id.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
@@ -1118,7 +1113,6 @@ class Session : public Owned<::z_owned_session_t> {
         (void)options;
         __ZENOH_RESULT_CHECK(::z_close(interop::as_loaned_c_ptr(*this), nullptr), err, "Failed to close the session");
     }
-#endif
 
     /// @brief Check if session is closed.
     /// @return ``true`` if session is closed, ``false`` otherwise.
