@@ -31,6 +31,8 @@ status_print(project_version)
 declare_cache_var(ZENOHCXX_ZENOHC ON BOOL "Build for Zenoh-c target")
 declare_cache_var(ZENOHCXX_ZENOHPICO OFF BOOL "Build for Zenoh-pico target")
 declare_cache_var(ZENOHCXX_EXAMPLES_PROTOBUF ON BOOL "Build Protobuf example (turn off if you have problems with installed Protobuf version)")
+declare_cache_var(ZENOHCXX_ENABLE_TESTS ON BOOL "Enable building tests")
+declare_cache_var(ZENOHCXX_ENABLE_EXAMPLES ON BOOL "Enable building examples")
 
 set_default_build_type(Release)
 
@@ -70,7 +72,17 @@ endif()
 
 
 add_subdirectory(install)
-enable_testing()
-add_subdirectory(tests)
-add_subdirectory(examples)
+
+if(ZENOHCXX_ENABLE_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+else()
+    message(STATUS "Tests are disabled.")
+endif()
+if(ZENOHCXX_ENABLE_EXAMPLES)
+    add_subdirectory(examples)
+else()
+    message(STATUS "Examples are disabled.")
+endif()
+
 add_subdirectory(docs)
