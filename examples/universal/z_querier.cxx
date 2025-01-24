@@ -34,7 +34,7 @@ int _main(int argc, char **argv) {
             .named_value({"t", "target"}, "TARGET", "Query target (BEST_MATCHING | ALL | ALL_COMPLETE)",
                          "BEST_MATCHING")
             .named_value({"o", "timeout"}, "TIMEOUT", "Timeout in ms (number)", "10000")
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
             .named_flag({"add-matching-listener"}, "Add matching listener")
 #endif
             .run();
