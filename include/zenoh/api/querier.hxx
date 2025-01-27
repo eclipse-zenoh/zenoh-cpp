@@ -13,7 +13,7 @@
 
 #pragma once
 
-#if defined(ZENOHCXX_ZENOHC)
+#if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1) && defined(Z_FEATURE_UNSTABLE_API)
 
 #include "../detail/closures_concrete.hxx"
 #include "base.hxx"
