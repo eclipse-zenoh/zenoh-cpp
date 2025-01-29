@@ -160,7 +160,7 @@ class AdvancedPublisher : public Owned<::ze_owned_advanced_publisher_t> {
                       "zenoh::MatchingStatus& status)");
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
-        ::zc_owned_closure_matching_status_t c_closure;
+        ::z_owned_closure_matching_status_t c_closure;
         using Cval = std::remove_reference_t<C>;
         using Dval = std::remove_reference_t<D>;
         using ClosureType = typename zenoh::detail::closures::Closure<Cval, Dval, void, const zenoh::MatchingStatus&>;
@@ -190,7 +190,7 @@ class AdvancedPublisher : public Owned<::ze_owned_advanced_publisher_t> {
         Channel channel, zenoh::ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Query>();
         auto m = zenoh::interop::detail::null<MatchingListener<void>>();
-        zenoh::ZResult res = ::zc_publisher_declare_matching_listener(
+        zenoh::ZResult res = ::z_publisher_declare_matching_listener(
             interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(m), ::z_move(cb_handler_pair.first));
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Matching Listener");
         if (res != Z_OK) ::z_drop(zenoh::interop::as_moved_c_ptr(cb_handler_pair.second));
@@ -216,7 +216,7 @@ class AdvancedPublisher : public Owned<::ze_owned_advanced_publisher_t> {
                       "zenoh::MatchingStatus& status)");
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
-        ::zc_owned_closure_matching_status_t c_closure;
+        ::z_owned_closure_matching_status_t c_closure;
         using Cval = std::remove_reference_t<C>;
         using Dval = std::remove_reference_t<D>;
         using ClosureType = typename zenoh::detail::closures::Closure<Cval, Dval, void, const zenoh::MatchingStatus&>;
@@ -235,7 +235,7 @@ class AdvancedPublisher : public Owned<::ze_owned_advanced_publisher_t> {
     /// thrown in case of error.
     /// @note Zenoh-c only.
     MatchingStatus get_matching_status(zenoh::ZResult* err = nullptr) const {
-        ::zc_matching_status_t m;
+        ::z_matching_status_t m;
         zenoh::ZResult res = ::ze_advanced_publisher_get_matching_status(zenoh::interop::as_loaned_c_ptr(*this), &m);
         __ZENOH_RESULT_CHECK(res, err, "Failed to get matching status");
         return {m.matching};
