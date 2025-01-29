@@ -23,8 +23,10 @@
 #include "interop.hxx"
 #include "keyexpr.hxx"
 #include "reply.hxx"
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
 #include "matching.hxx"
+#endif
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 #include "source_info.hxx"
 #endif
 #include <optional>
@@ -150,7 +152,7 @@ class Querier : public Owned<::z_owned_querier_t> {
     }
 #endif
 
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API) || Z_FEATURE_MATCHING == 1
+#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Construct matching listener, registering a callback for notifying queryables matching with a given

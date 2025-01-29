@@ -34,7 +34,7 @@ int _main(int argc, char **argv) {
             .named_value({"t", "target"}, "TARGET", "Query target (BEST_MATCHING | ALL | ALL_COMPLETE)",
                          "BEST_MATCHING")
             .named_value({"o", "timeout"}, "TIMEOUT", "Timeout in ms (number)", "10000")
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API) || Z_FEATURE_MATCHING == 1
+#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
             .named_flag({"add-matching-listener"}, "Add matching listener")
 #endif
             .run();
@@ -53,7 +53,7 @@ int _main(int argc, char **argv) {
     options.timeout_ms = timeout_ms;
     auto querier = session.declare_querier(selector.key_expr, std::move(options));
 
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API) || Z_FEATURE_MATCHING == 1
+#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
     if (args.flag("add-matching-listener")) {
         querier.declare_background_matching_listener(
             [](const MatchingStatus &s) {
