@@ -36,17 +36,17 @@ struct MatchingStatus {
 
 namespace detail::closures {
 extern "C" {
-inline void _zenoh_on_status_change_call(const ::zc_matching_status_t* status, void* context) {
+inline void _zenoh_on_status_change_call(const ::z_matching_status_t* status, void* context) {
     IClosure<void, const MatchingStatus&>::call_from_context(context, MatchingStatus{status->matching});
 }
 }
 }  // namespace detail::closures
 
 namespace detail {
-class MatchingListenerBase : public Owned<::zc_owned_matching_listener_t> {
+class MatchingListenerBase : public Owned<::z_owned_matching_listener_t> {
    protected:
     MatchingListenerBase(zenoh::detail::null_object_t) : Owned(nullptr){};
-    MatchingListenerBase(::zc_owned_matching_listener_t* m) : Owned(m){};
+    MatchingListenerBase(::z_owned_matching_listener_t* m) : Owned(m){};
     friend struct interop::detail::Converter;
 };
 }  // namespace detail
@@ -68,7 +68,7 @@ class MatchingListener<void> : public detail::MatchingListenerBase {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void undeclare(ZResult* err = nullptr) && {
-        __ZENOH_RESULT_CHECK(::zc_undeclare_matching_listener(interop::as_moved_c_ptr(*this)), err,
+        __ZENOH_RESULT_CHECK(::z_undeclare_matching_listener(interop::as_moved_c_ptr(*this)), err,
                              "Failed to undeclare matching listener");
     }
 };
@@ -103,7 +103,7 @@ class MatchingListener : public detail::MatchingListenerBase {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     Handler undeclare(ZResult* err = nullptr) && {
-        __ZENOH_RESULT_CHECK(::zc_undeclare_matching_listener(interop::as_moved_c_ptr(*this)), err,
+        __ZENOH_RESULT_CHECK(::z_undeclare_matching_listener(interop::as_moved_c_ptr(*this)), err,
                              "Failed to undeclare matching listener");
         return std::move(this->_handler);
     }

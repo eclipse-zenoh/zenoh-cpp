@@ -23,8 +23,10 @@
 #include "interop.hxx"
 #include "keyexpr.hxx"
 #include "timestamp.hxx"
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
 #include "matching.hxx"
+#endif
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 #include "source_info.hxx"
 #endif
 #include <optional>
@@ -145,7 +147,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     }
 #endif
 
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Construct matching listener, registering a callback for notifying subscribers matching with a given
@@ -166,7 +168,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
                       "zenoh::MatchingStatus& status)");
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
-        ::zc_owned_closure_matching_status_t c_closure;
+        ::z_owned_closure_matching_status_t c_closure;
         using Cval = std::remove_reference_t<C>;
         using Dval = std::remove_reference_t<D>;
         using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const MatchingStatus&>;
@@ -174,8 +176,8 @@ class Publisher : public Owned<::z_owned_publisher_t> {
         ::z_closure(&c_closure, detail::closures::_zenoh_on_status_change_call, detail::closures::_zenoh_on_drop,
                     closure);
         MatchingListener<void> m(zenoh::detail::null_object);
-        ZResult res = ::zc_publisher_declare_matching_listener(interop::as_loaned_c_ptr(*this),
-                                                               interop::as_owned_c_ptr(m), ::z_move(c_closure));
+        ZResult res = ::z_publisher_declare_matching_listener(interop::as_loaned_c_ptr(*this),
+                                                              interop::as_owned_c_ptr(m), ::z_move(c_closure));
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Matching Listener");
         return m;
     }
@@ -196,7 +198,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
         Channel channel, ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Query>();
         MatchingListener<void> m(zenoh::detail::null_object);
-        ZResult res = ::zc_publisher_declare_matching_listener(
+        ZResult res = ::z_publisher_declare_matching_listener(
             interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(m), ::z_move(cb_handler_pair.first));
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Matching Listener");
         if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
@@ -222,7 +224,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
                       "zenoh::MatchingStatus& status)");
         static_assert(std::is_invocable_r<void, D>::value,
                       "on_drop should be callable with the following signature: void on_drop()");
-        ::zc_owned_closure_matching_status_t c_closure;
+        ::z_owned_closure_matching_status_t c_closure;
         using Cval = std::remove_reference_t<C>;
         using Dval = std::remove_reference_t<D>;
         using ClosureType = typename detail::closures::Closure<Cval, Dval, void, const MatchingStatus&>;
@@ -230,7 +232,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
         ::z_closure(&c_closure, detail::closures::_zenoh_on_status_change_call, detail::closures::_zenoh_on_drop,
                     closure);
         ZResult res =
-            ::zc_publisher_declare_background_matching_listener(interop::as_loaned_c_ptr(*this), ::z_move(c_closure));
+            ::z_publisher_declare_background_matching_listener(interop::as_loaned_c_ptr(*this), ::z_move(c_closure));
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare background Matching Listener");
     }
 
@@ -241,8 +243,8 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     /// thrown in case of error.
     /// @note Zenoh-c only.
     MatchingStatus get_matching_status(ZResult* err = nullptr) const {
-        ::zc_matching_status_t m;
-        ZResult res = ::zc_publisher_get_matching_status(interop::as_loaned_c_ptr(*this), &m);
+        ::z_matching_status_t m;
+        ZResult res = ::z_publisher_get_matching_status(interop::as_loaned_c_ptr(*this), &m);
         __ZENOH_RESULT_CHECK(res, err, "Failed to get matching status");
         return {m.matching};
     }

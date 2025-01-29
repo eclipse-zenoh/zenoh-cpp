@@ -42,7 +42,7 @@ int _main(int argc, char **argv) {
             .named_value({"k", "key"}, "KEY_EXPRESSION", "Key expression to publish to (string)", default_keyexpr)
             .named_value({"p", "payload"}, "PAYLOAD", "Payload to publish (string)", default_value)
             .named_value({"a", "attach"}, "ATTACHMENT", "Attachment to add to each put (string)", "")
-#if defined(Z_FEATURE_UNSTABLE_API) && defined(ZENOHCXX_ZENOHC)
+#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
             .named_flag({"add-matching-listener"}, "Add matching listener")
 #endif
             .run();
@@ -56,7 +56,7 @@ int _main(int argc, char **argv) {
 
     std::cout << "Declaring Publisher on '" << keyexpr << "'..." << std::endl;
     auto pub = session.declare_publisher(KeyExpr(keyexpr));
-#if defined(Z_FEATURE_UNSTABLE_API) && defined(ZENOHCXX_ZENOHC)
+#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
     if (args.flag("add-matching-listener")) {
         pub.declare_background_matching_listener(
             [](const MatchingStatus &s) {
