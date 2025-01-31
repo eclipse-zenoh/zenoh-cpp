@@ -30,6 +30,7 @@
 #include "queryable.hxx"
 #include "subscriber.hxx"
 #include "timestamp.hxx"
+
 #if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1) && defined(Z_FEATURE_UNSTABLE_API)
 #include "querier.hxx"
 #endif
