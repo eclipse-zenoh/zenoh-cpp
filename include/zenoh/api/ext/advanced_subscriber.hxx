@@ -19,7 +19,9 @@
 #include "../interop.hxx"
 #include "../keyexpr.hxx"
 #include "../sample.hxx"
+#include "../session.hxx"
 #include "../source_info.hxx"
+#include "../subscriber.hxx"
 #include "miss.hxx"
 
 namespace zenoh::ext {
