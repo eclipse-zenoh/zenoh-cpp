@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <optional>
+#include <variant>
 
 #include "../base.hxx"
 #include "../enums.hxx"
