@@ -32,7 +32,7 @@
 namespace zenoh {
 /// The query to be answered by a ``Queryable``.
 class Query : public Owned<::z_owned_query_t> {
-    Query(zenoh::detail::null_object_t) : Owned(nullptr){};
+    Query(zenoh::detail::null_object_t) : Owned(nullptr) {};
     friend struct interop::detail::Converter;
 
    public:
@@ -110,7 +110,7 @@ class Query : public Owned<::z_owned_query_t> {
         /// @brief The priority of this reply message.
         Priority priority = Z_PRIORITY_DEFAULT;
         /// @brief The congestion control to apply when routing this reply message.
-        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
+        CongestionControl congestion_control = ::z_congestion_control_default_response();
         /// @brief Whether Zenoh will NOT wait to batch this reply message with others to reduce the bandwith.
         bool is_express = false;
         /// @brief The timestamp of this message.
@@ -190,7 +190,7 @@ class Query : public Owned<::z_owned_query_t> {
         /// @brief The priority of this reply message.
         Priority priority = Z_PRIORITY_DEFAULT;
         /// @brief The congestion control to apply when routing this reply message.
-        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
+        CongestionControl congestion_control = ::z_congestion_control_default_response();
         /// @brief Whether Zenoh will NOT wait to batch this reply message with others to reduce the bandwith.
         bool is_express = false;
         /// @brief the timestamp of this message.
