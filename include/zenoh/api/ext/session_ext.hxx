@@ -43,7 +43,7 @@ class SessionExt {
 
     /// @brief Get extension interface for `zenoh::Session`. Its lifetime is bound that of the session.
     /// @param session
-    SessionExt(const zenoh::Session& session) : _session(session) {};
+    SessionExt(const zenoh::Session& session) : _session(session){};
 
     /// @name Methods
 

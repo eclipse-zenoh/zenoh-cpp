@@ -44,7 +44,7 @@ class SessionExt;
 
 /// A Zenoh session.
 class Session : public Owned<::z_owned_session_t> {
-    Session(zenoh::detail::null_object_t) : Owned(nullptr) {};
+    Session(zenoh::detail::null_object_t) : Owned(nullptr){};
 
    public:
     /// @brief Options to be passed when opening a ``Session``.
