@@ -177,7 +177,7 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief The priority of the get message.
         Priority priority = Z_PRIORITY_DEFAULT;
         /// @brief The congestion control to apply when routing get message.
-        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
+        CongestionControl congestion_control = ::z_internal_congestion_control_default_request();
         /// @brief Whether Zenoh will NOT wait to batch get message with others to reduce the bandwith.
         bool is_express = false;
         /// @brief An optional payload of the query.
@@ -526,7 +526,7 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief The priority of the delete message.
         Priority priority = Z_PRIORITY_DEFAULT;
         /// @brief The congestion control to apply when routing delete message.
-        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
+        CongestionControl congestion_control = ::z_internal_congestion_control_default_push();
         /// @brief Whether Zenoh will NOT wait to batch delete message with others to reduce the bandwith.
         bool is_express = false;
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -571,7 +571,7 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief The priority of this message.
         Priority priority = Z_PRIORITY_DEFAULT;
         /// @brief The congestion control to apply when routing this message.
-        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
+        CongestionControl congestion_control = ::z_internal_congestion_control_default_push();
         /// @brief Whether Zenoh will NOT wait to batch this message with others to reduce the bandwith.
         bool is_express = false;
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
@@ -640,7 +640,7 @@ class Session : public Owned<::z_owned_session_t> {
         /// @name Fields
 
         /// @brief The congestion control to apply when routing messages from this publisher.
-        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
+        CongestionControl congestion_control = ::z_internal_congestion_control_default_push();
         /// @brief The priority of messages from this publisher.
         Priority priority = Z_PRIORITY_DEFAULT;
         /// @brief If ``true``, Zenoh will not wait to batch this message with others to reduce the bandwith.
@@ -717,7 +717,7 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief The priority of the querier queries.
         Priority priority = Z_PRIORITY_DEFAULT;
         /// @brief The congestion control to apply when routing querier queries.
-        CongestionControl congestion_control = Z_CONGESTION_CONTROL_DEFAULT;
+        CongestionControl congestion_control = ::z_internal_congestion_control_default_request();
         /// @brief Whether Zenoh will NOT wait to batch querier queries with other messages to reduce the bandwith.
         bool is_express = false;
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
