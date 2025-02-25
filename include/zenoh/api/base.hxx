@@ -18,8 +18,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "detail.hxx"
 #include "../zenohc.hxx"
+#include "detail.hxx"
 
 namespace zenoh {
 
