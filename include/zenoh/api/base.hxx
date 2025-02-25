@@ -60,7 +60,8 @@ class Copyable {
 
 /// Base type for C++ wrappers of Zenoh owned structures
 /// @tparam ZC_OWNED_TYPE - zenoh-c owned type ::z_owned_XXX_t
-template <typename ZC_OWNED_TYPE>
+/// @tparam USE_TAKE_FROM_LOANED - boolean template parameter to switch between variants
+template <typename ZC_OWNED_TYPE, bool USE_TAKE_FROM_LOANED = false>
 class Owned {
    protected:
     typedef ZC_OWNED_TYPE OwnedType;
@@ -86,6 +87,36 @@ class Owned {
         if (pv != nullptr) {
             _0 = *pv;
             ::z_internal_null(pv);
+        } else
+            ::z_internal_null(&this->_0);
+    }
+};
+
+// Specialization for USE_TAKE_FROM_LOANED = true
+template <typename ZC_OWNED_TYPE>
+class Owned<ZC_OWNED_TYPE, true> {
+   protected:
+    typedef ZC_OWNED_TYPE OwnedType;
+
+   protected:
+    /// Move constructor.
+    Owned(Owned&& v) : Owned(&v._0) {}
+    /// Move assignment.
+    Owned& operator=(Owned&& v) {
+        if (this != &v) {
+            ::z_drop(::z_move(this->_0));
+            ::z_take_from_loaned(&this->_0, ::z_loan_mut(v._0));
+        }
+        return *this;
+    }
+    /// Destructor drops owned value using z_drop from zenoh API
+    ~Owned() { ::z_drop(::z_move(_0)); }
+
+    OwnedType _0;
+
+    explicit Owned(OwnedType* pv) {
+        if (pv != nullptr) {
+            ::z_take_from_loaned(&this->_0, ::z_loan_mut(*pv));
         } else
             ::z_internal_null(&this->_0);
     }
