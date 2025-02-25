@@ -73,7 +73,7 @@ class Owned {
     Owned& operator=(Owned&& v) {
         if (this != &v) {
             ::z_drop(::z_move(this->_0));
-            if constexpr (detail::is_take_from_loaned_available<OwnedType>::value) {
+            if constexpr (detail::is_take_from_loaned_available_v<OwnedType>) {
                 ::z_take_from_loaned(&this->_0, ::z_loan_mut(v._0));
             } else {
                 _0 = v._0;
@@ -89,7 +89,7 @@ class Owned {
 
     explicit Owned(OwnedType* pv) {
         if (pv != nullptr) {
-            if constexpr (detail::is_take_from_loaned_available<OwnedType>::value) {
+            if constexpr (detail::is_take_from_loaned_available_v<OwnedType>) {
                 ::z_take_from_loaned(&this->_0, ::z_loan_mut(*pv));
             } else {
                 _0 = *pv;
