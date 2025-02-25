@@ -42,8 +42,8 @@ struct is_take_from_loaned_available : std::false_type {};
 
 template <typename T>
 struct is_take_from_loaned_available<
-    T, std::void_t<decltype(::z_take_from_loaned(std::declval<T*>(), std::declval<typename ::z_owned_to_loaned_type_t<T>::type*>()))>>
-    : std::true_type {};
+    T, std::void_t<decltype(::z_take_from_loaned(
+           std::declval<T*>(), std::declval<typename ::z_owned_to_loaned_type_t<T>::type*>()))>> : std::true_type {};
 
 template <typename T>
 inline constexpr bool is_take_from_loaned_available_v = is_take_from_loaned_available<T>::value;
