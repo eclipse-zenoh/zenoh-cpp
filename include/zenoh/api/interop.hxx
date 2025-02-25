@@ -15,35 +15,8 @@
 #include <optional>
 #include <type_traits>
 
+#include "detail.hxx"
 #include "base.hxx"
-
-namespace zenoh::detail {
-template <typename T, typename = void>
-struct is_loan_available : std::false_type {};
-
-template <typename T>
-struct is_loan_available<T, std::void_t<decltype(::z_loan(std::declval<const T&>()))>> : std::true_type {};
-
-template <typename T>
-inline constexpr bool is_loan_available_v = is_loan_available<T>::value;
-
-template <typename T, typename = void>
-struct is_loan_mut_available : std::false_type {};
-
-template <typename T>
-struct is_loan_mut_available<T, std::void_t<decltype(::z_loan_mut(std::declval<T&>()))>> : std::true_type {};
-
-template <typename T>
-inline constexpr bool is_loan_mut_available_v = is_loan_mut_available<T>::value;
-
-template <typename T, typename = void>
-struct is_take_from_loaned_available : std::false_type {};
-
-template <typename T>
-struct is_take_from_loaned_available<T, std::void_t<decltype(::z_take_from_loaned(std::declval<T*>(), ::z_owned_to_loaned_type_t<T>{}))>>
-    : std::true_type {};
-
-}  // namespace zenoh::detail
 
 namespace zenoh::interop {
 

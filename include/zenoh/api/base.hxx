@@ -18,6 +18,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "detail.hxx"
 #include "../zenohc.hxx"
 
 namespace zenoh {
@@ -72,7 +73,7 @@ class Owned {
     Owned& operator=(Owned&& v) {
         if (this != &v) {
             ::z_drop(::z_move(this->_0));
-            assign_impl(v, is_take_from_loaned_available<OwnedType>{});
+            assign_impl(v, detail::is_take_from_loaned_available<OwnedType>{});
         }
         return *this;
     }
@@ -83,7 +84,7 @@ class Owned {
 
     explicit Owned(OwnedType* pv) {
         if (pv != nullptr) {
-            construct_impl(pv, is_take_from_loaned_available<OwnedType>{});
+            construct_impl(pv, detail::is_take_from_loaned_available<OwnedType>{});
         } else {
             ::z_internal_null(&this->_0);
         }
