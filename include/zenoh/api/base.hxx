@@ -73,7 +73,12 @@ class Owned {
     Owned& operator=(Owned&& v) {
         if (this != &v) {
             ::z_drop(::z_move(this->_0));
-            assign_impl(v, detail::is_take_from_loaned_available<OwnedType>{});
+            if constexpr (detail::is_take_from_loaned_available<OwnedType>::value) {
+                ::z_take_from_loaned(&this->_0, ::z_loan_mut(v._0));
+            } else {
+                _0 = v._0;
+                ::z_internal_null(&v._0);
+            }
         }
         return *this;
     }
@@ -84,29 +89,15 @@ class Owned {
 
     explicit Owned(OwnedType* pv) {
         if (pv != nullptr) {
-            construct_impl(pv, detail::is_take_from_loaned_available<OwnedType>{});
+            if constexpr (detail::is_take_from_loaned_available<OwnedType>::value) {
+                ::z_take_from_loaned(&this->_0, ::z_loan_mut(*pv));
+            } else {
+                _0 = *pv;
+                ::z_internal_null(pv);
+            }
         } else {
             ::z_internal_null(&this->_0);
         }
-    }
-
-   private:
-    void construct_impl(OwnedType* pv, std::true_type) {
-        ::z_take_from_loaned(&this->_0, ::z_loan_mut(*pv));
-    }
-
-    void construct_impl(OwnedType* pv, std::false_type) {
-        _0 = *pv;
-        ::z_internal_null(pv);
-    }
-
-    void assign_impl(Owned& v, std::true_type) {
-        ::z_take_from_loaned(&this->_0, ::z_loan_mut(v._0));
-    }
-
-    void assign_impl(Owned& v, std::false_type) {
-        _0 = v._0;
-        ::z_internal_null(&v._0);
     }
 };
 
