@@ -65,12 +65,6 @@ class Owned {
    protected:
     typedef ZC_OWNED_TYPE OwnedType;
 
-    template <typename T, typename = void>
-    struct has_take_from_loaned : std::false_type {};
-
-    template <typename T>
-    struct has_take_from_loaned<T, std::void_t<decltype(::z_take_from_loaned(std::declval<T*>(), ::z_owned_to_loaned_type_t<T>{}))>> : std::true_type {};
-
    protected:
     /// Move constructor.
     Owned(Owned&& v) : Owned(&v._0) {}
@@ -78,7 +72,7 @@ class Owned {
     Owned& operator=(Owned&& v) {
         if (this != &v) {
             ::z_drop(::z_move(this->_0));
-            assign_impl(v, has_take_from_loaned<OwnedType>{});
+            assign_impl(v, is_take_from_loaned_available<OwnedType>{});
         }
         return *this;
     }
@@ -89,7 +83,7 @@ class Owned {
 
     explicit Owned(OwnedType* pv) {
         if (pv != nullptr) {
-            construct_impl(pv, has_take_from_loaned<OwnedType>{});
+            construct_impl(pv, is_take_from_loaned_available<OwnedType>{});
         } else {
             ::z_internal_null(&this->_0);
         }
