@@ -44,5 +44,8 @@ template <typename T>
 struct is_take_from_loaned_available<T, std::void_t<decltype(::z_take_from_loaned(std::declval<T*>(), ::z_owned_to_loaned_type_t<T>{}))>>
     : std::true_type {};
 
+struct null_object_t {};
+inline constexpr null_object_t null_object{};
+
 }  // namespace zenoh::detail
 
