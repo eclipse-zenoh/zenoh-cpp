@@ -24,7 +24,7 @@
 namespace zenoh {
 /// ``Hello`` message returned by a zenoh entity as a reply to a "scout"
 /// message.
-class Hello : public Owned<::z_owned_hello_t, true> {
+class Hello : public Owned<::z_owned_hello_t> {
    public:
     /// @name Methods
 

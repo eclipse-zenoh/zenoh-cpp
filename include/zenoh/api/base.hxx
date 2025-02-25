@@ -60,12 +60,17 @@ class Copyable {
 
 /// Base type for C++ wrappers of Zenoh owned structures
 /// @tparam ZC_OWNED_TYPE - zenoh-c owned type ::z_owned_XXX_t
-/// @tparam USE_TAKE_FROM_LOANED - boolean template parameter to switch between variants
-template <typename ZC_OWNED_TYPE, bool USE_TAKE_FROM_LOANED = false>
+template <typename ZC_OWNED_TYPE>
 class Owned {
    protected:
     typedef ZC_OWNED_TYPE OwnedType;
 
+    template <typename T, typename = void>
+    struct has_take_from_loaned : std::false_type {};
+
+    template <typename T>
+    struct has_take_from_loaned<T, std::void_t<decltype(::z_take_from_loaned(std::declval<T*>(), ::z_owned_to_loaned_type_t<T>{}))>> : std::true_type {};
+
    protected:
     /// Move constructor.
     Owned(Owned&& v) : Owned(&v._0) {}
@@ -73,8 +78,7 @@ class Owned {
     Owned& operator=(Owned&& v) {
         if (this != &v) {
             ::z_drop(::z_move(this->_0));
-            _0 = v._0;
-            ::z_internal_null(&v._0);
+            assign_impl(v, has_take_from_loaned<OwnedType>{});
         }
         return *this;
     }
@@ -85,40 +89,29 @@ class Owned {
 
     explicit Owned(OwnedType* pv) {
         if (pv != nullptr) {
-            _0 = *pv;
-            ::z_internal_null(pv);
-        } else
+            construct_impl(pv, has_take_from_loaned<OwnedType>{});
+        } else {
             ::z_internal_null(&this->_0);
-    }
-};
-
-// Specialization for USE_TAKE_FROM_LOANED = true
-template <typename ZC_OWNED_TYPE>
-class Owned<ZC_OWNED_TYPE, true> {
-   protected:
-    typedef ZC_OWNED_TYPE OwnedType;
-
-   protected:
-    /// Move constructor.
-    Owned(Owned&& v) : Owned(&v._0) {}
-    /// Move assignment.
-    Owned& operator=(Owned&& v) {
-        if (this != &v) {
-            ::z_drop(::z_move(this->_0));
-            ::z_take_from_loaned(&this->_0, ::z_loan_mut(v._0));
         }
-        return *this;
     }
-    /// Destructor drops owned value using z_drop from zenoh API
-    ~Owned() { ::z_drop(::z_move(_0)); }
 
-    OwnedType _0;
+   private:
+    void construct_impl(OwnedType* pv, std::true_type) {
+        ::z_take_from_loaned(&this->_0, ::z_loan_mut(*pv));
+    }
 
-    explicit Owned(OwnedType* pv) {
-        if (pv != nullptr) {
-            ::z_take_from_loaned(&this->_0, ::z_loan_mut(*pv));
-        } else
-            ::z_internal_null(&this->_0);
+    void construct_impl(OwnedType* pv, std::false_type) {
+        _0 = *pv;
+        ::z_internal_null(pv);
+    }
+
+    void assign_impl(Owned& v, std::true_type) {
+        ::z_take_from_loaned(&this->_0, ::z_loan_mut(v._0));
+    }
+
+    void assign_impl(Owned& v, std::false_type) {
+        _0 = v._0;
+        ::z_internal_null(&v._0);
     }
 };
 
