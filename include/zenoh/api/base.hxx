@@ -19,7 +19,7 @@
 #include <string>
 
 #include "../zenohc.hxx"
-#include "detail.hxx"
+#include "../detail/availability_checks.hxx"
 
 namespace zenoh {
 

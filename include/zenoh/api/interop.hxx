@@ -16,7 +16,6 @@
 #include <type_traits>
 
 #include "base.hxx"
-#include "detail.hxx"
 
 namespace zenoh::interop {
 
