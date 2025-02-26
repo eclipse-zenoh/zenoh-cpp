@@ -18,8 +18,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "../zenohc.hxx"
 #include "../detail/availability_checks.hxx"
+#include "../zenohc.hxx"
 
 namespace zenoh {
 
