@@ -12,6 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+#include <chrono>
 #include <thread>
 
 #include "zenoh.hxx"
@@ -118,7 +119,9 @@ void put_sub_fifo_channel(Talloc& alloc) {
 
     std::this_thread::sleep_for(1s);
 
-    auto subscriber = session2.declare_subscriber(ke, channels::FifoChannel(16));
+    std::vector<Subscriber<channels::FifoChannel::HandlerType<Sample>>> subscribers;
+    subscribers.push_back(session2.declare_subscriber(ke, channels::FifoChannel(16)));
+    subscribers.push_back(session2.declare_subscriber(ke, channels::FifoChannel(16)));
 
     std::this_thread::sleep_for(1s);
 
@@ -127,24 +130,28 @@ void put_sub_fifo_channel(Talloc& alloc) {
 
     std::this_thread::sleep_for(1s);
 
-    auto res = subscriber.handler().recv();
-    assert(std::holds_alternative<Sample>(res));
-    assert(std::get<Sample>(res).get_keyexpr() == "zenoh/test");
-    assert(std::get<Sample>(res).get_payload().as_string() == "first");
-    res = subscriber.handler().try_recv();
-    assert(std::holds_alternative<Sample>(res));
-    assert(std::get<Sample>(res).get_keyexpr() == "zenoh/test");
-    assert(std::get<Sample>(res).get_payload().as_string() == "second");
+    for (const auto& subscriber : subscribers) {
+        auto res = subscriber.handler().recv();
+        assert(std::holds_alternative<Sample>(res));
+        assert(std::get<Sample>(res).get_keyexpr() == "zenoh/test");
+        assert(std::get<Sample>(res).get_payload().as_string() == "first");
+        res = subscriber.handler().try_recv();
+        assert(std::holds_alternative<Sample>(res));
+        assert(std::get<Sample>(res).get_keyexpr() == "zenoh/test");
+        assert(std::get<Sample>(res).get_payload().as_string() == "second");
 
-    res = subscriber.handler().try_recv();
-    assert(std::holds_alternative<channels::RecvError>(res));
-    assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_NODATA);
+        res = subscriber.handler().try_recv();
+        assert(std::holds_alternative<channels::RecvError>(res));
+        assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_NODATA);
+    }
 
     /// after session close subscriber handler should become disconnected
     session2.close();
-    res = subscriber.handler().recv();
-    assert(std::holds_alternative<channels::RecvError>(res));
-    assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
+    for (const auto& subscriber : subscribers) {
+        auto res = subscriber.handler().recv();
+        assert(std::holds_alternative<channels::RecvError>(res));
+        assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
+    }
 }
 
 template <typename Talloc>
@@ -155,7 +162,9 @@ void put_sub_ring_channel(Talloc& alloc) {
 
     std::this_thread::sleep_for(1s);
 
-    auto subscriber = session2.declare_subscriber(ke, channels::RingChannel(1));
+    std::vector<Subscriber<channels::RingChannel::HandlerType<Sample>>> subscribers;
+    subscribers.push_back(session2.declare_subscriber(ke, channels::RingChannel(1)));
+    subscribers.push_back(session2.declare_subscriber(ke, channels::RingChannel(1)));
 
     std::this_thread::sleep_for(1s);
 
@@ -164,20 +173,24 @@ void put_sub_ring_channel(Talloc& alloc) {
 
     std::this_thread::sleep_for(1s);
 
-    auto res = subscriber.handler().recv();
-    assert(std::holds_alternative<Sample>(res));
-    assert(std::get<Sample>(res).get_keyexpr() == "zenoh/test");
-    assert(std::get<Sample>(res).get_payload().as_string() == "second");
+    for (const auto& subscriber : subscribers) {
+        auto res = subscriber.handler().recv();
+        assert(std::holds_alternative<Sample>(res));
+        assert(std::get<Sample>(res).get_keyexpr() == "zenoh/test");
+        assert(std::get<Sample>(res).get_payload().as_string() == "second");
 
-    res = subscriber.handler().try_recv();
-    assert(std::holds_alternative<channels::RecvError>(res));
-    assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_NODATA);
+        res = subscriber.handler().try_recv();
+        assert(std::holds_alternative<channels::RecvError>(res));
+        assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_NODATA);
+    }
 
     /// after session close subscriber handler should become disconnected
     session2.close();
-    res = subscriber.handler().recv();
-    assert(std::holds_alternative<channels::RecvError>(res));
-    assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
+    for (const auto& subscriber : subscribers) {
+        auto res = subscriber.handler().recv();
+        assert(std::holds_alternative<channels::RecvError>(res));
+        assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
+    }
 }
 
 template <typename Talloc, bool share_alloc = true>

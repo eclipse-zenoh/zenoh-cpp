@@ -65,6 +65,7 @@ Subscriber example with non-blocking stream interface:
 .. code-block:: c++
 
     #include "zenoh.hxx"
+    #include <chrono>
     #include <iostream>
     #include <thread>
 
