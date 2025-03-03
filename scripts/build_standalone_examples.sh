@@ -15,7 +15,7 @@ absolute_install_location=$(cd $1; pwd)
 
 bash $SCRIPT_DIR/build_local.sh $SCRIPT_DIR/../examples/simple/zenohc $absolute_install_location
 
-if [ "$BUILD_PICO" == "ON" ]; then
+if [ "$BUILD_PICO" == "ON" ] || [ "$BUILD_PICO" == "TRUE" ] || [ "$BUILD_PICO" == "1" ]; then
     #build examples requiring zenoh-pico
     bash $SCRIPT_DIR/build_local.sh $SCRIPT_DIR/../examples/simple/universal $absolute_install_location
     bash $SCRIPT_DIR/build_local.sh $SCRIPT_DIR/../examples/simple/zenohpico $absolute_install_location

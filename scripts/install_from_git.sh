@@ -20,7 +20,7 @@ if [ "$#" -ge 3 ]; then
     USE_SHARED_MEMORY=$3
 fi
 
-if [ "$USE_UNSTABLE" == "TRUE" ]; then
+if [ "$USE_UNSTABLE" == "TRUE" ] || [ "$USE_UNSTABLE" == "ON" ] || [ "$USE_UNSTABLE" == "1" ]; then
     USE_UNSTABLE_PICO="1"
 fi
 
@@ -36,7 +36,7 @@ mkdir -p $1
 absolute_install_location=$(cd $1; pwd)
 #build zenoh-c
 bash $SCRIPT_DIR/install_local.sh $SCRIPT_DIR/../zenoh-c $absolute_install_location -DZENOHC_BUILD_WITH_UNSTABLE_API=$USE_UNSTABLE -DZENOHC_BUILD_WITH_SHARED_MEMORY=$USE_SHARED_MEMORY
-if [ "$BUILD_PICO" == "ON" ]; then
+if [ "$BUILD_PICO" == "ON" ] || [ "$BUILD_PICO" == "TRUE" ] || [ "$BUILD_PICO" == "1" ]; then
     #build zenoh-pico
     bash $SCRIPT_DIR/install_local.sh $SCRIPT_DIR/../zenoh-pico $absolute_install_location -DZ_FEATURE_UNSTABLE_API=$USE_UNSTABLE_PICO
 fi
