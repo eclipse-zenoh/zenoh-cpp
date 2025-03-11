@@ -17,4 +17,4 @@ rm -rf ./build
 mkdir ./build
 cd ./build
 cmake .. "${@:3}" --install-prefix "$absolute_install_location"
-cmake --build . --target install --config Release
+cmake --build . --target install
