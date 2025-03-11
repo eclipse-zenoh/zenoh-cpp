@@ -74,7 +74,12 @@ class Owned {
         if (this != &v) {
             ::z_drop(::z_move(this->_0));
             if constexpr (detail::is_take_from_loaned_available_v<OwnedType>) {
-                ::z_take_from_loaned(&this->_0, ::z_loan_mut(v._0));
+                auto p = ::z_loan_mut(v._0);
+                if (p != nullptr) {
+                    ::z_take_from_loaned(&this->_0, p);
+                } else {
+                    ::z_internal_null(&this->_0);
+                }
             } else {
                 _0 = v._0;
                 ::z_internal_null(&v._0);
@@ -90,7 +95,12 @@ class Owned {
     explicit Owned(OwnedType* pv) {
         if (pv != nullptr) {
             if constexpr (detail::is_take_from_loaned_available_v<OwnedType>) {
-                ::z_take_from_loaned(&this->_0, ::z_loan_mut(*pv));
+                auto p = ::z_loan_mut(*pv);
+                if (p != nullptr) {
+                    ::z_take_from_loaned(&this->_0, p);
+                } else {
+                    ::z_internal_null(&this->_0);
+                }
             } else {
                 _0 = *pv;
                 ::z_internal_null(pv);
