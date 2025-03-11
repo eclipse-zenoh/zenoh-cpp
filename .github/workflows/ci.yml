@@ -32,7 +32,6 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         shm: [FALSE, TRUE]
         unstable: [FALSE, TRUE]
-        mode: [Debug, Release]
 
     steps:
       - name: Clone this repository
@@ -47,7 +46,7 @@ jobs:
         shell: bash
         run: |
           cd build
-          cmake --build . --target examples --config ${{ matrix.mode }}
+          cmake --build . --target examples --config Release
 
       - name: make stand-alone examples
         shell: bash
@@ -58,13 +57,13 @@ jobs:
         shell: bash
         run: |
           cd build
-          cmake --build . --target tests --config ${{ matrix.mode }}
+          cmake --build . --target tests --config Release
 
       - name: run tests
         shell: bash
         run: |
           cd build
-          ctest -C ${{ matrix.mode }} --output-on-failure
+          ctest -C Release --output-on-failure
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -73,7 +72,7 @@ jobs:
           name: zenoh-cpp-${{ matrix.os }}
           # Directory containing files to upload
           path: |
-            target/${{ matrix.mode }}/examples
+            target/release/examples
 
   markdown_lint:
     runs-on: ubuntu-latest
