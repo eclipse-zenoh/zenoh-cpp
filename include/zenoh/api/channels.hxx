@@ -43,6 +43,7 @@ template <>
 struct FifoHandlerData<zenoh::Sample> {
     typedef ::z_owned_fifo_handler_sample_t handler_type;
     typedef ::z_owned_closure_sample_t closure_type;
+    typedef ::z_owned_sample_t owned_type;
     static void create_cb_handler_pair(closure_type* cb, handler_type* h, size_t capacity) {
         ::z_fifo_channel_sample_new(cb, h, capacity);
     }
@@ -53,6 +54,7 @@ template <>
 struct FifoHandlerData<zenoh::Query> {
     typedef ::z_owned_fifo_handler_query_t handler_type;
     typedef ::z_owned_closure_query_t closure_type;
+    typedef ::z_owned_query_t owned_type;
     static void create_cb_handler_pair(closure_type* cb, handler_type* h, size_t capacity) {
         ::z_fifo_channel_query_new(cb, h, capacity);
     }
@@ -64,6 +66,7 @@ template <>
 struct FifoHandlerData<zenoh::Reply> {
     typedef ::z_owned_fifo_handler_reply_t handler_type;
     typedef ::z_owned_closure_reply_t closure_type;
+    typedef ::z_owned_reply_t owned_type;
     static void create_cb_handler_pair(closure_type* cb, handler_type* h, size_t capacity) {
         ::z_fifo_channel_reply_new(cb, h, capacity);
     }
@@ -77,6 +80,7 @@ template <>
 struct RingHandlerData<zenoh::Sample> {
     typedef ::z_owned_ring_handler_sample_t handler_type;
     typedef ::z_owned_closure_sample_t closure_type;
+    typedef ::z_owned_sample_t owned_type;
     static void create_cb_handler_pair(closure_type* cb, handler_type* h, size_t capacity) {
         ::z_ring_channel_sample_new(cb, h, capacity);
     }
@@ -87,6 +91,7 @@ template <>
 struct RingHandlerData<zenoh::Query> {
     typedef ::z_owned_ring_handler_query_t handler_type;
     typedef ::z_owned_closure_query_t closure_type;
+    typedef ::z_owned_query_t owned_type;
     static void create_cb_handler_pair(closure_type* cb, handler_type* h, size_t capacity) {
         ::z_ring_channel_query_new(cb, h, capacity);
     }
@@ -98,6 +103,7 @@ template <>
 struct RingHandlerData<zenoh::Reply> {
     typedef ::z_owned_ring_handler_reply_t handler_type;
     typedef ::z_owned_closure_reply_t closure_type;
+    typedef ::z_owned_reply_t owned_type;
     static void create_cb_handler_pair(closure_type* cb, handler_type* h, size_t capacity) {
         ::z_ring_channel_reply_new(cb, h, capacity);
     }
@@ -120,10 +126,10 @@ class FifoHandler : public Owned<typename detail::FifoHandlerData<T>::handler_ty
     /// arrives.
     /// @return received data entry, if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> recv() const {
-        std::variant<T, RecvError> v(interop::detail::null<T>());
-        z_result_t res = ::z_recv(interop::as_loaned_c_ptr(*this), zenoh::interop::as_owned_c_ptr(std::get<T>(v)));
+        typename detail::FifoHandlerData<T>::owned_type t;
+        z_result_t res = ::z_recv(interop::as_loaned_c_ptr(*this), &t);
         if (res == Z_OK) {
-            return v;
+            return T(&t);
         } else {
             return RecvError::Z_DISCONNECTED;
         }
@@ -132,10 +138,10 @@ class FifoHandler : public Owned<typename detail::FifoHandlerData<T>::handler_ty
     /// @brief Fetch a data entry from the handler's buffer. If buffer is empty, will immediately return.
     /// @return received data entry, if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> try_recv() const {
-        std::variant<T, RecvError> v(interop::detail::null<T>());
-        z_result_t res = ::z_try_recv(interop::as_loaned_c_ptr(*this), zenoh::interop::as_owned_c_ptr(std::get<T>(v)));
+        typename T::OwnedType t;
+        z_result_t res = ::z_try_recv(interop::as_loaned_c_ptr(*this), &t);
         if (res == Z_OK) {
-            return v;
+            return T(&t);
         } else if (res == Z_CHANNEL_NODATA) {
             return RecvError::Z_NODATA;
         } else {
@@ -161,11 +167,11 @@ class RingHandler : public Owned<typename detail::RingHandlerData<T>::handler_ty
     /// arrives.
     /// @return received data, entry if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> recv() const {
-        std::variant<T, RecvError> v(interop::detail::null<T>());
+        typename T::OwnedType t;
         z_result_t res =
-            ::z_recv(zenoh::interop::as_loaned_c_ptr(*this), zenoh::interop::as_owned_c_ptr(std::get<T>(v)));
+            ::z_recv(zenoh::interop::as_loaned_c_ptr(*this), &t);
         if (res == Z_OK) {
-            return v;
+            return T(&t);
         } else {
             return RecvError::Z_DISCONNECTED;
         }
@@ -174,10 +180,10 @@ class RingHandler : public Owned<typename detail::RingHandlerData<T>::handler_ty
     /// @brief Fetch a data entry from the handler's buffer. If buffer is empty, will immediately return.
     /// @return received data entry, if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> try_recv() const {
-        std::variant<T, RecvError> v(interop::detail::null<T>());
-        z_result_t res = ::z_try_recv(interop::as_loaned_c_ptr(*this), zenoh::interop::as_owned_c_ptr(std::get<T>(v)));
+        typename T::OwnedType t;
+        z_result_t res = ::z_try_recv(interop::as_loaned_c_ptr(*this), &t);
         if (res == Z_OK) {
-            return v;
+            return T(&t);
         } else if (res == Z_CHANNEL_NODATA) {
             return RecvError::Z_NODATA;
         } else {
