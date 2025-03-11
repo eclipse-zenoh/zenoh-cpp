@@ -32,7 +32,7 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         shm: [FALSE, TRUE]
         unstable: [FALSE, TRUE]
-        build_type: [Release, Debug]
+        build_type: [Debug, Release]
 
     steps:
       - name: Clone this repository
