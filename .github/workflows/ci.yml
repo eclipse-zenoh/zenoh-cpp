@@ -32,6 +32,7 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         shm: [FALSE, TRUE]
         unstable: [FALSE, TRUE]
+        build_type: [Release, Debug]
 
     steps:
       - name: Clone this repository
@@ -40,7 +41,7 @@ jobs:
       - name: install zenoh-cpp and its dependencies
         shell: bash
         run: |
-          ./scripts/install_from_git.sh ~/local ${{ matrix.unstable }} ${{ matrix.shm }}
+          ./scripts/install_from_git.sh ~/local ${{ matrix.unstable }} ${{ matrix.shm }} ${{ matrix.build_type }}
 
       - name: make examples
         shell: bash
