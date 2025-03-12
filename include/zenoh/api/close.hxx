@@ -27,7 +27,7 @@ class CloseHandle : public Owned<::zc_owned_concurrent_close_handle_t> {
     /// @brief Blocks until corresponding close operation completes.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    void join(ZResult* err = nullptr) {
+    void wait(ZResult* err = nullptr) {
         __ZENOH_RESULT_CHECK(zc_concurrent_close_handle_wait(interop::as_moved_c_ptr(*this)), err,
                              "Failed to wait for close operation");
     }

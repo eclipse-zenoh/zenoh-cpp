@@ -28,17 +28,26 @@ void test_session_close() {
     session.close();
 }
 
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 void test_session_close_in_background() {
     auto session = Session::open(Config::create_default());
 
-    auto close_options = SessionCloseOptions::create_default();
-    close_options.out_concurrent = [](CloseHandle&& h) { h.wait(); }
+    bool close_called = false;
+    auto close_options = Session::SessionCloseOptions::create_default();
+    close_options.out_concurrent = [&close_called](CloseHandle&& h) { h.wait(); close_called = true; };
 
     session.close(std::move(close_options));
+
+    if(!close_called) {
+        exit(-1);
+    }
 }
+#endif
 
 int main() {
     test_session_close_in_drop();
     test_session_close();
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     test_session_close_in_background();
+#endif
 }

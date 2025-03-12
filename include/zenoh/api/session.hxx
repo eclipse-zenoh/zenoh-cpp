@@ -72,7 +72,7 @@ class Session : public Owned<::z_owned_session_t> {
         /// A function to receive close handle. If set, the close operation will be executed concurrently
         /// in separate task, and this function will receive a handle to be used for controlling
         /// close execution.
-        std::function<void(CloseHandle&&)> out_concurrent;
+        std::function<void(CloseHandle&&)> out_concurrent = nullptr;
 #endif
         /// @name Fields
         static SessionCloseOptions create_default() { return {}; }
@@ -1150,7 +1150,7 @@ class Session : public Owned<::z_owned_session_t> {
         }
         __ZENOH_RESULT_CHECK(::z_close(interop::as_loaned_c_ptr(*this), &close_opts), err,
                              "Failed to close the session");
-        if(*err == Z_OK && options.out_concurrent) {
+        if(options.out_concurrent && (!err || *err == Z_OK)) {
             options.out_concurrent(std::move(close_handle));
         }
 #else
