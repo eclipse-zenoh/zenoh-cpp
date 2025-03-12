@@ -126,10 +126,12 @@ class FifoHandler : public Owned<typename detail::FifoHandlerData<T>::handler_ty
     /// arrives.
     /// @return received data entry, if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> recv() const {
-        typename detail::FifoHandlerData<T>::owned_type t;
-        z_result_t res = ::z_recv(interop::as_loaned_c_ptr(*this), &t);
+        typename detail::FifoHandlerData<T>::owned_type ct;
+        z_result_t res = ::z_recv(interop::as_loaned_c_ptr(*this), &ct);
         if (res == Z_OK) {
-            return T(&t);
+            T t(std::move(interop::as_owned_cpp_ref<T>(&ct)));
+            ::z_drop(::z_move(ct));
+            return t;
         } else {
             return RecvError::Z_DISCONNECTED;
         }
@@ -138,10 +140,12 @@ class FifoHandler : public Owned<typename detail::FifoHandlerData<T>::handler_ty
     /// @brief Fetch a data entry from the handler's buffer. If buffer is empty, will immediately return.
     /// @return received data entry, if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> try_recv() const {
-        typename T::OwnedType t;
-        z_result_t res = ::z_try_recv(interop::as_loaned_c_ptr(*this), &t);
+        typename detail::FifoHandlerData<T>::owned_type ct;
+        z_result_t res = ::z_try_recv(interop::as_loaned_c_ptr(*this), &ct);
         if (res == Z_OK) {
-            return T(&t);
+            T t(std::move(interop::as_owned_cpp_ref<T>(&ct)));
+            ::z_drop(::z_move(ct));
+            return t;
         } else if (res == Z_CHANNEL_NODATA) {
             return RecvError::Z_NODATA;
         } else {
@@ -167,11 +171,13 @@ class RingHandler : public Owned<typename detail::RingHandlerData<T>::handler_ty
     /// arrives.
     /// @return received data, entry if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> recv() const {
-        typename T::OwnedType t;
+        typename detail::RingHandlerData<T>::owned_type ct;
         z_result_t res =
-            ::z_recv(zenoh::interop::as_loaned_c_ptr(*this), &t);
+            ::z_recv(zenoh::interop::as_loaned_c_ptr(*this), &ct);
         if (res == Z_OK) {
-            return T(&t);
+            T t(std::move(interop::as_owned_cpp_ref<T>(&ct)));
+            ::z_drop(::z_move(ct));
+            return t;
         } else {
             return RecvError::Z_DISCONNECTED;
         }
@@ -180,10 +186,12 @@ class RingHandler : public Owned<typename detail::RingHandlerData<T>::handler_ty
     /// @brief Fetch a data entry from the handler's buffer. If buffer is empty, will immediately return.
     /// @return received data entry, if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> try_recv() const {
-        typename T::OwnedType t;
-        z_result_t res = ::z_try_recv(interop::as_loaned_c_ptr(*this), &t);
+        typename detail::RingHandlerData<T>::owned_type ct;
+        z_result_t res = ::z_try_recv(interop::as_loaned_c_ptr(*this), &ct);
         if (res == Z_OK) {
-            return T(&t);
+            T t(std::move(interop::as_owned_cpp_ref<T>(&ct)));
+            ::z_drop(::z_move(ct));
+            return t;
         } else if (res == Z_CHANNEL_NODATA) {
             return RecvError::Z_NODATA;
         } else {
