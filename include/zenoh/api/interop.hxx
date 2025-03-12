@@ -205,7 +205,6 @@ struct Converter {
     }
 };
 
-
 template <class T>
 T null() {
     return Converter::null_owned<T>();
