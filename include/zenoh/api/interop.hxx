@@ -17,27 +17,6 @@
 
 #include "base.hxx"
 
-namespace zenoh::detail {
-template <typename T, typename = void>
-struct is_loan_available : std::false_type {};
-
-template <typename T>
-struct is_loan_available<T, std::void_t<decltype(::z_loan(std::declval<const T&>()))>> : std::true_type {};
-
-template <class T>
-inline constexpr bool is_loan_available_v = is_loan_available<T>::value;
-
-template <typename T, typename = void>
-struct is_loan_mut_available : std::false_type {};
-
-template <typename T>
-struct is_loan_mut_available<T, std::void_t<decltype(::z_loan_mut(std::declval<T&>()))>> : std::true_type {};
-
-template <class T>
-inline constexpr bool is_loan_mut_available_v = is_loan_mut_available<T>::value;
-
-}  // namespace zenoh::detail
-
 namespace zenoh::interop {
 
 /// @brief Get zenoh-c representation of trivially copyable zenoh-cpp object.
@@ -191,7 +170,7 @@ auto& as_copyable_cpp_ref(CopyableType* copyable_c_obj) {
     return *reinterpret_cast<T*>(c_cpp);
 }
 
-/// @brief Move owned Zenoh zenoh-cpp object object into zenoh-c struct.
+/// @brief Move Zenoh zenoh-cpp object into owned zenoh-c struct.
 template <class OwnedType>
 OwnedType move_to_c_obj(Owned<OwnedType>&& owned_cpp_obj) {
     OwnedType o = *as_owned_c_ptr(owned_cpp_obj);
@@ -218,6 +197,11 @@ struct Converter {
     template <class OPTIONS>
     static auto to_c_opts(OPTIONS& options) {
         return options.to_c_opts();
+    }
+
+    template <class T>
+    static T from_owned(typename T::OwnedType* owned) {
+        return T(owned);
     }
 };
 

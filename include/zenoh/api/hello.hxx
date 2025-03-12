@@ -25,6 +25,10 @@ namespace zenoh {
 /// ``Hello`` message returned by a zenoh entity as a reply to a "scout"
 /// message.
 class Hello : public Owned<::z_owned_hello_t> {
+    Hello(zenoh::detail::null_object_t) : Owned(nullptr){};
+    explicit Hello(OwnedType* pv) : Owned(pv){};
+    friend struct interop::detail::Converter;
+
    public:
     /// @name Methods
 

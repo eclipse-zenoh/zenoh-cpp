@@ -317,10 +317,31 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief The completeness of the Queryable.
         bool complete = false;
 
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
+        /// Restrict the matching requests that will be received by this Queryable to the ones
+        /// that have the compatible allowed_destination.
+        /// @note Zenoh-c only.
+
+        Locality allowed_origin = ::zc_locality_default();
+#endif
         /// @name Methods
 
         /// @brief Create default option settings.
         static QueryableOptions create_default() { return {}; }
+
+       private:
+        friend struct interop::detail::Converter;
+        ::z_queryable_options_t to_c_opts() {
+            ::z_queryable_options_t opts;
+            z_queryable_options_default(&opts);
+            opts.complete = this->complete;
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+            opts.allowed_origin = this->allowed_origin;
+#endif
+            return opts;
+        }
     };
 
     /// @brief Create a ``Queryable`` object to answer to ``Session::get`` requests.
@@ -345,9 +366,7 @@ class Session : public Owned<::z_owned_session_t> {
         using ClosureType = typename detail::closures::Closure<Cval, Dval, void, Query&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_query), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_query_call, detail::closures::_zenoh_on_drop, closure);
-        ::z_queryable_options_t opts;
-        z_queryable_options_default(&opts);
-        opts.complete = options.complete;
+        ::z_queryable_options_t opts = interop::detail::Converter::to_c_opts(options);
 
         Queryable<void> q(zenoh::detail::null_object);
         ZResult res = ::z_declare_queryable(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(q),
@@ -378,9 +397,7 @@ class Session : public Owned<::z_owned_session_t> {
         using ClosureType = typename detail::closures::Closure<Cval, Dval, void, Query&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_query), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_query_call, detail::closures::_zenoh_on_drop, closure);
-        ::z_queryable_options_t opts;
-        z_queryable_options_default(&opts);
-        opts.complete = options.complete;
+        ::z_queryable_options_t opts = interop::detail::Converter::to_c_opts(options);
 
         ZResult res = ::z_declare_background_queryable(interop::as_loaned_c_ptr(*this),
                                                        interop::as_loaned_c_ptr(key_expr), ::z_move(c_closure), &opts);
@@ -401,9 +418,7 @@ class Session : public Owned<::z_owned_session_t> {
         const KeyExpr& key_expr, Channel channel, QueryableOptions&& options = QueryableOptions::create_default(),
         ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Query>();
-        ::z_queryable_options_t opts;
-        z_queryable_options_default(&opts);
-        opts.complete = options.complete;
+        ::z_queryable_options_t opts = interop::detail::Converter::to_c_opts(options);
 
         Queryable<void> q(zenoh::detail::null_object);
         ZResult res = ::z_declare_queryable(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(q),
@@ -417,11 +432,14 @@ class Session : public Owned<::z_owned_session_t> {
 #if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_SUBSCRIPTION == 1
     /// @brief Options to be passed when declaring a ``Subscriber``.
     struct SubscriberOptions {
-/// @name Fields
-
-/// Restrict the matching publications that will be received by this Subscribers to the ones
-/// that have the compatible allowed_destination.
+        /// @name Fields
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        /// release.
+        /// Restrict the matching publications that will be received by this Subscribers to the ones
+        /// that have the compatible allowed_destination.
+        /// @note Zenoh-c only.
+
         Locality allowed_origin = ::zc_locality_default();
 #endif
         /// @name Methods

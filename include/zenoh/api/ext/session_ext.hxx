@@ -50,8 +50,8 @@ class SessionExt {
     /// @warning This API is deprecated. Please use zenoh::ext::AdvancedPublisher.
     /// @brief Options passed to the ``SessionExt::declare_publication_cache``.
     struct PublicationCacheOptions {
-        /// The prefix used for queryable.
-        std::optional<KeyExpr> queryable_prefix = {};
+        /// The suffix used for queryable.
+        std::optional<KeyExpr> queryable_suffix = {};
 #if defined(Z_FEATURE_UNSTABLE_API)
         /// The restriction for the matching queries that will be receive by this publication cache.
         Locality queryable_origin = ::zc_locality_default();
@@ -73,7 +73,7 @@ class SessionExt {
         ::ze_publication_cache_options_t to_c_opts() {
             ::ze_publication_cache_options_t opts;
             ze_publication_cache_options_default(&opts);
-            opts.queryable_prefix = zenoh::interop::as_loaned_c_ptr(this->queryable_prefix);
+            opts.queryable_suffix = zenoh::interop::as_loaned_c_ptr(this->queryable_suffix);
 #if defined(Z_FEATURE_UNSTABLE_API)
             opts.queryable_origin = this->queryable_origin;
 #endif

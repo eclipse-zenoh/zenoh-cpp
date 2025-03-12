@@ -18,6 +18,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "../detail/availability_checks.hxx"
 #include "../zenohc.hxx"
 
 namespace zenoh {
@@ -72,8 +73,15 @@ class Owned {
     Owned& operator=(Owned&& v) {
         if (this != &v) {
             ::z_drop(::z_move(this->_0));
-            _0 = v._0;
-            ::z_internal_null(&v._0);
+            if constexpr (detail::is_take_from_loaned_available_v<OwnedType>) {
+                auto p_loaned = ::z_loan_mut(v._0);
+                assert(p_loaned != nullptr);
+                ::z_take_from_loaned(&this->_0, p_loaned);
+                // drop not needed, it's job for destructor of `v`
+            } else {
+                _0 = v._0;
+                ::z_internal_null(&v._0);
+            }
         }
         return *this;
     }
@@ -84,16 +92,19 @@ class Owned {
 
     explicit Owned(OwnedType* pv) {
         if (pv != nullptr) {
-            _0 = *pv;
-            ::z_internal_null(pv);
-        } else
+            if constexpr (detail::is_take_from_loaned_available_v<OwnedType>) {
+                auto p_loaned = ::z_loan_mut(*pv);
+                assert(p_loaned != nullptr);
+                ::z_take_from_loaned(&this->_0, p_loaned);
+                ::z_drop(::z_move(*pv));
+            } else {
+                _0 = *pv;
+                ::z_internal_null(pv);
+            }
+        } else {
             ::z_internal_null(&this->_0);
+        }
     }
 };
-
-namespace detail {
-struct null_object_t {};
-inline constexpr null_object_t null_object{};
-}  // namespace detail
 
 }  // namespace zenoh

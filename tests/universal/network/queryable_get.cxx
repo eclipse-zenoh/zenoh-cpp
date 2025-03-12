@@ -12,6 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+#include <chrono>
 #include <thread>
 
 #include "zenoh.hxx"
