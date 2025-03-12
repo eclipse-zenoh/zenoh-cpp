@@ -170,7 +170,7 @@ auto& as_copyable_cpp_ref(CopyableType* copyable_c_obj) {
     return *reinterpret_cast<T*>(c_cpp);
 }
 
-/// @brief Move owned Zenoh zenoh-cpp object object into zenoh-c struct.
+/// @brief Move Zenoh zenoh-cpp object into owned zenoh-c struct.
 template <class OwnedType>
 OwnedType move_to_c_obj(Owned<OwnedType>&& owned_cpp_obj) {
     OwnedType o = *as_owned_c_ptr(owned_cpp_obj);
@@ -198,7 +198,13 @@ struct Converter {
     static auto to_c_opts(OPTIONS& options) {
         return options.to_c_opts();
     }
+
+    template <class T>
+    static T from_owned(typename T::OwnedType* owned) {
+        return T(owned);
+    }
 };
+
 
 template <class T>
 T null() {

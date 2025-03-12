@@ -129,9 +129,7 @@ class FifoHandler : public Owned<typename detail::FifoHandlerData<T>::handler_ty
         typename detail::FifoHandlerData<T>::owned_type ct;
         z_result_t res = ::z_recv(interop::as_loaned_c_ptr(*this), &ct);
         if (res == Z_OK) {
-            T t(std::move(interop::as_owned_cpp_ref<T>(&ct)));
-            ::z_drop(::z_move(ct));
-            return t;
+            return interop::detail::Converter::from_owned<T>(&ct);
         } else {
             return RecvError::Z_DISCONNECTED;
         }
@@ -143,9 +141,7 @@ class FifoHandler : public Owned<typename detail::FifoHandlerData<T>::handler_ty
         typename detail::FifoHandlerData<T>::owned_type ct;
         z_result_t res = ::z_try_recv(interop::as_loaned_c_ptr(*this), &ct);
         if (res == Z_OK) {
-            T t(std::move(interop::as_owned_cpp_ref<T>(&ct)));
-            ::z_drop(::z_move(ct));
-            return t;
+            return interop::detail::Converter::from_owned<T>(&ct);
         } else if (res == Z_CHANNEL_NODATA) {
             return RecvError::Z_NODATA;
         } else {
@@ -174,9 +170,7 @@ class RingHandler : public Owned<typename detail::RingHandlerData<T>::handler_ty
         typename detail::RingHandlerData<T>::owned_type ct;
         z_result_t res = ::z_recv(zenoh::interop::as_loaned_c_ptr(*this), &ct);
         if (res == Z_OK) {
-            T t(std::move(interop::as_owned_cpp_ref<T>(&ct)));
-            ::z_drop(::z_move(ct));
-            return t;
+            return interop::detail::Converter::from_owned<T>(&ct);
         } else {
             return RecvError::Z_DISCONNECTED;
         }
@@ -188,9 +182,7 @@ class RingHandler : public Owned<typename detail::RingHandlerData<T>::handler_ty
         typename detail::RingHandlerData<T>::owned_type ct;
         z_result_t res = ::z_try_recv(interop::as_loaned_c_ptr(*this), &ct);
         if (res == Z_OK) {
-            T t(std::move(interop::as_owned_cpp_ref<T>(&ct)));
-            ::z_drop(::z_move(ct));
-            return t;
+            return interop::detail::Converter::from_owned<T>(&ct);
         } else if (res == Z_CHANNEL_NODATA) {
             return RecvError::Z_NODATA;
         } else {
