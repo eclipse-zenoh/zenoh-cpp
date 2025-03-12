@@ -47,7 +47,7 @@ class SessionExt;
 
 /// A Zenoh session.
 class Session : public Owned<::z_owned_session_t> {
-    Session(zenoh::detail::null_object_t) : Owned(nullptr) {};
+    Session(zenoh::detail::null_object_t) : Owned(nullptr){};
 
    public:
     /// @brief Options to be passed when opening a ``Session``.
@@ -1150,7 +1150,7 @@ class Session : public Owned<::z_owned_session_t> {
         }
         __ZENOH_RESULT_CHECK(::z_close(interop::as_loaned_c_ptr(*this), &close_opts), err,
                              "Failed to close the session");
-        if(options.out_concurrent && (!err || *err == Z_OK)) {
+        if (options.out_concurrent && (!err || *err == Z_OK)) {
             options.out_concurrent(std::move(close_handle));
         }
 #else

@@ -19,9 +19,7 @@ using namespace zenoh;
 #undef NDEBUG
 #include <assert.h>
 
-void test_session_close_in_drop() {
-    auto session = Session::open(Config::create_default());
-}
+void test_session_close_in_drop() { auto session = Session::open(Config::create_default()); }
 
 void test_session_close() {
     auto session = Session::open(Config::create_default());
@@ -34,11 +32,14 @@ void test_session_close_in_background() {
 
     bool close_called = false;
     auto close_options = Session::SessionCloseOptions::create_default();
-    close_options.out_concurrent = [&close_called](CloseHandle&& h) { h.wait(); close_called = true; };
+    close_options.out_concurrent = [&close_called](CloseHandle&& h) {
+        h.wait();
+        close_called = true;
+    };
 
     session.close(std::move(close_options));
 
-    if(!close_called) {
+    if (!close_called) {
         exit(-1);
     }
 }
