@@ -172,8 +172,7 @@ class RingHandler : public Owned<typename detail::RingHandlerData<T>::handler_ty
     /// @return received data, entry if there were any in the buffer, a receive error otherwise.
     std::variant<T, RecvError> recv() const {
         typename detail::RingHandlerData<T>::owned_type ct;
-        z_result_t res =
-            ::z_recv(zenoh::interop::as_loaned_c_ptr(*this), &ct);
+        z_result_t res = ::z_recv(zenoh::interop::as_loaned_c_ptr(*this), &ct);
         if (res == Z_OK) {
             T t(std::move(interop::as_owned_cpp_ref<T>(&ct)));
             ::z_drop(::z_move(ct));
