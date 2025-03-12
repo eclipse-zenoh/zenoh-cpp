@@ -51,6 +51,7 @@ class ReplyError : public Owned<::z_owned_reply_err_t> {
 /// A reply from queryable to ``Session::get`` operation.
 class Reply : public Owned<::z_owned_reply_t> {
     Reply(zenoh::detail::null_object_t) : Owned(nullptr){};
+    explicit Reply(OwnedType* pv) : Owned(pv){};
     friend struct interop::detail::Converter;
 
    public:
