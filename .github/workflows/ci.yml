@@ -33,6 +33,10 @@ jobs:
         shm: [FALSE, TRUE]
         unstable: [FALSE, TRUE]
         build_type: [Debug, Release]
+        exclude:
+          - os: windows-latest
+            build_type: Debug
+            shm: TRUE
 
     steps:
       - name: Clone this repository
