@@ -68,16 +68,19 @@ class Owned {
 
    protected:
     /// Move constructor.
-    Owned(Owned&& v) : Owned(&v._0) {}
+    Owned(Owned&& v) : Owned(nullptr) { *this = std::move(v); }
     /// Move assignment.
     Owned& operator=(Owned&& v) {
         if (this != &v) {
             ::z_drop(::z_move(this->_0));
             if constexpr (detail::is_take_from_loaned_available_v<OwnedType>) {
-                ::z_take_from_loaned(&this->_0, ::z_loan_mut(v._0));
+                if (::z_internal_check(v._0)) {
+                    ::z_take_from_loaned(&this->_0, ::z_loan_mut(v._0));
+                } else {
+                    ::z_internal_null(&this->_0);
+                }
             } else {
-                _0 = v._0;
-                ::z_internal_null(&v._0);
+                z_take(&this->_0, ::z_move(v._0));
             }
         }
         return *this;
@@ -89,12 +92,7 @@ class Owned {
 
     explicit Owned(OwnedType* pv) {
         if (pv != nullptr) {
-            if constexpr (detail::is_take_from_loaned_available_v<OwnedType>) {
-                ::z_take_from_loaned(&this->_0, ::z_loan_mut(*pv));
-            } else {
-                _0 = *pv;
-                ::z_internal_null(pv);
-            }
+            z_take(&this->_0, ::z_move(*pv));
         } else {
             ::z_internal_null(&this->_0);
         }
