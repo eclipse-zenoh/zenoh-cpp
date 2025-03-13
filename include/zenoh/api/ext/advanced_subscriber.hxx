@@ -260,7 +260,7 @@ class AdvancedSubscriber : public detail::AdvancedSubscriberBase {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     Handler undeclare(ZResult* err = nullptr) && {
-        __ZENOH_RESULT_CHECK(::ze_undeclare_advanced_subscriber(interop::as_moved_c_ptr(*this)), err,
+        __ZENOH_RESULT_CHECK(::ze_undeclare_advanced_subscriber(::z_move(this->_0)), err,
                              "Failed to undeclare Querying Subscriber");
         return std::move(this->_handler);
     }

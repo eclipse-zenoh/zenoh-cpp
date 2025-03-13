@@ -147,10 +147,11 @@ void put_sub_fifo_channel(Talloc& alloc) {
 
     /// after session close subscriber handler should become disconnected
     session2.close();
-    for (const auto& subscriber : subscribers) {
+    for (auto& subscriber : subscribers) {
         auto res = subscriber.handler().recv();
         assert(std::holds_alternative<channels::RecvError>(res));
         assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
+        std::move(subscriber).undeclare();
     }
 }
 
@@ -186,10 +187,11 @@ void put_sub_ring_channel(Talloc& alloc) {
 
     /// after session close subscriber handler should become disconnected
     session2.close();
-    for (const auto& subscriber : subscribers) {
+    for (auto& subscriber : subscribers) {
         auto res = subscriber.handler().recv();
         assert(std::holds_alternative<channels::RecvError>(res));
         assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
+        std::move(subscriber).undeclare();
     }
 }
 

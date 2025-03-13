@@ -43,49 +43,49 @@ void queryable_get() {
     auto session2 = Session::open(Config::create_default());
     size_t queries_processed = 0;
 
-    {
-        auto queryable = session1.declare_queryable(
-            ke,
-            [&queries](const Query& q) {
-                auto payload = q.get_payload()->get().as_string();
-                QueryData qd;
-                qd.key = std::string(q.get_keyexpr().as_string_view());
-                qd.params = std::string(q.get_parameters());
-                qd.payload = payload;
-                queries.push_back(std::move(qd));
-                if (q.get_parameters() == "ok") {
-                    q.reply(q.get_keyexpr(), Bytes(payload));
-                } else {
-                    q.reply_err(Bytes("err"));
-                }
-            },
-            [&queryable_dropped]() { queryable_dropped = true; });
-        std::this_thread::sleep_for(1s);
-
-        auto on_reply = [&replies, &errors](const Reply& r) {
-            if (r.is_ok()) {
-                replies.push_back(r.get_ok().get_payload().as_string());
+    auto queryable = session1.declare_queryable(
+        ke,
+        [&queries](const Query& q) {
+            auto payload = q.get_payload()->get().as_string();
+            QueryData qd;
+            qd.key = std::string(q.get_keyexpr().as_string_view());
+            qd.params = std::string(q.get_parameters());
+            qd.payload = payload;
+            queries.push_back(std::move(qd));
+            if (q.get_parameters() == "ok") {
+                q.reply(q.get_keyexpr(), Bytes(payload));
             } else {
-                errors.push_back(r.get_err().get_payload().as_string());
+                q.reply_err(Bytes("err"));
             }
-        };
-        auto on_drop = [&queries_processed]() { queries_processed++; };
+        },
+        [&queryable_dropped]() { queryable_dropped = true; });
+    std::this_thread::sleep_for(1s);
 
-        Session::GetOptions opt1;
-        opt1.payload = Bytes("1");
-        session2.get(selector, "ok", on_reply, on_drop, std::move(opt1));
-        std::this_thread::sleep_for(1s);
+    auto on_reply = [&replies, &errors](const Reply& r) {
+        if (r.is_ok()) {
+            replies.push_back(r.get_ok().get_payload().as_string());
+        } else {
+            errors.push_back(r.get_err().get_payload().as_string());
+        }
+    };
+    auto on_drop = [&queries_processed]() { queries_processed++; };
 
-        Session::GetOptions opt2;
-        opt2.payload = Bytes("2");
-        session2.get(selector, "ok", on_reply, on_drop, std::move(opt2));
-        std::this_thread::sleep_for(1s);
+    Session::GetOptions opt1;
+    opt1.payload = Bytes("1");
+    session2.get(selector, "ok", on_reply, on_drop, std::move(opt1));
+    std::this_thread::sleep_for(1s);
 
-        Session::GetOptions opt3;
-        opt3.payload = Bytes("3");
-        session2.get(selector, "err", on_reply, on_drop, std::move(opt3));
-        std::this_thread::sleep_for(1s);
-    }
+    Session::GetOptions opt2;
+    opt2.payload = Bytes("2");
+    session2.get(selector, "ok", on_reply, on_drop, std::move(opt2));
+    std::this_thread::sleep_for(1s);
+
+    Session::GetOptions opt3;
+    opt3.payload = Bytes("3");
+    session2.get(selector, "err", on_reply, on_drop, std::move(opt3));
+    std::this_thread::sleep_for(1s);
+
+    std::move(queryable).undeclare();
 
     assert(queries.size() == 3);
     QueryData qd = {"zenoh/test/1", "ok", "1"};
@@ -160,6 +160,7 @@ void queryable_get_channel() {
     res = replies.recv();
     assert(std::holds_alternative<channels::RecvError>(res));
     assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
+    std::move(queryable).undeclare();
 }
 
 int main(int argc, char** argv) {

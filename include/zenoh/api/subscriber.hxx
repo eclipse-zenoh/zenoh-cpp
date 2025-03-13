@@ -100,8 +100,7 @@ class Subscriber : public detail::SubscriberBase {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     Handler undeclare(ZResult* err = nullptr) && {
-        __ZENOH_RESULT_CHECK(::z_undeclare_subscriber(interop::as_moved_c_ptr(*this)), err,
-                             "Failed to undeclare subscriber");
+        __ZENOH_RESULT_CHECK(::z_undeclare_subscriber(::z_move(this->_0)), err, "Failed to undeclare subscriber");
         return std::move(this->_handler);
     }
 
