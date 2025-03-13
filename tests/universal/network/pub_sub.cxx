@@ -56,21 +56,21 @@ void pub_sub(Talloc& alloc) {
 
     bool subscriber_dropped = false;
     std::vector<std::pair<std::string, std::string>> received_messages;
-    {
-        auto subscriber = session2.declare_subscriber(
-            ke,
-            [&received_messages](const Sample& s) {
-                received_messages.emplace_back(s.get_keyexpr().as_string_view(), s.get_payload().as_string());
-            },
-            [&subscriber_dropped]() { subscriber_dropped = true; });
 
-        std::this_thread::sleep_for(1s);
+    auto subscriber = session2.declare_subscriber(
+        ke,
+        [&received_messages](const Sample& s) {
+            received_messages.emplace_back(s.get_keyexpr().as_string_view(), s.get_payload().as_string());
+        },
+        [&subscriber_dropped]() { subscriber_dropped = true; });
 
-        publisher.put(alloc.alloc_with_data("first"));
-        publisher.put(alloc.alloc_with_data("second"));
+    std::this_thread::sleep_for(1s);
 
-        std::this_thread::sleep_for(1s);
-    }
+    publisher.put(alloc.alloc_with_data("first"));
+    publisher.put(alloc.alloc_with_data("second"));
+
+    std::this_thread::sleep_for(1s);
+    std::move(subscriber).undeclare();
 
     assert(received_messages.size() == 2);
     assert(received_messages[0].first == "zenoh/test");
@@ -109,6 +109,7 @@ void put_sub(Talloc& alloc) {
     assert(received_messages[0].second == "first");
     assert(received_messages[1].first == "zenoh/test");
     assert(received_messages[1].second == "second");
+    std::move(subscriber).undeclare();
 }
 
 template <typename Talloc>
@@ -151,7 +152,8 @@ void put_sub_fifo_channel(Talloc& alloc) {
         auto res = subscriber.handler().recv();
         assert(std::holds_alternative<channels::RecvError>(res));
         assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
-        std::move(subscriber).undeclare();
+        z_result_t err;
+        std::move(subscriber).undeclare(&err);  // a error can be thrown since session2 was closed
     }
 }
 
@@ -191,7 +193,8 @@ void put_sub_ring_channel(Talloc& alloc) {
         auto res = subscriber.handler().recv();
         assert(std::holds_alternative<channels::RecvError>(res));
         assert(std::get<channels::RecvError>(res) == channels::RecvError::Z_DISCONNECTED);
-        std::move(subscriber).undeclare();
+        z_result_t err;
+        std::move(subscriber).undeclare(&err);  // a error can be thrown since session2 was closed
     }
 }
 
