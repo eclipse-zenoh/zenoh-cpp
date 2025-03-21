@@ -172,6 +172,14 @@ class CliArgParser {
     };
 
    private:
+    bool is_named(size_t& current_arg) const {
+        if (current_arg >= _argc) {
+            return false;
+        }
+        std::string_view a = _argv[current_arg];
+        return (a.size() == 2 && a[0] == '-') || (a.size() > 2 && a[0] == '-' && a[1] == '-');
+    }
+
     std::vector<std::string_view> parse_required(size_t& current_arg) {
         std::vector<std::string_view> required_out(_required.size());
         for (size_t i = 0; i < _required.size(); i++) {
@@ -228,8 +236,8 @@ class CliArgParser {
 
         while (current_arg < _argc) {
             std::string_view a = _argv[current_arg];
-            if (a.size() < 2 || a[0] != '-' || (a.size() > 2 && a[1] != '-')) {
-                throw std::runtime_error(std::string("Unexpected option: ") + _argv[current_arg]);
+            if (!is_named(current_arg)) {
+                break;
             }
             std::string_view val = "";
             size_t pos = a.find('=');
@@ -248,10 +256,6 @@ class CliArgParser {
             const auto& named_arg = _named[arg_index];
             if (const auto named_flag = std::get_if<NamedFlag>(&named_arg); named_flag != nullptr) {
                 std::get<Result::ArgFlagValue>(named_out[arg_index]).value = true;
-                if (!val.empty()) {
-                    throw std::runtime_error(std::string("Option: ") + it->first +
-                                             " is a flag and does not require a value");
-                }
             } else if (current_arg >= _argc && val.empty()) {
                 throw std::runtime_error(std::string("Option: ") + it->first + " requires a value");
             } else {
@@ -277,10 +281,20 @@ class CliArgParser {
         }
 
         size_t current_arg = 1;
-        auto required_out = parse_required(current_arg);
-        auto optional_out = parse_optional(current_arg);
+        std::vector<std::string_view> required_out, optional_out;
+        bool named_first = is_named(current_arg);
+        if (!named_first) {  // positional arguments first
+            required_out = parse_required(current_arg);
+            optional_out = parse_optional(current_arg);
+        }
         auto&& [named_out, opt_to_named_arg_index] = parse_named(current_arg);
-
+        if (named_first) {  // named argument first - positional ones are at the end
+            required_out = parse_required(current_arg);
+            optional_out = parse_optional(current_arg);
+        }
+        if (current_arg < _argc) {
+            throw std::runtime_error(std::string("Unexpected argument: ") + _argv[current_arg]);
+        }
         return Result(std::move(required_out), std::move(optional_out), std::move(named_out),
                       std::move(opt_to_named_arg_index));
     }
