@@ -12,13 +12,16 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+#include <chrono>
 #include <cstdio>
 #include <iostream>
+#include <thread>
 
 #include "../getargs.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
+using namespace std::chrono_literals;
 
 int _main(int argc, char **argv) {
     auto &&[config, args] = ConfigCliArgParser(argc, argv).named_flag({"no-express"}, "Disable message batching").run();
@@ -33,8 +36,11 @@ int _main(int argc, char **argv) {
         KeyExpr("test/ping"),
         [pub = std::move(pub)](const Sample &sample) mutable { pub.put(sample.get_payload().clone()); },
         closures::none);
-    std::cout << "Pong ready, press any key to quit\n";
-    std::getchar();
+
+    std::cout << "Pong ready, press CTRL-C to quit...\n";
+    while (true) {
+        std::this_thread::sleep_for(1s);
+    }
     return 0;
 }
 
