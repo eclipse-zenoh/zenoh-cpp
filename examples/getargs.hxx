@@ -94,6 +94,7 @@ class CliArgParser {
         os << "  " << vals.description;
     }
 
+   public:
     void print_help(std::ostream& os) const {
         os << "Usage: " << std::filesystem::path(_argv[0]).filename().string();
         if (!_named.empty()) {
@@ -123,8 +124,6 @@ class CliArgParser {
             std::visit([&os](const auto& arg) { CliArgParser::print_help_string(arg, os); }, n);
             os << std::endl;
         }
-        std::cout << "  ";
-        print_help_string(NamedFlag{{"h", "help"}, "Print help"}, os);
         os << std::endl;
     }
 
@@ -180,40 +179,9 @@ class CliArgParser {
         return (a.size() == 2 && a[0] == '-') || (a.size() > 2 && a[0] == '-' && a[1] == '-');
     }
 
-    std::vector<std::string_view> parse_required(size_t& current_arg) {
-        std::vector<std::string_view> required_out(_required.size());
-        for (size_t i = 0; i < _required.size(); i++) {
-            if (i + 1 >= _argc) {
-                throw std::runtime_error(std::string("Missing required argument <") + _required[i].name + ">");
-            } else {
-                required_out[i] = _argv[i + current_arg];
-            }
-        }
-        current_arg += required_out.size();
-        return required_out;
-    }
-
-    std::vector<std::string_view> parse_optional(size_t& current_arg) {
-        std::vector<std::string_view> optional_out(_optional.size());
-        for (size_t i = 0; i < _optional.size(); i++) {
-            optional_out[i] = _optional[i].value;
-        }
-
-        for (size_t i = 0; i < _optional.size(); i++) {
-            if (current_arg >= _argc) {
-                break;
-            } else if (_argv[current_arg][0] == '-') {  // start of named arguments
-                break;
-            } else {
-                optional_out[i] = _argv[i + _required.size() + 1];
-            }
-            current_arg += 1;
-        }
-        return optional_out;
-    }
-
-    std::tuple<std::vector<Result::NamedArgValue>, std::unordered_map<std::string, size_t>> parse_named(
-        size_t& current_arg) {
+    std::tuple<std::vector<std::string_view>, std::vector<std::string_view>, std::vector<Result::NamedArgValue>,
+               std::unordered_map<std::string, size_t>>
+    parse_args(size_t& current_arg) {
         std::unordered_map<std::string, size_t> opt_to_named_arg_index;
         for (size_t i = 0; i < _named.size(); i++) {
             const auto& opts = std::visit([](const auto& arg) { return arg.opts; }, _named[i]);
@@ -225,76 +193,84 @@ class CliArgParser {
         std::vector<Result::NamedArgValue> named_out;
         named_out.reserve(_named.size());
         for (size_t i = 0; i < _named.size(); i++) {
-            if (const auto named_flag = std::get_if<NamedFlag>(&_named[i]); named_flag != nullptr) {
+            if (std::holds_alternative<NamedFlag>(_named[i])) {
                 named_out.push_back(Result::ArgFlagValue{false});
-            } else if (const auto named_value = std::get_if<NamedValue>(&_named[i]); named_value != nullptr) {
-                named_out.push_back(Result::ArgValue{named_value->value});
-            } else if (const auto named_values = std::get_if<NamedValues>(&_named[i]); named_values != nullptr) {
+            } else if (std::holds_alternative<NamedValue>(_named[i])) {
+                named_out.push_back(Result::ArgValue{std::get<NamedValue>(_named[i]).value});
+            } else if (std::holds_alternative<NamedValues>(_named[i])) {
                 named_out.push_back(Result::ArgValues{});
             }
         }
 
+        std::vector<std::string_view> required_out;
+        std::vector<std::string_view> optional_out(_optional.size());
+        for (size_t i = 0; i < _optional.size(); i++) {
+            optional_out[i] = _optional[i].value;
+        }
+        size_t num_parsed_optional = 0;
+
         while (current_arg < _argc) {
             std::string_view a = _argv[current_arg];
             if (!is_named(current_arg)) {
-                break;
-            }
-            std::string_view val = "";
-            size_t pos = a.find('=');
-            if (pos != std::string_view::npos) {
-                _argv[current_arg][pos] = '\0';
-                a = _argv[current_arg];
-                val = _argv[current_arg] + pos + 1;
-            }
-            auto it =
-                (a[1] == '-') ? opt_to_named_arg_index.find(a.data() + 2) : opt_to_named_arg_index.find(a.data() + 1);
-            if (it == opt_to_named_arg_index.end()) {
-                throw std::runtime_error(std::string("Unexpected option: ") + _argv[current_arg]);
-            }
-            size_t arg_index = it->second;
-            current_arg++;
-            const auto& named_arg = _named[arg_index];
-            if (const auto named_flag = std::get_if<NamedFlag>(&named_arg); named_flag != nullptr) {
-                std::get<Result::ArgFlagValue>(named_out[arg_index]).value = true;
-            } else if (current_arg >= _argc && val.empty()) {
-                throw std::runtime_error(std::string("Option: ") + it->first + " requires a value");
+                if (required_out.size() < _required.size()) {
+                    required_out.push_back(a);
+                } else if (num_parsed_optional < optional_out.size()) {
+                    optional_out[num_parsed_optional] = a;
+                    num_parsed_optional++;
+                } else {
+                    throw std::runtime_error(
+                        std::string("Unexpected positional argument value: '").append(a).append("'"));
+                }
+                current_arg++;
             } else {
-                val = val.empty() ? _argv[current_arg++] : val;
-                if (const auto named_value = std::get_if<NamedValue>(&named_arg); named_value != nullptr) {
-                    std::get<Result::ArgValue>(named_out[arg_index]).value = val;
-                } else if (const auto named_values = std::get_if<NamedValues>(&named_arg); named_values != nullptr) {
-                    std::get<Result::ArgValues>(named_out[arg_index]).values.push_back(val);
+                std::string_view val = "";
+                size_t pos = a.find('=');
+                if (pos != std::string_view::npos) {
+                    _argv[current_arg][pos] = '\0';
+                    a = _argv[current_arg];
+                    val = _argv[current_arg] + pos + 1;
+                }
+                auto it = (a[1] == '-') ? opt_to_named_arg_index.find(a.data() + 2)
+                                        : opt_to_named_arg_index.find(a.data() + 1);
+                if (it == opt_to_named_arg_index.end()) {
+                    throw std::runtime_error(std::string("Unexpected option: ") + _argv[current_arg]);
+                }
+                size_t arg_index = it->second;
+                current_arg++;
+                const auto& named_arg = _named[arg_index];
+                if (std::holds_alternative<NamedFlag>(named_arg)) {
+                    std::get<Result::ArgFlagValue>(named_out[arg_index]).value = true;
+                } else if (current_arg >= _argc && val.empty()) {
+                    throw std::runtime_error(std::string("Option: ") + it->first + " requires a value");
+                } else {
+                    val = val.empty() ? _argv[current_arg++] : val;
+                    if (std::holds_alternative<NamedValue>(named_arg)) {
+                        std::get<Result::ArgValue>(named_out[arg_index]).value = val;
+                    } else if (std::holds_alternative<NamedValues>(named_arg)) {
+                        std::get<Result::ArgValues>(named_out[arg_index]).values.push_back(val);
+                    }
                 }
             }
         }
 
-        return {std::move(named_out), std::move(opt_to_named_arg_index)};
+        if (required_out.size() < _required.size()) {
+            throw std::runtime_error(std::string("Missing required argument <") + _required[required_out.size()].name +
+                                     ">");
+        }
+
+        return {std::move(required_out), std::move(optional_out), std::move(named_out),
+                std::move(opt_to_named_arg_index)};
     }
 
    public:
     Result run() {
-        // Show help if help option is passed or if no parameters are passed when some are required
-        if ((_argc == 2 && (strcmp(_argv[1], "--help") == 0 || strcmp(_argv[1], "-h") == 0)) ||
-            _argc == 1 && _required.size() > 0) {
+        if (_argc == 1 && _required.size() > 0) {
             print_help(std::cout);
             exit(0);
         }
-
         size_t current_arg = 1;
-        std::vector<std::string_view> required_out, optional_out;
-        bool named_first = is_named(current_arg);
-        if (!named_first) {  // positional arguments first
-            required_out = parse_required(current_arg);
-            optional_out = parse_optional(current_arg);
-        }
-        auto&& [named_out, opt_to_named_arg_index] = parse_named(current_arg);
-        if (named_first) {  // named argument first - positional ones are at the end
-            required_out = parse_required(current_arg);
-            optional_out = parse_optional(current_arg);
-        }
-        if (current_arg < _argc) {
-            throw std::runtime_error(std::string("Unexpected argument: ") + _argv[current_arg]);
-        }
+        auto&& [required_out, optional_out, named_out, opt_to_named_arg_index] = parse_args(current_arg);
+
         return Result(std::move(required_out), std::move(optional_out), std::move(named_out),
                       std::move(opt_to_named_arg_index));
     }
@@ -378,8 +354,14 @@ class ConfigCliArgParser : public CliArgParser {
         named_value({"m", "mode"}, "MODE", "Zenoh session mode (peer | client)", "client");
 #endif
         named_flag({"no-multicast-scouting"}, "Disable the multicast-based scouting mechanism");
+        named_flag({"h", "help"}, "Print help");
 
         auto result = CliArgParser::run();
+
+        if (result.flag("h")) {
+            print_help(std::cout);
+            exit(0);
+        }
 
         zenoh::Config config = zenoh::Config::create_default();
         auto mode = result.value("m");
