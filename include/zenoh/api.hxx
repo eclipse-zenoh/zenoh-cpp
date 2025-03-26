@@ -33,6 +33,9 @@
 #include "api/reply.hxx"
 #include "api/sample.hxx"
 #include "api/scout.hxx"
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#include "api/close.hxx"
+#endif
 #include "api/session.hxx"
 #include "api/subscriber.hxx"
 #include "api/timestamp.hxx"

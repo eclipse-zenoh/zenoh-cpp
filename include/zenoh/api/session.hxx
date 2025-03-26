@@ -36,6 +36,9 @@
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
 #include "shm/client_storage/client_storage.hxx"
 #endif
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#include "close.hxx"
+#endif
 
 namespace zenoh {
 namespace ext {
@@ -63,6 +66,14 @@ class Session : public Owned<::z_owned_session_t> {
 
     /// @brief Options to be passed when closing a ``Session``.
     struct SessionCloseOptions {
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+        /// The timeout for close operation in milliseconds. 0 means default close timeout which is 10 seconds.
+        uint32_t timeout_ms = 10000;
+        /// A function to receive close handle. If set, the close operation will be executed concurrently
+        /// in separate task, and this function will receive a handle to be used for controlling
+        /// close execution.
+        std::function<void(CloseHandle&&)> out_concurrent = nullptr;
+#endif
         /// @name Fields
         static SessionCloseOptions create_default() { return {}; }
     };
@@ -1129,8 +1140,23 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     void close(SessionCloseOptions&& options = SessionCloseOptions::create_default(), ZResult* err = nullptr) {
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+        CloseHandle close_handle(zenoh::detail::null_object);
+        ::z_close_options_t close_opts;
+        ::z_close_options_default(&close_opts);
+        close_opts.internal_timeout_ms = options.timeout_ms;
+        if (options.out_concurrent) {
+            close_opts.internal_out_concurrent = &close_handle._0;
+        }
+        __ZENOH_RESULT_CHECK(::z_close(interop::as_loaned_c_ptr(*this), &close_opts), err,
+                             "Failed to close the session");
+        if (options.out_concurrent && (!err || *err == Z_OK)) {
+            options.out_concurrent(std::move(close_handle));
+        }
+#else
         (void)options;
         __ZENOH_RESULT_CHECK(::z_close(interop::as_loaned_c_ptr(*this), nullptr), err, "Failed to close the session");
+#endif
     }
 
     /// @brief Check if session is closed.
