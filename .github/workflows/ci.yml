@@ -24,7 +24,7 @@ jobs:
           find include/ tests/ examples/ -iname "*.hxx" -o -iname "*.cxx" | xargs clang-format -n -Werror
 
   build:
-    name: Build on ${{ matrix.os }}
+    name: Build on ${{ matrix.os }} in ${{ matrix.build_type }} unstable ${{ matrix.unstable }}  shm ${{ matrix.shm }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -32,6 +32,11 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         shm: [FALSE, TRUE]
         unstable: [FALSE, TRUE]
+        build_type: [Debug, Release]
+        exclude:
+          - os: windows-latest
+            build_type: Debug
+            shm: TRUE
 
     steps:
       - name: Clone this repository
@@ -40,13 +45,13 @@ jobs:
       - name: install zenoh-cpp and its dependencies
         shell: bash
         run: |
-          ./scripts/install_from_git.sh ~/local ${{ matrix.unstable }} ${{ matrix.shm }}
+          ./scripts/install_from_git.sh ~/local ${{ matrix.unstable }} ${{ matrix.shm }} ON ${{ matrix.build_type }}
 
       - name: make examples
         shell: bash
         run: |
           cd build
-          cmake --build . --target examples --config Release
+          cmake --build . --target examples --config ${{ matrix.build_type }}
 
       - name: make stand-alone examples
         shell: bash
@@ -57,19 +62,19 @@ jobs:
         shell: bash
         run: |
           cd build
-          cmake --build . --target tests --config Release
+          cmake --build . --target tests --config ${{ matrix.build_type }}
 
       - name: run tests
         shell: bash
         run: |
           cd build
-          ctest -C Release --output-on-failure
+          ctest -C ${{ matrix.build_type }} --output-on-failure
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           # Artifact name
-          name: zenoh-cpp-${{ matrix.os }}
+          name: zenoh-cpp-${{ matrix.os }}-${{ matrix.build_type }}
           # Directory containing files to upload
           path: |
             target/release/examples

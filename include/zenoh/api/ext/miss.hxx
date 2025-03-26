@@ -108,7 +108,7 @@ class SampleMissListener : public detail::SampleMissListenerBase {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     Handler undeclare(ZResult* err = nullptr) && {
-        __ZENOH_RESULT_CHECK(::ze_undeclare_sample_miss_listener(interop::as_moved_c_ptr(*this)), err,
+        __ZENOH_RESULT_CHECK(::ze_undeclare_sample_miss_listener(::z_move(this->_0)), err,
                              "Failed to undeclare Sample Miss Listener");
         return std::move(this->_handler);
     }
