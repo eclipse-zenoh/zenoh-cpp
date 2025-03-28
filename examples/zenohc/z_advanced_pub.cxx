@@ -54,8 +54,7 @@ int _main(int argc, char **argv) {
     opts.cache.emplace().max_samples = history;
     opts.publisher_detection = true;
     opts.sample_miss_detection.emplace().heartbeat_period_ms = 500;
-    opts.sample_miss_detection.emplace().heartbeat_mode = 
-        ext::SessionExt::AdvancedPublisherOptions::HeartbeatMode::PERIODIC;
+    opts.sample_miss_detection.emplace().heartbeat_mode = ext::SessionExt::AdvancedPublisherOptions::HeartbeatMode::PERIODIC;
     // alternatively sample miss detection can be done in response to subscriber's periodic queries:
     // opts.sample_miss_detection.emplace();
 
