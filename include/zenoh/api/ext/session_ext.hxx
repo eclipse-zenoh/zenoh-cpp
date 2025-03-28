@@ -288,13 +288,25 @@ class SessionExt {
             static CacheOptions create_default() { return {}; }
         };
 
+        /// @brief Heartbeat mode
+        enum class HeartbeatMode {
+            /// Allow last sample miss detection through periodic heartbeat.
+            /// Periodically send the last published Sample's sequence number to allow last sample
+            PERIODIC = ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_PERIODIC,
+            /// Allow last sample miss detection through sporadic heartbeat.
+            /// Each period, the last published Sample's sequence number is sent with `z_congestion_control_t::BLOCK`
+            /// but only if it changed since last period.
+            SPORADIC = ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_SPORADIC
+        };
+
         /// @brief Settings allowing matching Subscribers to detect lost samples and optionally ask for retransimission.
         struct SampleMissDetectionOptions {
             /// The period of publisher heartbeats in ms, which can be used by ``AdvancedSubscriber`` for missed sample
             /// detection (if heartbeat-based recovery is enabled).
             /// Otherwise, missed samples will be retransmitted based on Advanced Subscriber queries.
             std::optional<uint64_t> heartbeat_period_ms = {};
-
+            /// Allow last sample miss detection through sporadic or periodic heartbeat.
+            HeartbeatMode heartbeat_mode = HeartbeatMode::PERIODIC;
             /// @brief Create default option settings.
             static SampleMissDetectionOptions create_default() { return {}; }
         };
@@ -334,6 +346,8 @@ class SessionExt {
             opts.publisher_detection = this->publisher_detection;
             if (this->sample_miss_detection.has_value()) {
                 opts.sample_miss_detection.is_enabled = true;
+                opts.sample_miss_detection.heartbeat_mode =
+                    static_cast<::ze_advanced_publisher_heartbeat_mode_t>(this->sample_miss_detection->heartbeat_mode);
                 if (this->sample_miss_detection->heartbeat_period_ms.has_value()) {
                     // treat 0 as very small delay
                     opts.sample_miss_detection.heartbeat_period_ms =
