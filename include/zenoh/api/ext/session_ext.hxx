@@ -293,6 +293,7 @@ class SessionExt {
 
         /// @brief Allow last sample miss detection through periodic heartbeat.
         /// Periodically send the last published Sample's sequence number to allow last sample
+        /// miss detection.
         struct HeartbeatPeriodic {
             uint64_t period_ms;
         };
