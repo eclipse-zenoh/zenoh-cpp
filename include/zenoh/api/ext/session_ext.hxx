@@ -265,8 +265,6 @@ class SessionExt {
     /// release.
     /// Options passed to the `SessionExt::declare_advanced_publisher()` function.
     struct AdvancedPublisherOptions {
-        /// @name Fields
-
         /// @brief  Setting for advanced publisher's cache. The cache allows advanced subscribers to recover history
         /// and/or lost samples.
         struct CacheOptions {
@@ -295,6 +293,8 @@ class SessionExt {
         /// Periodically send the last published Sample's sequence number to allow last sample
         /// miss detection.
         struct HeartbeatPeriodic {
+            /// @name Fields
+            /// @brief The period of publisher periodic heartbeats in ms.
             uint64_t period_ms;
         };
 
@@ -302,26 +302,36 @@ class SessionExt {
         /// Each period, the last published Sample's sequence number is sent with `z_congestion_control_t::BLOCK`
         /// but only if it changed since last period.
         struct HeartbeatSporadic {
+            /// @name Fields
+            /// @brief The period of publisher sporadic heartbeats in ms.
             uint64_t period_ms;
         };
 
         /// @brief Settings allowing matching Subscribers to detect lost samples and optionally ask for retransimission.
         struct SampleMissDetectionOptions {
+
+            /// @name Fields
+
             /// Configure last sample miss detection through sporadic or periodic heartbeat.
-            std::variant<HeartbeatNone, HeartbeatPeriodic, HeartbeatSporadic> heartbeat_mode = HeartbeatNone{};
-            /// @warning This API is deprecated and will be removed in future releases. Use `heartbeat_mode` instead.
+            std::variant<HeartbeatNone, HeartbeatPeriodic, HeartbeatSporadic> heartbeat = HeartbeatNone{};
+            /// @warning This API is deprecated and will be removed in future releases. Use `heartbeat` instead.
             ///
             /// The period of publisher periodic heartbeats in ms. When this option is set and heartbeat mode is set to
             /// `HeartbeatNone`, the behavior is the same as `HeartbeatPeriodic` with the period is set to
-            /// heartbeat_mode
+            /// heartbeat
             ///
             /// This option is ignored if heartbeat mode is not set to `HeartbeatNone`.
             ///
             /// Do not use this option, if is temporary left for backward compatibility and will be removed soon
             std::optional<uint64_t> heartbeat_period_ms = {};
+
+            /// @name Methods
+
             /// @brief Create default option settings.
             static SampleMissDetectionOptions create_default() { return {}; }
         };
+
+        /// @name Fields
 
         /// Base publisher options.
         zenoh::Session::PublisherOptions publisher_options = {};
@@ -358,16 +368,16 @@ class SessionExt {
             opts.publisher_detection = this->publisher_detection;
             if (this->sample_miss_detection.has_value()) {
                 opts.sample_miss_detection.is_enabled = true;
-                if (std::holds_alternative<HeartbeatPeriodic>(this->sample_miss_detection->heartbeat_mode)) {
+                if (std::holds_alternative<HeartbeatPeriodic>(this->sample_miss_detection->heartbeat)) {
                     opts.sample_miss_detection.heartbeat_mode =
                         ::ze_advanced_publisher_heartbeat_mode_t::ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_PERIODIC;
                     opts.sample_miss_detection.heartbeat_period_ms =
-                        std::get<HeartbeatPeriodic>(this->sample_miss_detection->heartbeat_mode).period_ms;
-                } else if (std::holds_alternative<HeartbeatSporadic>(this->sample_miss_detection->heartbeat_mode)) {
+                        std::get<HeartbeatPeriodic>(this->sample_miss_detection->heartbeat).period_ms;
+                } else if (std::holds_alternative<HeartbeatSporadic>(this->sample_miss_detection->heartbeat)) {
                     opts.sample_miss_detection.heartbeat_mode =
                         ::ze_advanced_publisher_heartbeat_mode_t::ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_SPORADIC;
                     opts.sample_miss_detection.heartbeat_period_ms =
-                        std::get<HeartbeatSporadic>(this->sample_miss_detection->heartbeat_mode).period_ms;
+                        std::get<HeartbeatSporadic>(this->sample_miss_detection->heartbeat).period_ms;
                 } else {
                     opts.sample_miss_detection.heartbeat_mode =
                         ::ze_advanced_publisher_heartbeat_mode_t::ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_NONE;
