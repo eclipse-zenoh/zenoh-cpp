@@ -53,9 +53,9 @@ int _main(int argc, char **argv) {
     ext::SessionExt::AdvancedPublisherOptions opts;
     opts.cache.emplace().max_samples = history;
     opts.publisher_detection = true;
-    opts.sample_miss_detection.emplace().heartbeat = ext::SessionExt::AdvancedPublisherOptions::HeartbeatPeriodic{1000};
-    // alternatively sample miss detection can be done in response to subscriber's periodic queries:
-    // opts.sample_miss_detection.emplace();
+    opts.sample_miss_detection.emplace().heartbeat =
+        ext::SessionExt::AdvancedPublisherOptions::SampleMissDetectionOptions::HeartbeatPeriodic{1000};
+    // alternatively sample miss detection can be done in response to subscriber's periodic queries
 
     std::cout << "Declaring AdvancedPublisher on '" << keyexpr << "'..." << std::endl;
     auto pub = session.ext().declare_advanced_publisher(KeyExpr(keyexpr), std::move(opts));

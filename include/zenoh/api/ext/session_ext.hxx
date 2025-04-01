@@ -43,7 +43,7 @@ class SessionExt {
 
     /// @brief Get extension interface for `zenoh::Session`. Its lifetime is bound that of the session.
     /// @param session
-    SessionExt(const zenoh::Session& session) : _session(session){};
+    SessionExt(const zenoh::Session& session) : _session(session) {};
 
     /// @name Methods
 
@@ -286,29 +286,29 @@ class SessionExt {
             static CacheOptions create_default() { return {}; }
         };
 
-        /// @brief Disable last sample miss detection through heartbeat.
-        struct HeartbeatNone {};
-
-        /// @brief Allow last sample miss detection through periodic heartbeat.
-        /// Periodically send the last published Sample's sequence number to allow last sample
-        /// miss detection.
-        struct HeartbeatPeriodic {
-            /// @name Fields
-            /// @brief The period of publisher periodic heartbeats in ms.
-            uint64_t period_ms;
-        };
-
-        /// @brief Allow last sample miss detection through sporadic heartbeat.
-        /// Each period, the last published Sample's sequence number is sent with `z_congestion_control_t::BLOCK`
-        /// but only if it changed since last period.
-        struct HeartbeatSporadic {
-            /// @name Fields
-            /// @brief The period of publisher sporadic heartbeats in ms.
-            uint64_t period_ms;
-        };
-
         /// @brief Settings allowing matching Subscribers to detect lost samples and optionally ask for retransimission.
         struct SampleMissDetectionOptions {
+            /// @brief Disable last sample miss detection through heartbeat.
+            struct HeartbeatNone {};
+
+            /// @brief Allow last sample miss detection through periodic heartbeat.
+            /// Periodically send the last published Sample's sequence number to allow last sample
+            /// miss detection.
+            struct HeartbeatPeriodic {
+                /// @name Fields
+                /// @brief The period of publisher periodic heartbeats in ms.
+                uint64_t period_ms;
+            };
+
+            /// @brief Allow last sample miss detection through sporadic heartbeat.
+            /// Each period, the last published Sample's sequence number is sent with `z_congestion_control_t::BLOCK`
+            /// but only if it changed since last period.
+            struct HeartbeatSporadic {
+                /// @name Fields
+                /// @brief The period of publisher sporadic heartbeats in ms.
+                uint64_t period_ms;
+            };
+
             /// @name Fields
 
             /// Configure last sample miss detection through sporadic or periodic heartbeat.
