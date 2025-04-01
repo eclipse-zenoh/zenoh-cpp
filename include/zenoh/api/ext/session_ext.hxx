@@ -309,7 +309,6 @@ class SessionExt {
 
         /// @brief Settings allowing matching Subscribers to detect lost samples and optionally ask for retransimission.
         struct SampleMissDetectionOptions {
-
             /// @name Fields
 
             /// Configure last sample miss detection through sporadic or periodic heartbeat.
