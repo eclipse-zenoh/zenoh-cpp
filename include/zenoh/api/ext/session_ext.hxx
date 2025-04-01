@@ -367,20 +367,23 @@ class SessionExt {
             opts.publisher_detection = this->publisher_detection;
             if (this->sample_miss_detection.has_value()) {
                 opts.sample_miss_detection.is_enabled = true;
-                if (std::holds_alternative<HeartbeatPeriodic>(this->sample_miss_detection->heartbeat)) {
+                if (std::holds_alternative<SampleMissDetectionOptions::HeartbeatPeriodic>(
+                        this->sample_miss_detection->heartbeat)) {
                     opts.sample_miss_detection.heartbeat_mode =
                         ::ze_advanced_publisher_heartbeat_mode_t::ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_PERIODIC;
                     opts.sample_miss_detection.heartbeat_period_ms =
-                        std::get<HeartbeatPeriodic>(this->sample_miss_detection->heartbeat).period_ms;
-                } else if (std::holds_alternative<HeartbeatSporadic>(this->sample_miss_detection->heartbeat)) {
+                        std::get<SampleMissDetectionOptions::HeartbeatPeriodic>(this->sample_miss_detection->heartbeat)
+                            .period_ms;
+                } else if (std::holds_alternative<SampleMissDetectionOptions::HeartbeatSporadic>(
+                               this->sample_miss_detection->heartbeat)) {
                     opts.sample_miss_detection.heartbeat_mode =
                         ::ze_advanced_publisher_heartbeat_mode_t::ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_SPORADIC;
                     opts.sample_miss_detection.heartbeat_period_ms =
-                        std::get<HeartbeatSporadic>(this->sample_miss_detection->heartbeat).period_ms;
+                        std::get<SampleMissDetectionOptions::HeartbeatSporadic>(this->sample_miss_detection->heartbeat)
+                            .period_ms;
                 } else {
                     opts.sample_miss_detection.heartbeat_mode =
                         ::ze_advanced_publisher_heartbeat_mode_t::ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_NONE;
-                    // TODO: remove this branch in future releases
                     if (this->sample_miss_detection->heartbeat_period_ms.has_value()) {
                         opts.sample_miss_detection.heartbeat_mode =
                             ::ze_advanced_publisher_heartbeat_mode_t::ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_PERIODIC;
