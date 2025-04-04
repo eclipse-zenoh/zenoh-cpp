@@ -1148,6 +1148,64 @@ class Session : public Owned<::z_owned_session_t> {
         return Ext(*this);
     }
 #endif
+
+#if defined(ZENOHCXX_ZENOHPICO) && Z_FEATURE_BATCHING == 1
+    /// @brief A RAII-style batch guard. Until it goes out of scope, any message that would have been sent on the
+    /// network by subsequent api calls will be instead stored until the batch is full, or ``BatchGuard::flush`` is
+    /// called.
+    ///
+    /// When the guard goes out of scope, all the messages remaining in the batch are automatically flushed.
+    /// @note Zenoh-pico only.
+    class BatchGuard {
+        friend class Session;
+
+        z_owned_session_t session;
+        BatchGuard(const Session& s) { this->session._rc = _z_session_rc_clone(interop::as_loaned_c_ptr(s)); }
+
+        BatchGuard() { z_internal_null(&this->session); }
+
+        BatchGuard(const BatchGuard&) = delete;
+        BatchGuard& operator=(const BatchGuard&) = delete;
+
+       public:
+        BatchGuard(BatchGuard&&) = default;
+        BatchGuard& operator=(BatchGuard&&) = default;
+
+        /// @name Methods
+
+        /// @brief Send the currently batched messages on the network.
+        /// @param err if not null, the result code will be written to this location, otherwise ZException exception
+        /// will be thrown in case of error.
+        void flush(ZResult* err = nullptr) const {
+            __ZENOH_RESULT_CHECK(z_internal_check(this->session) ? Z_OK : Z_EINVAL, err, "Batch guard is invalid");
+            if (err == nullptr || *err == Z_OK) {
+                __ZENOH_RESULT_CHECK(::zp_batch_flush(z_loan(this->session)), err, "Failed to flush the batch");
+            }
+        }
+
+        ~BatchGuard() {
+            if (z_internal_check(this->session)) {
+                zp_batch_stop(z_loan(this->session));
+                z_drop(z_move(this->session));
+            }
+        }
+    };
+
+    /// @brief Activate the batching mechanism.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @return A RAII-style batch guard.
+    /// @note Zenoh-pico only.
+    [[nodiscard]] BatchGuard start_batching(ZResult* err = nullptr) const {
+        __ZENOH_RESULT_CHECK(::zp_batch_start(interop::as_loaned_c_ptr(*this)), err, "Failed to start batching");
+        if (err == nullptr || *err == Z_OK) {
+            return BatchGuard(*this);
+        } else {
+            return BatchGuard();
+        }
+    }
+
+#endif
 };
 
 }  // namespace zenoh

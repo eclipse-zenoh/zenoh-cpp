@@ -12,7 +12,7 @@ absolute_install_location=$(cd $1; pwd)
 #build zenoh-c
 bash $SCRIPT_DIR/install_local.sh $SCRIPT_DIR/../../zenoh-c $absolute_install_location Release -DZENOHC_BUILD_WITH_UNSTABLE_API=TRUE -DZENOHC_BUILD_WITH_SHARED_MEMORY=TRUE
 #build zenoh-pico
-bash $SCRIPT_DIR/install_local.sh $SCRIPT_DIR/../../zenoh-pico $absolute_install_location Release -DZ_FEATURE_UNSTABLE_API=1
+bash $SCRIPT_DIR/install_local.sh $SCRIPT_DIR/../../zenoh-pico $absolute_install_location Release -DZ_FEATURE_UNSTABLE_API=1 -DZ_FEATURE_BATCHING=1
 
 rm -rf ./build
 mkdir ./build
