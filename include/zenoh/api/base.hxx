@@ -36,10 +36,10 @@ class ZException : public std::runtime_error {
 
 #define __ZENOH_RESULT_CHECK(err, err_ptr, message)        \
     if (err_ptr == nullptr) {                              \
-        ZResult __ze = err;                                \
+        ZResult __ze = static_cast<ZResult>(err);          \
         if (__ze != Z_OK) throw ZException(message, __ze); \
     } else {                                               \
-        *err_ptr = err;                                    \
+        *err_ptr = static_cast<ZResult>(err);              \
     }
 
 //
