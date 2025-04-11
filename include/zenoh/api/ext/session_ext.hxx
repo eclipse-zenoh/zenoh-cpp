@@ -627,8 +627,8 @@ class SessionExt {
             zenoh::interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Advanced Subscriber");
         if (res != Z_OK) ::z_drop(zenoh::interop::as_moved_c_ptr(cb_handler_pair.second));
-        return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
-                                                                          std::move(cb_handler_pair.second));
+        return AdvancedSubscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
+                                                                                  std::move(cb_handler_pair.second));
     }
 };
 }  // namespace zenoh::ext

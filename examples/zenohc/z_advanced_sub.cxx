@@ -47,7 +47,6 @@ int _main(int argc, char **argv) {
 
     ext::SessionExt::AdvancedSubscriberOptions opts;
     opts.history.emplace().detect_late_publishers = true;
-    opts.history->detect_late_publishers = true;
     // enable recovery based on received heartbeats from ext::AdvancedPublisher
     opts.recovery.emplace().last_sample_miss_detection =
         ext::SessionExt::AdvancedSubscriberOptions::RecoveryOptions::Heartbeat{};
