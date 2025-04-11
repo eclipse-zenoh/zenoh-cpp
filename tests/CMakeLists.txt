@@ -21,6 +21,12 @@ function(add_test_instance file mode lib option)
 			return()
 		endif()
 	endif()
+	# Exclude advanced pub-sub test if unstable features are disabled
+	if(NOT(ZENOHC_BUILD_WITH_UNSTABLE_API))
+		if(${file} MATCHES "^.*advanced_pub_sub.*$")
+			return()
+		endif()
+	endif()
 
 	set(zenoh_router_branch "main")
 	get_filename_component(filename ${file} NAME_WE)
