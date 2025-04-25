@@ -226,11 +226,19 @@ void test_with_alloc() {
     }
 }
 
+void publisher_get_keyexpr() {
+    KeyExpr ke("zenoh/test_publisher_keyexpr");
+    auto session = Session::open(Config::create_default());
+    auto publisher = session.declare_publisher(ke);
+    assert(publisher.get_keyexpr().as_string_view() == "zenoh/test_publisher_keyexpr");
+}
+
 int main(int argc, char** argv) {
     test_with_alloc<CommonAllocator>();
 #if defined Z_FEATURE_SHARED_MEMORY && defined Z_FEATURE_UNSTABLE_API
     test_with_alloc<SHMAllocator>();
     test_with_alloc<SHMAllocator, false>();
 #endif
+    publisher_get_keyexpr();
     return 0;
 }
