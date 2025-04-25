@@ -26,7 +26,7 @@
 #if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
 #include "matching.hxx"
 #endif
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API)
 #include "source_info.hxx"
 #endif
 #include <optional>
@@ -142,7 +142,7 @@ class Querier : public Owned<::z_owned_querier_t> {
         __ZENOH_RESULT_CHECK(::z_undeclare_querier(interop::as_moved_c_ptr(*this)), err, "Failed to undeclare querier");
     }
 
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Get the id of the querier.

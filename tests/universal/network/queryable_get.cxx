@@ -163,7 +163,15 @@ void queryable_get_channel() {
     std::move(queryable).undeclare();
 }
 
+void queryable_get_keyexpr() {
+    KeyExpr ke("zenoh/test_queryable_keyexpr");
+    auto session = Session::open(Config::create_default());
+    auto queryable = session.declare_queryable(ke, channels::FifoChannel(3));
+    assert(queryable.get_keyexpr().as_string_view() == "zenoh/test_queryable_keyexpr");
+}
+
 int main(int argc, char** argv) {
     queryable_get();
     queryable_get_channel();
+    queryable_get_keyexpr();
 }

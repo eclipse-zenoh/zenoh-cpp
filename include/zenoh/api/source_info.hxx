@@ -19,7 +19,6 @@
 #include "interop.hxx"
 
 namespace zenoh {
-#ifdef ZENOHCXX_ZENOHC
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief The global unique id of a Zenoh entity.
 /// @note Zenoh-c only.
@@ -59,5 +58,4 @@ class SourceInfo : public Owned<::z_owned_source_info_t> {
     /// @brief Get the sequence number of the sample from the given source.
     uint32_t sn() const { return ::z_source_info_sn(interop::as_loaned_c_ptr(*this)); }
 };
-#endif
 }  // namespace zenoh
