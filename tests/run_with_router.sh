@@ -50,8 +50,11 @@ for LOCATOR in $(echo "$LOCATORS" | xargs); do
     sleep 5
 
     echo "> Running $TESTBIN ..."
-    "$TESTBIN" "$LOCATOR"
+    "$TESTBIN" "$LOCATOR" > client."$TEST_NAME_WE".log 2>&1
     RETCODE=$?
+
+    echo "> Logs of $TESTBIN ..."
+    cat client."$TEST_NAME_WE".log
 
     echo "> Stopping zenohd ..."
     kill -9 "$ZPID"
