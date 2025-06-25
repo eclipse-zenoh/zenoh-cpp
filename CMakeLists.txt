@@ -40,8 +40,10 @@ set_default_build_type(Release)
 add_library(zenohcxx INTERFACE)
 target_include_directories(zenohcxx INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-if(ZENOHCXX_ZENOHPICO) 
-	find_package(zenohpico REQUIRED)
+if(ZENOHCXX_ZENOHPICO)
+	if(NOT TARGET zenohpico::lib) # Only find if target is not already available
+		find_package(zenohpico REQUIRED)
+	endif()
 	if(TARGET zenohpico::lib)
 		message(STATUS "defined lib target zenohcxx::zenohpico for zenohpico::lib")
 		add_library(zenohcxx_zenohpico INTERFACE)
@@ -56,7 +58,9 @@ if(ZENOHCXX_ZENOHPICO)
 endif()
 
 if(ZENOHCXX_ZENOHC)
-	find_package(zenohc REQUIRED)
+	if(NOT TARGET zenohc::lib) # Only find if target is not already available
+		find_package(zenohc REQUIRED)
+	endif()
 	if(TARGET zenohc::lib)
 		message(STATUS "defined lib target zenohcxx::zenohc::lib for zenohc::lib")
 		add_library(zenohcxx_zenohc INTERFACE)
