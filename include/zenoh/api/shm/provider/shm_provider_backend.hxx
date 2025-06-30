@@ -19,6 +19,8 @@
 #include "chunk.hxx"
 #include "types.hxx"
 
+#include <memory>
+
 namespace zenoh {
 
 class CppShmProviderBackendIface {
@@ -28,8 +30,16 @@ class CppShmProviderBackendIface {
     virtual size_t defragment() = 0;
     virtual size_t available() const = 0;
     virtual void layout_for(MemoryLayout &layout) = 0;
+    virtual ProtocolId id() = 0;
     virtual ~CppShmProviderBackendIface() = default;
 };
+
+template<class Derived>
+class CppShmSegment: public std::enable_shared_from_this<Derived> {
+public:
+    virtual ~CppShmSegment() = default;
+};
+
 
 class CppShmProviderBackend : public CppShmProviderBackendIface {};
 
@@ -55,6 +65,9 @@ inline size_t _z_cpp_shm_provider_backend_available_fn(void *context) {
 }
 inline void _z_cpp_shm_provider_backend_layout_for_fn(struct z_owned_memory_layout_t *layout, void *context) {
     static_cast<CppShmProviderBackend *>(context)->layout_for(interop::as_owned_cpp_ref<MemoryLayout>(layout));
+}
+inline ProtocolId _z_cpp_shm_provider_backend_id_fn(void *context) {
+    return static_cast<CppShmProviderBackend *>(context)->id();
 }
 }
 }  // namespace shm::provider_backend::closures
