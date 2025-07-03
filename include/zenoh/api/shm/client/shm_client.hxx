@@ -27,7 +27,7 @@ namespace zenoh {
 class CppShmClient {
    public:
     virtual std::unique_ptr<CppShmSegment> attach(SegmentId segment_id) = 0;
-    virtual ProtocolId id() = 0;
+    virtual ProtocolId id() const = 0;
     virtual ~CppShmClient() = default;
 };
 
@@ -44,9 +44,7 @@ inline bool _z_cpp_shm_client_attach_fn(struct z_shm_segment_t* out_segment, z_s
     return false;
 }
 
-inline ProtocolId _z_cpp_shm_client_id_fn(void* context) { 
-    return static_cast<CppShmClient*>(context)->id();
-}
+inline ProtocolId _z_cpp_shm_client_id_fn(void* context) { return static_cast<CppShmClient*>(context)->id(); }
 
 inline void _z_cpp_shm_client_drop_fn(void* context) { delete static_cast<CppShmClient*>(context); }
 }

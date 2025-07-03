@@ -161,6 +161,9 @@ class TestShmProviderBackend : public CppShmProviderBackend {
     }
 
    private:
+    static void deref_segemnt_fn(void* context) {}
+
+   private:
     virtual ChunkAllocResult alloc(const MemoryLayout& layout) override {
         assert(interop::detail::check(layout));
 
@@ -176,12 +179,16 @@ class TestShmProviderBackend : public CppShmProviderBackend {
                 this->busy_flags[i] = true;
                 this->bytes_available--;
 
+                z_owned_ptr_in_segment_t ptr;
+                zc_threadsafe_context_t segment = {{NULL}, &TestShmProviderBackend::deref_segemnt_fn};
+                z_ptr_in_segment_new(&ptr, &this->bytes[i], segment);
+
                 AllocatedChunk chunk;
-                chunk.data = &this->bytes[i];
-                uint64_t ptr = (uint64_t)(chunk.data);
-                chunk.descriptpr.chunk = ptr & 0xFFFFFFFF;
+                chunk.ptr = z_move(ptr);
+                uint64_t data_ptr = (uint64_t)(&this->bytes[i]);
+                chunk.descriptpr.chunk = data_ptr & 0xFFFFFFFF;
                 chunk.descriptpr.len = 1;
-                chunk.descriptpr.segment = (ptr >> 32) & 0xFFFFFFFF;
+                chunk.descriptpr.segment = (data_ptr >> 32) & 0xFFFFFFFF;
 
                 return ChunkAllocResult(chunk);
             }
@@ -209,6 +216,8 @@ class TestShmProviderBackend : public CppShmProviderBackend {
 
     virtual size_t available() const override { return this->bytes_available; }
 
+    virtual ProtocolId id() const override { return 100500; }
+
     virtual void layout_for(MemoryLayout& layout) override {
         assert(interop::detail::check(layout));
 
@@ -224,14 +233,13 @@ class TestShmProviderBackend : public CppShmProviderBackend {
 };
 
 int run_c_provider() {
-    const ProtocolId id = 100500;
     const size_t size = 1024;
 
     // create test backend
     auto backend = std::make_unique<TestShmProviderBackend>(size);
 
     // create provider
-    CppShmProvider provider(id, std::move(backend));
+    CppShmProvider provider(std::move(backend));
     ASSERT_VALID(provider);
 
     // test provider
@@ -287,7 +295,7 @@ int run_global_client_storage() {
 }
 
 template <bool list_api>
-int run_client_storage_for_list(std::vector<std::pair<ProtocolId, ShmClient>>&& list) {
+int run_client_storage_for_list(std::vector<ShmClient>&& list) {
     // create storage
     auto storage = [list = std::move(list)]() mutable {
         if constexpr (list_api) {
@@ -307,14 +315,14 @@ int run_client_storage_for_list(std::vector<std::pair<ProtocolId, ShmClient>>&& 
 template <bool list_api>
 int run_client_storage_impl() {
     // create client list
-    std::vector<std::pair<ProtocolId, ShmClient>> list;
+    std::vector<ShmClient> list;
 
     // create POSIX SHM Client
     PosixShmClient client;
     ASSERT_VALID(client);
 
     // add client to the list
-    list.push_back(std::make_pair(Z_SHM_POSIX_PROTOCOL_ID, std::move(client)));
+    list.push_back(std::move(client));
 
     return run_client_storage_for_list<list_api>(std::move(list));
 }
@@ -341,20 +349,20 @@ class TestShmClient : public CppShmClient {
     virtual std::unique_ptr<CppShmSegment> attach(SegmentId segment_id) override {
         return std::make_unique<TestShmSegment>(segment_id);
     }
+
+    virtual ProtocolId id() const override { return 100500; }
 };
 
 int run_c_client() {
-    const ProtocolId id = 100500;
-
     // create client list
-    std::vector<std::pair<ProtocolId, ShmClient>> list;
+    std::vector<ShmClient> list;
 
     // create C SHM Client
     auto client = ShmClient(std::make_unique<TestShmClient>());
     ASSERT_VALID(client);
 
     // add client to the list
-    list.push_back(std::make_pair(id, std::move(client)));
+    list.push_back(std::move(client));
     ASSERT_NULL(client);
 
     // create client storage from the list

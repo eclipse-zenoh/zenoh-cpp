@@ -50,7 +50,7 @@ class ShmProvider : public Owned<::z_owned_shm_provider_t> {
     friend class AllocLayout;
 
    protected:
-    ShmProvider(zenoh::detail::null_object_t) : Owned(nullptr) {};
+    ShmProvider(zenoh::detail::null_object_t) : Owned(nullptr) {}
 
    public:
     BufLayoutAllocResult alloc(size_t size) const {
@@ -151,8 +151,7 @@ class CppShmProvider : public ShmProvider {
     /// @name Constructors
 
     /// @brief Create a new CPP-defined ShmProvider.
-    CppShmProvider(std::unique_ptr<CppShmProviderBackend> backend)
-        : ShmProvider(zenoh::detail::null_object) {
+    CppShmProvider(std::unique_ptr<CppShmProviderBackend> backend) : ShmProvider(zenoh::detail::null_object) {
         // init context
         zc_context_t context = {backend.release(),
                                 &shm::provider_backend::closures::_z_cpp_shm_provider_backend_drop_fn};
@@ -172,8 +171,7 @@ class CppShmProvider : public ShmProvider {
     }
 
     /// @brief Create a new CPP-defined threadsafe ShmProvider.
-    CppShmProvider(std::unique_ptr<CppShmProviderBackendThreadsafe> backend)
-        : ShmProvider(zenoh::detail::null_object) {
+    CppShmProvider(std::unique_ptr<CppShmProviderBackendThreadsafe> backend) : ShmProvider(zenoh::detail::null_object) {
         // init context
         ::zc_threadsafe_context_t context = {{backend.release()},
                                              &shm::provider_backend::closures::_z_cpp_shm_provider_backend_drop_fn};

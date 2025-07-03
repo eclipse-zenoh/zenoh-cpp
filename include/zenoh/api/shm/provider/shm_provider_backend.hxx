@@ -14,12 +14,12 @@
 
 #pragma once
 
+#include <memory>
+
 #include "../../base.hxx"
 #include "../../interop.hxx"
 #include "chunk.hxx"
 #include "types.hxx"
-
-#include <memory>
 
 namespace zenoh {
 
@@ -30,16 +30,9 @@ class CppShmProviderBackendIface {
     virtual size_t defragment() = 0;
     virtual size_t available() const = 0;
     virtual void layout_for(MemoryLayout &layout) = 0;
-    virtual ProtocolId id() = 0;
+    virtual ProtocolId id() const = 0;
     virtual ~CppShmProviderBackendIface() = default;
 };
-
-template<class Derived>
-class CppShmSegment: public std::enable_shared_from_this<Derived> {
-public:
-    virtual ~CppShmSegment() = default;
-};
-
 
 class CppShmProviderBackend : public CppShmProviderBackendIface {};
 

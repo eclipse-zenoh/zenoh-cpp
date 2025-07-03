@@ -31,8 +31,7 @@ class PosixShmProvider : public ShmProvider {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     PosixShmProvider(std::size_t size, ZResult* err = nullptr) : ShmProvider(zenoh::detail::null_object) {
-        __ZENOH_RESULT_CHECK(::z_posix_shm_provider_new(&this->_0, size), err,
-                             "Failed to create POSIX SHM provider");
+        __ZENOH_RESULT_CHECK(::z_posix_shm_provider_new(&this->_0, size), err, "Failed to create POSIX SHM provider");
     }
 
     /// @brief Create a new PosixShmProvider.
