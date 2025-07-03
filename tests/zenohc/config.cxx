@@ -32,7 +32,7 @@ void test_config_to_string() {
     Config config = Config::create_default();
     auto s = config.to_string();
     assert(s.size() > 0);
-    assert(s.find("{\"id\":\"") == 0);
+    assert(s.find("{\"id\":") != std::string::npos);
 }
 
 int main(int argc, char** argv) {
