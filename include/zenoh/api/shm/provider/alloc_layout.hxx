@@ -52,10 +52,17 @@ class AllocLayout : public Owned<::z_owned_alloc_layout_t> {
     /// @name Constructors
 
     /// @brief Create a new Alloc Layout for SHM Provider.
+    AllocLayout(const ShmProvider& owner_provider, std::size_t size, ZResult* err = nullptr) : Owned(nullptr) {
+        __ZENOH_RESULT_CHECK(::z_alloc_layout_new(&this->_0, interop::as_loaned_c_ptr(owner_provider), size), err,
+                             "Failed to create SHM Alloc Layout");
+    }
+
+    /// @brief Create a new Alloc Layout for SHM Provider.
     AllocLayout(const ShmProvider& owner_provider, std::size_t size, AllocAlignment alignment, ZResult* err = nullptr)
         : Owned(nullptr) {
-        __ZENOH_RESULT_CHECK(::z_alloc_layout_new(&this->_0, interop::as_loaned_c_ptr(owner_provider), size, alignment),
-                             err, "Failed to create SHM Alloc Layout");
+        __ZENOH_RESULT_CHECK(
+            ::z_alloc_layout_with_alignment_new(&this->_0, interop::as_loaned_c_ptr(owner_provider), size, alignment),
+            err, "Failed to create SHM Alloc Layout");
     }
 
     /// @name Methods

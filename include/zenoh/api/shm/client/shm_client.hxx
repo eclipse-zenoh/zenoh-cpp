@@ -27,6 +27,7 @@ namespace zenoh {
 class CppShmClient {
    public:
     virtual std::unique_ptr<CppShmSegment> attach(SegmentId segment_id) = 0;
+    virtual ProtocolId id() const = 0;
     virtual ~CppShmClient() = default;
 };
 
@@ -42,6 +43,8 @@ inline bool _z_cpp_shm_client_attach_fn(struct z_shm_segment_t* out_segment, z_s
     }
     return false;
 }
+
+inline ProtocolId _z_cpp_shm_client_id_fn(void* context) { return static_cast<CppShmClient*>(context)->id(); }
 
 inline void _z_cpp_shm_client_drop_fn(void* context) { delete static_cast<CppShmClient*>(context); }
 }
@@ -59,7 +62,10 @@ class ShmClient : public Owned<::z_owned_shm_client_t> {
     ShmClient(std::unique_ptr<CppShmClient>&& cpp_interface) : Owned(nullptr) {
         zc_threadsafe_context_t context = {{cpp_interface.release()},
                                            &shm::client::closures::_z_cpp_shm_client_drop_fn};
-        zc_shm_client_callbacks_t callbacks = {&shm::client::closures::_z_cpp_shm_client_attach_fn};
+        zc_shm_client_callbacks_t callbacks = {
+            &shm::client::closures::_z_cpp_shm_client_attach_fn,
+            &shm::client::closures::_z_cpp_shm_client_id_fn,
+        };
         z_shm_client_new(&this->_0, context, callbacks);
     }
 };

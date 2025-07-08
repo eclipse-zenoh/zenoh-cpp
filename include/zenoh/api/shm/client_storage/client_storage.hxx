@@ -47,9 +47,9 @@ class ShmClientStorage : public Owned<::z_owned_shm_client_storage_t> {
     /// clients
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    template <class Container, typename _T = std::enable_if<
-                                   std::is_same<typename std::iterator_traits<typename Container::iterator>::value_type,
-                                                std::pair<ProtocolId, ShmClient>>::value>>
+    template <class Container,
+              typename _T = std::enable_if<std::is_same<
+                  typename std::iterator_traits<typename Container::iterator>::value_type, ShmClient>::value>>
     ShmClientStorage(Container&& container, bool add_default_client_set, ZResult* err = nullptr)
         : ShmClientStorage(std::make_move_iterator(container.begin()), std::make_move_iterator(container.end()),
                            add_default_client_set, err) {}
@@ -61,8 +61,8 @@ class ShmClientStorage : public Owned<::z_owned_shm_client_storage_t> {
     /// clients
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    template <class I, typename _T = std::enable_if<std::is_same<typename std::iterator_traits<I>::value_type,
-                                                                 std::pair<ProtocolId, ShmClient>>::value>>
+    template <class I, typename _T =
+                           std::enable_if<std::is_same<typename std::iterator_traits<I>::value_type, ShmClient>::value>>
     ShmClientStorage(std::move_iterator<I> begin, std::move_iterator<I> end, bool add_default_client_set,
                      ZResult* err = nullptr)
         : Owned(nullptr) {
@@ -71,9 +71,8 @@ class ShmClientStorage : public Owned<::z_owned_shm_client_storage_t> {
 
         // fill list with clients
         for (std::move_iterator<I> it = begin; it != end; ++it) {
-            __ZENOH_RESULT_CHECK(
-                zc_shm_client_list_add_client(interop::as_loaned_c_ptr(list), it->first, z_move(it->second._0)), err,
-                "Failed to form list of SHM clients");
+            __ZENOH_RESULT_CHECK(zc_shm_client_list_add_client(interop::as_loaned_c_ptr(list), z_move(it->_0)), err,
+                                 "Failed to form list of SHM clients");
         }
 
         // create client storage from the list

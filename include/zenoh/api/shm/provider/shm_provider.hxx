@@ -50,45 +50,82 @@ class ShmProvider : public Owned<::z_owned_shm_provider_t> {
     friend class AllocLayout;
 
    protected:
-    ShmProvider(zenoh::detail::null_object_t) : Owned(nullptr){};
+    ShmProvider(zenoh::detail::null_object_t) : Owned(nullptr) {}
 
    public:
+    BufLayoutAllocResult alloc(size_t size) const {
+        z_buf_layout_alloc_result_t result;
+        ::z_shm_provider_alloc(&result, interop::as_loaned_c_ptr(*this), size);
+        return Converters::from(result);
+    }
+
     BufLayoutAllocResult alloc(size_t size, AllocAlignment alignment) const {
         z_buf_layout_alloc_result_t result;
-        ::z_shm_provider_alloc(&result, interop::as_loaned_c_ptr(*this), size, alignment);
+        ::z_shm_provider_alloc_aligned(&result, interop::as_loaned_c_ptr(*this), size, alignment);
+        return Converters::from(result);
+    }
+
+    BufLayoutAllocResult alloc_gc(size_t size) const {
+        z_buf_layout_alloc_result_t result;
+        ::z_shm_provider_alloc_gc(&result, interop::as_loaned_c_ptr(*this), size);
         return Converters::from(result);
     }
 
     BufLayoutAllocResult alloc_gc(size_t size, AllocAlignment alignment) const {
         z_buf_layout_alloc_result_t result;
-        ::z_shm_provider_alloc_gc(&result, interop::as_loaned_c_ptr(*this), size, alignment);
+        ::z_shm_provider_alloc_gc_aligned(&result, interop::as_loaned_c_ptr(*this), size, alignment);
+        return Converters::from(result);
+    }
+
+    BufLayoutAllocResult alloc_gc_defrag(size_t size) const {
+        z_buf_layout_alloc_result_t result;
+        ::z_shm_provider_alloc_gc_defrag(&result, interop::as_loaned_c_ptr(*this), size);
         return Converters::from(result);
     }
 
     BufLayoutAllocResult alloc_gc_defrag(size_t size, AllocAlignment alignment) const {
         z_buf_layout_alloc_result_t result;
-        ::z_shm_provider_alloc_gc_defrag(&result, interop::as_loaned_c_ptr(*this), size, alignment);
+        ::z_shm_provider_alloc_gc_defrag_aligned(&result, interop::as_loaned_c_ptr(*this), size, alignment);
+        return Converters::from(result);
+    }
+
+    BufLayoutAllocResult alloc_gc_defrag_dealloc(size_t size) const {
+        z_buf_layout_alloc_result_t result;
+        ::z_shm_provider_alloc_gc_defrag_dealloc(&result, interop::as_loaned_c_ptr(*this), size);
         return Converters::from(result);
     }
 
     BufLayoutAllocResult alloc_gc_defrag_dealloc(size_t size, AllocAlignment alignment) const {
         z_buf_layout_alloc_result_t result;
-        ::z_shm_provider_alloc_gc_defrag_dealloc(&result, interop::as_loaned_c_ptr(*this), size, alignment);
+        ::z_shm_provider_alloc_gc_defrag_dealloc_aligned(&result, interop::as_loaned_c_ptr(*this), size, alignment);
+        return Converters::from(result);
+    }
+
+    BufLayoutAllocResult alloc_gc_defrag_blocking(size_t size) const {
+        z_buf_layout_alloc_result_t result;
+        ::z_shm_provider_alloc_gc_defrag_blocking(&result, interop::as_loaned_c_ptr(*this), size);
         return Converters::from(result);
     }
 
     BufLayoutAllocResult alloc_gc_defrag_blocking(size_t size, AllocAlignment alignment) const {
         z_buf_layout_alloc_result_t result;
-        ::z_shm_provider_alloc_gc_defrag_blocking(&result, interop::as_loaned_c_ptr(*this), size, alignment);
+        ::z_shm_provider_alloc_gc_defrag_blocking_aligned(&result, interop::as_loaned_c_ptr(*this), size, alignment);
         return Converters::from(result);
+    }
+
+    ZResult alloc_gc_defrag_async(size_t size, std::unique_ptr<ShmProviderAsyncInterface> receiver) const {
+        auto rcv = receiver.release();
+        ::zc_threadsafe_context_t context = {{rcv}, &ShmProviderAsyncInterface::drop};
+        return ::z_shm_provider_alloc_gc_defrag_async(&rcv->_result, interop::as_loaned_c_ptr(*this), size, context,
+                                                      ShmProviderAsyncInterface::result);
     }
 
     ZResult alloc_gc_defrag_async(size_t size, AllocAlignment alignment,
                                   std::unique_ptr<ShmProviderAsyncInterface> receiver) const {
         auto rcv = receiver.release();
         ::zc_threadsafe_context_t context = {{rcv}, &ShmProviderAsyncInterface::drop};
-        return ::z_shm_provider_alloc_gc_defrag_async(&rcv->_result, interop::as_loaned_c_ptr(*this), size, alignment,
-                                                      context, ShmProviderAsyncInterface::result);
+        return ::z_shm_provider_alloc_gc_defrag_aligned_async(&rcv->_result, interop::as_loaned_c_ptr(*this), size,
+                                                              alignment, context, ShmProviderAsyncInterface::result);
     }
 
     void defragment() const { ::z_shm_provider_defragment(interop::as_loaned_c_ptr(*this)); }
@@ -114,8 +151,7 @@ class CppShmProvider : public ShmProvider {
     /// @name Constructors
 
     /// @brief Create a new CPP-defined ShmProvider.
-    CppShmProvider(ProtocolId id, std::unique_ptr<CppShmProviderBackend> backend)
-        : ShmProvider(zenoh::detail::null_object) {
+    CppShmProvider(std::unique_ptr<CppShmProviderBackend> backend) : ShmProvider(zenoh::detail::null_object) {
         // init context
         zc_context_t context = {backend.release(),
                                 &shm::provider_backend::closures::_z_cpp_shm_provider_backend_drop_fn};
@@ -126,15 +162,16 @@ class CppShmProvider : public ShmProvider {
             &shm::provider_backend::closures::_z_cpp_shm_provider_backend_free_fn,
             &shm::provider_backend::closures::_z_cpp_shm_provider_backend_defragment_fn,
             &shm::provider_backend::closures::_z_cpp_shm_provider_backend_available_fn,
-            &shm::provider_backend::closures::_z_cpp_shm_provider_backend_layout_for_fn};
+            &shm::provider_backend::closures::_z_cpp_shm_provider_backend_layout_for_fn,
+            &shm::provider_backend::closures::_z_cpp_shm_provider_backend_id_fn,
+        };
 
         // create provider
-        ::z_shm_provider_new(&this->_0, id, context, callbacks);
+        ::z_shm_provider_new(&this->_0, context, callbacks);
     }
 
     /// @brief Create a new CPP-defined threadsafe ShmProvider.
-    CppShmProvider(ProtocolId id, std::unique_ptr<CppShmProviderBackendThreadsafe> backend)
-        : ShmProvider(zenoh::detail::null_object) {
+    CppShmProvider(std::unique_ptr<CppShmProviderBackendThreadsafe> backend) : ShmProvider(zenoh::detail::null_object) {
         // init context
         ::zc_threadsafe_context_t context = {{backend.release()},
                                              &shm::provider_backend::closures::_z_cpp_shm_provider_backend_drop_fn};
@@ -145,10 +182,12 @@ class CppShmProvider : public ShmProvider {
             &shm::provider_backend::closures::_z_cpp_shm_provider_backend_free_fn,
             &shm::provider_backend::closures::_z_cpp_shm_provider_backend_defragment_fn,
             &shm::provider_backend::closures::_z_cpp_shm_provider_backend_available_fn,
-            &shm::provider_backend::closures::_z_cpp_shm_provider_backend_layout_for_fn};
+            &shm::provider_backend::closures::_z_cpp_shm_provider_backend_layout_for_fn,
+            &shm::provider_backend::closures::_z_cpp_shm_provider_backend_id_fn,
+        };
 
         // create provider
-        ::z_shm_provider_threadsafe_new(&this->_0, id, context, callbacks);
+        ::z_shm_provider_threadsafe_new(&this->_0, context, callbacks);
     }
 };
 
