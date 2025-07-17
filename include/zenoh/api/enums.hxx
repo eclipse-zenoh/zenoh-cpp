@@ -55,7 +55,6 @@ typedef ::z_consolidation_mode_t ConsolidationMode;
 typedef ::z_reliability_t Reliability;
 #endif
 
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 ///  Congestion control values.
 ///
 ///   Values:
@@ -65,19 +64,11 @@ typedef ::z_reliability_t Reliability;
 ///    congestion control
 ///    - **Z_CONGESTION_CONTROL_BLOCK_FIRST**: Defines congestion control as "block first". Messages except the first
 ///    one are dropped in case of congestion control
+///    @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+///    release.
+///    @note Zenoh-c only.
 ///
 typedef ::z_congestion_control_t CongestionControl;
-#else
-///  Congestion control values.
-///
-///   Values:
-///    - **Z_CONGESTION_CONTROL_BLOCK**: Defines congestion control as "block". Messages are not dropped in case of
-///       congestion control
-///    - **Z_CONGESTION_CONTROL_DROP**: Defines congestion control as "drop". Messages are dropped in case of
-///    congestion control
-///
-typedef ::z_congestion_control_t CongestionControl;
-#endif
 
 /// Priority of Zenoh messages values.
 ///
