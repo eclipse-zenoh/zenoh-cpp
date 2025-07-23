@@ -30,13 +30,13 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        shm: [FALSE, TRUE]
-        unstable: [FALSE, TRUE]
+        shm: ["FALSE", "TRUE"]
+        unstable: ["FALSE", "TRUE"]
         build_type: [Debug, Release]
         exclude:
           - os: windows-latest
             build_type: Debug
-            shm: TRUE
+            shm: "TRUE"
 
     steps:
       - name: Clone this repository
