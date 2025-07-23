@@ -64,8 +64,8 @@ typedef ::z_reliability_t Reliability;
 ///      congestion control
 ///    - **Z_CONGESTION_CONTROL_BLOCK_FIRST**: Defines congestion control as "block first". Messages except the first
 ///      one are dropped in case of congestion control
-///  @warning **Z_CONGESTION_CONTROL_BLOCK_FIRST** has been marked as unstable: it works as advertised, but it may be changed in a future
-///      release.
+///  @warning **Z_CONGESTION_CONTROL_BLOCK_FIRST** has been marked as unstable: it works as advertised, but it may be
+///      changed in a future release.
 ///  @note **Z_CONGESTION_CONTROL_BLOCK_FIRST** is Zenoh-c only.
 ///
 typedef ::z_congestion_control_t CongestionControl;
