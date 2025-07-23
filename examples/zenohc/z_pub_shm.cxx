@@ -34,9 +34,7 @@ int _main(int argc, char **argv) {
         ConfigCliArgParser(argc, argv)
             .named_value({"k", "key"}, "KEY_EXPRESSION", "Key expression to publish to (string)", default_keyexpr)
             .named_value({"p", "payload"}, "PAYLOAD", "Payload to publish (string)", default_value)
-#if defined(Z_FEATURE_UNSTABLE_API)
             .named_flag({"add-matching-listener"}, "Add matching listener")
-#endif
             .run();
 
     auto keyexpr = args.value("key");
@@ -48,7 +46,6 @@ int _main(int argc, char **argv) {
     std::cout << "Declaring Publisher on '" << keyexpr << "'..." << std::endl;
     auto pub = session.declare_publisher(KeyExpr(keyexpr));
 
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     if (args.flag("add-matching-listener")) {
         pub.declare_background_matching_listener(
             [](const MatchingStatus &s) {
@@ -60,7 +57,6 @@ int _main(int argc, char **argv) {
             },
             closures::none);
     }
-#endif
 
     std::cout << "Publisher on '" << keyexpr << "' declared" << std::endl;
 

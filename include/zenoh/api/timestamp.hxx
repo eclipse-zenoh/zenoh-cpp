@@ -30,8 +30,6 @@ class Timestamp : public Copyable<::z_timestamp_t> {
     /// @return time in NTP64 format.
     uint64_t get_time() const { return ::z_timestamp_ntp64_time(&this->inner()); }
 
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
     /// @brief Get the unique id of the timestamp.
     /// @return session id associated with this timestamp.
     Id get_id() const { return interop::into_copyable_cpp_obj<Id>(::z_timestamp_id(&this->inner())); }
