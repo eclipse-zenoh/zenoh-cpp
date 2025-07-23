@@ -23,7 +23,7 @@
 #include "interop.hxx"
 #include "keyexpr.hxx"
 #include "timestamp.hxx"
-#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
+#if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
 #include "matching.hxx"
 #endif
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -48,11 +48,10 @@ class Publisher : public Owned<::z_owned_publisher_t> {
         std::optional<Encoding> encoding = {};
         /// @brief The timestamp of this message.
         std::optional<Timestamp> timestamp = {};
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The source info of this message.
-        /// @note Zenoh-c only.
         std::optional<SourceInfo> source_info = {};
 #endif
         /// @brief The attachment to attach to the publication.
@@ -69,7 +68,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
             ::z_publisher_put_options_t opts;
             z_publisher_put_options_default(&opts);
             opts.encoding = interop::as_moved_c_ptr(this->encoding);
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API)
             opts.source_info = interop::as_moved_c_ptr(this->source_info);
 #endif
             opts.attachment = interop::as_moved_c_ptr(this->attachment);
@@ -147,9 +146,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     }
 #endif
 
-#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
+#if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
     /// @brief Construct matching listener, registering a callback for notifying subscribers matching with a given
     /// publisher.
     ///
@@ -159,7 +156,6 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``MatchingListener`` object.
-    /// @note Zenoh-c only.
     template <class C, class D>
     [[nodiscard]] MatchingListener<void> declare_matching_listener(C&& on_status_change, D&& on_drop,
                                                                    ZResult* err = nullptr) const {
@@ -182,8 +178,6 @@ class Publisher : public Owned<::z_owned_publisher_t> {
         return m;
     }
 
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
     /// @brief Construct matching listener, delivering notification on publisher status change through a streaming
     /// handler.
     /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
@@ -192,7 +186,6 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``MatchingListener`` object.
-    /// @note Zenoh-c only.
     template <class Channel>
     [[nodiscard]] MatchingListener<typename Channel::template HandlerType<MatchingStatus>> declare_matching_listener(
         Channel channel, ZResult* err = nullptr) const {
@@ -206,8 +199,6 @@ class Publisher : public Owned<::z_owned_publisher_t> {
             std::move(m), std::move(cb_handler_pair.second));
     }
 
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
     /// @brief Declare matching listener, registering a callback for notifying subscribers matching with a given
     /// publisher. The callback will be run in the background until the corresponding publisher is destroyed.
     ///
@@ -216,7 +207,6 @@ class Publisher : public Owned<::z_owned_publisher_t> {
     /// @param on_drop the callable that will be called once publisher is destroyed or undeclared.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @note Zenoh-c only.
     template <class C, class D>
     void declare_background_matching_listener(C&& on_status_change, D&& on_drop, ZResult* err = nullptr) const {
         static_assert(std::is_invocable_r<void, C, const MatchingStatus&>::value,
@@ -236,12 +226,9 @@ class Publisher : public Owned<::z_owned_publisher_t> {
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare background Matching Listener");
     }
 
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
     /// @brief Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @note Zenoh-c only.
     MatchingStatus get_matching_status(ZResult* err = nullptr) const {
         ::z_matching_status_t m;
         ZResult res = ::z_publisher_get_matching_status(interop::as_loaned_c_ptr(*this), &m);

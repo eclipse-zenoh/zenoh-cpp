@@ -30,7 +30,7 @@
 #include "queryable.hxx"
 #include "subscriber.hxx"
 #include "timestamp.hxx"
-#if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1) && defined(Z_FEATURE_UNSTABLE_API)
+#if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1)
 #include "querier.hxx"
 #endif
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
@@ -184,21 +184,23 @@ class Session : public Owned<::z_owned_session_t> {
         std::optional<Bytes> payload = {};
         /// @brief  An optional encoding of the query payload and/or attachment.
         std::optional<Encoding> encoding = {};
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The source info for the query.
         std::optional<SourceInfo> source_info = {};
 
+#if defined(ZENOHCXX_ZENOHC)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         ///
         /// @brief The accepted replies for the query.
         /// @note Zenoh-c only.
         ReplyKeyExpr accept_replies = ::zc_reply_keyexpr_default();
+#endif
+#endif
 
-        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-        /// release.
+#if defined(ZENOHCXX_ZENOHC)
         /// @brief Allowed destination.
         /// @note Zenoh-c only.
         Locality allowed_destination = ::zc_locality_default();
@@ -213,6 +215,32 @@ class Session : public Owned<::z_owned_session_t> {
 
         /// @brief Create default option settings.
         static GetOptions create_default() { return {}; }
+
+       private:
+        friend struct interop::detail::Converter;
+        ::z_get_options_t to_c_opts() {
+            ::z_get_options_t opts;
+            z_get_options_default(&opts);
+            opts.target = this->target;
+            opts.consolidation = *interop::as_copyable_c_ptr(this->consolidation);
+            opts.congestion_control = this->congestion_control;
+            opts.priority = this->priority;
+            opts.is_express = this->is_express;
+            opts.payload = interop::as_moved_c_ptr(this->payload);
+            opts.encoding = interop::as_moved_c_ptr(this->encoding);
+#if defined(Z_FEATURE_UNSTABLE_API)
+            opts.source_info = interop::as_moved_c_ptr(this->source_info);
+#endif
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+            opts.accept_replies = this->accept_replies;
+#endif
+#if defined(ZENOHCXX_ZENOHC)
+            opts.allowed_destination = this->allowed_destination;
+#endif
+            opts.attachment = interop::as_moved_c_ptr(this->attachment);
+            opts.timeout_ms = this->timeout_ms;
+            return opts;
+        }
     };
 
     /// @brief Query data from the matching queryables in the system. Replies are provided through a callback function.
@@ -236,22 +264,7 @@ class Session : public Owned<::z_owned_session_t> {
         using ClosureType = typename detail::closures::Closure<Cval, Dval, void, Reply&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_reply), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_reply_call, detail::closures::_zenoh_on_drop, closure);
-        ::z_get_options_t opts;
-        z_get_options_default(&opts);
-        opts.target = options.target;
-        opts.consolidation = *interop::as_copyable_c_ptr(options.consolidation);
-        opts.congestion_control = options.congestion_control;
-        opts.priority = options.priority;
-        opts.is_express = options.is_express;
-        opts.payload = interop::as_moved_c_ptr(options.payload);
-        opts.encoding = interop::as_moved_c_ptr(options.encoding);
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-        opts.source_info = interop::as_moved_c_ptr(options.source_info);
-        opts.accept_replies = options.accept_replies;
-        opts.allowed_destination = options.allowed_destination;
-#endif
-        opts.attachment = interop::as_moved_c_ptr(options.attachment);
-        opts.timeout_ms = options.timeout_ms;
+        ::z_get_options_t opts = interop::detail::Converter::to_c_opts(options);
 
         __ZENOH_RESULT_CHECK(::z_get(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr),
                                      parameters.c_str(), ::z_move(c_closure), &opts),
@@ -274,22 +287,7 @@ class Session : public Owned<::z_owned_session_t> {
                                                       GetOptions&& options = GetOptions::create_default(),
                                                       ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Reply>();
-        ::z_get_options_t opts;
-        z_get_options_default(&opts);
-        opts.target = options.target;
-        opts.consolidation = *interop::as_copyable_c_ptr(options.consolidation);
-        opts.congestion_control = options.congestion_control;
-        opts.priority = options.priority;
-        opts.is_express = options.is_express;
-        opts.payload = interop::as_moved_c_ptr(options.payload);
-        opts.encoding = interop::as_moved_c_ptr(options.encoding);
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-        opts.source_info = interop::as_moved_c_ptr(options.source_info);
-        opts.accept_replies = options.accept_replies;
-        opts.allowed_destination = options.allowed_destination;
-#endif
-        opts.attachment = interop::as_moved_c_ptr(options.attachment);
-        opts.timeout_ms = options.timeout_ms;
+        ::z_get_options_t opts = interop::detail::Converter::to_c_opts(options);
 
         ZResult res = ::z_get(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr), parameters.c_str(),
                               ::z_move(cb_handler_pair.first), &opts);
@@ -306,13 +304,10 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief The completeness of the Queryable.
         bool complete = false;
 
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-        /// release.
+#if defined(ZENOHCXX_ZENOHC)
         /// Restrict the matching requests that will be received by this Queryable to the ones
         /// that have the compatible allowed_destination.
         /// @note Zenoh-c only.
-
         Locality allowed_origin = ::zc_locality_default();
 #endif
         /// @name Methods
@@ -326,7 +321,7 @@ class Session : public Owned<::z_owned_session_t> {
             ::z_queryable_options_t opts;
             z_queryable_options_default(&opts);
             opts.complete = this->complete;
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(ZENOHCXX_ZENOHC)
             opts.allowed_origin = this->allowed_origin;
 #endif
             return opts;
@@ -422,13 +417,10 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Options to be passed when declaring a ``Subscriber``.
     struct SubscriberOptions {
         /// @name Fields
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-        /// release.
+#if defined(ZENOHCXX_ZENOHC)
         /// Restrict the matching publications that will be received by this Subscribers to the ones
         /// that have the compatible allowed_destination.
         /// @note Zenoh-c only.
-
         Locality allowed_origin = ::zc_locality_default();
 #endif
         /// @name Methods
@@ -441,7 +433,7 @@ class Session : public Owned<::z_owned_session_t> {
         ::z_subscriber_options_t to_c_opts() {
             ::z_subscriber_options_t opts;
             z_subscriber_options_default(&opts);
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(ZENOHCXX_ZENOHC)
             opts.allowed_origin = this->allowed_origin;
 #endif
             return opts;
@@ -592,9 +584,7 @@ class Session : public Owned<::z_owned_session_t> {
         CongestionControl congestion_control = ::z_internal_congestion_control_default_push();
         /// @brief Whether Zenoh will NOT wait to batch this message with others to reduce the bandwith.
         bool is_express = false;
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-        /// release.
+#if defined(ZENOHCXX_ZENOHC)
         /// @brief Allowed destination.
         /// @note Zenoh-c only.
         Locality allowed_destination = ::zc_locality_default();
@@ -609,11 +599,10 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief The put operation reliability.
         Reliability reliability = z_reliability_default();
 #endif
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The source info of this message.
-        /// @note Zenoh-c only.
         std::optional<SourceInfo> source_info = {};
 #endif
         /// @brief An optional attachment to the message.
@@ -641,10 +630,10 @@ class Session : public Owned<::z_owned_session_t> {
         opts.is_express = options.is_express;
 #if defined(Z_FEATURE_UNSTABLE_API)
         opts.reliability = options.reliability;
-#endif
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-        opts.allowed_destination = options.allowed_destination;
         opts.source_info = interop::as_moved_c_ptr(options.source_info);
+#endif
+#if defined(ZENOHCXX_ZENOHC)
+        opts.allowed_destination = options.allowed_destination;
 #endif
         opts.attachment = interop::as_moved_c_ptr(options.attachment);
         opts.timestamp = interop::as_copyable_c_ptr(options.timestamp);
@@ -669,9 +658,7 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief The publisher reliability.
         Reliability reliability = z_reliability_default();
 #endif
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-        /// release.
+#if defined(ZENOHCXX_ZENOHC)
         /// @brief Allowed destination.
         /// @note Zenoh-c only.
         Locality allowed_destination = ::zc_locality_default();
@@ -695,7 +682,7 @@ class Session : public Owned<::z_owned_session_t> {
 #if defined(Z_FEATURE_UNSTABLE_API)
             opts.reliability = this->reliability;
 #endif
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(ZENOHCXX_ZENOHC)
             opts.allowed_destination = this->allowed_destination;
 #endif
             opts.encoding = interop::as_moved_c_ptr(this->encoding);
@@ -721,9 +708,7 @@ class Session : public Owned<::z_owned_session_t> {
     }
 #endif
 
-#if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1) && defined(Z_FEATURE_UNSTABLE_API)
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
+#if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1)
     /// @brief Options to be passed when declaring a ``Querier``.
     struct QuerierOptions {
         /// @name Fields
@@ -745,9 +730,8 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief The accepted replies for the querier queries.
         /// @note Zenoh-c only.
         ReplyKeyExpr accept_replies = ::zc_reply_keyexpr_default();
-
-        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-        /// release.
+#endif
+#if defined(ZENOHCXX_ZENOHC)
         /// @brief Allowed destination for querier queries.
         /// @note Zenoh-c only.
         Locality allowed_destination = ::zc_locality_default();
@@ -763,8 +747,6 @@ class Session : public Owned<::z_owned_session_t> {
         static QuerierOptions create_default() { return {}; }
     };
 
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
     /// @brief Create a ``Querier`` object to send queries to matching ``Queryable`` objects.
     /// @param key_expr the key expression to match the queryables.
     /// @param options options passed to querier declaration.
@@ -783,6 +765,8 @@ class Session : public Owned<::z_owned_session_t> {
         ;
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         opts.accept_replies = options.accept_replies;
+#endif
+#if defined(ZENOHCXX_ZENOHC)
         opts.allowed_destination = options.allowed_destination;
 #endif
         opts.timeout_ms = options.timeout_ms;

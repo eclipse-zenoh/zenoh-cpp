@@ -22,7 +22,7 @@
 #include "interop.hxx"
 #include "keyexpr.hxx"
 #include "timestamp.hxx"
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API)
 #include "source_info.hxx"
 #endif
 
@@ -97,11 +97,10 @@ class Sample : public Owned<::z_owned_sample_t> {
     /// @brief Get the express setting this sample was sent with.
     /// @return ``CongestionControl`` value.
     bool get_express() const { return ::z_sample_express(interop::as_loaned_c_ptr(*this)); }
-#if defined(ZENOHCXX) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Get the source info of this sample.
-    /// @note Zenoh-c only.
     const SourceInfo& get_source_info() const {
         return interop::as_owned_cpp_ref<SourceInfo>(::z_sample_source_info(interop::as_loaned_c_ptr(*this)));
     }
