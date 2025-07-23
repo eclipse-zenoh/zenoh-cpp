@@ -26,7 +26,7 @@
 #if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
 #include "matching.hxx"
 #endif
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 #include "source_info.hxx"
 #endif
 #include <optional>
@@ -48,10 +48,11 @@ class Querier : public Owned<::z_owned_querier_t> {
         std::optional<Bytes> payload = {};
         /// @brief  An optional encoding of the query payload and/or attachment.
         std::optional<Encoding> encoding = {};
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The source info for the query.
+        /// @note Zenoh-c only.
         std::optional<SourceInfo> source_info = {};
 #endif
 
@@ -88,7 +89,7 @@ class Querier : public Owned<::z_owned_querier_t> {
         z_querier_get_options_default(&opts);
         opts.payload = interop::as_moved_c_ptr(options.payload);
         opts.encoding = interop::as_moved_c_ptr(options.encoding);
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         opts.source_info = interop::as_moved_c_ptr(options.source_info);
 #endif
         opts.attachment = interop::as_moved_c_ptr(options.attachment);
@@ -116,7 +117,7 @@ class Querier : public Owned<::z_owned_querier_t> {
         z_querier_get_options_default(&opts);
         opts.payload = interop::as_moved_c_ptr(options.payload);
         opts.encoding = interop::as_moved_c_ptr(options.encoding);
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         opts.source_info = interop::as_moved_c_ptr(options.source_info);
 #endif
         opts.attachment = interop::as_moved_c_ptr(options.attachment);
