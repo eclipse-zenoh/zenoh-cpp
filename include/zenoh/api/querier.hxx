@@ -13,7 +13,7 @@
 
 #pragma once
 
-#if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1) && defined(Z_FEATURE_UNSTABLE_API)
+#if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1)
 
 #include "../detail/closures_concrete.hxx"
 #include "base.hxx"
@@ -23,10 +23,10 @@
 #include "interop.hxx"
 #include "keyexpr.hxx"
 #include "reply.hxx"
-#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
+#if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
 #include "matching.hxx"
 #endif
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
 #include "source_info.hxx"
 #endif
 #include <optional>
@@ -34,8 +34,6 @@
 namespace zenoh {
 class Session;
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-/// release.
 /// A Zenoh Querier. Constructed by ``Session::declare_querier`` method. Queriers allow to send queries to a queryable.
 class Querier : public Owned<::z_owned_querier_t> {
     Querier(zenoh::detail::null_object_t) : Owned(nullptr){};
@@ -54,6 +52,7 @@ class Querier : public Owned<::z_owned_querier_t> {
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The source info for the query.
+        /// @note Zenoh-c only.
         std::optional<SourceInfo> source_info = {};
 #endif
 
@@ -152,9 +151,7 @@ class Querier : public Owned<::z_owned_querier_t> {
     }
 #endif
 
-#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
+#if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_MATCHING == 1)
     /// @brief Construct matching listener, registering a callback for notifying queryables matching with a given
     /// querier's key expression and target.
     ///
@@ -164,7 +161,6 @@ class Querier : public Owned<::z_owned_querier_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``MatchingListener`` object.
-    /// @note Zenoh-c only.
     template <class C, class D>
     [[nodiscard]] MatchingListener<void> declare_matching_listener(C&& on_status_change, D&& on_drop,
                                                                    ZResult* err = nullptr) const {
@@ -187,8 +183,6 @@ class Querier : public Owned<::z_owned_querier_t> {
         return m;
     }
 
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
     /// @brief Construct matching listener, delivering notification on querier status change through a streaming
     /// handler.
     /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
@@ -197,7 +191,6 @@ class Querier : public Owned<::z_owned_querier_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``MatchingListener`` object.
-    /// @note Zenoh-c only.
     template <class Channel>
     [[nodiscard]] MatchingListener<typename Channel::template HandlerType<MatchingStatus>> declare_matching_listener(
         Channel channel, ZResult* err = nullptr) const {
@@ -211,8 +204,6 @@ class Querier : public Owned<::z_owned_querier_t> {
             std::move(m), std::move(cb_handler_pair.second));
     }
 
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
     /// @brief Declare matching listener, registering a callback for notifying queryables matching with a given
     /// querier. The callback will be run in the background until the corresponding querier is destroyed.
     ///
@@ -221,7 +212,6 @@ class Querier : public Owned<::z_owned_querier_t> {
     /// @param on_drop the callable that will be called once querier is destroyed or undeclared.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @note Zenoh-c only.
     template <class C, class D>
     void declare_background_matching_listener(C&& on_status_change, D&& on_drop, ZResult* err = nullptr) const {
         static_assert(std::is_invocable_r<void, C, const MatchingStatus&>::value,
@@ -241,12 +231,9 @@ class Querier : public Owned<::z_owned_querier_t> {
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare background Matching Listener");
     }
 
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-    /// release.
     /// @brief Gets querier matching status - i.e. if there are any queryables matching its key expression.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @note Zenoh-c only.
     MatchingStatus get_matching_status(ZResult* err = nullptr) const {
         ::z_matching_status_t m;
         ZResult res = ::z_querier_get_matching_status(interop::as_loaned_c_ptr(*this), &m);

@@ -21,7 +21,6 @@
 namespace zenoh {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief The global unique id of a Zenoh entity.
-/// @note Zenoh-c only.
 class EntityGlobalId : public Copyable<::z_entity_global_id_t> {
     using Copyable::Copyable;
     friend struct interop::detail::Converter;
@@ -38,7 +37,6 @@ class EntityGlobalId : public Copyable<::z_entity_global_id_t> {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Informations on the Zenoh source.
-/// @note Zenoh-c only.
 class SourceInfo : public Owned<::z_owned_source_info_t> {
    public:
     /// @name Constructors

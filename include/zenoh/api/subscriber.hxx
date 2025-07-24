@@ -44,6 +44,7 @@ class SubscriberBase : public Owned<::z_owned_subscriber_t> {
     /// release.
     /// @brief Get the id of the subscriber.
     /// @return id of this subscriber.
+    /// @note Zenoh-c only.
     EntityGlobalId get_id() const {
         return interop::into_copyable_cpp_obj<EntityGlobalId>(::z_subscriber_id(interop::as_loaned_c_ptr(*this)));
     }

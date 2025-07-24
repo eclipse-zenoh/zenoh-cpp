@@ -128,9 +128,9 @@ class SessionExt {
 
         /// The key expression to be used for queries.
         std::optional<KeyExpr> query_keyexpr = {};
-#if defined(Z_FEATURE_UNSTABLE_API)
         /// The restriction for the matching publications that will be received by this publication cache.
         zenoh::Locality allowed_origin = ::zc_locality_default();
+#if defined(Z_FEATURE_UNSTABLE_API)
         /// The accepted replies for queries.
         zenoh::ReplyKeyExpr query_accept_replies = ::zc_reply_keyexpr_default();
 #endif
@@ -153,8 +153,8 @@ class SessionExt {
             ::ze_querying_subscriber_options_t opts;
             ze_querying_subscriber_options_default(&opts);
             opts.query_selector = zenoh::interop::as_loaned_c_ptr(this->query_keyexpr);
-#if defined(Z_FEATURE_UNSTABLE_API)
             opts.allowed_origin = this->allowed_origin;
+#if defined(Z_FEATURE_UNSTABLE_API)
             opts.query_accept_replies = this->query_accept_replies;
 #endif
             opts.query_target = this->query_target;

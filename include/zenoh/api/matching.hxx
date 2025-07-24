@@ -21,11 +21,8 @@ namespace zenoh {
 class Publisher;
 class Querier;
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-/// release.
 /// @brief A struct that indicates if there exist Subscribers matching the Publisher's key expression or Queryables
 /// matching Querier's key expression and target.
-/// @note Zenoh-c only.
 struct MatchingStatus {
     /// @name Fields
 
@@ -73,8 +70,6 @@ class MatchingListener<void> : public detail::MatchingListenerBase {
     }
 };
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-/// release.
 /// @brief A Zenoh matching listener.
 ///
 /// A listener that sends notifications when the [`MatchingStatus`] of a corresponding Zenoh entity changes.

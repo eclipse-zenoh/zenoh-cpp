@@ -57,11 +57,16 @@ typedef ::z_reliability_t Reliability;
 
 ///  Congestion control values.
 ///
-///   Values:
+///  Values:
 ///    - **Z_CONGESTION_CONTROL_BLOCK**: Defines congestion control as "block". Messages are not dropped in case of
 ///       congestion control
 ///    - **Z_CONGESTION_CONTROL_DROP**: Defines congestion control as "drop". Messages are dropped in case of
-///    congestion control
+///      congestion control
+///    - **Z_CONGESTION_CONTROL_BLOCK_FIRST**: Defines congestion control as "block first". Messages except the first
+///      one are dropped in case of congestion control
+///  @warning **Z_CONGESTION_CONTROL_BLOCK_FIRST** has been marked as unstable: it works as advertised, but it may be
+///      changed in a future release.
+///  @note **Z_CONGESTION_CONTROL_BLOCK_FIRST** is Zenoh-c only.
 ///
 typedef ::z_congestion_control_t CongestionControl;
 
@@ -101,23 +106,26 @@ inline std::string_view whatami_as_str(WhatAmI whatami) {
     return std::string_view(::z_string_data(::z_loan(str_out)), ::z_string_len(::z_loan(str_out)));
 }
 
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+#if defined(ZENOHCXX_ZENOHC)
 /// @brief The locality of samples to be received by subscribers or targeted by publishers.
 ///
+/// @note Zenoh-c only.
 /// Values:
 /// - **ZC_LOCALITY_ANY**:  Any.
 /// - **ZC_LOCALITY_SESSION_LOCAL**: Only from local sessions.
 /// - **ZC_LOCALITY_SESSION_REMOTE**: Only from remote sessions.
 typedef ::zc_locality_t Locality;
 
+#if defined(Z_FEATURE_UNSTABLE_API)
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Key expressions types to which Queryable should reply to.
 ///
+/// @note Zenoh-c only.
 /// Values:
 /// - **ZC_REPLY_KEYEXPR_ANY**:  Replies to any key expression queries.
 /// - **ZC_REPLY_KEYEXPR_MATCHING_QUERY**: Replies only to queries with intersecting key expressions.
 typedef ::zc_reply_keyexpr_t ReplyKeyExpr;
+#endif
 #endif
 
 }  // namespace zenoh
