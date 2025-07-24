@@ -17,9 +17,11 @@
 
 #include "base.hxx"
 #include "bytes.hxx"
-#include "id.hxx"
 #include "interop.hxx"
 #include "sample.hxx"
+#if defined(Z_FEATURE_UNSTABLE_API)
+#include "source_info.hxx"
+#endif
 
 namespace zenoh {
 
@@ -105,12 +107,12 @@ class Reply : public Owned<::z_owned_reply_t> {
 #if defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
-    /// @brief Get the id of the Zenoh instance that issued this reply.
-    /// @return Zenoh instance id, or an empty optional if the id was not set.
-    std::optional<Id> get_replier_id() const {
-        ::z_id_t z_id;
-        if (::z_reply_replier_id(interop::as_loaned_c_ptr(*this), &z_id)) {
-            return interop::into_copyable_cpp_obj<Id>(z_id);
+    /// @brief Get the id of the Zenoh entity that issued this reply.
+    /// @return Zenoh entity global id, or an empty optional if the id was not set.
+    std::optional<EntityGlobalId> get_replier_id() const {
+        ::z_entity_global_id_t z_entity_global_id;
+        if (::z_reply_replier_id(interop::as_loaned_c_ptr(*this), &z_entity_global_id)) {
+            return interop::into_copyable_cpp_obj<EntityGlobalId>(z_entity_global_id);
         }
         return {};
     }
