@@ -59,7 +59,7 @@ for LOCATOR in $(echo "$LOCATORS" | xargs); do
         RETCODE=$?
 
         # Only retry if the test failed (non-zero) AND the log contains the specific transient failure message
-        if [ "$RETCODE" -lt 0 ] && grep -q "Failed to open session" client."$TEST_NAME_WE".log; then
+        if [ "$RETCODE" -ne 0 ] && grep -q "Failed to open session" client."$TEST_NAME_WE".log; then
             if [ "$ATTEMPT" -le "$MAX_RETRIES" ]; then
                 echo "> Detected 'Failed to open session' in log. Client log (attempt $ATTEMPT):"
                 cat client."$TEST_NAME_WE".log
@@ -86,7 +86,7 @@ for LOCATOR in $(echo "$LOCATORS" | xargs); do
     echo "> Logs of zenohd ..."
     cat zenohd."$TEST_NAME_WE".log
 
-    [ "$RETCODE" -lt 0 ] && exit "$RETCODE"
+    [ "$RETCODE" -ne 0 ] && exit "$RETCODE"
 done
 
 echo "> Done ($RETCODE)."
