@@ -49,9 +49,31 @@ for LOCATOR in $(echo "$LOCATORS" | xargs); do
 
     sleep 5
 
-    echo "> Running $TESTBIN ..."
-    "$TESTBIN" "$LOCATOR" > client."$TEST_NAME_WE".log 2>&1
-    RETCODE=$?
+    # Run test with retry if log shows "Failed to open session"
+    MAX_RETRIES=5
+    ATTEMPT=1
+    RETCODE=1
+    while :; do
+        echo "> Running $TESTBIN ... (attempt $ATTEMPT/$((MAX_RETRIES + 1)))"
+        "$TESTBIN" "$LOCATOR" > client."$TEST_NAME_WE".log 2>&1
+        RETCODE=$?
+
+        # Only retry if the test failed (non-zero) AND the log contains the specific transient failure message
+        if [ "$RETCODE" -lt 0 ] && grep -q "Failed to open session" client."$TEST_NAME_WE".log; then
+            if [ "$ATTEMPT" -le "$MAX_RETRIES" ]; then
+                echo "> Detected 'Failed to open session' in log. Client log (attempt $ATTEMPT):"
+                cat client."$TEST_NAME_WE".log
+                echo "> Waiting 5s and retrying..."
+                sleep 5
+                ATTEMPT=$((ATTEMPT + 1))
+                continue
+            else
+                echo "> Detected 'Failed to open session' after $MAX_RETRIES retries. Not retrying."
+            fi
+        fi
+        # Break on success or on failures not matching the transient error
+        break
+    done
 
     echo "> Logs of $TESTBIN ..."
     cat client."$TEST_NAME_WE".log
