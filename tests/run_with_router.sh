@@ -47,6 +47,9 @@ for LOCATOR in $(echo "$LOCATORS" | xargs); do
     RUST_LOG=debug ./zenohd --plugin-search-dir "$TESTDIR/zenoh-git/target/debug" -l "$LOCATOR" > zenohd."$TEST_NAME_WE".log 2>&1 &
     ZPID=$!
 
+    date
+    cat zenohd."$TEST_NAME_WE".log
+
     sleep 5
 
     # Run test with retry if log shows "Failed to open session"
@@ -64,6 +67,10 @@ for LOCATOR in $(echo "$LOCATORS" | xargs); do
                 echo "> Detected 'Failed to open session' in log. Client log (attempt $ATTEMPT):"
                 cat client."$TEST_NAME_WE".log
                 echo "> Waiting 5s and retrying..."
+
+                date
+                cat zenohd."$TEST_NAME_WE".log
+
                 sleep 5
                 ATTEMPT=$((ATTEMPT + 1))
                 continue
