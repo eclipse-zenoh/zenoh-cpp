@@ -13,7 +13,7 @@
 
 #pragma once
 
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_ADVANCED_PUBLICATION == 1) && defined(Z_FEATURE_UNSTABLE_API)
 #include <optional>
 
 #include "../../detail/closures_concrete.hxx"
@@ -40,7 +40,6 @@ namespace zenoh::ext {
 ///
 /// In addition to publishing the data,
 /// it also maintains the storage, allowing matching subscribers to retrive missed samples.
-/// @note Zenoh-c only
 class AdvancedPublisher : public Owned<::ze_owned_advanced_publisher_t> {
     AdvancedPublisher(zenoh::detail::null_object_t) : Owned(nullptr){};
     friend struct interop::detail::Converter;
