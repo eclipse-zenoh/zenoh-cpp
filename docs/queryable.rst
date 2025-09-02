@@ -37,7 +37,8 @@ Queryable example:
                         << query.get_keyexpr().as_string_view() 
                         << "?" << query.get_parameters() << std::endl;
                query.reply(queryable_expr, Bytes::serialize("42"));
-         }
+         },
+         closures::none
       );
       // Wait for a key press to exit
       c = getchar();
