@@ -855,7 +855,7 @@ class Session : public Owned<::z_owned_session_t> {
     }
 
 #if defined(Z_FEATURE_UNSTABLE_API) && Z_FEATURE_PERIODIC_TASKS == 1
-    /// @brief Start a he periodic scheduler task.  The periodic scheduler task executes registered periodic jobs
+    /// @brief Start the periodic scheduler task.  The periodic scheduler task executes registered periodic jobs
     /// according to their configured intervals. Jobs are added and removed via the scheduler API.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
