@@ -52,9 +52,10 @@ class Session : public Owned<::z_owned_session_t> {
         /// @name Fields
 #ifdef ZENOHCXX_ZENOHPICO
         /// @brief If ``true``, start background threads which handle the network
-        /// traffic. If false, the threads should be called manually with ``Session::start_read_task`` and
-        /// ``Session::start_lease_task`` or methods ``Session::read``, ``Session::send_keep_alive`` and
-        /// ``Session::send_join`` should be called in loop.
+        /// traffic. If false, the threads should be called manually with ``Session::start_read_task``,
+        /// ``Session::start_lease_task`` and ``Session::start_periodic_scheduler_task``
+        /// or methods ``Session::read``, ``Session::send_keep_alive``,
+        /// ``Session::send_join`` and ``Session::process_periodic_tasks`` should be called in loop.
         /// @note Zenoh-pico only.
         bool start_background_tasks = true;
 #endif
@@ -86,6 +87,11 @@ class Session : public Owned<::z_owned_session_t> {
             if (err_inner == Z_OK) {
                 this->start_lease_task(&err_inner);
             }
+#if defined(Z_FEATURE_UNSTABLE_API) && Z_FEATURE_PERIODIC_TASKS == 1
+            if (err_inner == Z_OK) {
+                this->start_periodic_scheduler_task(&err_inner);
+            }
+#endif
             if (err_inner == Z_OK) return;
             ::z_drop(::z_move(this->_0));
             __ZENOH_RESULT_CHECK(err_inner, err, "Failed to start background tasks");
@@ -848,6 +854,34 @@ class Session : public Owned<::z_owned_session_t> {
         __ZENOH_RESULT_CHECK(zp_stop_lease_task(interop::as_loaned_c_ptr(*this)), err, "Failed to stop lease task");
     }
 
+#if defined(Z_FEATURE_UNSTABLE_API) && Z_FEATURE_PERIODIC_TASKS == 1
+    /// @brief Start a he periodic scheduler task.  The periodic scheduler task executes registered periodic jobs
+    /// according to their configured intervals. Jobs are added and removed via the scheduler API.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @note Zenoh-pico only.
+    void start_periodic_scheduler_task(ZResult* err = nullptr) {
+        __ZENOH_RESULT_CHECK(zp_start_periodic_scheduler_task(interop::as_loaned_c_ptr(*this), NULL), err,
+                             "Failed to start periodic scheduler task");
+    }
+
+    /// @brief Stop the periodic scheduler task.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @note Zenoh-pico only.
+    void stop_periodic_scheduler_task(ZResult* err = nullptr) {
+        __ZENOH_RESULT_CHECK(zp_stop_periodic_scheduler_task(interop::as_loaned_c_ptr(*this)), err,
+                             "Failed to stop periodic scheduler task");
+    }
+
+    /// @brief Process outstanding periodic tasks.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void process_periodic_tasks(ZResult* err = nullptr) {
+        __ZENOH_RESULT_CHECK(zp_process_periodic_tasks(interop::as_loaned_c_ptr(*this)), err,
+                             "Failed to process periodic tasks");
+    }
+#endif
     /// @brief Triggers a single execution of reading procedure from the network and processes of any received the
     /// message.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be

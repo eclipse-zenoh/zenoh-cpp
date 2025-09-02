@@ -12,7 +12,8 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #pragma once
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_ADVANCED_PUBLICATION == 1 || Z_FEATURE_ADVANCED_SUBSCRIPTION == 1) && \
+    defined(Z_FEATURE_UNSTABLE_API)
 
 #include <algorithm>
 #include <optional>
@@ -34,7 +35,6 @@ namespace zenoh::ext {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
 /// release.
 /// @brief Zenoh Session interface extension.
-/// @note Zenoh-c only.
 class SessionExt {
     const zenoh::Session& _session;
 
@@ -47,6 +47,7 @@ class SessionExt {
 
     /// @name Methods
 
+#if defined(ZENOHCXX_ZENOHC)
     /// @warning This API is deprecated. Please use zenoh::ext::AdvancedPublisher.
     /// @brief Options passed to the ``SessionExt::declare_publication_cache``.
     struct PublicationCacheOptions {
@@ -260,7 +261,9 @@ class SessionExt {
         return QueryingSubscriber<typename Channel::template HandlerType<zenoh::Sample>>(
             std::move(qs), std::move(cb_handler_pair.second));
     }
+#endif
 
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_ADVANCED_PUBLICATION == 1
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// Options passed to the `SessionExt::declare_advanced_publisher()` function.
@@ -399,7 +402,8 @@ class SessionExt {
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Advanced Publisher");
         return p;
     }
-
+#endif
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_ADVANCED_SUBSCRIPTION == 1
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Options passed to the ``SessionExt::declare_advanced_subscriber``.
@@ -614,6 +618,7 @@ class SessionExt {
         return AdvancedSubscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
                                                                                   std::move(cb_handler_pair.second));
     }
+#endif
 };
 }  // namespace zenoh::ext
 

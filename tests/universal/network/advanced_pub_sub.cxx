@@ -33,7 +33,9 @@ std::array<std::string, 6> VALUES_TO_PUBLISH = {"test_value_1", "test_value_2", 
 void test_pub_sub() {
     KeyExpr ke("zenoh/advanced_pub_sub_test");
     auto config1 = Config::create_default();
+#if defined(ZENOHCXX_ZENOHC)
     config1.insert_json5(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");
+#endif
 
     auto session1 = Session::open(std::move(config1));
     auto session2 = Session::open(Config::create_default());
@@ -82,7 +84,9 @@ void test_pub_sub() {
 void test_pub_sub_channels() {
     KeyExpr ke("zenoh/advanced_pub_sub_chennels_test");
     auto config1 = Config::create_default();
+#if defined(ZENOHCXX_ZENOHC)
     config1.insert_json5(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");
+#endif
 
     auto session1 = Session::open(std::move(config1));
     auto session2 = Session::open(Config::create_default());

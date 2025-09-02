@@ -13,7 +13,7 @@
 
 #pragma once
 
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_ADVANCED_SUBSCRIPTION == 1) && defined(Z_FEATURE_UNSTABLE_API)
 
 #include "../../detail/closures.hxx"
 #include "../base.hxx"

@@ -41,8 +41,9 @@ int _main(int argc, char **argv) {
             .named_value({"p", "payload"}, "PAYLOAD", "Payload to publish (string)", default_value)
             .named_value({"i", "history"}, "HISTORY_SIZE", "The number of publications to keep in cache (number)", "1")
             .run();
-
+#if defined(ZENOHCXX_ZENOHC)
     config.insert_json5(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");
+#endif
     auto keyexpr = args.value("key");
     auto payload = args.value("payload");
     auto history = std::atoi(args.value("history").data());

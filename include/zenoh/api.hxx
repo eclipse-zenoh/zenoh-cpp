@@ -43,7 +43,8 @@
 #include "api/shm/shm.hxx"
 #endif
 #include "api/ext/serialization.hxx"
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_ADVANCED_PUBLICATION == 1 || Z_FEATURE_ADVANCED_SUBSCRIPTION == 1) && \
+    defined(Z_FEATURE_UNSTABLE_API)
 #include "api/ext/session_ext.hxx"
 #endif
 #if (defined(ZENOHCXX) || Z_FEATURE_MATCHING == 1)

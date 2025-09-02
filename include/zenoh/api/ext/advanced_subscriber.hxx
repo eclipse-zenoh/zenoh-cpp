@@ -13,7 +13,7 @@
 
 #pragma once
 
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_ADVANCED_SUBSCRIPTION == 1) && defined(Z_FEATURE_UNSTABLE_API)
 #include "../../detail/closures_concrete.hxx"
 #include "../base.hxx"
 #include "../interop.hxx"
@@ -42,7 +42,6 @@ class AdvancedSubscriberBase : public Owned<::ze_owned_advanced_subscriber_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``SampleMissListener`` object.
-    /// @note Zenoh-c only.
     template <class C, class D>
     [[nodiscard]] SampleMissListener<void> declare_sample_miss_listener(C&& on_miss_detected, D&& on_drop,
                                                                         zenoh::ZResult* err = nullptr) const {
@@ -72,7 +71,6 @@ class AdvancedSubscriberBase : public Owned<::ze_owned_advanced_subscriber_t> {
     /// @param on_drop the callable that will be called once sample miss listener is destroyed or undeclared.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @note Zenoh-c only.
     template <class C, class D>
     void declare_background_sample_miss_listener(C&& on_miss_detected, D&& on_drop,
                                                  zenoh::ZResult* err = nullptr) const {
@@ -136,7 +134,6 @@ class AdvancedSubscriberBase : public Owned<::ze_owned_advanced_subscriber_t> {
     /// @param options options to pass to subscriber declaration.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @note Zenoh-c only.
     template <class C, class D>
     void detect_publishers_background(C&& on_sample, D&& on_drop,
                                       zenoh::Session::LivelinessSubscriberOptions&& options =
@@ -210,7 +207,6 @@ class AdvancedSubscriber;
 ///
 /// In addition to receiving the data it is subscribed to,
 /// it also will fetch data from a Queryable at startup and peridodically (using  `AdvancedSubscriber::get`).
-/// @note Zenoh-c only.
 template <>
 class AdvancedSubscriber<void> : public detail::AdvancedSubscriberBase {
    protected:
@@ -234,7 +230,6 @@ class AdvancedSubscriber<void> : public detail::AdvancedSubscriberBase {
 ///
 /// In addition to receiving the data it is subscribed to,
 /// it is also able to receive notifications regarding missed samples and/or automatically recover them.
-/// @note Zenoh-c only.
 /// @tparam Handler streaming handler exposing data. If `void`, no handler access is provided and instead data is being
 /// processed inside the callback.
 template <class Handler>
