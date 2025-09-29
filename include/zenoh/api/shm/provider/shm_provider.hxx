@@ -132,14 +132,14 @@ class ShmProvider : public Owned<::z_owned_shm_provider_t> {
     PrecomputedLayout alloc_layout(std::size_t size, ZResult* err = nullptr) {
         PrecomputedLayout layout = PrecomputedLayout(zenoh::detail::null_object);
         __ZENOH_RESULT_CHECK(
-            ::z_shm_provider_alloc_layout(interop::as_owned_c_ptr(&layout), interop::as_loaned_c_ptr(*this), size), err,
+            ::z_shm_provider_alloc_layout(interop::as_owned_c_ptr(layout), interop::as_loaned_c_ptr(*this), size), err,
             "Failed to create SHM Alloc Layout");
         return layout;
     }
 
     PrecomputedLayout alloc_layout(std::size_t size, AllocAlignment alignment, ZResult* err = nullptr) {
         PrecomputedLayout layout = PrecomputedLayout(zenoh::detail::null_object);
-        __ZENOH_RESULT_CHECK(::z_shm_provider_alloc_layout_aligned(interop::as_owned_c_ptr(&layout),
+        __ZENOH_RESULT_CHECK(::z_shm_provider_alloc_layout_aligned(interop::as_owned_c_ptr(layout),
                                                                    interop::as_loaned_c_ptr(*this), size, alignment),
                              err, "Failed to create SHM Alloc Layout");
         return layout;
