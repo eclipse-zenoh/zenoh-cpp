@@ -129,7 +129,7 @@ class ShmProvider : public Owned<::z_owned_shm_provider_t> {
                                                               alignment, context, ShmProviderAsyncInterface::result);
     }
 
-    PrecomputedLayout alloc_layout(std::size_t size, ZResult* err = nullptr) {
+    PrecomputedLayout alloc_layout(std::size_t size, ZResult* err = nullptr) const {
         PrecomputedLayout layout = PrecomputedLayout(zenoh::detail::null_object);
         __ZENOH_RESULT_CHECK(
             ::z_shm_provider_alloc_layout(interop::as_owned_c_ptr(layout), interop::as_loaned_c_ptr(*this), size), err,
@@ -137,7 +137,7 @@ class ShmProvider : public Owned<::z_owned_shm_provider_t> {
         return layout;
     }
 
-    PrecomputedLayout alloc_layout(std::size_t size, AllocAlignment alignment, ZResult* err = nullptr) {
+    PrecomputedLayout alloc_layout(std::size_t size, AllocAlignment alignment, ZResult* err = nullptr) const {
         PrecomputedLayout layout = PrecomputedLayout(zenoh::detail::null_object);
         __ZENOH_RESULT_CHECK(::z_shm_provider_alloc_layout_aligned(interop::as_owned_c_ptr(layout),
                                                                    interop::as_loaned_c_ptr(*this), size, alignment),
