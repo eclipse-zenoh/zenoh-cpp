@@ -117,7 +117,7 @@ int test_provider(const ShmProvider& provider, AllocAlignment alignment, size_t 
     // OK layouted allocations
     {
         // make OK allocation layout
-        PrecomputedLayout precomputed_layout(provider, buf_ok_size, alignment);
+        PrecomputedLayout precomputed_layout = provider.alloc_layout(buf_ok_size, alignment);
         ASSERT_VALID(precomputed_layout);
 
         // test layouted allocation OK
@@ -129,7 +129,7 @@ int test_provider(const ShmProvider& provider, AllocAlignment alignment, size_t 
     // ERR layouted allocation
     if (buf_err_size) {
         // make ERR allocation layout
-        PrecomputedLayout precomputed_layout(provider, buf_err_size, alignment);
+        PrecomputedLayout precomputed_layout = provider.alloc_layout(buf_err_size, alignment);
         ASSERT_VALID(precomputed_layout);
 
         // test layouted allocation ERROR
