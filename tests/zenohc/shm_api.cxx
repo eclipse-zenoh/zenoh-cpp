@@ -91,8 +91,8 @@ bool check_alloc(Talloc&& alloc) {
     return false;
 }
 
-bool test_layouted_allocation(const AllocLayout& alloc_layout) {
-    auto alloc = alloc_layout.alloc_gc();
+bool test_layouted_allocation(const PrecomputedLayout& precomputed_layout) {
+    auto alloc = precomputed_layout.alloc_gc();
     return check_alloc(std::move(alloc));
 }
 
@@ -117,24 +117,24 @@ int test_provider(const ShmProvider& provider, AllocAlignment alignment, size_t 
     // OK layouted allocations
     {
         // make OK allocation layout
-        AllocLayout alloc_layout(provider, buf_ok_size, alignment);
-        ASSERT_VALID(alloc_layout);
+        PrecomputedLayout precomputed_layout(provider, buf_ok_size, alignment);
+        ASSERT_VALID(precomputed_layout);
 
         // test layouted allocation OK
         for (int i = 0; i < 100; ++i) {
-            ASSERT_TRUE(test_layouted_allocation(alloc_layout));
+            ASSERT_TRUE(test_layouted_allocation(precomputed_layout));
         }
     }
 
     // ERR layouted allocation
     if (buf_err_size) {
         // make ERR allocation layout
-        AllocLayout alloc_layout(provider, buf_err_size, alignment);
-        ASSERT_VALID(alloc_layout);
+        PrecomputedLayout precomputed_layout(provider, buf_err_size, alignment);
+        ASSERT_VALID(precomputed_layout);
 
         // test layouted allocation ERROR
         for (int i = 0; i < 100; ++i) {
-            ASSERT_FALSE(test_layouted_allocation(alloc_layout));
+            ASSERT_FALSE(test_layouted_allocation(precomputed_layout));
         }
     }
 

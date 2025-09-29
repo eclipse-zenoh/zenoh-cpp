@@ -47,7 +47,7 @@ class ShmProviderAsyncInterface {
 };
 
 class ShmProvider : public Owned<::z_owned_shm_provider_t> {
-    friend class AllocLayout;
+    friend class PrecomputedLayout;
 
    protected:
     ShmProvider(zenoh::detail::null_object_t) : Owned(nullptr) {}
@@ -128,6 +128,22 @@ class ShmProvider : public Owned<::z_owned_shm_provider_t> {
                                                               alignment, context, ShmProviderAsyncInterface::result);
     }
 
+        PrecomputedLayout alloc_layout(std::size_t size, ZResult* err = nullptr) {
+            PrecomputedLayout layout = PrecomputedLayout(zenoh::detail::null_object);
+            __ZENOH_RESULT_CHECK(::z_shm_provider_alloc_layout(interop::as_owned_c_ptr(&layout), interop::as_loaned_c_ptr(*this), size), err,
+                                 "Failed to create SHM Alloc Layout");
+            return layout;
+        }
+
+        PrecomputedLayout alloc_layout(std::size_t size, AllocAlignment alignment, ZResult* err = nullptr) {
+            PrecomputedLayout layout = PrecomputedLayout(zenoh::detail::null_object);
+            __ZENOH_RESULT_CHECK(
+                ::z_shm_provider_alloc_layout_aligned(interop::as_owned_c_ptr(&layout), interop::as_loaned_c_ptr(*this), size, alignment),
+                err, "Failed to create SHM Alloc Layout");
+            return layout;
+        }
+
+
     void defragment() const { ::z_shm_provider_defragment(interop::as_loaned_c_ptr(*this)); }
 
     std::size_t garbage_collect() const { return ::z_shm_provider_garbage_collect(interop::as_loaned_c_ptr(*this)); }
@@ -143,7 +159,7 @@ class ShmProvider : public Owned<::z_owned_shm_provider_t> {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 class CppShmProvider : public ShmProvider {
-    friend class AllocLayout;
+    friend class PrecomputedLayout;
 
    public:
     using ShmProvider::ShmProvider;
