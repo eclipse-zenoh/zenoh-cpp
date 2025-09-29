@@ -87,7 +87,8 @@ class PrecomputedLayout : public Owned<::z_owned_precomputed_layout_t> {
 
     ZResult alloc_gc_defrag_async(std::unique_ptr<PrecomputedLayoutAsyncInterface> receiver) const {
         auto rcv = receiver.release();
-        ::zc_threadsafe_context_t context = {{rcv}, &shm::provider::closures::_z_precomputed_layout_async_interface_drop_fn};
+        ::zc_threadsafe_context_t context = {{rcv},
+                                             &shm::provider::closures::_z_precomputed_layout_async_interface_drop_fn};
         return ::z_precomputed_layout_threadsafe_alloc_gc_defrag_async(
             &rcv->_result, interop::as_loaned_c_ptr(*this), context,
             shm::provider::closures::_z_precomputed_layout_async_interface_result_fn);
