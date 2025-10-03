@@ -76,7 +76,9 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     KeyExpr(KeyExpr&& other) = default;
 
     /// @name Methods
+
     /// @brief Get underlying key expression string.
+    /// @return The key expression as a string_view.
     std::string_view as_string_view() const {
         ::z_view_string_t s;
         ::z_keyexpr_as_view_string(interop::as_loaned_c_ptr(*this), &s);
