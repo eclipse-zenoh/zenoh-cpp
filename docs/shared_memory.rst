@@ -43,7 +43,7 @@ Shared Memory
    :members:
    :membergroups: Constructors Operators Methods
 
-.. doxygenclass:: zenoh::AllocLayout
+.. doxygenclass:: zenoh::PrecomputedLayout
    :members:
    :membergroups: Constructors Operators Methods
 
