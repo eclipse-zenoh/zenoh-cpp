@@ -19,12 +19,12 @@
 #include "../../base.hxx"
 #include "../common/common.hxx"
 #include "chunk.hxx"
-#include "shm_provider.hxx"
-#include "shm_provider_backend.hxx"
 #include "types.hxx"
 #include "types_impl.hxx"
 
 namespace zenoh {
+
+class ShmProvider;
 
 struct PrecomputedLayoutAsyncInterface {
     z_buf_alloc_result_t _result;
@@ -58,19 +58,11 @@ class PrecomputedLayout : public Owned<::z_owned_precomputed_layout_t> {
     /// @name Constructors
 
     /// @warning This API has been marked as deprecated, use `ShmProvider::alloc_layout` instead.
-    PrecomputedLayout(const ShmProvider& owner_provider, std::size_t size, ZResult* err = nullptr) : Owned(nullptr) {
-        __ZENOH_RESULT_CHECK(::z_alloc_layout_new(&this->_0, interop::as_loaned_c_ptr(owner_provider), size), err,
-                             "Failed to create SHM Alloc Layout");
-    }
+    PrecomputedLayout(const ShmProvider& owner_provider, std::size_t size, ZResult* err = nullptr);
 
     /// @warning This API has been marked as deprecated, use `ShmProvider::alloc_layout` instead.
     PrecomputedLayout(const ShmProvider& owner_provider, std::size_t size, AllocAlignment alignment,
-                      ZResult* err = nullptr)
-        : Owned(nullptr) {
-        __ZENOH_RESULT_CHECK(
-            ::z_alloc_layout_with_alignment_new(&this->_0, interop::as_loaned_c_ptr(owner_provider), size, alignment),
-            err, "Failed to create SHM Alloc Layout");
-    }
+                      ZResult* err = nullptr);
 
     /// @name Methods
     BufAllocResult alloc() const {
