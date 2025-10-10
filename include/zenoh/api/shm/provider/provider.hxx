@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "alloc_layout.hxx"
 #include "chunk.hxx"
+#include "precomputed_layout.hxx"
 #include "shm_provider.hxx"
 #include "shm_provider_backend.hxx"
 #include "types.hxx"
