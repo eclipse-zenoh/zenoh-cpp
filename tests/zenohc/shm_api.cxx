@@ -252,7 +252,7 @@ int run_c_provider() {
 int run_posix_provider() {
     const size_t total_size = 4096;
     const size_t buf_ok_size = total_size / 4;
-    const size_t buf_err_size = total_size * 2;
+    const size_t buf_err_size = total_size * 100;
 
     const AllocAlignment alignment = {4};
 
