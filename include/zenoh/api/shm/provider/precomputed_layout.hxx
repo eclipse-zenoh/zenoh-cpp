@@ -19,6 +19,7 @@
 #include "../../base.hxx"
 #include "../common/common.hxx"
 #include "chunk.hxx"
+#include "shm_provider.hxx"
 #include "shm_provider_backend.hxx"
 #include "types.hxx"
 #include "types_impl.hxx"
