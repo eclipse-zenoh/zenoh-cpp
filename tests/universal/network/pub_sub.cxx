@@ -38,7 +38,7 @@ class SHMAllocator {
         const auto len = strlen(data);
         auto alloc_result = provider.alloc_gc_defrag_blocking(len, AllocAlignment({0}));
         ZShmMut&& buf = std::get<ZShmMut>(std::move(alloc_result));
-        memcpy(buf.data(), data, len + 1);
+        memcpy(buf.data(), data, len);
         return Bytes(std::move(buf));
     }
 };
