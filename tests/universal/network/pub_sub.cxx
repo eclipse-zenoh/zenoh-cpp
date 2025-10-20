@@ -38,7 +38,7 @@ class SHMAllocator {
         const auto len = strlen(data);
         auto alloc_result = provider.alloc_gc_defrag_blocking(len, AllocAlignment({0}));
         ZShmMut&& buf = std::get<ZShmMut>(std::move(alloc_result));
-        memcpy(buf.data(), data, len + 1);
+        memcpy(buf.data(), data, len);
         return Bytes(std::move(buf));
     }
 };
@@ -200,7 +200,6 @@ void put_sub_ring_channel(Talloc& alloc) {
 
 template <typename Talloc, bool share_alloc = true>
 void test_with_alloc() {
-    init_log_from_env_or("error");
     if constexpr (share_alloc) {
         Talloc alloc;
         pub_sub(alloc);
@@ -235,6 +234,9 @@ void publisher_get_keyexpr() {
 }
 
 int main(int argc, char** argv) {
+#ifdef ZENOHCXX_ZENOHC
+    init_log_from_env_or("error");
+#endif
     test_with_alloc<CommonAllocator>();
 #if defined Z_FEATURE_SHARED_MEMORY && defined Z_FEATURE_UNSTABLE_API
     test_with_alloc<SHMAllocator>();
