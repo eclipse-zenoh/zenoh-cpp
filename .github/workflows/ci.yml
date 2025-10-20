@@ -68,6 +68,10 @@ jobs:
         shell: bash
         run: |
           cd build
+          # On ubuntu we need to modify memlock limit to allow tests to run
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            sudo prlimit --memlock=unlimited --pid=$$
+          fi
           # On macOS, sudo is required to run tests due to LAN access permissions
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
             sudo ctest -C ${{ matrix.build_type }} --output-on-failure
