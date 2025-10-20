@@ -76,7 +76,7 @@ jobs:
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
             sudo ctest -C ${{ matrix.build_type }} --output-on-failure
           else
-            RUST_LOG=trace ctest -V -C ${{ matrix.build_type }} --output-on-failure
+            ctest -C ${{ matrix.build_type }} --output-on-failure
           fi
 
       - name: Upload artifact
