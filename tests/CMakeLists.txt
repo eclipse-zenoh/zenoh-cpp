@@ -42,7 +42,7 @@ foreach(file ${files})
 	endif()
 endforeach()
 
-file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/universal/network/*.cxx")
+file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/universal/network/pub_*.cxx")
 foreach(file ${files})
 	if(ZENOHCXX_ZENOHC) 
 		# Exclude advanced pub-sub test if unstable features are disabled

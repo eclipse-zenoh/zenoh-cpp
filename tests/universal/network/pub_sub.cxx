@@ -200,6 +200,7 @@ void put_sub_ring_channel(Talloc& alloc) {
 
 template <typename Talloc, bool share_alloc = true>
 void test_with_alloc() {
+    init_log_from_env_or("error");
     if constexpr (share_alloc) {
         Talloc alloc;
         pub_sub(alloc);
