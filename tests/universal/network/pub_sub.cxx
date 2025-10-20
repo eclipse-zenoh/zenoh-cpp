@@ -234,9 +234,6 @@ void publisher_get_keyexpr() {
 }
 
 int main(int argc, char** argv) {
-#ifdef ZENOHCXX_ZENOHC
-    init_log_from_env_or("error");
-#endif
     test_with_alloc<CommonAllocator>();
 #if defined Z_FEATURE_SHARED_MEMORY && defined Z_FEATURE_UNSTABLE_API
     test_with_alloc<SHMAllocator>();
