@@ -380,6 +380,24 @@ int run_cleanup() {
     return Z_OK;
 }
 
+int run_transport_provider() {
+    auto session = Session::open(Config::create_default());
+
+    auto shared_provider_state = session.get_shm_provider();
+    ASSERT_TRUE(std::holds_alternative<ShmProviderNotReadyState>(shared_provider_state));
+
+    while (std::holds_alternative<ShmProviderNotReadyState>(shared_provider_state)) {
+        z_sleep_ms(100);
+        shared_provider_state = session.get_shm_provider();
+    }
+    ASSERT_TRUE(std::holds_alternative<SharedShmProvider>(shared_provider_state));
+
+    auto shared_provider = std::get<SharedShmProvider>(std::move(shared_provider_state));
+    auto provider = shared_provider.inner_shm_provider();
+
+    return Z_OK;
+}
+
 int main() {
     ASSERT_OK(run_posix_provider());
     ASSERT_OK(run_c_provider());
@@ -388,5 +406,6 @@ int main() {
     ASSERT_OK(run_client_storage());
     ASSERT_OK(run_c_client());
     ASSERT_OK(run_cleanup());
+    ASSERT_OK(run_transport_provider());
     return Z_OK;
 }

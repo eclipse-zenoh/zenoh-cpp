@@ -49,6 +49,7 @@ class ShmProviderAsyncInterface {
 
 class ShmProvider : public Owned<::z_owned_shm_provider_t> {
     friend class PrecomputedLayout;
+    friend class SharedShmProvider;
 
    protected:
     ShmProvider(zenoh::detail::null_object_t) : Owned(nullptr) {}
@@ -155,6 +156,24 @@ class ShmProvider : public Owned<::z_owned_shm_provider_t> {
         z_owned_shm_mut_t result;
         ::z_shm_provider_map(&result, interop::as_loaned_c_ptr(*this), chunk, len);
         return std::move(interop::as_owned_cpp_ref<ZShmMut>(&result));
+    }
+};
+
+class SharedShmProvider : public Owned<::z_owned_shared_shm_provider_t> {
+    friend class Session;
+
+   protected:
+    SharedShmProvider(zenoh::detail::null_object_t) : Owned(nullptr) {}
+
+   public:
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Performs a shallow copy of contained SHM provider. The resulting provider object is **semantically**
+    /// similar to threadsafe provider wrapped into C++'s shared_ptr.
+    ShmProvider inner_shm_provider() const {
+        ShmProvider provider(zenoh::detail::null_object);
+        ::z_inner_shm_provider(&provider._0, interop::as_loaned_c_ptr(*this));
+        return provider;
     }
 };
 
