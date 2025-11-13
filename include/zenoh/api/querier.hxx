@@ -18,6 +18,7 @@
 #include "../detail/closures_concrete.hxx"
 #include "base.hxx"
 #include "bytes.hxx"
+#include "cancellation.hxx"
 #include "encoding.hxx"
 #include "enums.hxx"
 #include "interop.hxx"
@@ -55,14 +56,36 @@ class Querier : public Owned<::z_owned_querier_t> {
         /// @note Zenoh-c only.
         std::optional<SourceInfo> source_info = {};
 #endif
-
         /// @brief An optional attachment to the query.
         std::optional<Bytes> attachment = {};
+#if defined(Z_FEATURE_UNSTABLE_API)
+        /// @brief Cancellation token to interrupt the query.
+        ///  @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        ///  release.
+        std::optional<CancellationToken> cancellation_token = {};
+#endif
 
         /// @name Methods
 
         /// @brief Create default option settings.
         static GetOptions create_default() { return {}; }
+
+       private:
+        friend struct interop::detail::Converter;
+        ::z_querier_get_options_t to_c_opts() {
+            ::z_querier_get_options_t opts;
+            z_querier_get_options_default(&opts);
+            opts.payload = interop::as_moved_c_ptr(this->payload);
+            opts.encoding = interop::as_moved_c_ptr(this->encoding);
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+            opts.source_info = interop::as_moved_c_ptr(this->source_info);
+#endif
+            opts.attachment = interop::as_moved_c_ptr(this->attachment);
+#if defined(Z_FEATURE_UNSTABLE_API)
+            opts.cancellation_token = interop::as_moved_c_ptr(this->cancellation_token);
+#endif
+            return opts;
+        }
     };
 
     /// @name Methods
@@ -85,14 +108,7 @@ class Querier : public Owned<::z_owned_querier_t> {
         using ClosureType = typename detail::closures::Closure<Cval, Dval, void, Reply&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_reply), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_reply_call, detail::closures::_zenoh_on_drop, closure);
-        ::z_querier_get_options_t opts;
-        z_querier_get_options_default(&opts);
-        opts.payload = interop::as_moved_c_ptr(options.payload);
-        opts.encoding = interop::as_moved_c_ptr(options.encoding);
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-        opts.source_info = interop::as_moved_c_ptr(options.source_info);
-#endif
-        opts.attachment = interop::as_moved_c_ptr(options.attachment);
+        ::z_querier_get_options_t opts = interop::detail::Converter::to_c_opts(options);
 
         __ZENOH_RESULT_CHECK(
             ::z_querier_get(interop::as_loaned_c_ptr(*this), parameters.c_str(), ::z_move(c_closure), &opts), err,
@@ -113,14 +129,7 @@ class Querier : public Owned<::z_owned_querier_t> {
                                                       GetOptions&& options = GetOptions::create_default(),
                                                       ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Reply>();
-        ::z_querier_get_options_t opts;
-        z_querier_get_options_default(&opts);
-        opts.payload = interop::as_moved_c_ptr(options.payload);
-        opts.encoding = interop::as_moved_c_ptr(options.encoding);
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-        opts.source_info = interop::as_moved_c_ptr(options.source_info);
-#endif
-        opts.attachment = interop::as_moved_c_ptr(options.attachment);
+        ::z_querier_get_options_t opts = interop::detail::Converter::to_c_opts(options);
 
         ZResult res = ::z_querier_get(interop::as_loaned_c_ptr(*this), parameters.c_str(),
                                       ::z_move(cb_handler_pair.first), &opts);

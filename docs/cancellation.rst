@@ -1,5 +1,5 @@
 ..
-.. Copyright (c) 2023 ZettaScale Technology
+.. Copyright (c) 2025 ZettaScale Technology
 ..
 .. This program and the accompanying materials are made available under the
 .. terms of the Eclipse Public License 2.0 which is available at
@@ -12,24 +12,9 @@
 ..   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 ..
 
-*************
-API Reference
-*************
+Query Cancellation
+==================
 
-.. toctree::
-   :maxdepth: 10
-
-   commons
-   error_handling
-   keyexpr
-   config
-   session
-   scouting
-   publish_subscribe
-   query_reply
-   matching
-   channels
-   cancellation
-   interop
-   shared_memory
-   ext
+.. doxygenclass:: zenoh::CancellationToken
+   :members:
+   :membergroups: Constructors Methods Operators
