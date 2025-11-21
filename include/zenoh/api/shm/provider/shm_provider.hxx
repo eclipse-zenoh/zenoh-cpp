@@ -49,6 +49,7 @@ class ShmProviderAsyncInterface {
 
 class ShmProvider : public Owned<::z_owned_shm_provider_t> {
     friend class PrecomputedLayout;
+    friend class SharedShmProvider;
 
    protected:
     ShmProvider(zenoh::detail::null_object_t) : Owned(nullptr) {}
@@ -155,6 +156,36 @@ class ShmProvider : public Owned<::z_owned_shm_provider_t> {
         z_owned_shm_mut_t result;
         ::z_shm_provider_map(&result, interop::as_loaned_c_ptr(*this), chunk, len);
         return std::move(interop::as_owned_cpp_ref<ZShmMut>(&result));
+    }
+};
+
+class SharedShmProvider : public Owned<::z_owned_shared_shm_provider_t> {
+    friend class Session;
+
+   protected:
+    SharedShmProvider(zenoh::detail::null_object_t) : Owned(nullptr) {}
+
+   public:
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Move constructor.
+    SharedShmProvider(SharedShmProvider&&) = default;
+    SharedShmProvider& operator=(SharedShmProvider&&) = default;
+
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Copy constructor.
+    /// Makes a shallow copy of the underlying shared SHM provider.
+    SharedShmProvider(const SharedShmProvider& other) : SharedShmProvider(zenoh::detail::null_object) {
+        ::z_shared_shm_provider_clone(&this->_0, interop::as_loaned_c_ptr(other));
+    };
+
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Get access to SHM provider interface.
+    const ShmProvider& shm_provider() const {
+        auto loaned = ::z_shared_shm_provider_loan_as(interop::as_loaned_c_ptr(*this));
+        return interop::as_owned_cpp_ref<ShmProvider>(loaned);
     }
 };
 

@@ -35,6 +35,7 @@
 #endif
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
 #include "shm/client_storage/client_storage.hxx"
+#include "shm/provider/shm_provider.hxx"
 #endif
 #include "cancellation.hxx"
 
@@ -42,6 +43,19 @@ namespace zenoh {
 namespace ext {
 class SessionExt;
 }
+
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief The non-ready state for SHM provider.
+enum class ShmProviderNotReadyState {
+    /// Provider is disabled by configuration.
+    SHM_PROVIDER_DISABLED,
+    /// Provider is concurrently-initializing.
+    SHM_PROVIDER_INITIALIZING,
+    /// Error initializing provider.
+    SHM_PROVIDER_ERROR,
+};
+#endif
 
 /// A Zenoh session.
 class Session : public Owned<::z_owned_session_t> {
@@ -141,6 +155,43 @@ class Session : public Owned<::z_owned_session_t> {
     static Session open(Config&& config, const ShmClientStorage& shm_storage,
                         SessionOptions&& options = SessionOptions::create_default(), ZResult* err = nullptr) {
         return Session(std::move(config), shm_storage, std::move(options), err);
+    }
+#endif
+
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Each session's runtime may create its own provider to manage internal optimizations.
+    /// This method exposes that provider so it can also be accessed at the application level.
+    ///
+    /// Note that the provider may not be immediately available or may be disabled via configuration.
+    /// Provider initialization is concurrent and triggered by access events (both transport-internal and through this
+    /// API).
+    ///
+    /// To use this provider, both *shared_memory* and *transport_optimization* config sections must be enabled.
+    ///
+    /// @return SharedShmProvider if initialized from Session's provider if it exists and ShmProviderNotReadyState
+    /// with provider state description otherwise.
+    std::variant<SharedShmProvider, ShmProviderNotReadyState> obtain_shm_provider() const {
+        SharedShmProvider provider(zenoh::detail::null_object);
+        ::z_shm_provider_state state;
+
+        ::z_obtain_shm_provider(interop::as_loaned_c_ptr(*this), &provider._0, &state);
+        switch (state) {
+            case Z_SHM_PROVIDER_STATE_DISABLED: {
+                return ShmProviderNotReadyState::SHM_PROVIDER_DISABLED;
+            }
+            case Z_SHM_PROVIDER_STATE_INITIALIZING: {
+                return ShmProviderNotReadyState::SHM_PROVIDER_INITIALIZING;
+            }
+            case Z_SHM_PROVIDER_STATE_READY: {
+                return provider;
+            }
+            case Z_SHM_PROVIDER_STATE_ERROR: {
+                return ShmProviderNotReadyState::SHM_PROVIDER_ERROR;
+            }
+        }
+        return ShmProviderNotReadyState::SHM_PROVIDER_ERROR;
     }
 #endif
 
