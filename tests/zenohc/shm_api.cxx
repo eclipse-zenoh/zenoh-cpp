@@ -383,17 +383,24 @@ int run_cleanup() {
 int run_transport_provider() {
     auto session = Session::open(Config::create_default());
 
-    auto shared_provider_state = session.get_shm_provider();
+    auto shared_provider_state = session.obtain_shm_provider();
     ASSERT_TRUE(std::holds_alternative<ShmProviderNotReadyState>(shared_provider_state));
 
     while (std::holds_alternative<ShmProviderNotReadyState>(shared_provider_state)) {
         z_sleep_ms(100);
-        shared_provider_state = session.get_shm_provider();
+        shared_provider_state = session.obtain_shm_provider();
     }
     ASSERT_TRUE(std::holds_alternative<SharedShmProvider>(shared_provider_state));
 
     auto shared_provider = std::get<SharedShmProvider>(std::move(shared_provider_state));
-    auto provider = shared_provider.inner_shm_provider();
+    auto& provider = shared_provider.shm_provider();
+
+    const size_t total_size = 4096;
+    const size_t buf_ok_size = total_size / 4;
+    const size_t buf_err_size = total_size * 1024 * 1024;
+    const AllocAlignment alignment = {0};
+
+    ASSERT_OK(test_provider(provider, alignment, buf_ok_size, buf_err_size));
 
     return Z_OK;
 }
