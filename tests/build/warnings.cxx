@@ -13,12 +13,16 @@
 //
 
 // Disable 'old-style-cast` warning for C headers only
+// Disable 'pedantic` warning due to "ISO C++ forbids compound-literals [-Werror=pedantic]"
+// Disable 'missing-field-initializers` warning doe to missing initializations
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4996)
 #else
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #endif
 
 #ifdef ZENOHCXX_ZENOHPICO
