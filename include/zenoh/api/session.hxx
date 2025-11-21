@@ -37,6 +37,7 @@
 #include "shm/client_storage/client_storage.hxx"
 #include "shm/provider/shm_provider.hxx"
 #endif
+#include "cancellation.hxx"
 
 namespace zenoh {
 namespace ext {
@@ -261,11 +262,16 @@ class Session : public Owned<::z_owned_session_t> {
         /// @note Zenoh-c only.
         Locality allowed_destination = ::zc_locality_default();
 #endif
-
         /// @brief An optional attachment to the query.
         std::optional<Bytes> attachment = {};
         /// @brief The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
         uint64_t timeout_ms = 0;
+#if defined(Z_FEATURE_UNSTABLE_API)
+        /// @brief Cancellation token to interrupt the query.
+        ///  @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        ///  release.
+        std::optional<CancellationToken> cancellation_token = {};
+#endif
 
         /// @name Methods
 
@@ -295,6 +301,9 @@ class Session : public Owned<::z_owned_session_t> {
 #endif
             opts.attachment = interop::as_moved_c_ptr(this->attachment);
             opts.timeout_ms = this->timeout_ms;
+#if defined(Z_FEATURE_UNSTABLE_API)
+            opts.cancellation_token = interop::as_moved_c_ptr(this->cancellation_token);
+#endif
             return opts;
         }
     };
@@ -1116,11 +1125,29 @@ class Session : public Owned<::z_owned_session_t> {
 
         /// @brief The timeout for the query in milliseconds.
         uint64_t timeout_ms = 10000;
+#if defined(Z_FEATURE_UNSTABLE_API)
+        /// @brief Cancellation token to interrupt the query.
+        ///  @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+        ///  release.
+        std::optional<CancellationToken> cancellation_token = {};
+#endif
 
         /// @name Methods
 
         /// @brief Create default option settings.
         static LivelinessGetOptions create_default() { return {}; }
+
+       private:
+        friend struct interop::detail::Converter;
+        ::z_liveliness_get_options_t to_c_opts() {
+            ::z_liveliness_get_options_t opts;
+            z_liveliness_get_options_default(&opts);
+            opts.timeout_ms = this->timeout_ms;
+#if defined(Z_FEATURE_UNSTABLE_API)
+            opts.cancellation_token = interop::as_moved_c_ptr(this->cancellation_token);
+#endif
+            return opts;
+        }
     };
 
     /// @brief Query liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
@@ -1145,9 +1172,7 @@ class Session : public Owned<::z_owned_session_t> {
         using ClosureType = typename detail::closures::Closure<Cval, Dval, void, Reply&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_reply), std::forward<D>(on_drop));
         ::z_closure(&c_closure, detail::closures::_zenoh_on_reply_call, detail::closures::_zenoh_on_drop, closure);
-        ::z_liveliness_get_options_t opts;
-        z_liveliness_get_options_default(&opts);
-        opts.timeout_ms = options.timeout_ms;
+        ::z_liveliness_get_options_t opts = interop::detail::Converter::to_c_opts(options);
 
         __ZENOH_RESULT_CHECK(::z_liveliness_get(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr),
                                                 ::z_move(c_closure), &opts),
@@ -1168,9 +1193,7 @@ class Session : public Owned<::z_owned_session_t> {
         const KeyExpr& key_expr, Channel channel,
         LivelinessGetOptions&& options = LivelinessGetOptions::create_default(), ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<Reply>();
-        ::z_liveliness_get_options_t opts;
-        z_liveliness_get_options_default(&opts);
-        opts.timeout_ms = options.timeout_ms;
+        ::z_liveliness_get_options_t opts = interop::detail::Converter::to_c_opts(options);
 
         ZResult res = ::z_liveliness_get(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr),
                                          ::z_move(cb_handler_pair.first), &opts);
