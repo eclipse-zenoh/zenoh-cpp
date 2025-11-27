@@ -47,16 +47,14 @@ class SessionExt {
 
     /// @name Methods
 
-#if defined(ZENOHCXX_ZENOHC)
+#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API is deprecated. Please use zenoh::ext::AdvancedPublisher.
     /// @brief Options passed to the ``SessionExt::declare_publication_cache``.
     struct PublicationCacheOptions {
         /// The suffix used for queryable.
         std::optional<KeyExpr> queryable_suffix = {};
-#if defined(Z_FEATURE_UNSTABLE_API)
         /// The restriction for the matching queries that will be receive by this publication cache.
-        Locality queryable_origin = ::zc_locality_default();
-#endif
+        Locality queryable_origin = ::z_locality_default();
         /// The `complete` option for the queryable.
         bool queryable_complete = false;
         /// The the history size (i.e. maximum number of messages to store).
@@ -75,9 +73,7 @@ class SessionExt {
             ::ze_publication_cache_options_t opts;
             ze_publication_cache_options_default(&opts);
             opts.queryable_suffix = zenoh::interop::as_loaned_c_ptr(this->queryable_suffix);
-#if defined(Z_FEATURE_UNSTABLE_API)
             opts.queryable_origin = this->queryable_origin;
-#endif
             opts.queryable_complete = this->queryable_complete;
             opts.history = this->history;
             opts.resources_limit = this->resources_limit;
@@ -130,11 +126,9 @@ class SessionExt {
         /// The key expression to be used for queries.
         std::optional<KeyExpr> query_keyexpr = {};
         /// The restriction for the matching publications that will be received by this publication cache.
-        zenoh::Locality allowed_origin = ::zc_locality_default();
-#if defined(Z_FEATURE_UNSTABLE_API)
+        zenoh::Locality allowed_origin = ::z_locality_default();
         /// The accepted replies for queries.
         zenoh::ReplyKeyExpr query_accept_replies = ::zc_reply_keyexpr_default();
-#endif
         /// @brief The target to be used for queries.
         zenoh::QueryTarget query_target = QueryTarget::Z_QUERY_TARGET_BEST_MATCHING;
         /// @brief The consolidation mode to be used for queries.
@@ -155,9 +149,7 @@ class SessionExt {
             ze_querying_subscriber_options_default(&opts);
             opts.query_selector = zenoh::interop::as_loaned_c_ptr(this->query_keyexpr);
             opts.allowed_origin = this->allowed_origin;
-#if defined(Z_FEATURE_UNSTABLE_API)
             opts.query_accept_replies = this->query_accept_replies;
-#endif
             opts.query_target = this->query_target;
             opts.query_consolidation = *zenoh::interop::as_copyable_c_ptr(this->query_consolidation);
             opts.query_timeout_ms = this->query_timeout_ms;
