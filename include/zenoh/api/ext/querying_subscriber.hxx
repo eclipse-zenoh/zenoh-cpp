@@ -46,11 +46,9 @@ class QueryingSubscriberBase : public Owned<::ze_owned_querying_subscriber_t> {
         opts.consolidation = *interop::as_copyable_c_ptr(options.consolidation);
         opts.payload = zenoh::interop::as_moved_c_ptr(options.payload);
         opts.encoding = zenoh::interop::as_moved_c_ptr(options.encoding);
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         opts.source_info = zenoh::interop::as_moved_c_ptr(options.source_info);
         opts.accept_replies = options.accept_replies;
         opts.allowed_destination = options.allowed_destination;
-#endif
         opts.attachment = zenoh::interop::as_moved_c_ptr(options.attachment);
         opts.timeout_ms = options.timeout_ms;
 
