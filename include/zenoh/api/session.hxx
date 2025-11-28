@@ -301,6 +301,9 @@ class Session : public Owned<::z_owned_session_t> {
 #endif
             opts.attachment = interop::as_moved_c_ptr(this->attachment);
             opts.timeout_ms = this->timeout_ms;
+#if defined(ZENOHCXX_ZENOHPICO)
+            opts.timeout_ms = (opts.timeout_ms == 0) ? Z_GET_TIMEOUT_DEFAULT : opts.timeout_ms;
+#endif
 #if defined(Z_FEATURE_UNSTABLE_API)
             opts.cancellation_token = interop::as_moved_c_ptr(this->cancellation_token);
 #endif
@@ -835,6 +838,9 @@ class Session : public Owned<::z_owned_session_t> {
         opts.allowed_destination = options.allowed_destination;
 #endif
         opts.timeout_ms = options.timeout_ms;
+#if defined(ZENOHCXX_ZENOHPICO)
+        opts.timeout_ms = (opts.timeout_ms == 0) ? Z_GET_TIMEOUT_DEFAULT : opts.timeout_ms;
+#endif
 
         Querier q = interop::detail::null<Querier>();
         ZResult res = ::z_declare_querier(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(q),
