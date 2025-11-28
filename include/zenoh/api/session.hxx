@@ -257,7 +257,7 @@ class Session : public Owned<::z_owned_session_t> {
         ReplyKeyExpr accept_replies = ::zc_reply_keyexpr_default();
 #endif
 
-#if defined(ZENOHCXX_ZENOHC) || defined(Z_FEATURE_LOCAL_QUERYABLE)
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_QUERYABLE == 1
         /// @brief Allowed destination.
         Locality allowed_destination = ::z_locality_default();
 #endif
@@ -295,7 +295,7 @@ class Session : public Owned<::z_owned_session_t> {
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
             opts.accept_replies = this->accept_replies;
 #endif
-#if defined(ZENOHCXX_ZENOHC) || defined(Z_FEATURE_LOCAL_QUERYABLE)
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_QUERYABLE == 1
             opts.allowed_destination = this->allowed_destination;
 #endif
             opts.attachment = interop::as_moved_c_ptr(this->attachment);
@@ -368,7 +368,7 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief The completeness of the Queryable.
         bool complete = false;
 
-#if defined(ZENOHCXX_ZENOHC) || defined(Z_FEATURE_LOCAL_QUERYABLE)
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_QUERYABLE == 1
         /// Restrict the matching requests that will be received by this Queryable to the ones
         /// that have the compatible allowed_destination.
         Locality allowed_origin = ::z_locality_default();
@@ -384,7 +384,7 @@ class Session : public Owned<::z_owned_session_t> {
             ::z_queryable_options_t opts;
             z_queryable_options_default(&opts);
             opts.complete = this->complete;
-#if defined(ZENOHCXX_ZENOHC) || defined(Z_FEATURE_LOCAL_QUERYABLE)
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_QUERYABLE == 1
             opts.allowed_origin = this->allowed_origin;
 #endif
             return opts;
@@ -480,7 +480,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Options to be passed when declaring a ``Subscriber``.
     struct SubscriberOptions {
         /// @name Fields
-#if defined(ZENOHCXX_ZENOHC) || defined(Z_FEATURE_LOCAL_SUBSCRIBER)
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_SUBSCRIBER == 1
         /// Restrict the matching publications that will be received by this Subscribers to the ones
         /// that have the compatible allowed_destination.
         Locality allowed_origin = ::z_locality_default();
@@ -495,7 +495,7 @@ class Session : public Owned<::z_owned_session_t> {
         ::z_subscriber_options_t to_c_opts() {
             ::z_subscriber_options_t opts;
             z_subscriber_options_default(&opts);
-#if defined(ZENOHCXX_ZENOHC) || defined(Z_FEATURE_LOCAL_SUBSCRIBER)
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_SUBSCRIBER == 1
             opts.allowed_origin = this->allowed_origin;
 #endif
             return opts;
@@ -646,7 +646,7 @@ class Session : public Owned<::z_owned_session_t> {
         CongestionControl congestion_control = ::z_internal_congestion_control_default_push();
         /// @brief Whether Zenoh will NOT wait to batch this message with others to reduce the bandwith.
         bool is_express = false;
-#if defined(ZENOHCXX_ZENOHC) || defined(Z_FEATURE_LOCAL_SUBSCRIBER)
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_SUBSCRIBER == 1
         /// @brief Allowed destination.
         Locality allowed_destination = ::z_locality_default();
 #endif
@@ -693,7 +693,7 @@ class Session : public Owned<::z_owned_session_t> {
         opts.reliability = options.reliability;
         opts.source_info = interop::as_moved_c_ptr(options.source_info);
 #endif
-#if defined(ZENOHCXX_ZENOHC) || defined(Z_FEATURE_LOCAL_SUBSCRIBER)
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_SUBSCRIBER == 1
         opts.allowed_destination = options.allowed_destination;
 #endif
         opts.attachment = interop::as_moved_c_ptr(options.attachment);
@@ -719,7 +719,7 @@ class Session : public Owned<::z_owned_session_t> {
         /// @brief The publisher reliability.
         Reliability reliability = z_reliability_default();
 #endif
-#if defined(ZENOHCXX_ZENOHC) || defined(Z_FEATURE_LOCAL_SUBSCRIBER)
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_SUBSCRIBER == 1
         /// @brief Allowed destination.
         Locality allowed_destination = ::z_locality_default();
 #endif
@@ -742,7 +742,7 @@ class Session : public Owned<::z_owned_session_t> {
 #if defined(Z_FEATURE_UNSTABLE_API)
             opts.reliability = this->reliability;
 #endif
-#if defined(ZENOHCXX_ZENOHC) || defined(Z_FEATURE_LOCAL_SUBSCRIBER)
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_SUBSCRIBER == 1
             opts.allowed_destination = this->allowed_destination;
 #endif
             opts.encoding = interop::as_moved_c_ptr(this->encoding);
@@ -791,7 +791,7 @@ class Session : public Owned<::z_owned_session_t> {
         /// @note Zenoh-c only.
         ReplyKeyExpr accept_replies = ::zc_reply_keyexpr_default();
 #endif
-#if defined(ZENOHCXX_ZENOHC) || defined(Z_FEATURE_LOCAL_QUERYABLE)
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_QUERYABLE == 1
         /// @brief Allowed destination for querier queries.
         Locality allowed_destination = ::z_locality_default();
 #endif
@@ -825,7 +825,7 @@ class Session : public Owned<::z_owned_session_t> {
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
         opts.accept_replies = options.accept_replies;
 #endif
-#if defined(ZENOHCXX_ZENOHC) || defined(Z_FEATURE_LOCAL_QUERYABLE)
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_QUERYABLE == 1
         opts.allowed_destination = options.allowed_destination;
 #endif
         opts.timeout_ms = options.timeout_ms;

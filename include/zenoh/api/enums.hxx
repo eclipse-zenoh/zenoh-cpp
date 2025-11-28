@@ -106,7 +106,7 @@ inline std::string_view whatami_as_str(WhatAmI whatami) {
     return std::string_view(::z_string_data(::z_loan(str_out)), ::z_string_len(::z_loan(str_out)));
 }
 
-#if defined(ZENOHCXX_ZENOHC) || defined(Z_FEATURE_LOCAL_SUBSCRIBER) || defined(Z_FEATURE_LOCAL_QUERYABLE)
+#if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_SUBSCRIBER == 1 || Z_FEATURE_LOCAL_QUERYABLE == 1
 /// @brief The locality of samples to be received by subscribers or targeted by publishers.
 ///
 /// Values:
