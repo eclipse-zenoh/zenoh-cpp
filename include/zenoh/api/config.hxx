@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "base.hxx"
+#include "interop.hxx"
 
 namespace zenoh {
 /// A Zenoh Session config.
