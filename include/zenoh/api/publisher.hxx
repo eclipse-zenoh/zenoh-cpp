@@ -69,7 +69,7 @@ class Publisher : public Owned<::z_owned_publisher_t> {
             z_publisher_put_options_default(&opts);
             opts.encoding = interop::as_moved_c_ptr(this->encoding);
 #if defined(Z_FEATURE_UNSTABLE_API)
-            opts.source_info = interop::as_moved_c_ptr(this->source_info);
+            opts.source_info = interop::as_copyable_c_ptr(this->source_info);
 #endif
             opts.attachment = interop::as_moved_c_ptr(this->attachment);
             opts.timestamp = interop::as_copyable_c_ptr(this->timestamp);

@@ -28,6 +28,9 @@
 #include "publisher.hxx"
 #include "query_consolidation.hxx"
 #include "queryable.hxx"
+#if defined(Z_FEATURE_UNSTABLE_API)
+#include "source_info.hxx"
+#endif
 #include "subscriber.hxx"
 #include "timestamp.hxx"
 #if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1)
@@ -242,19 +245,20 @@ class Session : public Owned<::z_owned_session_t> {
         std::optional<Bytes> payload = {};
         /// @brief  An optional encoding of the query payload and/or attachment.
         std::optional<Encoding> encoding = {};
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The source info for the query.
-        /// @note Zenoh-c only.
         std::optional<SourceInfo> source_info = {};
 
+#if defined(ZENOHCXX_ZENOHC)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         ///
         /// @brief The accepted replies for the query.
         /// @note Zenoh-c only.
         ReplyKeyExpr accept_replies = ::zc_reply_keyexpr_default();
+#endif
 #endif
 
 #if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_QUERYABLE == 1
@@ -289,8 +293,8 @@ class Session : public Owned<::z_owned_session_t> {
             opts.is_express = this->is_express;
             opts.payload = interop::as_moved_c_ptr(this->payload);
             opts.encoding = interop::as_moved_c_ptr(this->encoding);
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-            opts.source_info = interop::as_moved_c_ptr(this->source_info);
+#if defined(Z_FEATURE_UNSTABLE_API)
+            opts.source_info = interop::as_copyable_c_ptr(this->source_info);
 #endif
 #if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
             opts.accept_replies = this->accept_replies;
@@ -691,7 +695,7 @@ class Session : public Owned<::z_owned_session_t> {
         opts.is_express = options.is_express;
 #if defined(Z_FEATURE_UNSTABLE_API)
         opts.reliability = options.reliability;
-        opts.source_info = interop::as_moved_c_ptr(options.source_info);
+        opts.source_info = interop::as_copyable_c_ptr(options.source_info);
 #endif
 #if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_SUBSCRIBER == 1
         opts.allowed_destination = options.allowed_destination;
@@ -1206,6 +1210,12 @@ class Session : public Owned<::z_owned_session_t> {
         return interop::into_copyable_cpp_obj<Timestamp>(t);
     }
 
+#if defined(Z_FEATURE_UNSTABLE_API)
+    /// @brief Get session global ID.
+    EntityGlobalId get_id() {
+        return interop::into_copyable_cpp_obj<EntityGlobalId>(::z_session_id(interop::as_loaned_c_ptr(*this)));
+    }
+#endif
     /// @brief Close the session and undeclare all not yet undeclared ``Subscriber`` and ``Queryable``
     /// callbacks. After this, all calls to corresponding session (or session entity) methods will fail.
     /// It still possible though to process any already received messages using ``Subscriber`` or

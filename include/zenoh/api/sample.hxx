@@ -101,8 +101,10 @@ class Sample : public Owned<::z_owned_sample_t> {
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Get the source info of this sample.
-    const SourceInfo& get_source_info() const {
-        return interop::as_owned_cpp_ref<SourceInfo>(::z_sample_source_info(interop::as_loaned_c_ptr(*this)));
+    const std::optional<std::reference_wrapper<const SourceInfo>> get_source_info() const {
+        const auto* si = ::z_sample_source_info(interop::as_loaned_c_ptr(*this));
+        if (si == NULL) return {};
+        return std::cref(interop::as_copyable_cpp_ref<SourceInfo>(si));
     }
 #endif
 
