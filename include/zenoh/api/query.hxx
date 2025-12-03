@@ -24,7 +24,7 @@
 #include "enums.hxx"
 #include "interop.hxx"
 #include "keyexpr.hxx"
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API)
 #include "source_info.hxx"
 #endif
 #include "timestamp.hxx"
@@ -89,6 +89,17 @@ class Query : public Owned<::z_owned_query_t> {
         return std::cref(interop::as_owned_cpp_ref<Bytes>(attachment));
     }
 
+#if defined(Z_FEATURE_UNSTABLE_API)
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Get the source info of this query.
+    const std::optional<std::reference_wrapper<const SourceInfo>> get_source_info() const {
+        const auto* si = ::z_query_source_info(interop::as_loaned_c_ptr(*this));
+        if (si == NULL) return {};
+        return std::cref(interop::as_copyable_cpp_ref<SourceInfo>(si));
+    }
+#endif
+
 #if defined(ZENOHCXX_ZENOHC)
     /// @brief Get the mutable attachment of the query.
     /// @return attachment of the query.
@@ -115,11 +126,10 @@ class Query : public Owned<::z_owned_query_t> {
         bool is_express = false;
         /// @brief The timestamp of this message.
         std::optional<Timestamp> timestamp = {};
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The source info of this reply message.
-        /// @note Zenoh-c only.
         std::optional<SourceInfo> source_info = {};
 #endif
         /// @brief An optional attachment to this reply message.
@@ -145,8 +155,8 @@ class Query : public Owned<::z_owned_query_t> {
         opts.congestion_control = options.congestion_control;
         opts.is_express = options.is_express;
         opts.timestamp = interop::as_copyable_c_ptr(options.timestamp);
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-        opts.source_info = interop::as_moved_c_ptr(options.source_info);
+#if defined(Z_FEATURE_UNSTABLE_API)
+        opts.source_info = interop::as_copyable_c_ptr(options.source_info);
 #endif
         opts.attachment = interop::as_moved_c_ptr(options.attachment);
 
@@ -195,11 +205,10 @@ class Query : public Owned<::z_owned_query_t> {
         bool is_express = false;
         /// @brief the timestamp of this message.
         std::optional<Timestamp> timestamp = {};
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API)
         /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
         /// release.
         /// @brief The source info of this reply message.
-        /// @note Zenoh-c only.
         std::optional<SourceInfo> source_info = {};
 #endif
         /// @brief An optional attachment to this reply message.
@@ -224,8 +233,8 @@ class Query : public Owned<::z_owned_query_t> {
         opts.congestion_control = options.congestion_control;
         opts.is_express = options.is_express;
         opts.timestamp = interop::as_copyable_c_ptr(options.timestamp);
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-        opts.source_info = interop::as_moved_c_ptr(options.source_info);
+#if defined(Z_FEATURE_UNSTABLE_API)
+        opts.source_info = interop::as_copyable_c_ptr(options.source_info);
 #endif
         opts.attachment = interop::as_moved_c_ptr(options.attachment);
 

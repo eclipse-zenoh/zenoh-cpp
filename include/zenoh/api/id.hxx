@@ -45,6 +45,13 @@ class Id : public Copyable<::z_id_t> {
         ::z_drop(::z_move(s));
         return ss;
     }
+
+    /// @name Operators
+
+    /// @brief Equality relation.
+    /// @param other an id to compare with.
+    /// @return ``true`` if both zenoh ids are equal, ``false`` otherwise.
+    bool operator==(const Id& other) const { return this->bytes() == other.bytes(); };
 };
 
 /// @brief Print ``Id`` in the hex format.

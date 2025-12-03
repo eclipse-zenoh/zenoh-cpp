@@ -33,27 +33,38 @@ class EntityGlobalId : public Copyable<::z_entity_global_id_t> {
 
     /// Get eid.
     uint32_t eid() const { return ::z_entity_global_id_eid(&this->inner()); }
+
+    /// @name Operators
+
+    /// @brief Equality relation.
+    /// @param other an entity global id to compare with.
+    /// @return ``true`` if both ids are equal, ``false`` otherwise.
+    bool operator==(const EntityGlobalId& other) const {
+        return this->eid() == other.eid() && this->id() == other.id();
+    };
 };
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Informations on the Zenoh source.
-class SourceInfo : public Owned<::z_owned_source_info_t> {
+class SourceInfo : public Copyable<::z_source_info_t> {
+    using Copyable::Copyable;
+    friend struct interop::detail::Converter;
+
    public:
     /// @name Constructors
 
     /// @brief Construct from global id and sequence number.
-    SourceInfo(const EntityGlobalId& id, uint32_t sn) : Owned(nullptr) {
-        ::z_source_info_new(&this->_0, interop::as_copyable_c_ptr(id), sn);
-    }
+    SourceInfo(const EntityGlobalId& id, uint32_t sn)
+        : Copyable(::z_source_info_new(interop::as_copyable_c_ptr(id), sn)) {}
 
     /// @name Methods
 
     /// @brief Get the source id.
     EntityGlobalId id() const {
-        return interop::into_copyable_cpp_obj<EntityGlobalId>(::z_source_info_id(interop::as_loaned_c_ptr(*this)));
+        return interop::into_copyable_cpp_obj<EntityGlobalId>(::z_source_info_id(&this->inner()));
     }
 
     /// @brief Get the sequence number of the sample from the given source.
-    uint32_t sn() const { return ::z_source_info_sn(interop::as_loaned_c_ptr(*this)); }
+    uint32_t sn() const { return ::z_source_info_sn(&this->inner()); }
 };
 }  // namespace zenoh
