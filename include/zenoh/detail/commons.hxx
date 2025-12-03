@@ -54,4 +54,13 @@ auto make_transform_iterator(It const& it, F&& f) {
     return TransformIterator<It, F>(it, std::forward<F>(f));
 }
 
+template <class... Ts>
+struct overloaded : Ts... {
+    using Ts::operator()...;
+};
+
+// Some compilers might require this explicit deduction guide
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
+
 }  // namespace zenoh::detail::commons
