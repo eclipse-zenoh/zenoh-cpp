@@ -14,18 +14,17 @@
 #pragma once
 
 #include "../detail/closures.hxx"
-#include "../detail/commons.hxx"
 #include "base.hxx"
-#include "closures.hxx"
 #include "interop.hxx"
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 #include "shm/buffer/buffer.hxx"
 #endif
 
-#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace zenoh {
@@ -81,10 +80,10 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     }
 
     /// @brief Construct by copying sequence of charactes.
-    Bytes(const char* v) : Bytes(std::string_view(v)){};
+    Bytes(const char* v) : Bytes(std::string_view(v)) {};
 
     /// @brief Construct by copying sequence of charactes.
-    Bytes(const std::string& v) : Bytes(std::string_view(v)){};
+    Bytes(const std::string& v) : Bytes(std::string_view(v)) {};
 
     /// @brief Construct by moving a string.
     Bytes(std::string&& v) : Bytes() {

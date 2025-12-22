@@ -14,6 +14,8 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #include <iterator>
+#include <type_traits>
+#include <utility>
 
 namespace zenoh::detail::commons {
 
