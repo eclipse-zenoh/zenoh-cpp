@@ -40,7 +40,9 @@
 #include "shm/client_storage/client_storage.hxx"
 #include "shm/provider/shm_provider.hxx"
 #endif
+#if defined(Z_FEATURE_UNSTABLE_API)
 #include "cancellation.hxx"
+#endif
 
 namespace zenoh {
 namespace ext {

@@ -12,7 +12,6 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 #pragma once
 
-#include <optional>
 #include <type_traits>
 
 #include "../zenohc.hxx"

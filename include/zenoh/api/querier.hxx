@@ -18,7 +18,9 @@
 #include "../detail/closures_concrete.hxx"
 #include "base.hxx"
 #include "bytes.hxx"
+#if defined(Z_FEATURE_UNSTABLE_API)
 #include "cancellation.hxx"
+#endif
 #include "encoding.hxx"
 #include "enums.hxx"
 #include "interop.hxx"

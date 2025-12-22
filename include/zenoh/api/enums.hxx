@@ -12,6 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #pragma once
+
 #include <string_view>
 
 #include "../zenohc.hxx"
