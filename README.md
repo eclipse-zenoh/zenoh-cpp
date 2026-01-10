@@ -24,7 +24,6 @@ C++ bindings are still under active development so the Zenoh team will highly ap
 ## Requirements
 
 The only hard requirement for building the library is a C++17-compliant compiler.
-Using the library requires either [zenoh-c] or [zenoh-pico] to be installed.
 
 -------------------------------
 
