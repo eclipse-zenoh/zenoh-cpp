@@ -14,7 +14,6 @@
 #pragma once
 
 #include <array>
-#include <iomanip>
 #include <iostream>
 #include <string_view>
 

@@ -20,7 +20,7 @@ namespace zenoh::detail::closures {
 
 struct IDroppable {
     virtual void drop() = 0;
-    virtual ~IDroppable(){};
+    virtual ~IDroppable() {};
 
     static void delete_from_context(void* context) {
         reinterpret_cast<IDroppable*>(context)->drop();
