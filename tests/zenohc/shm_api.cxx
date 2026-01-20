@@ -92,12 +92,12 @@ bool check_alloc(Talloc&& alloc) {
 }
 
 bool test_layouted_allocation(const PrecomputedLayout& precomputed_layout) {
-    auto alloc = precomputed_layout.alloc_gc();
+    auto alloc = precomputed_layout.alloc_gc_defrag();
     return check_alloc(std::move(alloc));
 }
 
 bool test_allocation(const ShmProvider& provider, size_t size, AllocAlignment alignment) {
-    auto alloc = provider.alloc_gc(size, alignment);
+    auto alloc = provider.alloc_gc_defrag(size, alignment);
     return check_alloc(std::move(alloc));
 }
 
@@ -252,7 +252,7 @@ int run_c_provider() {
 int run_posix_provider() {
     const size_t total_size = 4096;
     const size_t buf_ok_size = total_size / 4;
-    const size_t buf_err_size = total_size * 100;
+    const size_t buf_err_size = total_size * 2;
 
     const AllocAlignment alignment = {4};
 
@@ -406,6 +406,8 @@ int run_transport_provider() {
 }
 
 int main() {
+    init_log_from_env_or("trace");
+
     ASSERT_OK(run_posix_provider());
     ASSERT_OK(run_c_provider());
     ASSERT_OK(run_default_client_storage());
