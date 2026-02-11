@@ -88,7 +88,8 @@ void test_get() {
 
         Session::GetOptions opt;
         opt.cancellation_token = ct;
-        auto replies = session2.get(ke, "", channels::FifoChannel(3), std::move(opt));
+        ZResult _err;
+        auto replies = session2.get(ke, "", channels::FifoChannel(3), std::move(opt), &_err);
         std::this_thread::sleep_for(1s);
         auto res = replies.try_recv();
         assert(std::holds_alternative<channels::RecvError>(res));
@@ -162,7 +163,8 @@ void test_querier_get() {
 
         Querier::GetOptions opt;
         opt.cancellation_token = ct;
-        auto replies = querier.get("", channels::FifoChannel(3), std::move(opt));
+        ZResult _err;
+        auto replies = querier.get("", channels::FifoChannel(3), std::move(opt), &_err);
         std::this_thread::sleep_for(1s);
         auto res = replies.try_recv();
         assert(std::holds_alternative<channels::RecvError>(res));
@@ -213,7 +215,8 @@ void test_liveliness_get() {
 
         Session::LivelinessGetOptions opt;
         opt.cancellation_token = ct;
-        auto replies = session2.liveliness_get(ke, channels::FifoChannel(3), std::move(opt));
+        ZResult _err;
+        auto replies = session2.liveliness_get(ke, channels::FifoChannel(3), std::move(opt), &_err);
         std::this_thread::sleep_for(1s);
         auto res = replies.try_recv();
         assert(std::holds_alternative<channels::RecvError>(res));
