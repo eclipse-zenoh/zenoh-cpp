@@ -389,8 +389,10 @@ class Session : public Owned<::z_owned_session_t> {
 
         ZResult res = ::z_get(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr), parameters.c_str(),
                               ::z_move(cb_handler_pair.first), &opts);
+        if (res != Z_OK && err == nullptr) {
+            ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
+        }
         __ZENOH_RESULT_CHECK(res, err, "Failed to perform get operation");
-        if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
         return std::move(cb_handler_pair.second);
     }
 #endif
@@ -504,8 +506,10 @@ class Session : public Owned<::z_owned_session_t> {
         Queryable<void> q(zenoh::detail::null_object);
         ZResult res = ::z_declare_queryable(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(q),
                                             interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
+        if (res != Z_OK && err == nullptr) {
+            ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
+        }
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Queryable");
-        if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
         return Queryable<typename Channel::template HandlerType<Query>>(std::move(q),
                                                                         std::move(cb_handler_pair.second));
     }
@@ -618,8 +622,10 @@ class Session : public Owned<::z_owned_session_t> {
         ZResult res =
             ::z_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
                                    interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
+        if (res != Z_OK && err == nullptr) {
+            ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
+        }
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Subscriber");
-        if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
         return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
                                                                           std::move(cb_handler_pair.second));
     }
@@ -1163,8 +1169,10 @@ class Session : public Owned<::z_owned_session_t> {
         ZResult res = ::z_liveliness_declare_subscriber(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s),
                                                         interop::as_loaned_c_ptr(key_expr),
                                                         ::z_move(cb_handler_pair.first), &opts);
+        if (res != Z_OK && err == nullptr) {
+            ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
+        }
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
-        if (res != Z_OK) ::z_drop(::z_move(*interop::as_moved_c_ptr(cb_handler_pair.second)));
         return Subscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
                                                                           std::move(cb_handler_pair.second));
     }
@@ -1247,8 +1255,10 @@ class Session : public Owned<::z_owned_session_t> {
 
         ZResult res = ::z_liveliness_get(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr),
                                          ::z_move(cb_handler_pair.first), &opts);
+        if (res != Z_OK && err == nullptr) {
+            ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
+        }
         __ZENOH_RESULT_CHECK(res, err, "Failed to perform liveliness_get operation");
-        if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
         return std::move(cb_handler_pair.second);
     }
 #endif

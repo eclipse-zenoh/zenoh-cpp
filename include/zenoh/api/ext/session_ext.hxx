@@ -248,8 +248,10 @@ class SessionExt {
         zenoh::ZResult res = ::ze_declare_querying_subscriber(
             zenoh::interop::as_loaned_c_ptr(this->_session), zenoh::interop::as_owned_c_ptr(qs),
             zenoh::interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
+        if (res != Z_OK && err == nullptr) {
+            ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
+        }
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Querying Subscriber");
-        if (res != Z_OK) ::z_drop(zenoh::interop::as_moved_c_ptr(cb_handler_pair.second));
         return QueryingSubscriber<typename Channel::template HandlerType<zenoh::Sample>>(
             std::move(qs), std::move(cb_handler_pair.second));
     }
@@ -605,8 +607,10 @@ class SessionExt {
         zenoh::ZResult res = ::ze_declare_advanced_subscriber(
             zenoh::interop::as_loaned_c_ptr(this->_session), zenoh::interop::as_owned_c_ptr(s),
             zenoh::interop::as_loaned_c_ptr(key_expr), ::z_move(cb_handler_pair.first), &opts);
+        if (res != Z_OK && err == nullptr) {
+            ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
+        }
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Advanced Subscriber");
-        if (res != Z_OK) ::z_drop(zenoh::interop::as_moved_c_ptr(cb_handler_pair.second));
         return AdvancedSubscriber<typename Channel::template HandlerType<Sample>>(std::move(s),
                                                                                   std::move(cb_handler_pair.second));
     }
