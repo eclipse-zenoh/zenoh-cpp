@@ -178,8 +178,10 @@ class AdvancedSubscriberBase : public Owned<::ze_owned_advanced_subscriber_t> {
         zenoh::ZResult res =
             ::z_liveliness_declare_subscriber(zenoh::interop::as_loaned_c_ptr(*this), zenoh::interop::as_owned_c_ptr(s),
                                               ::z_move(cb_handler_pair.first), &opts);
+        if (res != Z_OK && err == nullptr) {
+            ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
+        }
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Liveliness Token Subscriber");
-        if (res != Z_OK) ::z_drop(::z_move(*zenoh::interop::as_moved_c_ptr(cb_handler_pair.second)));
         return zenoh::Subscriber<typename Channel::template HandlerType<zenoh::Sample>>(
             std::move(s), std::move(cb_handler_pair.second));
     }

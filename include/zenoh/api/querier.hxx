@@ -132,8 +132,10 @@ class Querier : public Owned<::z_owned_querier_t> {
 
         ZResult res = ::z_querier_get(interop::as_loaned_c_ptr(*this), parameters.c_str(),
                                       ::z_move(cb_handler_pair.first), &opts);
+        if (res != Z_OK && err == nullptr) {
+            ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
+        }
         __ZENOH_RESULT_CHECK(res, err, "Failed to perform Querier::get operation");
-        if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
         return std::move(cb_handler_pair.second);
     }
 
@@ -206,8 +208,10 @@ class Querier : public Owned<::z_owned_querier_t> {
         MatchingListener<void> m(zenoh::detail::null_object);
         ZResult res = ::z_querier_declare_matching_listener(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(m),
                                                             ::z_move(cb_handler_pair.first));
+        if (res != Z_OK && err == nullptr) {
+            ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
+        }
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare Matching Listener");
-        if (res != Z_OK) ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
         return MatchingListener<typename Channel::template HandlerType<MatchingStatus>>(
             std::move(m), std::move(cb_handler_pair.second));
     }
