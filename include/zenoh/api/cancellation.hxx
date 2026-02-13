@@ -34,7 +34,7 @@ class CancellationToken : public Owned<::z_owned_cancellation_token_t> {
     /// @brief Copy constructor.
     ///
     /// Cancelling a token also cancels all of its copies.
-    CancellationToken(CancellationToken& other) : Owned(nullptr) {
+    CancellationToken(const CancellationToken& other) : Owned(nullptr) {
         ::z_cancellation_token_clone(interop::as_owned_c_ptr(*this), interop::as_loaned_c_ptr(other));
     }
 
@@ -60,7 +60,7 @@ class CancellationToken : public Owned<::z_owned_cancellation_token_t> {
     ///
     /// @return ``true`` if token was cancelled (i.e if ``cancel`` was called on it or one of its copies), ``false``
     /// otherwise.
-    bool is_cancelled() { return ::z_cancellation_token_is_cancelled(interop::as_loaned_c_ptr(*this)); }
+    bool is_cancelled() const { return ::z_cancellation_token_is_cancelled(interop::as_loaned_c_ptr(*this)); }
 };
 }  // namespace zenoh
 #endif
