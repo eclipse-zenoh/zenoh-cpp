@@ -119,9 +119,11 @@ class Query : public Owned<::z_owned_query_t> {
         /// @brief An optional encoding of the reply message payload and/or attachment.
         std::optional<Encoding> encoding = {};
         /// @brief The priority of this reply message.
+        [[deprecated("priority is no longer supported in ReplyOptions")]]
         Priority priority = Z_PRIORITY_DEFAULT;
         /// @brief The congestion control to apply when routing this reply message.
-        CongestionControl congestion_control = ::z_internal_congestion_control_default_response();
+        [[deprecated("congestion_control is no longer supported in ReplyOptions")]]
+        CongestionControl congestion_control = Z_CONGESTION_CONTROL_BLOCK;
         /// @brief Whether Zenoh will NOT wait to batch this reply message with others to reduce the bandwith.
         bool is_express = false;
         /// @brief The timestamp of this message.
@@ -151,8 +153,6 @@ class Query : public Owned<::z_owned_query_t> {
         ::z_query_reply_options_t opts;
         z_query_reply_options_default(&opts);
         opts.encoding = interop::as_moved_c_ptr(options.encoding);
-        opts.priority = options.priority;
-        opts.congestion_control = options.congestion_control;
         opts.is_express = options.is_express;
         opts.timestamp = interop::as_copyable_c_ptr(options.timestamp);
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -198,9 +198,11 @@ class Query : public Owned<::z_owned_query_t> {
         /// @name Fields.
 
         /// @brief The priority of this reply message.
+        [[deprecated("priority is no longer supported in ReplyDelOptions")]]
         Priority priority = Z_PRIORITY_DEFAULT;
         /// @brief The congestion control to apply when routing this reply message.
-        CongestionControl congestion_control = ::z_internal_congestion_control_default_response();
+        [[deprecated("congestion_control is no longer supported in ReplyDelOptions")]]
+        CongestionControl congestion_control = Z_CONGESTION_CONTROL_BLOCK;
         /// @brief Whether Zenoh will NOT wait to batch this reply message with others to reduce the bandwith.
         bool is_express = false;
         /// @brief the timestamp of this message.
@@ -229,8 +231,6 @@ class Query : public Owned<::z_owned_query_t> {
                    ZResult* err = nullptr) const {
         ::z_query_reply_del_options_t opts;
         z_query_reply_del_options_default(&opts);
-        opts.priority = options.priority;
-        opts.congestion_control = options.congestion_control;
         opts.is_express = options.is_express;
         opts.timestamp = interop::as_copyable_c_ptr(options.timestamp);
 #if defined(Z_FEATURE_UNSTABLE_API)

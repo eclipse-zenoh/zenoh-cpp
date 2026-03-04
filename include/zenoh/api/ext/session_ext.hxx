@@ -270,7 +270,7 @@ class SessionExt {
             /// Number of samples to keep for each resource.
             size_t max_samples = 1;
             /// The congestion control to apply to replies.
-            zenoh::CongestionControl congestion_control = ::z_internal_congestion_control_default_response();
+            zenoh::CongestionControl congestion_control = Z_CONGESTION_CONTROL_BLOCK;
             /// The priority of replies.
             zenoh::Priority priority = ::z_priority_default();
             /// If set to ``true``, this cache replies will not be batched. This usually has a positive impact on
