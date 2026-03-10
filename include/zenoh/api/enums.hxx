@@ -119,6 +119,7 @@ typedef ::z_locality_t Locality;
 #if defined(ZENOHCXX_ZENOHC)
 /// @brief Key expressions types to which Queryable should reply to.
 ///
+/// @note Zenoh-c only.
 /// Values:
 /// - **ZC_REPLY_KEYEXPR_ANY**:  Replies to any key expression queries.
 /// - **ZC_REPLY_KEYEXPR_MATCHING_QUERY**: Replies only to queries with intersecting key expressions.
