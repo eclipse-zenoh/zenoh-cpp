@@ -284,6 +284,7 @@ class Session : public Owned<::z_owned_session_t> {
 
 #if defined(ZENOHCXX_ZENOHC)
         /// @brief The accepted replies for the query.
+        /// @note Zenoh-c only.
         ReplyKeyExpr accept_replies = ::zc_reply_keyexpr_default();
 #endif
 
