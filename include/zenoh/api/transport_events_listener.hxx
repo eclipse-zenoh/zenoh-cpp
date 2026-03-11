@@ -27,8 +27,8 @@ class Session;
 namespace detail {
 class TransportEventsListenerBase : public Owned<::z_owned_transport_events_listener_t> {
    protected:
-    TransportEventsListenerBase(zenoh::detail::null_object_t) : Owned(nullptr){};
-    TransportEventsListenerBase(::z_owned_transport_events_listener_t* l) : Owned(l){};
+    TransportEventsListenerBase(zenoh::detail::null_object_t) : Owned(nullptr) {};
+    TransportEventsListenerBase(::z_owned_transport_events_listener_t* l) : Owned(l) {};
     friend struct interop::detail::Converter;
 };
 }  // namespace detail
@@ -117,8 +117,7 @@ auto as_moved_c_ptr(TransportEventsListener<Handler>& l) {
 /// @brief Return a pair of pointers to moved zenoh-c representations of transport events listener and its callback.
 /// Will return a pair of null pointers if option is empty.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
-auto as_moved_c_ptr(std::optional<TransportEventsListener<Handler>>& l)
-    -> decltype(as_moved_c_ptr(l.value())) {
+auto as_moved_c_ptr(std::optional<TransportEventsListener<Handler>>& l) -> decltype(as_moved_c_ptr(l.value())) {
     if (!l.has_value()) {
         return as_moved_c_ptr(l.value());
     } else {
