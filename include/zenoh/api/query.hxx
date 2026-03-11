@@ -90,11 +90,10 @@ class Query : public Owned<::z_owned_query_t> {
     }
 
 #if defined(ZENOHCXX_ZENOHC)
-    /// @brief Get the accepts_replies setting of this query, i.e. which replies are accepted by the query originator.
+    /// @brief Get the accepts_replies setting of this query, i.e. which replies are accepted by the query
+    /// originator.
     /// @note Zenoh-c only.
-    ReplyKeyExpr get_accepts_replies() const {
-        return ::z_query_accepts_replies(interop::as_loaned_c_ptr(*this));
-    }
+    ReplyKeyExpr get_accepts_replies() const { return ::z_query_accepts_replies(interop::as_loaned_c_ptr(*this)); }
 #endif
 
 #if defined(Z_FEATURE_UNSTABLE_API)
