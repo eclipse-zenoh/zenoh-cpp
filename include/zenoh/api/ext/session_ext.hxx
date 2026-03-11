@@ -128,7 +128,7 @@ class SessionExt {
         /// The restriction for the matching publications that will be received by this publication cache.
         zenoh::Locality allowed_origin = ::z_locality_default();
         /// The accepted replies for queries.
-        zenoh::ReplyKeyExpr query_accept_replies = ::zc_reply_keyexpr_default();
+        zenoh::ReplyKeyExpr query_accept_replies = ::z_reply_keyexpr_default();
         /// @brief The target to be used for queries.
         zenoh::QueryTarget query_target = QueryTarget::Z_QUERY_TARGET_BEST_MATCHING;
         /// @brief The consolidation mode to be used for queries.
