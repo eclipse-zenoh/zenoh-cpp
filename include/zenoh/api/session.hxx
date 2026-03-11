@@ -285,7 +285,7 @@ class Session : public Owned<::z_owned_session_t> {
 #if defined(ZENOHCXX_ZENOHC)
         /// @brief The accepted replies for the query.
         /// @note Zenoh-c only.
-        ReplyKeyExpr accept_replies = ::zc_reply_keyexpr_default();
+        ReplyKeyExpr accept_replies = ::z_reply_keyexpr_default();
 #endif
 
 #if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_QUERYABLE == 1
@@ -823,7 +823,7 @@ class Session : public Owned<::z_owned_session_t> {
 #if defined(ZENOHCXX_ZENOHC)
         /// @brief The accepted replies for the querier queries.
         /// @note Zenoh-c only.
-        ReplyKeyExpr accept_replies = ::zc_reply_keyexpr_default();
+        ReplyKeyExpr accept_replies = ::z_reply_keyexpr_default();
 #endif
 #if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_QUERYABLE == 1
         /// @brief Allowed destination for querier queries.

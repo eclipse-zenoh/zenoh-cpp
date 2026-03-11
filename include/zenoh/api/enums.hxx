@@ -121,9 +121,9 @@ typedef ::z_locality_t Locality;
 ///
 /// @note Zenoh-c only.
 /// Values:
-/// - **ZC_REPLY_KEYEXPR_ANY**:  Replies to any key expression queries.
-/// - **ZC_REPLY_KEYEXPR_MATCHING_QUERY**: Replies only to queries with intersecting key expressions.
-typedef ::zc_reply_keyexpr_t ReplyKeyExpr;
+/// - **Z_REPLY_KEYEXPR_ANY**:  Replies to any key expression queries.
+/// - **Z_REPLY_KEYEXPR_MATCHING_QUERY**: Replies only to queries with intersecting key expressions.
+typedef ::z_reply_keyexpr_t ReplyKeyExpr;
 #endif
 
 }  // namespace zenoh
