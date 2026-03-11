@@ -27,8 +27,8 @@ class Session;
 namespace detail {
 class LinkEventsListenerBase : public Owned<::z_owned_link_events_listener_t> {
    protected:
-    LinkEventsListenerBase(zenoh::detail::null_object_t) : Owned(nullptr) {};
-    LinkEventsListenerBase(::z_owned_link_events_listener_t* l) : Owned(l) {};
+    LinkEventsListenerBase(zenoh::detail::null_object_t) : Owned(nullptr) {}
+    LinkEventsListenerBase(::z_owned_link_events_listener_t* l) : Owned(l) {}
     friend struct interop::detail::Converter;
 };
 }  // namespace detail
