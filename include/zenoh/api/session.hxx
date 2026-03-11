@@ -66,7 +66,7 @@ enum class ShmProviderNotReadyState {
 
 /// A Zenoh session.
 class Session : public Owned<::z_owned_session_t> {
-    Session(zenoh::detail::null_object_t) : Owned(nullptr){};
+    Session(zenoh::detail::null_object_t) : Owned(nullptr) {};
 
    public:
     /// @brief Options to be passed when opening a ``Session``.
@@ -1017,8 +1017,8 @@ class Session : public Owned<::z_owned_session_t> {
                     closure);
         ::z_transport_events_listener_options_t opts = interop::detail::Converter::to_c_opts(options);
         TransportEventsListener<void> l = interop::detail::null<TransportEventsListener<void>>();
-        ZResult res = ::z_declare_transport_events_listener(interop::as_loaned_c_ptr(*this),
-                                                            interop::as_owned_c_ptr(l), ::z_move(c_closure), &opts);
+        ZResult res = ::z_declare_transport_events_listener(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(l),
+                                                            ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare transport events listener");
         return l;
     }
@@ -1069,14 +1069,13 @@ class Session : public Owned<::z_owned_session_t> {
     template <class Channel>
     [[nodiscard]] TransportEventsListener<typename Channel::template HandlerType<TransportEvent>>
     declare_transport_events_listener(
-        Channel channel,
-        TransportEventsListenerOptions&& options = TransportEventsListenerOptions::create_default(),
+        Channel channel, TransportEventsListenerOptions&& options = TransportEventsListenerOptions::create_default(),
         ZResult* err = nullptr) const {
         auto cb_handler_pair = channel.template into_cb_handler_pair<TransportEvent>();
         ::z_transport_events_listener_options_t opts = interop::detail::Converter::to_c_opts(options);
         TransportEventsListener<void> l = interop::detail::null<TransportEventsListener<void>>();
-        ZResult res = ::z_declare_transport_events_listener(
-            interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(l), ::z_move(cb_handler_pair.first), &opts);
+        ZResult res = ::z_declare_transport_events_listener(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(l),
+                                                            ::z_move(cb_handler_pair.first), &opts);
         if (res != Z_OK && err == nullptr) {
             ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
         }
@@ -1128,8 +1127,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @note Zenoh-c only.
     template <class C, class D>
     [[nodiscard]] LinkEventsListener<void> declare_link_events_listener(
-        C&& on_event, D&& on_drop,
-        LinkEventsListenerOptions&& options = LinkEventsListenerOptions::create_default(),
+        C&& on_event, D&& on_drop, LinkEventsListenerOptions&& options = LinkEventsListenerOptions::create_default(),
         ZResult* err = nullptr) const {
         static_assert(
             std::is_invocable_r<void, C, LinkEvent&>::value,
@@ -1141,8 +1139,7 @@ class Session : public Owned<::z_owned_session_t> {
         using Dval = std::remove_reference_t<D>;
         using ClosureType = typename detail::closures::Closure<Cval, Dval, void, LinkEvent&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_event), std::forward<D>(on_drop));
-        ::z_closure(&c_closure, detail::closures::_zenoh_on_link_event_call, detail::closures::_zenoh_on_drop,
-                    closure);
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_link_event_call, detail::closures::_zenoh_on_drop, closure);
         LinkEventsListenerOptions opts_copy = std::move(options);
         ::z_link_events_listener_options_t opts = interop::detail::Converter::to_c_opts(opts_copy);
         LinkEventsListener<void> l = interop::detail::null<LinkEventsListener<void>>();
@@ -1164,8 +1161,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @note Zenoh-c only.
     template <class C, class D>
     void declare_background_link_events_listener(
-        C&& on_event, D&& on_drop,
-        LinkEventsListenerOptions&& options = LinkEventsListenerOptions::create_default(),
+        C&& on_event, D&& on_drop, LinkEventsListenerOptions&& options = LinkEventsListenerOptions::create_default(),
         ZResult* err = nullptr) const {
         static_assert(
             std::is_invocable_r<void, C, LinkEvent&>::value,
@@ -1177,12 +1173,11 @@ class Session : public Owned<::z_owned_session_t> {
         using Dval = std::remove_reference_t<D>;
         using ClosureType = typename detail::closures::Closure<Cval, Dval, void, LinkEvent&>;
         auto closure = ClosureType::into_context(std::forward<C>(on_event), std::forward<D>(on_drop));
-        ::z_closure(&c_closure, detail::closures::_zenoh_on_link_event_call, detail::closures::_zenoh_on_drop,
-                    closure);
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_link_event_call, detail::closures::_zenoh_on_drop, closure);
         LinkEventsListenerOptions opts_copy = std::move(options);
         ::z_link_events_listener_options_t opts = interop::detail::Converter::to_c_opts(opts_copy);
-        ZResult res = ::z_declare_background_link_events_listener(interop::as_loaned_c_ptr(*this),
-                                                                   ::z_move(c_closure), &opts);
+        ZResult res =
+            ::z_declare_background_link_events_listener(interop::as_loaned_c_ptr(*this), ::z_move(c_closure), &opts);
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare background link events listener");
     }
 
@@ -1210,8 +1205,8 @@ class Session : public Owned<::z_owned_session_t> {
             ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
         }
         __ZENOH_RESULT_CHECK(res, err, "Failed to declare link events listener");
-        return LinkEventsListener<typename Channel::template HandlerType<LinkEvent>>(
-            std::move(l), std::move(cb_handler_pair.second));
+        return LinkEventsListener<typename Channel::template HandlerType<LinkEvent>>(std::move(l),
+                                                                                     std::move(cb_handler_pair.second));
     }
 #endif
 
