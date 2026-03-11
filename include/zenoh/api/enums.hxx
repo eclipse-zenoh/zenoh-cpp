@@ -116,15 +116,14 @@ inline std::string_view whatami_as_str(WhatAmI whatami) {
 typedef ::z_locality_t Locality;
 #endif
 
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+#if defined(ZENOHCXX_ZENOHC)
 /// @brief Key expressions types to which Queryable should reply to.
 ///
 /// @note Zenoh-c only.
 /// Values:
-/// - **ZC_REPLY_KEYEXPR_ANY**:  Replies to any key expression queries.
-/// - **ZC_REPLY_KEYEXPR_MATCHING_QUERY**: Replies only to queries with intersecting key expressions.
-typedef ::zc_reply_keyexpr_t ReplyKeyExpr;
+/// - **Z_REPLY_KEYEXPR_ANY**:  Replies to any key expression queries.
+/// - **Z_REPLY_KEYEXPR_MATCHING_QUERY**: Replies only to queries with intersecting key expressions.
+typedef ::z_reply_keyexpr_t ReplyKeyExpr;
 #endif
 
 }  // namespace zenoh
