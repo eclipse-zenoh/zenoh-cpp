@@ -280,15 +280,12 @@ class Session : public Owned<::z_owned_session_t> {
         /// release.
         /// @brief The source info for the query.
         std::optional<SourceInfo> source_info = {};
+#endif
 
 #if defined(ZENOHCXX_ZENOHC)
-        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-        /// release.
-        ///
         /// @brief The accepted replies for the query.
         /// @note Zenoh-c only.
-        ReplyKeyExpr accept_replies = ::zc_reply_keyexpr_default();
-#endif
+        ReplyKeyExpr accept_replies = ::z_reply_keyexpr_default();
 #endif
 
 #if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_QUERYABLE == 1
@@ -326,7 +323,7 @@ class Session : public Owned<::z_owned_session_t> {
 #if defined(Z_FEATURE_UNSTABLE_API)
             opts.source_info = interop::as_copyable_c_ptr(this->source_info);
 #endif
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(ZENOHCXX_ZENOHC)
             opts.accept_replies = this->accept_replies;
 #endif
 #if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_QUERYABLE == 1
@@ -823,13 +820,10 @@ class Session : public Owned<::z_owned_session_t> {
         CongestionControl congestion_control = ::z_internal_congestion_control_default_request();
         /// @brief Whether Zenoh will NOT wait to batch querier queries with other messages to reduce the bandwith.
         bool is_express = false;
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
-        /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
-        /// release.
-        ///
+#if defined(ZENOHCXX_ZENOHC)
         /// @brief The accepted replies for the querier queries.
         /// @note Zenoh-c only.
-        ReplyKeyExpr accept_replies = ::zc_reply_keyexpr_default();
+        ReplyKeyExpr accept_replies = ::z_reply_keyexpr_default();
 #endif
 #if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_QUERYABLE == 1
         /// @brief Allowed destination for querier queries.
@@ -862,7 +856,7 @@ class Session : public Owned<::z_owned_session_t> {
         opts.priority = options.priority;
         opts.is_express = options.is_express;
         ;
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(ZENOHCXX_ZENOHC)
         opts.accept_replies = options.accept_replies;
 #endif
 #if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LOCAL_QUERYABLE == 1

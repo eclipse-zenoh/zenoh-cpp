@@ -89,6 +89,13 @@ class Query : public Owned<::z_owned_query_t> {
         return std::cref(interop::as_owned_cpp_ref<Bytes>(attachment));
     }
 
+#if defined(ZENOHCXX_ZENOHC)
+    /// @brief Get the accepts_replies setting of this query, i.e. which replies are accepted by the query
+    /// originator.
+    /// @note Zenoh-c only.
+    ReplyKeyExpr get_accepts_replies() const { return ::z_query_accepts_replies(interop::as_loaned_c_ptr(*this)); }
+#endif
+
 #if defined(Z_FEATURE_UNSTABLE_API)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
