@@ -939,7 +939,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @return a vector of all links.
     std::vector<Link> get_links(std::optional<Transport> transport = {}, ZResult* err = nullptr) const {
         std::vector<Link> out;
-        auto f = [&out](Link& link) { out.push_back(link); };
+        auto f = [&out](Link& link) { out.push_back(std::move(link)); };
         typedef decltype(f) F;
         ::z_owned_closure_link_t c_closure;
         using ClosureType = typename detail::closures::Closure<F, closures::None, void, Link&>;
