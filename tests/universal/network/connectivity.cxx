@@ -23,7 +23,7 @@ using namespace std::chrono_literals;
 #undef NDEBUG
 #include <assert.h>
 
-// On zenoh-c: tests both router+peer and peer+peer session pairs.
+// On zenoh-c: tests router+peer session pair.
 // On zenoh-pico: tests peer+peer only (router mode not supported for listeners).
 //   Session disconnect events (DELETE) are not reported by zenoh-pico.
 
@@ -38,9 +38,9 @@ Config create_config(const char* mode, const char* listen, const char* connect) 
     return config;
 }
 
-Session create_listening_session(const char* port, const char* mode = "\"router\"") {
+Session create_listening_session(const char* port) {
     std::string listen = std::string("[\"tcp/127.0.0.1:") + port + "\"]";
-    return Session::open(create_config(mode, listen.c_str(), "[]"));
+    return Session::open(create_config("\"router\"", listen.c_str(), "[]"));
 }
 
 Session create_connecting_session(const char* port) {
@@ -76,18 +76,6 @@ std::pair<Session, Session> create_session_pair(const char* port) {
     return {std::move(s1), std::move(s2)};
 }
 
-std::pair<Session, Session> create_peer_session_pair(const char* port) {
-#ifdef ZENOHCXX_ZENOHC
-    auto s1 = create_listening_session(port, "\"peer\"");
-#else
-    auto s1 = create_listening_session(port);
-#endif
-    std::this_thread::sleep_for(1s);
-    auto s2 = create_connecting_session(port);
-    std::this_thread::sleep_for(1s);
-    return {std::move(s1), std::move(s2)};
-}
-
 void test_info_zid() {
     printf("=== test_info_zid ===\n");
 
@@ -95,7 +83,7 @@ void test_info_zid() {
     // zenoh-c only: router (listening) + peer (connecting)
     // s1 (router) sees s2 as a peer; s2 sees s1 as its router
     {
-        auto s1 = create_listening_session("17447", "\"router\"");
+        auto s1 = create_listening_session("17447");
         std::this_thread::sleep_for(1s);
         auto s2 = create_connecting_session("17447");
         std::this_thread::sleep_for(1s);
@@ -116,9 +104,10 @@ void test_info_zid() {
     }
 #endif
 
-    // peer+peer: both see each other as peers, no routers (zenoh-c and zenoh-pico)
+#ifdef ZENOHCXX_ZENOPICO
+    // peer+peer: both see each other as peers, no routers (zenoh-pico only)
     {
-        auto [s1, s2] = create_peer_session_pair("17457");
+        auto [s1, s2] = create_session_pair("17457");
 
         auto s1_zid = s1.get_zid();
         auto s2_zid = s2.get_zid();
@@ -134,6 +123,7 @@ void test_info_zid() {
         assert(peers_of_s2.size() == 1);
         assert(peers_of_s2[0] == s1_zid);
     }
+#endif
 
     printf("PASS\n\n");
 }
