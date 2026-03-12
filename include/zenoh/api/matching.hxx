@@ -74,7 +74,6 @@ class MatchingListener<void> : public detail::MatchingListenerBase {
 ///
 /// A listener that sends notifications when the [`MatchingStatus`] of a corresponding Zenoh entity changes.
 /// Dropping the corresponding Zenoh entity, disables the matching listener.
-/// @note Zenoh-c only.
 template <class Handler>
 class MatchingListener : public detail::MatchingListenerBase {
     Handler _handler;

@@ -917,7 +917,6 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a vector of all transports.
-    /// @note Zenoh-c only.
     std::vector<Transport> get_transports(ZResult* err = nullptr) const {
         std::vector<Transport> out;
         auto f = [&out](Transport& transport) { out.push_back(std::move(transport)); };
@@ -938,7 +937,6 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a vector of all links.
-    /// @note Zenoh-c only.
     std::vector<Link> get_links(std::optional<Transport> transport = {}, ZResult* err = nullptr) const {
         std::vector<Link> out;
         auto f = [&out](Link& link) { out.push_back(std::move(link)); };
@@ -991,7 +989,6 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``TransportEventsListener`` object.
-    /// @note Zenoh-c only.
     template <class C, class D>
     [[nodiscard]] TransportEventsListener<void> declare_transport_events_listener(
         C&& on_event, D&& on_drop,
@@ -1026,7 +1023,6 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param options options to pass to listener declaration.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @note Zenoh-c only.
     template <class C, class D>
     void declare_background_transport_events_listener(
         C&& on_event, D&& on_drop,
@@ -1059,7 +1055,6 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``TransportEventsListener`` object.
-    /// @note Zenoh-c only.
     template <class Channel>
     [[nodiscard]] TransportEventsListener<typename Channel::template HandlerType<TransportEvent>>
     declare_transport_events_listener(
@@ -1118,7 +1113,6 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``LinkEventsListener`` object.
-    /// @note Zenoh-c only.
     template <class C, class D>
     [[nodiscard]] LinkEventsListener<void> declare_link_events_listener(
         C&& on_event, D&& on_drop, LinkEventsListenerOptions&& options = LinkEventsListenerOptions::create_default(),
@@ -1152,7 +1146,6 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param options options to pass to listener declaration.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @note Zenoh-c only.
     template <class C, class D>
     void declare_background_link_events_listener(
         C&& on_event, D&& on_drop, LinkEventsListenerOptions&& options = LinkEventsListenerOptions::create_default(),
@@ -1184,7 +1177,6 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return a ``LinkEventsListener`` object.
-    /// @note Zenoh-c only.
     template <class Channel>
     [[nodiscard]] LinkEventsListener<typename Channel::template HandlerType<LinkEvent>> declare_link_events_listener(
         Channel channel, LinkEventsListenerOptions&& options = LinkEventsListenerOptions::create_default(),
