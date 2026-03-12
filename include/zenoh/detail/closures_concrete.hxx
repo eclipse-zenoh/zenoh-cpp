@@ -16,14 +16,14 @@
 #include "../api/hello.hxx"
 #include "../api/id.hxx"
 #include "../api/interop.hxx"
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API)
 #include "../api/link.hxx"
 #include "../api/link_event.hxx"
 #endif
 #include "../api/query.hxx"
 #include "../api/reply.hxx"
 #include "../api/sample.hxx"
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API)
 #include "../api/transport.hxx"
 #include "../api/transport_event.hxx"
 #endif
@@ -54,7 +54,7 @@ inline void _zenoh_on_id_call(const ::z_id_t* z_id, void* context) {
 inline void _zenoh_on_hello_call(::z_loaned_hello_t* hello, void* context) {
     IClosure<void, Hello&>::call_from_context(context, interop::as_owned_cpp_ref<Hello>(hello));
 }
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API)
 inline void _zenoh_on_transport_call(::z_loaned_transport_t* transport, void* context) {
     IClosure<void, Transport&>::call_from_context(context, interop::as_owned_cpp_ref<Transport>(transport));
 }
