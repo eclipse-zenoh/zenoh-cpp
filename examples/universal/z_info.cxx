@@ -25,7 +25,6 @@ int _main(int argc, char** argv) {
     std::cout << "Opening session...\n";
     auto session = Session::open(std::move(config));
 
-#if defined(ZENOHCXX_ZENOHC) && defined(Z_FEATURE_UNSTABLE_API)
     std::cout << "own id: " << session.get_zid() << std::endl;
 
     std::cout << "routers ids:\n";
@@ -38,6 +37,7 @@ int _main(int argc, char** argv) {
         std::cout << zid << "\n";
     }
 
+#if defined(Z_FEATURE_UNSTABLE_API)
     std::cout << "\ntransports:\n";
     for (const auto& transport : session.get_transports()) {
         std::cout << "  Transport\n";
