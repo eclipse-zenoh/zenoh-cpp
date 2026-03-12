@@ -23,10 +23,8 @@ using namespace std::chrono_literals;
 #undef NDEBUG
 #include <assert.h>
 
-// On zenoh-c: s1 is a router (listening), s2 is a peer (connecting).
-//   s1 sees s2 as a peer; s2 sees s1 as a router.
-// On zenoh-pico: s1 is a peer (listening), s2 is a peer (connecting).
-//   Both see each other as peers; neither sees the other as a router.
+// On zenoh-c: tests both router+peer and peer+peer session pairs.
+// On zenoh-pico: tests peer+peer only (router mode not supported for listeners).
 //   Session disconnect events (DELETE) are not reported by zenoh-pico.
 
 #ifdef ZENOHCXX_ZENOHC
@@ -40,9 +38,9 @@ Config create_config(const char* mode, const char* listen, const char* connect) 
     return config;
 }
 
-Session create_listening_session(const char* port) {
+Session create_listening_session(const char* port, const char* mode = "\"router\"") {
     std::string listen = std::string("[\"tcp/127.0.0.1:") + port + "\"]";
-    return Session::open(create_config("\"router\"", listen.c_str(), "[]"));
+    return Session::open(create_config(mode, listen.c_str(), "[]"));
 }
 
 Session create_connecting_session(const char* port) {
@@ -78,43 +76,64 @@ std::pair<Session, Session> create_session_pair(const char* port) {
     return {std::move(s1), std::move(s2)};
 }
 
+std::pair<Session, Session> create_peer_session_pair(const char* port) {
+#ifdef ZENOHCXX_ZENOHC
+    auto s1 = create_listening_session(port, "\"peer\"");
+#else
+    auto s1 = create_listening_session(port);
+#endif
+    std::this_thread::sleep_for(1s);
+    auto s2 = create_connecting_session(port);
+    std::this_thread::sleep_for(1s);
+    return {std::move(s1), std::move(s2)};
+}
+
 void test_info_zid() {
     printf("=== test_info_zid ===\n");
-    auto [s1, s2] = create_session_pair("17447");
-
-    auto s1_zid = s1.get_zid();
-    auto s2_zid = s2.get_zid();
-    assert(!(s1_zid == s2_zid));
 
 #ifdef ZENOHCXX_ZENOHC
-    // zenoh-c: s1 is router, s2 is peer
-    // s1 (router) has no routers above it, sees s2 as a peer
-    // s2 (peer) sees s1 as its router, has no other peers
-    auto routers_of_s1 = s1.get_routers_z_id();
-    assert(routers_of_s1.empty());
+    // zenoh-c only: router (listening) + peer (connecting)
+    // s1 (router) sees s2 as a peer; s2 sees s1 as its router
+    {
+        auto s1 = create_listening_session("17447", "\"router\"");
+        std::this_thread::sleep_for(1s);
+        auto s2 = create_connecting_session("17447");
+        std::this_thread::sleep_for(1s);
 
-    auto peers_of_s1 = s1.get_peers_z_id();
-    assert(peers_of_s1.size() == 1);
-    assert(peers_of_s1[0] == s2_zid);
+        auto s1_zid = s1.get_zid();
+        auto s2_zid = s2.get_zid();
+        assert(!(s1_zid == s2_zid));
 
-    auto routers_of_s2 = s2.get_routers_z_id();
-    assert(routers_of_s2.size() == 1);
-    assert(routers_of_s2[0] == s1_zid);
+        assert(s1.get_routers_z_id().empty());
+        auto peers_of_s1 = s1.get_peers_z_id();
+        assert(peers_of_s1.size() == 1);
+        assert(peers_of_s1[0] == s2_zid);
 
-    auto peers_of_s2 = s2.get_peers_z_id();
-    assert(peers_of_s2.empty());
-#else
-    // zenoh-pico: peer+peer - both see each other as peers, no routers
-    assert(s1.get_routers_z_id().empty());
-    auto peers_of_s1 = s1.get_peers_z_id();
-    assert(peers_of_s1.size() == 1);
-    assert(peers_of_s1[0] == s2_zid);
-
-    assert(s2.get_routers_z_id().empty());
-    auto peers_of_s2 = s2.get_peers_z_id();
-    assert(peers_of_s2.size() == 1);
-    assert(peers_of_s2[0] == s1_zid);
+        auto routers_of_s2 = s2.get_routers_z_id();
+        assert(routers_of_s2.size() == 1);
+        assert(routers_of_s2[0] == s1_zid);
+        assert(s2.get_peers_z_id().empty());
+    }
 #endif
+
+    // peer+peer: both see each other as peers, no routers (zenoh-c and zenoh-pico)
+    {
+        auto [s1, s2] = create_peer_session_pair("17457");
+
+        auto s1_zid = s1.get_zid();
+        auto s2_zid = s2.get_zid();
+        assert(!(s1_zid == s2_zid));
+
+        assert(s1.get_routers_z_id().empty());
+        auto peers_of_s1 = s1.get_peers_z_id();
+        assert(peers_of_s1.size() == 1);
+        assert(peers_of_s1[0] == s2_zid);
+
+        assert(s2.get_routers_z_id().empty());
+        auto peers_of_s2 = s2.get_peers_z_id();
+        assert(peers_of_s2.size() == 1);
+        assert(peers_of_s2[0] == s1_zid);
+    }
 
     printf("PASS\n\n");
 }
@@ -170,19 +189,24 @@ void test_transport_events() {
     assert(events.empty());
 
     auto s2 = create_connecting_session("17450");
-    std::this_thread::sleep_for(2s);
+    std::this_thread::sleep_for(1s);
 
     assert(events.size() == 1);
     assert(events[0].first == SampleKind::Z_SAMPLE_KIND_PUT);
     assert(events[0].second == s2.get_zid());
 
     s2.close();
-    std::this_thread::sleep_for(2s);
+    std::this_thread::sleep_for(1s);
 
 #ifdef ZENOHCXX_ZENOHC
     // zenoh-c reports the disconnect via a DELETE event
     assert(events.size() == 2);
     assert(events[1].first == SampleKind::Z_SAMPLE_KIND_DELETE);
+#endif
+
+#ifdef ZENOHCXX_ZENOHPICO
+    // zenoh-pico does not report disconnect. TODO: seems incorrect
+    assert(events.size() == 1);
 #endif
 
     std::move(listener).undeclare();
@@ -215,7 +239,7 @@ void test_transport_events_background() {
         [&events](TransportEvent& e) { events.push_back(e.get_kind()); }, closures::none);
 
     auto s2 = create_connecting_session("17452");
-    std::this_thread::sleep_for(2s);
+    std::this_thread::sleep_for(1s);
 
     assert(events.size() == 1);
     assert(events[0] == SampleKind::Z_SAMPLE_KIND_PUT);
@@ -235,19 +259,24 @@ void test_link_events() {
     assert(events.empty());
 
     auto s2 = create_connecting_session("17453");
-    std::this_thread::sleep_for(2s);
+    std::this_thread::sleep_for(1s);
 
     assert(events.size() == 1);
     assert(events[0].first == SampleKind::Z_SAMPLE_KIND_PUT);
     assert(events[0].second == s2.get_zid());
 
     s2.close();
-    std::this_thread::sleep_for(2s);
+    std::this_thread::sleep_for(1s);
 
 #ifdef ZENOHCXX_ZENOHC
     // zenoh-c reports the disconnect via a DELETE event
     assert(events.size() == 2);
     assert(events[1].first == SampleKind::Z_SAMPLE_KIND_DELETE);
+#endif
+
+#ifdef ZENOHCXX_ZENOHPICO
+    // zenoh-pico does not report disconnect. TODO: seems incorrect
+    assert(events.size() == 1);
 #endif
 
     std::move(listener).undeclare();
@@ -280,7 +309,7 @@ void test_link_events_background() {
         [&events](LinkEvent& e) { events.push_back(e.get_kind()); }, closures::none);
 
     auto s2 = create_connecting_session("17455");
-    std::this_thread::sleep_for(2s);
+    std::this_thread::sleep_for(1s);
 
     assert(events.size() == 1);
     assert(events[0] == SampleKind::Z_SAMPLE_KIND_PUT);
