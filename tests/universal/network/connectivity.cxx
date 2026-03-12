@@ -170,9 +170,11 @@ void test_transport_events() {
     auto s1 = create_listening_session("17450");
 
     std::vector<std::pair<SampleKind, Id>> events;
+    Session::TransportEventsListenerOptions tel_opts_1;
+    tel_opts_1.history = false;
     auto listener = s1.declare_transport_events_listener(
         [&events](TransportEvent& e) { events.emplace_back(e.get_kind(), e.get_transport().get_zid()); },
-        closures::none, {.history = false});
+        closures::none, std::move(tel_opts_1));
 
     assert(events.empty());
 
@@ -206,8 +208,10 @@ void test_transport_events_history() {
     auto [s1, s2] = create_session_pair("17451");
 
     std::vector<SampleKind> events;
+    Session::TransportEventsListenerOptions tel_opts_2;
+    tel_opts_2.history = true;
     auto listener = s1.declare_transport_events_listener(
-        [&events](TransportEvent& e) { events.push_back(e.get_kind()); }, closures::none, {.history = true});
+        [&events](TransportEvent& e) { events.push_back(e.get_kind()); }, closures::none, std::move(tel_opts_2));
 
     std::this_thread::sleep_for(1s);
 
@@ -240,9 +244,11 @@ void test_link_events() {
     auto s1 = create_listening_session("17453");
 
     std::vector<std::pair<SampleKind, Id>> events;
+    Session::LinkEventsListenerOptions lel_opts_1;
+    lel_opts_1.history = false;
     auto listener = s1.declare_link_events_listener(
         [&events](LinkEvent& e) { events.emplace_back(e.get_kind(), e.get_link().get_zid()); }, closures::none,
-        {.history = false});
+        std::move(lel_opts_1));
 
     assert(events.empty());
 
@@ -276,8 +282,10 @@ void test_link_events_history() {
     auto [s1, s2] = create_session_pair("17454");
 
     std::vector<SampleKind> events;
+    Session::LinkEventsListenerOptions lel_opts_2;
+    lel_opts_2.history = true;
     auto listener = s1.declare_link_events_listener([&events](LinkEvent& e) { events.push_back(e.get_kind()); },
-                                                    closures::none, {.history = true});
+                                                    closures::none, std::move(lel_opts_2));
 
     std::this_thread::sleep_for(1s);
 
@@ -316,8 +324,11 @@ void test_link_events_filtered() {
 
     // Filter by s1's transport with history - should get events
     std::vector<SampleKind> events1;
+    Session::LinkEventsListenerOptions lel_opts_3;
+    lel_opts_3.history = true;
+    lel_opts_3.transport = std::move(t1[0]);
     auto listener1 = s1.declare_link_events_listener([&events1](LinkEvent& e) { events1.push_back(e.get_kind()); },
-                                                     closures::none, {.history = true, .transport = std::move(t1[0])});
+                                                     closures::none, std::move(lel_opts_3));
 
     std::this_thread::sleep_for(1s);
     assert(events1.size() >= 1);
@@ -326,8 +337,11 @@ void test_link_events_filtered() {
 
     // Filter by s2's transport - should get no events on s1
     std::vector<SampleKind> events2;
+    Session::LinkEventsListenerOptions lel_opts_4;
+    lel_opts_4.history = true;
+    lel_opts_4.transport = std::move(t2[0]);
     auto listener2 = s1.declare_link_events_listener([&events2](LinkEvent& e) { events2.push_back(e.get_kind()); },
-                                                     closures::none, {.history = true, .transport = std::move(t2[0])});
+                                                     closures::none, std::move(lel_opts_4));
 
     std::this_thread::sleep_for(1s);
     assert(events2.empty());
