@@ -32,6 +32,10 @@
 #include "source_info.hxx"
 #endif
 #include "subscriber.hxx"
+#if defined(Z_FEATURE_UNSTABLE_API)
+#include "link_events_listener.hxx"
+#include "transport_events_listener.hxx"
+#endif
 #include "timestamp.hxx"
 #if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1)
 #include "querier.hxx"
@@ -62,7 +66,7 @@ enum class ShmProviderNotReadyState {
 
 /// A Zenoh session.
 class Session : public Owned<::z_owned_session_t> {
-    Session(zenoh::detail::null_object_t) : Owned(nullptr){};
+    Session(zenoh::detail::null_object_t) : Owned(nullptr) {}
 
    public:
     /// @brief Options to be passed when opening a ``Session``.
@@ -905,6 +909,293 @@ class Session : public Owned<::z_owned_session_t> {
                              "Failed to fetch peer Ids");
         return out;
     }
+
+#if defined(Z_FEATURE_UNSTABLE_API)
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Fetches all transports of this session.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @return a vector of all transports.
+    std::vector<Transport> get_transports(ZResult* err = nullptr) const {
+        std::vector<Transport> out;
+        auto f = [&out](Transport& transport) { out.push_back(std::move(transport)); };
+        typedef decltype(f) F;
+        ::z_owned_closure_transport_t c_closure;
+        using ClosureType = typename detail::closures::Closure<F, closures::None, void, Transport&>;
+        auto closure = ClosureType::into_context(std::forward<F>(f), closures::none);
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_transport_call, detail::closures::_zenoh_on_drop, closure);
+        __ZENOH_RESULT_CHECK(::z_info_transports(interop::as_loaned_c_ptr(*this), ::z_move(c_closure)), err,
+                             "Failed to fetch transports");
+        return out;
+    }
+
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Fetches all links of this session.
+    /// @param transport if provided, only links for this transport will be returned.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @return a vector of all links.
+    std::vector<Link> get_links(std::optional<Transport> transport = {}, ZResult* err = nullptr) const {
+        std::vector<Link> out;
+        auto f = [&out](Link& link) { out.push_back(std::move(link)); };
+        typedef decltype(f) F;
+        ::z_owned_closure_link_t c_closure;
+        using ClosureType = typename detail::closures::Closure<F, closures::None, void, Link&>;
+        auto closure = ClosureType::into_context(std::forward<F>(f), closures::none);
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_link_call, detail::closures::_zenoh_on_drop, closure);
+        ::z_info_links_options_t opts;
+        ::z_info_links_options_default(&opts);
+        if (transport.has_value()) {
+            opts.transport = interop::as_moved_c_ptr(transport.value());
+        }
+        __ZENOH_RESULT_CHECK(::z_info_links(interop::as_loaned_c_ptr(*this), ::z_move(c_closure), &opts), err,
+                             "Failed to fetch links");
+        return out;
+    }
+
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Options to pass to ``Session::declare_transport_events_listener``.
+    struct TransportEventsListenerOptions {
+       public:
+        /// @name Fields
+
+        /// If true, listener will receive events for transports that were already established before its declaration.
+        bool history = false;
+
+        /// @name Methods
+
+        /// @brief Create default option settings.
+        static TransportEventsListenerOptions create_default() { return {}; }
+
+       private:
+        friend struct interop::detail::Converter;
+        ::z_transport_events_listener_options_t to_c_opts() {
+            ::z_transport_events_listener_options_t opts;
+            ::z_transport_events_listener_options_default(&opts);
+            opts.history = this->history;
+            return opts;
+        }
+    };
+
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Declare a transport events listener.
+    /// @param on_event the callable that will be called each time a transport event occurs.
+    /// @param on_drop the callable that will be called once listener is destroyed or undeclared.
+    /// @param options options to pass to listener declaration.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @return a ``TransportEventsListener`` object.
+    template <class C, class D>
+    [[nodiscard]] TransportEventsListener<void> declare_transport_events_listener(
+        C&& on_event, D&& on_drop,
+        TransportEventsListenerOptions&& options = TransportEventsListenerOptions::create_default(),
+        ZResult* err = nullptr) const {
+        static_assert(std::is_invocable_r<void, C, TransportEvent&>::value,
+                      "on_event should be callable with the following signature: void on_event(zenoh::TransportEvent& "
+                      "event)");
+        static_assert(std::is_invocable_r<void, D>::value,
+                      "on_drop should be callable with the following signature: void on_drop()");
+        ::z_owned_closure_transport_event_t c_closure;
+        using Cval = std::remove_reference_t<C>;
+        using Dval = std::remove_reference_t<D>;
+        using ClosureType = typename detail::closures::Closure<Cval, Dval, void, TransportEvent&>;
+        auto closure = ClosureType::into_context(std::forward<C>(on_event), std::forward<D>(on_drop));
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_transport_event_call, detail::closures::_zenoh_on_drop,
+                    closure);
+        ::z_transport_events_listener_options_t opts = interop::detail::Converter::to_c_opts(options);
+        TransportEventsListener<void> l = interop::detail::null<TransportEventsListener<void>>();
+        ZResult res = ::z_declare_transport_events_listener(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(l),
+                                                            ::z_move(c_closure), &opts);
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare transport events listener");
+        return l;
+    }
+
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Declare a background transport events listener. The listener callback will be run in the background
+    /// until the corresponding session is closed or destroyed.
+    /// @param on_event the callable that will be called each time a transport event occurs.
+    /// @param on_drop the callable that will be called once listener is destroyed or undeclared.
+    /// @param options options to pass to listener declaration.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    template <class C, class D>
+    void declare_background_transport_events_listener(
+        C&& on_event, D&& on_drop,
+        TransportEventsListenerOptions&& options = TransportEventsListenerOptions::create_default(),
+        ZResult* err = nullptr) const {
+        static_assert(std::is_invocable_r<void, C, TransportEvent&>::value,
+                      "on_event should be callable with the following signature: void on_event(zenoh::TransportEvent& "
+                      "event)");
+        static_assert(std::is_invocable_r<void, D>::value,
+                      "on_drop should be callable with the following signature: void on_drop()");
+        ::z_owned_closure_transport_event_t c_closure;
+        using Cval = std::remove_reference_t<C>;
+        using Dval = std::remove_reference_t<D>;
+        using ClosureType = typename detail::closures::Closure<Cval, Dval, void, TransportEvent&>;
+        auto closure = ClosureType::into_context(std::forward<C>(on_event), std::forward<D>(on_drop));
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_transport_event_call, detail::closures::_zenoh_on_drop,
+                    closure);
+        ::z_transport_events_listener_options_t opts = interop::detail::Converter::to_c_opts(options);
+        ZResult res = ::z_declare_background_transport_events_listener(interop::as_loaned_c_ptr(*this),
+                                                                       ::z_move(c_closure), &opts);
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare background transport events listener");
+    }
+
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Declare a transport events listener with a channel.
+    /// @tparam Channel the type of channel used to create stream of data.
+    /// @param channel an instance of channel.
+    /// @param options options to pass to listener declaration.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @return a ``TransportEventsListener`` object.
+    template <class Channel>
+    [[nodiscard]] TransportEventsListener<typename Channel::template HandlerType<TransportEvent>>
+    declare_transport_events_listener(
+        Channel channel, TransportEventsListenerOptions&& options = TransportEventsListenerOptions::create_default(),
+        ZResult* err = nullptr) const {
+        auto cb_handler_pair = channel.template into_cb_handler_pair<TransportEvent>();
+        ::z_transport_events_listener_options_t opts = interop::detail::Converter::to_c_opts(options);
+        TransportEventsListener<void> l = interop::detail::null<TransportEventsListener<void>>();
+        ZResult res = ::z_declare_transport_events_listener(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(l),
+                                                            ::z_move(cb_handler_pair.first), &opts);
+        if (res != Z_OK && err == nullptr) {
+            ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
+        }
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare transport events listener");
+        return TransportEventsListener<typename Channel::template HandlerType<TransportEvent>>(
+            std::move(l), std::move(cb_handler_pair.second));
+    }
+
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Options to pass to ``Session::declare_link_events_listener``.
+    struct LinkEventsListenerOptions {
+       public:
+        /// @name Fields
+
+        /// If true, listener will receive events for links that were already established before its declaration.
+        bool history = false;
+
+        /// An optional transport to filter link events for.
+        std::optional<Transport> transport = {};
+
+        /// @name Methods
+
+        /// @brief Create default option settings.
+        static LinkEventsListenerOptions create_default() { return {}; }
+
+       private:
+        friend struct interop::detail::Converter;
+        ::z_link_events_listener_options_t to_c_opts() {
+            ::z_link_events_listener_options_t opts;
+            ::z_link_events_listener_options_default(&opts);
+            opts.history = this->history;
+            if (this->transport.has_value()) {
+                opts.transport = interop::as_moved_c_ptr(this->transport.value());
+            }
+            return opts;
+        }
+    };
+
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Declare a link events listener.
+    /// @param on_event the callable that will be called each time a link event occurs.
+    /// @param on_drop the callable that will be called once listener is destroyed or undeclared.
+    /// @param options options to pass to listener declaration.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @return a ``LinkEventsListener`` object.
+    template <class C, class D>
+    [[nodiscard]] LinkEventsListener<void> declare_link_events_listener(
+        C&& on_event, D&& on_drop, LinkEventsListenerOptions&& options = LinkEventsListenerOptions::create_default(),
+        ZResult* err = nullptr) const {
+        static_assert(
+            std::is_invocable_r<void, C, LinkEvent&>::value,
+            "on_event should be callable with the following signature: void on_event(zenoh::LinkEvent& event)");
+        static_assert(std::is_invocable_r<void, D>::value,
+                      "on_drop should be callable with the following signature: void on_drop()");
+        ::z_owned_closure_link_event_t c_closure;
+        using Cval = std::remove_reference_t<C>;
+        using Dval = std::remove_reference_t<D>;
+        using ClosureType = typename detail::closures::Closure<Cval, Dval, void, LinkEvent&>;
+        auto closure = ClosureType::into_context(std::forward<C>(on_event), std::forward<D>(on_drop));
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_link_event_call, detail::closures::_zenoh_on_drop, closure);
+        LinkEventsListenerOptions opts_copy = std::move(options);
+        ::z_link_events_listener_options_t opts = interop::detail::Converter::to_c_opts(opts_copy);
+        LinkEventsListener<void> l = interop::detail::null<LinkEventsListener<void>>();
+        ZResult res = ::z_declare_link_events_listener(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(l),
+                                                       ::z_move(c_closure), &opts);
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare link events listener");
+        return l;
+    }
+
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Declare a background link events listener. The listener callback will be run in the background
+    /// until the corresponding session is closed or destroyed.
+    /// @param on_event the callable that will be called each time a link event occurs.
+    /// @param on_drop the callable that will be called once listener is destroyed or undeclared.
+    /// @param options options to pass to listener declaration.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    template <class C, class D>
+    void declare_background_link_events_listener(
+        C&& on_event, D&& on_drop, LinkEventsListenerOptions&& options = LinkEventsListenerOptions::create_default(),
+        ZResult* err = nullptr) const {
+        static_assert(
+            std::is_invocable_r<void, C, LinkEvent&>::value,
+            "on_event should be callable with the following signature: void on_event(zenoh::LinkEvent& event)");
+        static_assert(std::is_invocable_r<void, D>::value,
+                      "on_drop should be callable with the following signature: void on_drop()");
+        ::z_owned_closure_link_event_t c_closure;
+        using Cval = std::remove_reference_t<C>;
+        using Dval = std::remove_reference_t<D>;
+        using ClosureType = typename detail::closures::Closure<Cval, Dval, void, LinkEvent&>;
+        auto closure = ClosureType::into_context(std::forward<C>(on_event), std::forward<D>(on_drop));
+        ::z_closure(&c_closure, detail::closures::_zenoh_on_link_event_call, detail::closures::_zenoh_on_drop, closure);
+        LinkEventsListenerOptions opts_copy = std::move(options);
+        ::z_link_events_listener_options_t opts = interop::detail::Converter::to_c_opts(opts_copy);
+        ZResult res =
+            ::z_declare_background_link_events_listener(interop::as_loaned_c_ptr(*this), ::z_move(c_closure), &opts);
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare background link events listener");
+    }
+
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
+    /// @brief Declare a link events listener with a channel.
+    /// @tparam Channel the type of channel used to create stream of data.
+    /// @param channel an instance of channel.
+    /// @param options options to pass to listener declaration.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    /// @return a ``LinkEventsListener`` object.
+    template <class Channel>
+    [[nodiscard]] LinkEventsListener<typename Channel::template HandlerType<LinkEvent>> declare_link_events_listener(
+        Channel channel, LinkEventsListenerOptions&& options = LinkEventsListenerOptions::create_default(),
+        ZResult* err = nullptr) const {
+        auto cb_handler_pair = channel.template into_cb_handler_pair<LinkEvent>();
+        LinkEventsListenerOptions opts_copy = std::move(options);
+        ::z_link_events_listener_options_t opts = interop::detail::Converter::to_c_opts(opts_copy);
+        LinkEventsListener<void> l = interop::detail::null<LinkEventsListener<void>>();
+        ZResult res = ::z_declare_link_events_listener(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(l),
+                                                       ::z_move(cb_handler_pair.first), &opts);
+        if (res != Z_OK && err == nullptr) {
+            ::z_drop(interop::as_moved_c_ptr(cb_handler_pair.second));
+        }
+        __ZENOH_RESULT_CHECK(res, err, "Failed to declare link events listener");
+        return LinkEventsListener<typename Channel::template HandlerType<LinkEvent>>(std::move(l),
+                                                                                     std::move(cb_handler_pair.second));
+    }
+#endif
+
 #if defined(ZENOHCXX_ZENOHPICO)
 #if Z_FEATURE_MULTI_THREAD == 1
     /// @brief Start a separate task to read from the network and process the messages as soon as they are received.

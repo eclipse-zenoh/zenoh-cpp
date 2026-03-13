@@ -39,13 +39,40 @@ Shared Memory
    :members:
    :membergroups: Constructors Operators Methods
 
+.. doxygenclass:: zenoh::ShmProvider
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::SharedShmProvider
+   :members:
+   :membergroups: Constructors Operators Methods
+
 .. doxygenclass:: zenoh::CppShmProvider
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::ShmProviderAsyncInterface
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::CppShmProviderBackendIface
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::CppShmProviderBackend
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::CppShmProviderBackendThreadsafe
    :members:
    :membergroups: Constructors Operators Methods
 
 .. doxygenclass:: zenoh::PrecomputedLayout
    :members:
    :membergroups: Constructors Operators Methods
+
+.. doxygenstruct:: zenoh::PrecomputedLayoutAsyncInterface
+   :members:
 
 .. doxygenclass:: zenoh::MemoryLayout
    :members:

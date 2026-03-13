@@ -36,6 +36,14 @@
 #include "api/session.hxx"
 #include "api/subscriber.hxx"
 #include "api/timestamp.hxx"
+#if defined(Z_FEATURE_UNSTABLE_API)
+#include "api/link.hxx"
+#include "api/link_event.hxx"
+#include "api/link_events_listener.hxx"
+#include "api/transport.hxx"
+#include "api/transport_event.hxx"
+#include "api/transport_events_listener.hxx"
+#endif
 #if (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_QUERY == 1)
 #include "api/querier.hxx"
 #endif

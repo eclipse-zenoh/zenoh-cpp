@@ -69,7 +69,7 @@ class Config : public Owned<::z_owned_config_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @return the ``Config`` object.
-    /// @note Zenoh-pico only.
+    /// @note Zenoh-c only.
     static Config from_env(ZResult* err = nullptr) {
         Config c(zenoh::detail::null_object);
         __ZENOH_RESULT_CHECK(::zc_config_from_env(&c._0), err, "Failed to create config from environment variable");

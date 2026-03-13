@@ -38,8 +38,8 @@ namespace zenoh {
 namespace ext {
 
 /// @brief A Zenoh data serializer used for incremental serialization of several values.
-/// I.e. data produced by subsequent calls to ``Serializer::serialize`` can be read by corresponding calls to
-/// ``Deserializer::deserialize`` in the same order (or alternatively by a single call to ``deserialize``
+/// I.e. data produced by subsequent calls to `Serializer::serialize` can be read by corresponding calls to
+/// `Deserializer::deserialize` in the same order (or alternatively by a single call to `deserialize`
 /// into tuple of serialized types).
 class Serializer : public Owned<::ze_owned_serializer_t> {
    public:
@@ -50,15 +50,15 @@ class Serializer : public Owned<::ze_owned_serializer_t> {
 
     /// @name Methods
 
-    /// @brief Serialize specified value and append it to the underlying ``Bytes``.
+    /// @brief Serialize specified value and append it to the underlying `Bytes`.
     /// @param value value to serialize.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception
     /// will be thrown in case of error.
     template <class T>
     void serialize(const T& value, ZResult* err = nullptr);
 
-    /// @brief Finalize serialization and return the underlying ``Bytes`` object.
-    /// @return underlying ``Bytes`` object.
+    /// @brief Finalize serialization and return the underlying `Bytes` object.
+    /// @return underlying `Bytes` object.
     Bytes finish() && {
         Bytes b;
         ::ze_serializer_finish(interop::as_moved_c_ptr(*this), interop::as_owned_c_ptr(b));
@@ -67,8 +67,8 @@ class Serializer : public Owned<::ze_owned_serializer_t> {
 };
 
 /// @brief A Zenoh data deserializer used for incremental deserialization of several values.
-/// I.e. data produced by subsequent calls to ``Serializer::serialize`` can be read by corresponding calls to
-/// ``Deserializer::deserialize`` in the same order (or alternatively by a single call to ``serialize``
+/// I.e. data produced by subsequent calls to `Serializer::serialize` can be read by corresponding calls to
+/// `Deserializer::deserialize` in the same order (or alternatively by a single call to `serialize`
 /// into tuple of serialized types).
 class Deserializer : public Copyable<::ze_deserializer_t> {
    public:
@@ -88,11 +88,11 @@ class Deserializer : public Copyable<::ze_deserializer_t> {
     T deserialize(zenoh::ZResult* err = nullptr);
 
     /// @brief Checks if deserializer has parsed all the data.
-    /// @return ``true`` if there is no more data to parse, ``false`` otherwise.
+    /// @return `true` if there is no more data to parse, `false` otherwise.
     bool is_done() const { return ::ze_deserializer_is_done(&this->_0); }
 };
 
-/// @brief Serialize a single value into ``Bytes``.
+/// @brief Serialize a single value into `Bytes`.
 /// @param value value to serialize.
 /// @param err if not null, the result code will be written to this location, otherwise ZException exception
 /// will be thrown in case of error.
@@ -104,7 +104,7 @@ zenoh::Bytes serialize(const T& value, ZResult* err = nullptr) {
     return std::move(s).finish();
 }
 
-/// @brief Deserialize ``Bytes`` corresponding to a single serialized value.
+/// @brief Deserialize `Bytes` corresponding to a single serialized value.
 /// @param bytes data to deserialize.
 /// @param err if not null, the result code will be written to this location, otherwise ZException exception
 /// will be thrown in case of error.

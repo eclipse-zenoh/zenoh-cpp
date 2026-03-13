@@ -41,7 +41,7 @@ class AdvancedSubscriberBase : public Owned<::ze_owned_advanced_subscriber_t> {
     /// @param on_drop the callable that will be called once sample miss listener is destroyed or undeclared.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @return a ``SampleMissListener`` object.
+    /// @return a `SampleMissListener` object.
     template <class C, class D>
     [[nodiscard]] SampleMissListener<void> declare_sample_miss_listener(C&& on_miss_detected, D&& on_drop,
                                                                         zenoh::ZResult* err = nullptr) const {
@@ -99,7 +99,7 @@ class AdvancedSubscriberBase : public Owned<::ze_owned_advanced_subscriber_t> {
     /// @param options options to pass to listener declaration.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @return a ``zenoh::Subscriber`` object.
+    /// @return a `zenoh::Subscriber` object.
     template <class C, class D>
     [[nodiscard]] zenoh::Subscriber<void> detect_publishers(
         C&& on_sample, D&& on_drop,
@@ -159,13 +159,13 @@ class AdvancedSubscriberBase : public Owned<::ze_owned_advanced_subscriber_t> {
 
     /// @brief  Declares a liveliness token listener for matching publishers detection. Only advanced publishers,
     /// enabling publisher detection can be detected.
-    /// @tparam Channel the type of channel used to create stream of data (see ``zenoh::channels::FifoChannel`` or
-    /// ``zenoh::channels::RingChannel``).
+    /// @tparam Channel the type of channel used to create stream of data (see `zenoh::channels::FifoChannel` or
+    /// `zenoh::channels::RingChannel`).
     /// @param channel an instance of channel.
     /// @param options options to pass to subscriber declaration.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
-    /// @return a ``Subscriber`` object.
+    /// @return a `Subscriber` object.
     template <class Channel>
     [[nodiscard]] zenoh::Subscriber<typename Channel::template HandlerType<Sample>> detect_publishers(
         Channel channel,
@@ -308,7 +308,7 @@ auto as_moved_c_ptr(zenoh::ext::AdvancedSubscriber<Handler>& s) {
 /// Will return a pair of null pointers if option is empty.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_moved_c_ptr(std::optional<zenoh::ext::AdvancedSubscriber<Handler>>& s) -> decltype(as_moved_c_ptr(s.value())) {
-    if (!s.has_value()) {
+    if (s.has_value()) {
         return as_moved_c_ptr(s.value());
     } else {
         return {};

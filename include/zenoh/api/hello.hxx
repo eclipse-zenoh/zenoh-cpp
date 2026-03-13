@@ -22,18 +22,18 @@
 #include "interop.hxx"
 
 namespace zenoh {
-/// ``Hello`` message returned by a zenoh entity as a reply to a "scout"
+/// `Hello` message returned by a zenoh entity as a reply to a "scout"
 /// message.
 class Hello : public Owned<::z_owned_hello_t> {
    public:
     /// @name Methods
 
-    /// @brief Get ``Id`` of the entity.
-    /// @return ``Id`` of the entity.
+    /// @brief Get `Id` of the entity.
+    /// @return `Id` of the entity.
     Id get_id() const { return interop::into_copyable_cpp_obj<Id>(::z_hello_zid(interop::as_loaned_c_ptr(*this))); };
 
     /// @brief Get the type of the entity.
-    /// @return ``zenoh::WhatAmI`` of the entity.
+    /// @return `zenoh::WhatAmI` of the entity.
     WhatAmI get_whatami() const { return ::z_hello_whatami(interop::as_loaned_c_ptr(*this)); }
 
     /// @brief Get the array of locators of the entity.
