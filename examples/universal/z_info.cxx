@@ -54,8 +54,12 @@ int _main(int argc, char** argv) {
         std::cout << "    src: " << link.get_src() << "\n";
         std::cout << "    dst: " << link.get_dst() << "\n";
         auto group = link.get_group();
-        if (!group.empty()) {
-            std::cout << "    group: " << group << "\n";
+        if (group.has_value()) {
+            std::cout << "    group: " << group.value() << "\n";
+        }
+        auto auth_id = link.get_auth_identifier();
+        if (auth_id.has_value()) {
+            std::cout << "    auth_identifier: " << auth_id.value() << "\n";
         }
         std::cout << "    mtu: " << link.get_mtu() << "\n";
         std::cout << "    is_streamed: " << (link.is_streamed() ? "true" : "false") << "\n";
@@ -67,6 +71,15 @@ int _main(int argc, char** argv) {
                 std::cout << interfaces[i];
             }
             std::cout << "]\n";
+        }
+        auto priorities = link.get_priorities();
+        if (priorities.has_value()) {
+            std::cout << "    priorities: [" << static_cast<int>(priorities.value().first) << ", "
+                      << static_cast<int>(priorities.value().second) << "]\n";
+        }
+        auto reliability = link.get_reliability();
+        if (reliability.has_value()) {
+            std::cout << "    reliability: " << static_cast<int>(reliability.value()) << "\n";
         }
     }
 
