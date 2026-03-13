@@ -28,6 +28,8 @@ API Reference
    publish_subscribe
    query_reply
    matching
+   liveliness
+   connectivity
    channels
    cancellation
    interop

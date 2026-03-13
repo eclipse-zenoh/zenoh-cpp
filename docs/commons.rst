@@ -32,8 +32,12 @@ Enum types are C++ - style typedefs for corrresponding enums of `zenoh-c`_ / `ze
 .. doxygentypedef:: zenoh::QueryTarget
 
 .. doxygentypedef:: zenoh::WhatAmI
-    
+
+.. doxygentypedef:: zenoh::What
+
 .. doxygentypedef:: zenoh::Locality
+
+.. doxygentypedef:: zenoh::ReplyKeyExpr
 
 .. doxygenfunction:: whatami_as_str
 
@@ -78,7 +82,14 @@ Sample
 
 Bytes
 ------
+.. doxygenstruct:: zenoh::Slice
+   :members:
+
 .. doxygenclass:: zenoh::Bytes
+   :members:
+   :membergroups: Constructors Operators Methods
+
+.. doxygenclass:: zenoh::Bytes::SliceIterator
    :members:
    :membergroups: Constructors Operators Methods
 
