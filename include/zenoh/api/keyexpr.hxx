@@ -22,7 +22,7 @@ namespace zenoh {
 
 /// @brief A Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#key-expression"> key expression </a>.
 ///
-/// Key expression can be registered in the ``zenoh::Session`` object with ``zenoh::Session::declare_keyexpr`` method.
+/// Key expression can be registered in the `zenoh::Session` object with `zenoh::Session::declare_keyexpr` method.
 /// The unique id is internally assinged to the key expression string in this case. This allows to reduce bandwith usage
 /// when transporting key expressions.
 
@@ -36,7 +36,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @brief Create a new instance from a string.
     ///
     /// @param key_expr string representing key expression.
-    /// @param autocanonize if ``true`` the key_expr will be autocanonized, prior to constructing key expression.
+    /// @param autocanonize if `true` the key_expr will be autocanonized, prior to constructing key expression.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     KeyExpr(std::string_view key_expr, bool autocanonize = true, ZResult* err = nullptr) : Owned(nullptr) {
@@ -53,7 +53,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @brief Create a new instance from a string.
     ///
     /// @param key_expr string representing key expression.
-    /// @param autocanonize if ``true`` the key_expr will be autocanonized, prior to constructing key expression.
+    /// @param autocanonize if `true` the key_expr will be autocanonized, prior to constructing key expression.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     KeyExpr(const std::string& key_expr, bool autocanonize = true, ZResult* err = nullptr)
@@ -62,7 +62,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @brief Create a new instance from a null-terminated string.
     ///
     /// @param key_expr null-terminated string representing key expression.
-    /// @param autocanonize if ``true`` the key_expr will be autocanonized, prior to constructing key expression.
+    /// @param autocanonize if `true` the key_expr will be autocanonized, prior to constructing key expression.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     KeyExpr(const char* key_expr, bool autocanonize = true, ZResult* err = nullptr)
@@ -86,10 +86,10 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
                                 ::z_string_len(::z_loan(s)));
     }
 
-    /// @brief Check if a given ``KeyExpr`` includes the other.
-    /// @param other the ``KeyExpr`` to compare with
-    /// @return ``true`` if current key expression includes ``other``, i.e. contains every key belonging to the
-    /// ``other``.
+    /// @brief Check if a given `KeyExpr` includes the other.
+    /// @param other the `KeyExpr` to compare with
+    /// @return `true` if current key expression includes `other`, i.e. contains every key belonging to the
+    /// `other`.
     bool includes(const KeyExpr& other) {
         return ::z_keyexpr_includes(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(other));
     }
@@ -108,7 +108,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     }
 
     /// @brief Construct new key expression by joining it with another one.
-    /// @param other the ``KeyExpr`` to append.
+    /// @param other the `KeyExpr` to append.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     KeyExpr join(const KeyExpr& other, ZResult* err = nullptr) const {
@@ -124,7 +124,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
 
     /// @brief Check if 2 key expressions intersect.
     ///
-    /// @return ``true`` if there is at least one non-empty key that is contained in both key expressions, ``false``
+    /// @return `true` if there is at least one non-empty key that is contained in both key expressions, `false`
     /// otherwise.
     bool intersects(const KeyExpr& other) const {
         return ::z_keyexpr_intersects(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(other));
@@ -154,37 +154,37 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
 
     /// @brief Key expression to string equality relation.
     /// @param other a string to compare with.
-    /// @return ``true`` if the key expression string representation is equal to other, ``false`` otherwise.
+    /// @return `true` if the key expression string representation is equal to other, `false` otherwise.
     bool operator==(std::string_view other) const { return as_string_view() == other; }
 
     /// @brief Key expression to string inequality relation.
     /// @param other a string to compare with.
-    /// @return ``false`` if the key expression string representation is equal to other, ``true`` otherwise.
+    /// @return `false` if the key expression string representation is equal to other, `true` otherwise.
     bool operator!=(std::string_view other) const { return !((*this) == other); }
 
     /// @brief Key expression to string equality relation.
     /// @param other a string to compare with.
-    /// @return ``true`` if the key expression string representation is equal to other, ``false`` otherwise.
+    /// @return `true` if the key expression string representation is equal to other, `false` otherwise.
     bool operator==(const std::string& other) const { return as_string_view() == other; }
 
     /// @brief Key expression to string inequality relation.
     /// @param other a string to compare with.
-    /// @return ``false`` if the key expression string representation is equal to other, ``true`` otherwise.
+    /// @return `false` if the key expression string representation is equal to other, `true` otherwise.
     bool operator!=(const std::string& other) const { return !((*this) == other); }
 
     /// @brief Key expression to string equality relation.
     /// @param other a null-terminated string to compare with.
-    /// @return ``true`` if the key expression string representation is equal to other, ``false`` otherwise.
+    /// @return `true` if the key expression string representation is equal to other, `false` otherwise.
     bool operator==(const char* other) const { return as_string_view() == other; }
 
     /// @brief Key expression to string inequality relation.
     /// @param other a null-terminated string to compare with.
-    /// @return ``false`` if the key expression string representation is equal to other, ``true`` otherwise.
+    /// @return `false` if the key expression string representation is equal to other, `true` otherwise.
     bool operator!=(const char* other) const { return !((*this) == other); }
 
     /// @brief Equality relation.
     /// @param other a key expression to compare with.
-    /// @return ``true`` if both key expressions are equal (i.e. they represent the same set of resources), ``false``
+    /// @return `true` if both key expressions are equal (i.e. they represent the same set of resources), `false`
     /// otherwise.
     bool operator==(const KeyExpr& other) const {
         return ::z_keyexpr_equals(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(other));
@@ -192,7 +192,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
 
     /// @brief Inequality relation.
     /// @param other a key expression to compare with.
-    /// @return ``false`` if both key expressions are equal (i.e. they represent the same set of resources), ``true``
+    /// @return `false` if both key expressions are equal (i.e. they represent the same set of resources), `true`
     /// otherwise.
     bool operator!=(const KeyExpr& other) const { return !(*this == other); }
 
