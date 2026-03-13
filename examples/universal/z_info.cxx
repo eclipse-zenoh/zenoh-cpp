@@ -13,6 +13,7 @@
 #include <stdio.h>
 
 #include <iostream>
+#include <thread>
 
 #include "../getargs.hxx"
 #include "zenoh.hxx"
@@ -113,7 +114,7 @@ int _main(int argc, char** argv) {
         []() {});
 
     while (true) {
-        z_sleep_s(1);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 #endif
     return 0;
