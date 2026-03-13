@@ -18,7 +18,7 @@
 
 namespace zenoh {
 
-/// ``zenoh::Sample`` kind values.
+/// `zenoh::Sample` kind values.
 ///
 /// Values:
 ///
@@ -96,9 +96,9 @@ typedef ::z_whatami_t WhatAmI;
 /// @brief Flag indicating type of Zenoh entities to scout for.
 typedef ::z_what_t What;
 
-/// @brief Get a human-readable representation of the given ``zenoh::WhatAmI``
+/// @brief Get a human-readable representation of the given `zenoh::WhatAmI`
 /// flag.
-/// @param whatami the ``zenoh::WhatAmI`` flag.
+/// @param whatami the `zenoh::WhatAmI` flag.
 /// @return a string representation of the given flag.
 inline std::string_view whatami_as_str(WhatAmI whatami) {
     ::z_view_string_t str_out;

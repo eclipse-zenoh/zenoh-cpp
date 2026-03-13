@@ -74,7 +74,6 @@ class MatchingListener<void> : public detail::MatchingListenerBase {
 ///
 /// A listener that sends notifications when the [`MatchingStatus`] of a corresponding Zenoh entity changes.
 /// Dropping the corresponding Zenoh entity, disables the matching listener.
-/// @note Zenoh-c only.
 template <class Handler>
 class MatchingListener : public detail::MatchingListenerBase {
     Handler _handler;
@@ -134,7 +133,7 @@ auto as_moved_c_ptr(MatchingListener<Handler>& m) {
 /// Will return a pair of null pointers if option is empty.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_moved_c_ptr(std::optional<MatchingListener<Handler>>& m) -> decltype(as_moved_c_ptr(m.value())) {
-    if (!m.has_value()) {
+    if (m.has_value()) {
         return as_moved_c_ptr(m.value());
     } else {
         return {};

@@ -150,7 +150,7 @@ auto as_moved_c_ptr(Queryable<Handler>& q) {
 /// Will return a pair of null pointers if optional is empty.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_moved_c_ptr(std::optional<Queryable<Handler>>& q) -> decltype(as_moved_c_ptr(q.value())) {
-    if (!q.has_value()) {
+    if (q.has_value()) {
         return as_moved_c_ptr(q.value());
     } else {
         return {};

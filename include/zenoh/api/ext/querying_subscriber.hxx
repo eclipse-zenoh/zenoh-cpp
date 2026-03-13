@@ -174,7 +174,7 @@ auto as_moved_c_ptr(zenoh::ext::QueryingSubscriber<Handler>& s) {
 /// Will return a pair of null pointers if option is empty.
 template <class Handler, typename = std::enable_if_t<!std::is_same_v<Handler, void>>>
 auto as_moved_c_ptr(std::optional<zenoh::ext::QueryingSubscriber<Handler>>& s) -> decltype(as_moved_c_ptr(s.value())) {
-    if (!s.has_value()) {
+    if (s.has_value()) {
         return as_moved_c_ptr(s.value());
     } else {
         return {};
