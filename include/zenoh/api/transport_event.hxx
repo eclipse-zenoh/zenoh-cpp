@@ -30,12 +30,12 @@ class TransportEvent : public Owned<::z_owned_transport_event_t> {
     /// @name Methods
 
     /// @brief Get the kind of this event.
-    /// @return ``SampleKind::Z_SAMPLE_KIND_PUT`` for transport opened, ``SampleKind::Z_SAMPLE_KIND_DELETE`` for
+    /// @return `SampleKind::Z_SAMPLE_KIND_PUT` for transport opened, `SampleKind::Z_SAMPLE_KIND_DELETE` for
     /// transport closed.
     SampleKind get_kind() const { return ::z_transport_event_kind(interop::as_loaned_c_ptr(*this)); }
 
     /// @brief Get the transport associated with this event.
-    /// @return reference to the ``Transport``.
+    /// @return reference to the `Transport`.
     const Transport& get_transport() const {
         return interop::as_owned_cpp_ref<Transport>(::z_transport_event_transport(interop::as_loaned_c_ptr(*this)));
     }

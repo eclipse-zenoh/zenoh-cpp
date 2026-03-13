@@ -30,12 +30,12 @@ class LinkEvent : public Owned<::z_owned_link_event_t> {
     /// @name Methods
 
     /// @brief Get the kind of this event.
-    /// @return ``SampleKind::Z_SAMPLE_KIND_PUT`` for link added, ``SampleKind::Z_SAMPLE_KIND_DELETE`` for link
+    /// @return `SampleKind::Z_SAMPLE_KIND_PUT` for link added, `SampleKind::Z_SAMPLE_KIND_DELETE` for link
     /// removed.
     SampleKind get_kind() const { return ::z_link_event_kind(interop::as_loaned_c_ptr(*this)); }
 
     /// @brief Get the link associated with this event.
-    /// @return reference to the ``Link``.
+    /// @return reference to the `Link`.
     const Link& get_link() const {
         return interop::as_owned_cpp_ref<Link>(::z_link_event_link(interop::as_loaned_c_ptr(*this)));
     }

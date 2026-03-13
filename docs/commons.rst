@@ -89,10 +89,6 @@ Bytes
    :members:
    :membergroups: Constructors Operators Methods
 
-.. doxygenclass:: zenoh::Bytes::SliceIterator
-   :members:
-   :membergroups: Constructors Operators Methods
-
 Logging
 -------
 

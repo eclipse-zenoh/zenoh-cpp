@@ -30,26 +30,26 @@ class Transport : public Owned<::z_owned_transport_t> {
     /// @name Methods
 
     /// @brief Get the Zenoh ID of the remote node.
-    /// @return ``Id`` of the remote node.
+    /// @return `Id` of the remote node.
     Id get_zid() const {
         return interop::into_copyable_cpp_obj<Id>(::z_transport_zid(interop::as_loaned_c_ptr(*this)));
     }
 
     /// @brief Get the type of the remote node.
-    /// @return ``zenoh::WhatAmI`` of the remote node.
+    /// @return `zenoh::WhatAmI` of the remote node.
     WhatAmI get_whatami() const { return ::z_transport_whatami(interop::as_loaned_c_ptr(*this)); }
 
     /// @brief Check if the transport supports QoS.
-    /// @return ``true`` if QoS is supported, ``false`` otherwise.
+    /// @return `true` if QoS is supported, `false` otherwise.
     bool is_qos() const { return ::z_transport_is_qos(interop::as_loaned_c_ptr(*this)); }
 
     /// @brief Check if the transport is multicast.
-    /// @return ``true`` if the transport is multicast, ``false`` otherwise.
+    /// @return `true` if the transport is multicast, `false` otherwise.
     bool is_multicast() const { return ::z_transport_is_multicast(interop::as_loaned_c_ptr(*this)); }
 
 #if defined(Z_FEATURE_SHARED_MEMORY)
     /// @brief Check if the transport supports shared memory.
-    /// @return ``true`` if shared memory is supported, ``false`` otherwise.
+    /// @return `true` if shared memory is supported, `false` otherwise.
     bool is_shm() const { return ::z_transport_is_shm(interop::as_loaned_c_ptr(*this)); }
 #endif
 
