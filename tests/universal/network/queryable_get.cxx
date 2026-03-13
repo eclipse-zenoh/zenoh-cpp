@@ -170,8 +170,224 @@ void queryable_get_keyexpr() {
     assert(queryable.get_keyexpr().as_string_view() == "zenoh/test_queryable_keyexpr");
 }
 
+// Test that accept_replies field of Session::GetOptions works correctly.
+//
+// A queryable is declared on "zenoh/test/accept_replies/*".
+// Queries are sent for "zenoh/test/accept_replies/1", but the queryable replies with
+// the disjoint key expression "zenoh/test/accept_replies/2".
+//
+// With the default accept_replies (Z_REPLY_KEYEXPR_MATCHING_QUERY), the reply attempt
+// should fail and no reply should be received by the getter.
+//
+// With accept_replies set to Z_REPLY_KEYEXPR_ANY, the disjoint reply should succeed
+// and be received by the getter.
+void queryable_get_accept_replies() {
+    KeyExpr ke("zenoh/test/accept_replies/*");
+    KeyExpr query_ke("zenoh/test/accept_replies/1");
+    KeyExpr disjoint_reply_ke("zenoh/test/accept_replies/2");
+
+    auto session1 = Session::open(Config::create_default());
+    auto session2 = Session::open(Config::create_default());
+
+    // --- Test 1: default accept_replies (Z_REPLY_KEYEXPR_MATCHING_QUERY) ---
+    // The queryable inspects the query's accept_replies setting and verifies it matches
+    // the expected value. It then attempts to reply with a disjoint key expression,
+    // which should be rejected.
+    {
+        ReplyKeyExpr observed_accept_replies = Z_REPLY_KEYEXPR_ANY;
+        ZResult reply_result = 0;
+
+        auto queryable = session1.declare_queryable(
+            ke,
+            [&](const Query& q) {
+                observed_accept_replies = q.get_accepts_replies();
+                // Attempt to reply with a disjoint key expression; this should fail
+                // when accept_replies is Z_REPLY_KEYEXPR_MATCHING_QUERY.
+                q.reply(disjoint_reply_ke, Bytes("disjoint"), Query::ReplyOptions::create_default(), &reply_result);
+            },
+            []() {});
+        std::this_thread::sleep_for(1s);
+
+        std::vector<std::string> replies;
+        Session::GetOptions opts;
+        // leave opts.accept_replies at its default (Z_REPLY_KEYEXPR_MATCHING_QUERY)
+        session2.get(
+            query_ke, "",
+            [&replies](const Reply& r) {
+                if (r.is_ok()) replies.push_back(r.get_ok().get_payload().as_string());
+            },
+            []() {}, std::move(opts));
+        std::this_thread::sleep_for(1s);
+
+        std::move(queryable).undeclare();
+
+        // The query should have been received with the default accept_replies value.
+        assert(observed_accept_replies == Z_REPLY_KEYEXPR_MATCHING_QUERY);
+        // Replying with a disjoint key expression should have failed.
+        assert(reply_result != Z_OK);
+        // No replies should have been received.
+        assert(replies.empty());
+    }
+
+    // --- Test 2: accept_replies = Z_REPLY_KEYEXPR_ANY ---
+    // The queryable replies with a disjoint key expression, which should now be accepted.
+    {
+        ReplyKeyExpr observed_accept_replies = Z_REPLY_KEYEXPR_MATCHING_QUERY;
+        ZResult reply_result = -1;
+
+        auto queryable = session1.declare_queryable(
+            ke,
+            [&](const Query& q) {
+                observed_accept_replies = q.get_accepts_replies();
+                // Attempt to reply with a disjoint key expression; this should succeed
+                // when accept_replies is Z_REPLY_KEYEXPR_ANY.
+                q.reply(disjoint_reply_ke, Bytes("disjoint"), Query::ReplyOptions::create_default(), &reply_result);
+            },
+            []() {});
+        std::this_thread::sleep_for(1s);
+
+        std::vector<std::string> replies;
+        std::vector<std::string> reply_keyexprs;
+        Session::GetOptions opts;
+        opts.accept_replies = Z_REPLY_KEYEXPR_ANY;
+        session2.get(
+            query_ke, "",
+            [&](const Reply& r) {
+                if (r.is_ok()) {
+                    replies.push_back(r.get_ok().get_payload().as_string());
+                    reply_keyexprs.push_back(std::string(r.get_ok().get_keyexpr().as_string_view()));
+                }
+            },
+            []() {}, std::move(opts));
+        std::this_thread::sleep_for(1s);
+
+        std::move(queryable).undeclare();
+
+        // The query should have been received with the Z_REPLY_KEYEXPR_ANY setting.
+        assert(observed_accept_replies == Z_REPLY_KEYEXPR_ANY);
+        // Replying with a disjoint key expression should have succeeded.
+        assert(reply_result == Z_OK);
+        // The disjoint reply should have been received.
+        assert(replies.size() == 1);
+        assert(replies[0] == "disjoint");
+        assert(reply_keyexprs[0] == "zenoh/test/accept_replies/2");
+    }
+}
+
+// Test that accept_replies field of Session::QuerierOptions works correctly.
+//
+// This is similar to queryable_get_accept_replies(), but uses a Querier instead of
+// Session::get(). With a Querier the accept_replies policy is fixed at declaration time
+// via Session::QuerierOptions and applies to every subsequent Querier::get() call.
+//
+// A queryable is declared on "zenoh/test/querier_accept_replies/*".
+// Queries are issued for "zenoh/test/querier_accept_replies/1", but the queryable replies
+// with the disjoint key expression "zenoh/test/querier_accept_replies/2".
+//
+// With the default accept_replies (Z_REPLY_KEYEXPR_MATCHING_QUERY), the reply attempt
+// should fail and no reply should be received by the querier.
+//
+// With accept_replies set to Z_REPLY_KEYEXPR_ANY in QuerierOptions, the disjoint reply
+// should succeed and be received.
+void queryable_querier_accept_replies() {
+    KeyExpr ke("zenoh/test/querier_accept_replies/*");
+    KeyExpr query_ke("zenoh/test/querier_accept_replies/1");
+    KeyExpr disjoint_reply_ke("zenoh/test/querier_accept_replies/2");
+
+    auto session1 = Session::open(Config::create_default());
+    auto session2 = Session::open(Config::create_default());
+
+    // --- Test 1: default accept_replies (Z_REPLY_KEYEXPR_MATCHING_QUERY) ---
+    {
+        ReplyKeyExpr observed_accept_replies = Z_REPLY_KEYEXPR_ANY;
+        ZResult reply_result = 0;
+
+        auto queryable = session1.declare_queryable(
+            ke,
+            [&](const Query& q) {
+                observed_accept_replies = q.get_accepts_replies();
+                // Attempt to reply with a disjoint key expression; this should fail
+                // when accept_replies is Z_REPLY_KEYEXPR_MATCHING_QUERY.
+                q.reply(disjoint_reply_ke, Bytes("disjoint"), Query::ReplyOptions::create_default(), &reply_result);
+            },
+            []() {});
+        std::this_thread::sleep_for(1s);
+
+        // Declare querier with default options (accept_replies = Z_REPLY_KEYEXPR_MATCHING_QUERY).
+        auto querier = session2.declare_querier(query_ke);
+        std::this_thread::sleep_for(1s);
+
+        std::vector<std::string> replies;
+        querier.get(
+            "",
+            [&replies](const Reply& r) {
+                if (r.is_ok()) replies.push_back(r.get_ok().get_payload().as_string());
+            },
+            []() {});
+        std::this_thread::sleep_for(1s);
+
+        std::move(queryable).undeclare();
+
+        // The query should have been received with the default accept_replies value.
+        assert(observed_accept_replies == Z_REPLY_KEYEXPR_MATCHING_QUERY);
+        // Replying with a disjoint key expression should have failed.
+        assert(reply_result != Z_OK);
+        // No replies should have been received.
+        assert(replies.empty());
+    }
+
+    // --- Test 2: accept_replies = Z_REPLY_KEYEXPR_ANY set via QuerierOptions ---
+    {
+        ReplyKeyExpr observed_accept_replies = Z_REPLY_KEYEXPR_MATCHING_QUERY;
+        ZResult reply_result = -1;
+
+        auto queryable = session1.declare_queryable(
+            ke,
+            [&](const Query& q) {
+                observed_accept_replies = q.get_accepts_replies();
+                // Attempt to reply with a disjoint key expression; this should succeed
+                // when accept_replies is Z_REPLY_KEYEXPR_ANY.
+                q.reply(disjoint_reply_ke, Bytes("disjoint"), Query::ReplyOptions::create_default(), &reply_result);
+            },
+            []() {});
+        std::this_thread::sleep_for(1s);
+
+        // Declare querier with accept_replies = Z_REPLY_KEYEXPR_ANY.
+        Session::QuerierOptions querier_opts;
+        querier_opts.accept_replies = Z_REPLY_KEYEXPR_ANY;
+        auto querier = session2.declare_querier(query_ke, std::move(querier_opts));
+        std::this_thread::sleep_for(1s);
+
+        std::vector<std::string> replies;
+        std::vector<std::string> reply_keyexprs;
+        querier.get(
+            "",
+            [&](const Reply& r) {
+                if (r.is_ok()) {
+                    replies.push_back(r.get_ok().get_payload().as_string());
+                    reply_keyexprs.push_back(std::string(r.get_ok().get_keyexpr().as_string_view()));
+                }
+            },
+            []() {});
+        std::this_thread::sleep_for(1s);
+
+        std::move(queryable).undeclare();
+
+        // The query should have been received with the Z_REPLY_KEYEXPR_ANY setting.
+        assert(observed_accept_replies == Z_REPLY_KEYEXPR_ANY);
+        // Replying with a disjoint key expression should have succeeded.
+        assert(reply_result == Z_OK);
+        // The disjoint reply should have been received.
+        assert(replies.size() == 1);
+        assert(replies[0] == "disjoint");
+        assert(reply_keyexprs[0] == "zenoh/test/querier_accept_replies/2");
+    }
+}
+
 int main(int argc, char** argv) {
     queryable_get();
     queryable_get_channel();
     queryable_get_keyexpr();
+    queryable_get_accept_replies();
+    queryable_querier_accept_replies();
 }
