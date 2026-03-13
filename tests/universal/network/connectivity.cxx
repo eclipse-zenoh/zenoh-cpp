@@ -224,9 +224,8 @@ void test_transport_events_history() {
 
 void test_transport_events_background() {
     printf("=== test_transport_events_background ===\n");
-    auto s1 = create_listening_session("17452");
-
     std::vector<SampleKind> events;
+    auto s1 = create_listening_session("17452");
     s1.declare_background_transport_events_listener([&events](TransportEvent& e) { events.push_back(e.get_kind()); },
                                                     closures::none);
 
@@ -298,9 +297,8 @@ void test_link_events_history() {
 
 void test_link_events_background() {
     printf("=== test_link_events_background ===\n");
-    auto s1 = create_listening_session("17455");
-
     std::vector<SampleKind> events;
+    auto s1 = create_listening_session("17455");
     s1.declare_background_link_events_listener([&events](LinkEvent& e) { events.push_back(e.get_kind()); },
                                                closures::none);
 
