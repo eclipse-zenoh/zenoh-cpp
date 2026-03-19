@@ -12,6 +12,8 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #pragma once
+
+#include <string>
 #include <string_view>
 
 #include "../zenohc.hxx"
@@ -27,7 +29,7 @@ namespace zenoh {
 /// when transporting key expressions.
 
 class KeyExpr : public Owned<::z_owned_keyexpr_t> {
-    KeyExpr(zenoh::detail::null_object_t) : Owned(nullptr){};
+    KeyExpr(zenoh::detail::null_object_t) : Owned(nullptr) {};
     friend struct interop::detail::Converter;
 
    public:
@@ -57,7 +59,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     KeyExpr(const std::string& key_expr, bool autocanonize = true, ZResult* err = nullptr)
-        : KeyExpr(static_cast<std::string_view>(key_expr), autocanonize, err){};
+        : KeyExpr(static_cast<std::string_view>(key_expr), autocanonize, err) {};
 
     /// @brief Create a new instance from a null-terminated string.
     ///
@@ -66,7 +68,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     KeyExpr(const char* key_expr, bool autocanonize = true, ZResult* err = nullptr)
-        : KeyExpr(std::string_view(key_expr), autocanonize, err){};
+        : KeyExpr(std::string_view(key_expr), autocanonize, err) {};
 
     /// @brief Copy constructor.
     KeyExpr(const KeyExpr& other) : KeyExpr(zenoh::detail::null_object) {

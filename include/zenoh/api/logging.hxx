@@ -12,6 +12,9 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #pragma once
+
+#include <string>
+
 #include "../zenohc.hxx"
 
 namespace zenoh {
