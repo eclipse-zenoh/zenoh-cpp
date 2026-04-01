@@ -1310,6 +1310,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Starts the admin space for a session.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
+    /// @note Zenoh-pico with Z_FEATURE_ADMIN_SPACE enabled only.
     void start_admin_space(ZResult* err = nullptr) const {
         __ZENOH_RESULT_CHECK(::zp_start_admin_space(interop::as_loaned_c_ptr(*this)), err,
                              "Failed to start admin space");
@@ -1318,6 +1319,7 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Stops the admin space for a session.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
+    /// @note Zenoh-pico with Z_FEATURE_ADMIN_SPACE enabled only.
     void stop_admin_space(ZResult* err = nullptr) const {
         __ZENOH_RESULT_CHECK(::zp_stop_admin_space(interop::as_loaned_c_ptr(*this)), err, "Failed to stop admin space");
     }
