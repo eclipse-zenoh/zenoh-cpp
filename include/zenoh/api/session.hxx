@@ -72,34 +72,38 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Options to be passed when opening a ``Session``.
     struct SessionOptions {
         /// @name Fields
-#if defined(ZENOHCXX_ZENOHPICO) && Z_FEATURE_MULTI_THREAD == 1
-        /// @brief List of background tasks to auto-start, allowing per task granularity.
-        /// @note Zenoh-pico only.
+#if defined(ZENOHCXX_ZENOHPICO)
+#if Z_FEATURE_MULTI_THREAD == 1
+        /// @cond DEPRECATED
+
+        /// @warning Deprecated: Background tasks are started automatically upon session creation and automatically
+        /// stopped when it is closed.
+        /// @note Zenoh-pico with Z_FEATURE_MULTI_THREAD enabled only.
         struct BackgroundTasksAutoStartOptions {
             /// @name Fields
 
-            /// Auto-start read task
             bool auto_start_read_task = true;
-            /// Auto-start lease task
-            bool auto_start_lease_task = true;
-#if defined(Z_FEATURE_UNSTABLE_API) && Z_FEATURE_PERIODIC_TASKS == 1
-            /// Auto-start periodic scheduler task.
-            /// @note With Z_FEATURE_PERIODIC_TASKS enabled only.
-            bool auto_start_periodic_task = true;
-#endif
-            /// @brief Create default auto-start settings.
+            bool auto_start_lease_task = false;
+
             static BackgroundTasksAutoStartOptions create_default() { return {}; }
         };
 
-        /// @brief If ``true``, start background threads which handle the network
-        /// traffic. If false, the threads should be called manually with ``Session::start_read_task``,
-        /// ``Session::start_lease_task`` and ``Session::start_periodic_scheduler_task``
-        /// or methods ``Session::read``, ``Session::send_keep_alive``,
-        /// ``Session::send_join`` and ``Session::process_periodic_tasks`` should be called in loop.
-        /// If contains ``BackgroundTasksAutoStartOptions`` value, only enabled tasks will start and the
-        /// remaining ones will need to be started or triggered manually.
+        /// @warning Deprecated: Background tasks are started automatically upon session creation and automatically
+        /// stopped when it is closed.
         /// @note Zenoh-pico with Z_FEATURE_MULTI_THREAD enabled only.
         std::variant<bool, BackgroundTasksAutoStartOptions> start_background_tasks = true;
+        /// @endcond
+
+        /// @brief The attributes to pass to zenoh session executor thread running read,
+        /// lease, keep alive, join, connect and other tasks in the background.
+        /// @note Zenoh-pico with Z_FEATURE_MULTI_THREAD enabled only.
+        z_task_attr_t* executor_task_attributes = nullptr;
+#endif
+#if Z_FEATURE_ADMIN_SPACE == 1
+        /// @brief Auto-start admin space after session creation.
+        /// @note Zenoh-pico with Z_FEATURE_ADMIN_SPACE enabled only.
+        bool auto_start_admin_space = false;
+#endif
 #endif
         /// @name Methods
 
@@ -111,23 +115,23 @@ class Session : public Owned<::z_owned_session_t> {
         ::z_open_options_t to_c_opts() {
             z_open_options_t opts;
             z_open_options_default(&opts);
-#if defined(ZENOHCXX_ZENOHPICO) && Z_FEATURE_MULTI_THREAD == 1
+#if defined(ZENOHCXX_ZENOHPICO)
+#if Z_FEATURE_MULTI_THREAD == 1
             std::visit(
                 detail::commons::overloaded{[&opts](const SessionOptions::BackgroundTasksAutoStartOptions& tasks) {
                                                 opts.auto_start_read_task = tasks.auto_start_read_task;
                                                 opts.auto_start_lease_task = tasks.auto_start_lease_task;
-#if defined(Z_FEATURE_UNSTABLE_API) && Z_FEATURE_PERIODIC_TASKS == 1
-                                                opts.auto_start_periodic_task = tasks.auto_start_periodic_task;
-#endif
                                             },
                                             [&opts](const bool& start_all) {
                                                 opts.auto_start_read_task = start_all;
-                                                opts.auto_start_lease_task = start_all;
-#if defined(Z_FEATURE_UNSTABLE_API) && Z_FEATURE_PERIODIC_TASKS == 1
-                                                opts.auto_start_periodic_task = start_all;
-#endif
+                                                opts.auto_start_lease_task = false;
                                             }},
                 start_background_tasks);
+            opts.executor_task_attributes = executor_task_attributes;
+#endif
+#if Z_FEATURE_ADMIN_SPACE == 1
+            opts.auto_start_admin_space = auto_start_admin_space;
+#endif
 #endif
             return opts;
         }
@@ -1187,10 +1191,15 @@ class Session : public Owned<::z_owned_session_t> {
 
 #if defined(ZENOHCXX_ZENOHPICO)
 #if Z_FEATURE_MULTI_THREAD == 1
+    /// @cond DEPRECATED
+
     /// @brief Start a separate task to read from the network and process the messages as soon as they are received.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @note Zenoh-pico with Z_FEATURE_MULTI_THREAD enabled only.
+    [[deprecated(
+        "Background tasks are started automatically upon session creation and automatically stopped when it is "
+        "closed.")]]
     void start_read_task(ZResult* err = nullptr) {
         __ZENOH_RESULT_CHECK(zp_start_read_task(interop::as_loaned_c_ptr(*this), nullptr), err,
                              "Failed to start read task");
@@ -1200,6 +1209,9 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @note Zenoh-pico with Z_FEATURE_MULTI_THREAD enabled only.
+    [[deprecated(
+        "Background tasks are started automatically upon session creation and automatically stopped when it is "
+        "closed.")]]
     void stop_read_task(ZResult* err = nullptr) {
         __ZENOH_RESULT_CHECK(zp_stop_read_task(interop::as_loaned_c_ptr(*this)), err, "Failed to stop read task");
     }
@@ -1210,6 +1222,9 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @note Zenoh-pico with Z_FEATURE_MULTI_THREAD enabled only.
+    [[deprecated(
+        "Background tasks are started automatically upon session creation and automatically stopped when it is "
+        "closed.")]]
     void start_lease_task(ZResult* err = nullptr) {
         __ZENOH_RESULT_CHECK(zp_start_lease_task(interop::as_loaned_c_ptr(*this), NULL), err,
                              "Failed to start lease task");
@@ -1219,6 +1234,9 @@ class Session : public Owned<::z_owned_session_t> {
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @note Zenoh-pico with Z_FEATURE_MULTI_THREAD enabled only.
+    [[deprecated(
+        "Background tasks are started automatically upon session creation and automatically stopped when it is "
+        "closed.")]]
     void stop_lease_task(ZResult* err = nullptr) {
         __ZENOH_RESULT_CHECK(zp_stop_lease_task(interop::as_loaned_c_ptr(*this)), err, "Failed to stop lease task");
     }
@@ -1226,57 +1244,35 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Verify if read task is currently running.
     /// @return ``true`` if read task is running, ``false`` otherwise.
     /// @note Zenoh-pico with Z_FEATURE_MULTI_THREAD enabled only.
-    bool is_read_task_running() const { return zp_read_task_is_running(interop::as_loaned_c_ptr(*this)); }
+    [[deprecated(
+        "Background tasks are started automatically upon session creation and automatically stopped when it is "
+        "closed.")]]
+    bool is_read_task_running() const {
+        return zp_read_task_is_running(interop::as_loaned_c_ptr(*this));
+    }
 
     /// @brief Verify if lease task is currently running.
     /// @return ``true`` if read task is running, ``false`` otherwise.
     /// @note Zenoh-pico with Z_FEATURE_MULTI_THREAD enabled only.
-    bool is_lease_task_running() const { return zp_lease_task_is_running(interop::as_loaned_c_ptr(*this)); }
-
-#if defined(Z_FEATURE_UNSTABLE_API) && Z_FEATURE_PERIODIC_TASKS == 1
-    /// @brief Start the periodic scheduler task.  The periodic scheduler task executes registered periodic jobs
-    /// according to their configured intervals. Jobs are added and removed via the scheduler API.
-    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
-    /// thrown in case of error.
-    /// @note Zenoh-pico with Z_FEATURE_MULTI_THREAD and Z_FEATURE_PERIODIC_TASKS enabled only.
-    void start_periodic_scheduler_task(ZResult* err = nullptr) {
-        __ZENOH_RESULT_CHECK(zp_start_periodic_scheduler_task(interop::as_loaned_c_ptr(*this), NULL), err,
-                             "Failed to start periodic scheduler task");
+    [[deprecated(
+        "Background tasks are started automatically upon session creation and automatically stopped when it is "
+        "closed.")]]
+    bool is_lease_task_running() const {
+        return zp_lease_task_is_running(interop::as_loaned_c_ptr(*this));
     }
-
-    /// @brief Stop the periodic scheduler task.
-    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
-    /// thrown in case of error.
-    /// @note Zenoh-pico with Z_FEATURE_MULTI_THREAD and Z_FEATURE_PERIODIC_TASKS enabled  only.
-    void stop_periodic_scheduler_task(ZResult* err = nullptr) {
-        __ZENOH_RESULT_CHECK(zp_stop_periodic_scheduler_task(interop::as_loaned_c_ptr(*this)), err,
-                             "Failed to stop periodic scheduler task");
-    }
-
-    /// @brief Verify if periodic scheduler task is currently running.
-    /// @return ``true`` if read task is running, ``false`` otherwise.
-    /// @note Zenoh-pico with _FEATURE_MULTI_THREAD and Z_FEATURE_PERIODIC_TASKS enabled only.
-    bool is_periodic_scheduler_task_running() const {
-        return zp_periodic_scheduler_task_is_running(interop::as_loaned_c_ptr(*this));
-    }
+    /// @endcond
 #endif
-#endif
+#if Z_FEATURE_MULTI_THREAD == 0 || defined(__DOXYGEN__)
+    /// @cond DEPRECATED
 
-#if defined(Z_FEATURE_UNSTABLE_API) && Z_FEATURE_PERIODIC_TASKS == 1
-    /// @brief Process outstanding periodic tasks.
-    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
-    /// thrown in case of error.
-    /// @note Zenoh-pico with Z_FEATURE_PERIODIC_TASKS enabled  only.
-    void process_periodic_tasks(ZResult* err = nullptr) {
-        __ZENOH_RESULT_CHECK(zp_process_periodic_tasks(interop::as_loaned_c_ptr(*this)), err,
-                             "Failed to process periodic tasks");
-    }
-#endif
     /// @brief Triggers a single execution of reading procedure from the network and processes of any received the
     /// message.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
     /// @note Zenoh-pico only.
+    [[deprecated(
+        "Use spin_once which will run a run a single pending task (such as read, lease, keep alive, accept, connect, "
+        "etc...) from the task queue.")]]
     void read(ZResult* err = nullptr) {
         __ZENOH_RESULT_CHECK(zp_read(interop::as_loaned_c_ptr(*this), nullptr), err, "Failed to perform read");
     }
@@ -1285,6 +1281,9 @@ class Session : public Owned<::z_owned_session_t> {
     /// will close the session when the lease is expired.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
+    [[deprecated(
+        "Use spin_once which will run a run a single pending task (such as read, lease, keep alive, accept, connect, "
+        "etc...) from the task queue.")]]
     void send_keep_alive(ZResult* err = nullptr) {
         __ZENOH_RESULT_CHECK(zp_send_keep_alive(interop::as_loaned_c_ptr(*this), nullptr), err,
                              "Failed to perform send_keep_alive");
@@ -1293,10 +1292,36 @@ class Session : public Owned<::z_owned_session_t> {
     /// @brief Triggers a single execution of join procedure: send the Join message.
     /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
     /// thrown in case of error.
+    [[deprecated(
+        "Use spin_once which will run a run a single pending task (such as read, lease, keep alive, accept, connect, "
+        "etc...) from the task queue.")]]
     void send_join(ZResult* err = nullptr) {
         __ZENOH_RESULT_CHECK(zp_send_join(interop::as_loaned_c_ptr(*this), nullptr), err,
                              "Failed to perform send_join");
     }
+    /// @endcond
+
+    /// @brief Spins zenoh executor once, executing a single pending task (such as read, lease, keep alive, accept,
+    /// connect, etc...) from the task queue.
+    /// @note Zenoh-pico with Z_FEATURE_MULTI_THREAD disabled only.
+    void spin_once() const { zp_spin_once(interop::as_loaned_c_ptr(*this)); }
+#endif
+#if Z_FEATURE_ADMIN_SPACE == 1
+    /// @brief Starts the admin space for a session.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void start_admin_space(ZResult* err = nullptr) const {
+        __ZENOH_RESULT_CHECK(::zp_start_admin_space(interop::as_loaned_c_ptr(*this)), err,
+                             "Failed to start admin space");
+    }
+
+    /// @brief Stops the admin space for a session.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception will be
+    /// thrown in case of error.
+    void stop_admin_space(ZResult* err = nullptr) const {
+        __ZENOH_RESULT_CHECK(::zp_stop_admin_space(interop::as_loaned_c_ptr(*this)), err, "Failed to stop admin space");
+    }
+#endif
 #endif
 
 #if defined(ZENOHCXX_ZENOHC) || Z_FEATURE_LIVELINESS == 1
