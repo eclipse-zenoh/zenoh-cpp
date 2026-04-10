@@ -32,7 +32,7 @@
 #include "source_info.hxx"
 #endif
 #include "subscriber.hxx"
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_CONNECTIVITY == 1)
 #include "link_events_listener.hxx"
 #include "transport_events_listener.hxx"
 #endif
@@ -903,7 +903,7 @@ class Session : public Owned<::z_owned_session_t> {
         return out;
     }
 
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_CONNECTIVITY == 1)
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
     /// release.
     /// @brief Fetches all transports of this session.

@@ -38,7 +38,7 @@ int _main(int argc, char** argv) {
         std::cout << zid << "\n";
     }
 
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_CONNECTIVITY == 1)
     std::cout << "\ntransports:\n";
     for (const auto& transport : session.get_transports()) {
         std::cout << "  Transport\n";
