@@ -14,7 +14,7 @@
 #pragma once
 
 #include <string>
-#include <vector>
+#include <string_view>
 
 #include "base.hxx"
 #include "interop.hxx"
@@ -22,7 +22,7 @@
 namespace zenoh {
 /// A Zenoh Session config.
 class Config : public Owned<::z_owned_config_t> {
-    Config(zenoh::detail::null_object_t) : Owned(nullptr){};
+    Config(zenoh::detail::null_object_t) : Owned(nullptr) {};
 
    public:
     /// @name Constructors

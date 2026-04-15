@@ -16,6 +16,8 @@
 //
 
 #pragma once
+
+#include <utility>
 #include <variant>
 
 #include "base.hxx"
@@ -111,7 +113,7 @@ class FifoChannel;
 /// @tparam T data entry type.
 template <class T>
 class FifoHandler : public Owned<typename detail::FifoHandlerData<T>::handler_type> {
-    FifoHandler(zenoh::detail::null_object_t) : Owned<typename detail::FifoHandlerData<T>::handler_type>(nullptr){};
+    FifoHandler(zenoh::detail::null_object_t) : Owned<typename detail::FifoHandlerData<T>::handler_type>(nullptr) {};
 
    public:
     /// @name Methods
@@ -152,7 +154,7 @@ class RingChannel;
 /// @tparam T data entry type.
 template <class T>
 class RingHandler : public Owned<typename detail::RingHandlerData<T>::handler_type> {
-    RingHandler(zenoh::detail::null_object_t) : Owned<typename detail::RingHandlerData<T>::handler_type>(nullptr){};
+    RingHandler(zenoh::detail::null_object_t) : Owned<typename detail::RingHandlerData<T>::handler_type>(nullptr) {};
 
    public:
     /// @name Methods
