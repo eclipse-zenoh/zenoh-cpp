@@ -55,7 +55,7 @@ class Droppable : public IDroppable {
 
     template <class DD>
     static void* into_context(DD&& drop) {
-        auto obj = new Droppable<std::remove_cvref_t<DD>>(std::forward<DD>(drop));
+        auto obj = new Droppable<D>(std::forward<DD>(drop));
         return obj->as_context();
     }
 };
@@ -75,7 +75,7 @@ class Closure : public IClosure<R, Args...> {
 
     template <class CC, class DD>
     static void* into_context(CC&& call, DD&& drop) {
-        auto obj = new Closure<std::remove_cvref_t<CC>, std::remove_cvref_t<DD>, R, Args...>(std::forward<CC>(call), std::forward<DD>(drop));
+        auto obj = new Closure<C, D, R, Args...>(std::forward<CC>(call), std::forward<DD>(drop));
         return obj->as_context();
     }
 };

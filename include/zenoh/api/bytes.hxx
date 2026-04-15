@@ -64,11 +64,12 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     template <class Allocator>
     Bytes(std::vector<uint8_t, Allocator>&& v) : Bytes() {
         std::vector<uint8_t, Allocator>* ptr = new std::vector<uint8_t, Allocator>(std::move(v));
-        auto d = [p = ptr]() mutable { delete p; };
-        using D = decltype(d);
-        using Dval = std::remove_reference_t<D>;
-        using DroppableType = typename detail::closures::Droppable<Dval>;
-        auto drop = DroppableType::into_context(std::move(d));
+         struct VectorDeleter {
+            std::vector<uint8_t, Allocator>* ptr;
+            void operator()() { delete ptr; };
+        }; 
+        using DroppableType = typename detail::closures::Droppable<VectorDeleter>;
+        auto drop = DroppableType::into_context(std::move(VectorDeleter(ptr)));
         ::z_bytes_from_buf(interop::as_owned_c_ptr(*this), ptr->data(), ptr->size(),
                            detail::closures::_zenoh_drop_with_context, drop);
     }
@@ -89,11 +90,12 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     /// @brief Construct by moving a string.
     Bytes(std::string&& v) : Bytes() {
         std::string* ptr = new std::string(std::move(v));
-        auto d = [p = ptr]() mutable { delete p; };
-        using D = decltype(d);
-        using Dval = std::remove_reference_t<D>;
-        using DroppableType = typename detail::closures::Droppable<Dval>;
-        auto drop = DroppableType::into_context(std::move(d));
+        struct StringDeleter {
+            std::string* ptr;
+            void operator()() { delete ptr; }
+        };
+        using DroppableType = typename detail::closures::Droppable<StringDeleter>;
+        auto drop = DroppableType::into_context(std::move(StringDeleter(ptr)));
         ::z_bytes_from_buf(interop::as_owned_c_ptr(*this), reinterpret_cast<uint8_t*>(ptr->data()), ptr->size(),
                            detail::closures::_zenoh_drop_with_context, drop);
     }
@@ -108,11 +110,13 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     Bytes(uint8_t* ptr, size_t len, Deleter deleter) : Bytes() {
         static_assert(std::is_invocable_r<void, Deleter, uint8_t*>::value,
                       "deleter should be callable with the following signature: void deleter(uint8_t* data)");
-        auto d = [p = ptr, del = std::move(deleter)]() mutable { del(p); };
-        using D = decltype(d);
-        using Dval = std::remove_reference_t<D>;
-        using DroppableType = typename detail::closures::Droppable<Dval>;
-        auto drop = DroppableType::into_context(std::move(d));
+        struct CustomDeleter {
+            uint8_t* ptr;
+            Deleter deleter;
+            void operator()() { deleter(ptr); }
+        };
+        using DroppableType = typename detail::closures::Droppable<CustomDeleter>;
+        auto drop = DroppableType::into_context(std::move(CustomDeleter(ptr, std::move(deleter))));
         ::z_bytes_from_buf(interop::as_owned_c_ptr(*this), ptr, len, detail::closures::_zenoh_drop_with_context, drop);
     }
 
