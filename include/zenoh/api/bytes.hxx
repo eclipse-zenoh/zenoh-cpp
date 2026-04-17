@@ -69,7 +69,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
             void operator()() { delete ptr; };
         }; 
         using DroppableType = typename detail::closures::Droppable<VectorDeleter>;
-        auto drop = DroppableType::into_context(std::move(VectorDeleter{ptr}));
+        auto drop = DroppableType::into_context(VectorDeleter{ptr});
         ::z_bytes_from_buf(interop::as_owned_c_ptr(*this), ptr->data(), ptr->size(),
                            detail::closures::_zenoh_drop_with_context, drop);
     }
@@ -95,7 +95,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
             void operator()() { delete ptr; }
         };
         using DroppableType = typename detail::closures::Droppable<StringDeleter>;
-        auto drop = DroppableType::into_context(std::move(StringDeleter{ptr}));
+        auto drop = DroppableType::into_context(StringDeleter{ptr});
         ::z_bytes_from_buf(interop::as_owned_c_ptr(*this), reinterpret_cast<uint8_t*>(ptr->data()), ptr->size(),
                            detail::closures::_zenoh_drop_with_context, drop);
     }
@@ -116,7 +116,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
             void operator()() { deleter(ptr); }
         };
         using DroppableType = typename detail::closures::Droppable<CustomDeleter>;
-        auto drop = DroppableType::into_context(std::move(CustomDeleter{ptr, std::move(deleter)}));
+        auto drop = DroppableType::into_context(CustomDeleter{ptr, std::move(deleter)});
         ::z_bytes_from_buf(interop::as_owned_c_ptr(*this), ptr, len, detail::closures::_zenoh_drop_with_context, drop);
     }
 
