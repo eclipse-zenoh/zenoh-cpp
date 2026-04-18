@@ -64,10 +64,10 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     template <class Allocator>
     Bytes(std::vector<uint8_t, Allocator>&& v) : Bytes() {
         std::vector<uint8_t, Allocator>* ptr = new std::vector<uint8_t, Allocator>(std::move(v));
-         struct VectorDeleter {
+        struct VectorDeleter {
             std::vector<uint8_t, Allocator>* ptr;
             void operator()() { delete ptr; };
-        }; 
+        };
         using DroppableType = typename detail::closures::Droppable<VectorDeleter>;
         auto drop = DroppableType::into_context(VectorDeleter{ptr});
         ::z_bytes_from_buf(interop::as_owned_c_ptr(*this), ptr->data(), ptr->size(),
@@ -82,10 +82,10 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     }
 
     /// @brief Construct by copying sequence of charactes.
-    Bytes(const char* v) : Bytes(std::string_view(v)){};
+    Bytes(const char* v) : Bytes(std::string_view(v)) {};
 
     /// @brief Construct by copying sequence of charactes.
-    Bytes(const std::string& v) : Bytes(std::string_view(v)){};
+    Bytes(const std::string& v) : Bytes(std::string_view(v)) {};
 
     /// @brief Construct by moving a string.
     Bytes(std::string&& v) : Bytes() {
