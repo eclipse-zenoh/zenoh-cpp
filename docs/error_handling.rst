@@ -15,9 +15,14 @@
 Error Handling
 ==============
 
-All failable Zenoh methods accept pointer to zenoh::ZResult as an optional argument.
-If it is not provided (or set to ``nullptr``) a ``zenoh::ZException`` will be thrown in case of failure.
-Otherwise a error code will be written to provided pointer and no exception will be thrown from Zenoh side.
+All failable Zenoh methods accept a pointer to ``zenoh::ZResult``.
+
+If the pointer is not ``nullptr``, the resulting error code is stored in the location it points to.
+If the pointer is ``nullptr`` and exceptions are enabled (which is usually the case), a ``zenoh::ZException`` is thrown on failure.
+If the pointer is ``nullptr`` and exceptions are disabled, ``abort()`` is called on failure.
+
+Therefore, when exceptions are unavailable, you must always provide a valid ``zenoh::ZResult`` pointer.
+
 If corresponding method is expected to return or consume (via ``std::move``) any objects, they will be reset to
 gravestone state (i.e. None of the functions or methods will work with the object in this state, except 
 explicit conversion to ``bool``, which will return false).

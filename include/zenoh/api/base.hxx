@@ -26,6 +26,7 @@ namespace zenoh {
 /// @brief Error code returned by Zenoh API
 typedef ::z_result_t ZResult;
 
+#ifdef __cpp_exceptions
 /// @brief Zenoh-specific Exception
 class ZException : public std::runtime_error {
    public:
@@ -33,13 +34,17 @@ class ZException : public std::runtime_error {
     ZException(const std::string& message, ZResult err)
         : std::runtime_error(message + "(Error code: " + std::to_string(err) + " )"), e(err) {}
 };
+#define __ZENOH_THROW_ZEXCEPTION(msg, err) throw ZException(msg, err)
+#else
+#define __ZENOH_THROW_ZEXCEPTION(msg, err) abort();
+#endif
 
-#define __ZENOH_RESULT_CHECK(err, err_ptr, message)        \
-    if (err_ptr == nullptr) {                              \
-        ZResult __ze = static_cast<ZResult>(err);          \
-        if (__ze != Z_OK) throw ZException(message, __ze); \
-    } else {                                               \
-        *err_ptr = static_cast<ZResult>(err);              \
+#define __ZENOH_RESULT_CHECK(err, err_ptr, message)                \
+    if (err_ptr == nullptr) {                                      \
+        ZResult __ze = static_cast<ZResult>(err);                  \
+        if (__ze != Z_OK) __ZENOH_THROW_ZEXCEPTION(message, __ze); \
+    } else {                                                       \
+        *err_ptr = static_cast<ZResult>(err);                      \
     }
 
 //

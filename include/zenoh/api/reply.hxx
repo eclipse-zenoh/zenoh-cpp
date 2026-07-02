@@ -66,7 +66,7 @@ class Reply : public Owned<::z_owned_reply_t> {
     /// @return reply sample.
     const Sample& get_ok() const {
         if (!::z_reply_is_ok(interop::as_loaned_c_ptr(*this))) {
-            throw ZException("Reply data sample was requested, but reply contains error", Z_EINVAL);
+            __ZENOH_THROW_ZEXCEPTION("Reply data sample was requested, but reply contains error", Z_EINVAL);
         }
         return interop::as_owned_cpp_ref<Sample>(::z_reply_ok(interop::as_loaned_c_ptr(*this)));
     }
@@ -77,7 +77,7 @@ class Reply : public Owned<::z_owned_reply_t> {
     // /// @return reply sample.
     // Sample& get_ok() {
     //     if (!::z_reply_is_ok(interop::as_loaned_c_ptr(*this))) {
-    //         throw ZException("Reply data sample was requested, but reply contains error", Z_EINVAL);
+    //         __ZENOH_THROW_ZEXCEPTION("Reply data sample was requested, but reply contains error", Z_EINVAL);
     //     }
     //     return interop::as_owned_cpp_ref<Sample>(::z_reply_ok_mut(interop::as_loaned_c_ptr(*this)));
     // }
@@ -87,7 +87,7 @@ class Reply : public Owned<::z_owned_reply_t> {
     /// @return reply error.
     const ReplyError& get_err() const {
         if (::z_reply_is_ok(interop::as_loaned_c_ptr(*this))) {
-            throw ZException("Reply error was requested, but reply contains data sample", Z_EINVAL);
+            __ZENOH_THROW_ZEXCEPTION("Reply error was requested, but reply contains data sample", Z_EINVAL);
         }
         return interop::as_owned_cpp_ref<ReplyError>(::z_reply_err(interop::as_loaned_c_ptr(*this)));
     }
@@ -98,7 +98,7 @@ class Reply : public Owned<::z_owned_reply_t> {
     // /// @return reply error.
     // ReplyError& get_err() {
     //     if (::z_reply_is_ok(interop::as_loaned_c_ptr(*this))) {
-    //         throw ZException("Reply error was requested, but reply contains data sample", Z_EINVAL);
+    //         __ZENOH_THROW_ZEXCEPTION("Reply error was requested, but reply contains data sample", Z_EINVAL);
     //     }
     //     return interop::as_owned_cpp_ref<ReplyError>(::z_reply_err_mut(interop::as_loaned_c_ptr(*this)));
     // }
