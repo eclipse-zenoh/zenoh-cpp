@@ -60,7 +60,7 @@ resolve_interface_ip() {
                     exit 1
                 }
             ' |
-                tr -d '\r'
+                tr -d '\015'
             ;;
         *)
             return 1
