@@ -25,6 +25,14 @@ cd "$TESTDIR"|| exit
 
 echo "------------------ Running test $TESTBIN -------------------"
 
+cleanup() {
+    if [ -n "${ZPID:-}" ]; then
+        kill -9 "$ZPID" 2>/dev/null || true
+    fi
+}
+
+trap cleanup EXIT INT TERM
+
 sleep 5
 
 if [ ! -f zenohd ]; then
@@ -39,7 +47,7 @@ fi
 
 chmod +x zenohd
 
-LOCATORS="tcp/0.0.0.0:7447"
+LOCATORS="${ZENOH_TEST_ROUTER_LISTENER:-tcp/127.0.0.1:7447}"
 for LOCATOR in $(echo "$LOCATORS" | xargs); do
     sleep 1
 
