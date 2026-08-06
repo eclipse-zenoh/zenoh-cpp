@@ -124,12 +124,31 @@ cd "$TESTDIR"|| exit
 echo "------------------ Running test $TESTBIN -------------------"
 
 cleanup() {
-    if [ -n "${ZPID:-}" ]; then
-        kill -9 "$ZPID" 2>/dev/null || true
-    fi
+    stop_router
 }
 
 trap cleanup EXIT INT TERM
+
+stop_router() {
+    if [ -z "${ZPID:-}" ]; then
+        return
+    fi
+
+    kill -TERM "$ZPID" 2>/dev/null || true
+
+    attempts=0
+    while kill -0 "$ZPID" 2>/dev/null && [ "$attempts" -lt 20 ]; do
+        sleep 0.1
+        attempts=$((attempts + 1))
+    done
+
+    if kill -0 "$ZPID" 2>/dev/null; then
+        kill -KILL "$ZPID" 2>/dev/null || true
+    fi
+
+    wait "$ZPID" 2>/dev/null || true
+    ZPID=
+}
 
 sleep 5
 
@@ -163,7 +182,7 @@ for LOCATOR in $(echo "$LOCATORS" | xargs); do
     cat client."$TEST_NAME_WE".log
 
     echo "> Stopping zenohd ..."
-    kill -9 "$ZPID"
+    stop_router
 
     sleep 1
 
