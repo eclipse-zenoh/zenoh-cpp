@@ -20,23 +20,46 @@ ZENOH_BRANCH="$2"
 resolve_interface_ip() {
     case "${RUNNER_OS:-$(uname -s)}" in
         Linux)
-            {
-                ip route get 1.1.1.1 |
-                    awk '{ for (i = 1; i <= NF; i++) if ($i == "src") print $(i + 1) }'
-                ip -4 -o addr show scope global |
-                    awk '{ split($4, address, "/"); print address[1] }'
-            } | select_private_ipv4
+            ip route get 1.1.1.1 |
+                awk '{ for (i = 1; i <= NF; i++) if ($i == "src") { print $(i + 1); exit } }' |
+                select_private_ipv4
             ;;
         macOS|Darwin)
-            {
-                INTERFACE=$(route -n get default | awk '/interface:/{print $2}')
-                ipconfig getifaddr "$INTERFACE"
-                ifconfig | awk '/inet /{print $2}'
-            } | select_private_ipv4
+            INTERFACE=$(route -n get default | awk '/interface:/{print $2; exit}')
+            ipconfig getifaddr "$INTERFACE" | select_private_ipv4
             ;;
         Windows|MINGW*|MSYS*)
-            powershell.exe -NoProfile -Command \
-                '(Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.IPAddress -match "^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)"} | Select-Object -First 1).IPAddress' |
+            powershell.exe -NoProfile -Command '
+                $ErrorActionPreference = "Stop"
+                try {
+                    $route = Get-NetRoute `
+                        -AddressFamily IPv4 `
+                        -DestinationPrefix "0.0.0.0/0" `
+                        -PolicyStore ActiveStore |
+                        Sort-Object @{Expression = { $_.RouteMetric + $_.InterfaceMetric }} |
+                        Select-Object -First 1
+
+                    if ($null -eq $route) { exit 1 }
+
+                    $ip = Get-NetIPAddress `
+                        -AddressFamily IPv4 `
+                        -InterfaceIndex $route.InterfaceIndex `
+                        -AddressState Preferred |
+                        Where-Object {
+                            $_.IPAddress -match "^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)"
+                        } |
+                        Select-Object -First 1 -ExpandProperty IPAddress
+
+                    if ($ip) {
+                        $ip
+                        exit 0
+                    }
+
+                    exit 1
+                } catch {
+                    exit 1
+                }
+            ' |
                 tr -d '\r'
             ;;
         *)
@@ -67,6 +90,8 @@ is_valid_ipv4() {
 }
 
 is_private_ipv4() {
+    is_valid_ipv4 "$1" || return 1
+
     case "$1" in
         10.*|192.168.*|172.16.*|172.17.*|172.18.*|172.19.*|172.2[0-9].*|172.3[0-1].*)
             return 0
