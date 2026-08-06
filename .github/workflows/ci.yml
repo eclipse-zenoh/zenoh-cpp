@@ -67,40 +67,6 @@ jobs:
       - name: run tests
         shell: bash
         run: |
-          case "${{ runner.os }}" in
-            Linux)
-              RUNNER_IP="$({
-                ip route get 1.1.1.1 |
-                  awk '{ for (i = 1; i <= NF; i++) if ($i == "src") print $(i + 1) }'
-              })"
-              ;;
-            macOS)
-              INTERFACE="$(route -n get default | awk '/interface:/{print $2}')"
-              RUNNER_IP="$(ipconfig getifaddr "$INTERFACE")"
-              ;;
-            Windows)
-              RUNNER_IP="$(
-                powershell.exe -NoProfile -Command \
-                  '(Get-NetIPConfiguration | Where-Object {$_.IPv4DefaultGateway -ne $null} | Select-Object -First 1 -ExpandProperty IPv4Address).IPAddress'
-              )"
-              RUNNER_IP="$(printf '%s' "$RUNNER_IP" | tr -d '\r')"
-              ;;
-            *)
-              echo "::error::Unsupported runner OS: ${{ runner.os }}"
-              exit 1
-              ;;
-          esac
-
-          if [[ ! "$RUNNER_IP" =~ ^10\.[0-9]+\.[0-9]+\.[0-9]+$ ]] &&
-             [[ ! "$RUNNER_IP" =~ ^192\.168\.[0-9]+\.[0-9]+$ ]] &&
-             [[ ! "$RUNNER_IP" =~ ^172\.(1[6-9]|2[0-9]|3[0-1])\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Resolved address is not a private IPv4 address: $RUNNER_IP"
-            exit 1
-          fi
-
-          export ZENOH_TEST_ROUTER_LISTENER="tcp/$RUNNER_IP:7447"
-          echo "Using Zenoh test router listener: $ZENOH_TEST_ROUTER_LISTENER"
-
           cd build
           # On ubuntu we need to modify memlock limit to allow tests to run
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
@@ -108,8 +74,7 @@ jobs:
           fi
           # On macOS, sudo is required to run tests due to LAN access permissions
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            sudo env "ZENOH_TEST_ROUTER_LISTENER=$ZENOH_TEST_ROUTER_LISTENER" \
-              ctest -C ${{ matrix.build_type }} --output-on-failure
+            sudo ctest -C ${{ matrix.build_type }} --output-on-failure
           else
             ctest -C ${{ matrix.build_type }} --output-on-failure
           fi

@@ -17,6 +17,79 @@ TESTBIN="$1"
 TESTDIR=$(dirname "$0")
 ZENOH_BRANCH="$2"
 
+resolve_interface_ip() {
+    case "${RUNNER_OS:-$(uname -s)}" in
+        Linux)
+            {
+                ip route get 1.1.1.1 |
+                    awk '{ for (i = 1; i <= NF; i++) if ($i == "src") print $(i + 1) }'
+                ip -4 -o addr show scope global |
+                    awk '{ split($4, address, "/"); print address[1] }'
+            } | select_private_ipv4
+            ;;
+        macOS|Darwin)
+            {
+                INTERFACE=$(route -n get default | awk '/interface:/{print $2}')
+                ipconfig getifaddr "$INTERFACE"
+                ifconfig | awk '/inet /{print $2}'
+            } | select_private_ipv4
+            ;;
+        Windows|MINGW*|MSYS*)
+            powershell.exe -NoProfile -Command \
+                '(Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.IPAddress -match "^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)"} | Select-Object -First 1).IPAddress' |
+                tr -d '\r'
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+select_private_ipv4() {
+    while IFS= read -r candidate; do
+        if is_private_ipv4 "$candidate"; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+    return 1
+}
+
+is_valid_ipv4() {
+    printf '%s\n' "$1" | awk -F. '
+        NF != 4 { exit 1 }
+        {
+            for (i = 1; i <= 4; i++) {
+                if ($i !~ /^[0-9]+$/ || $i < 0 || $i > 255) exit 1
+            }
+        }
+    '
+}
+
+is_private_ipv4() {
+    case "$1" in
+        10.*|192.168.*|172.16.*|172.17.*|172.18.*|172.19.*|172.2[0-9].*|172.3[0-1].*)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+if [ -z "${ZENOH_TEST_ROUTER_LISTENER:-}" ]; then
+    INTERFACE_IP=$(resolve_interface_ip)
+    if ! is_private_ipv4 "$INTERFACE_IP"; then
+        echo "ERROR: could not resolve a private IPv4 address for the test interface." >&2
+        echo "Resolved address: ${INTERFACE_IP:-<empty>}" >&2
+        echo "Set ZENOH_TEST_ROUTER_LISTENER to a concrete interface address before running ctest, or connect this machine to a private network." >&2
+        echo "Refusing to fall back to tcp/0.0.0.0:7447: that would expose the unauthenticated test router on every network interface." >&2
+        exit 1
+    fi
+    ZENOH_TEST_ROUTER_LISTENER="tcp/$INTERFACE_IP:7447"
+    export ZENOH_TEST_ROUTER_LISTENER
+fi
+
 # get vinary name without extension
 TEST_NAME_WE=$(basename -- "$TESTBIN")
 TEST_NAME_WE="${TEST_NAME_WE%.*}"
@@ -47,7 +120,7 @@ fi
 
 chmod +x zenohd
 
-LOCATORS="${ZENOH_TEST_ROUTER_LISTENER:-tcp/127.0.0.1:7447}"
+LOCATORS="$ZENOH_TEST_ROUTER_LISTENER"
 for LOCATOR in $(echo "$LOCATORS" | xargs); do
     sleep 1
 
