@@ -175,7 +175,11 @@ for LOCATOR in $(echo "$LOCATORS" | xargs); do
     sleep 5
 
     echo "> Running $TESTBIN ..."
-    "$TESTBIN" "$LOCATOR" > client."$TEST_NAME_WE".log 2>&1
+    if command -v stdbuf >/dev/null 2>&1; then
+        ZENOH_TEST_ROUTER="$LOCATOR" stdbuf -oL -eL "$TESTBIN" "$LOCATOR" > client."$TEST_NAME_WE".log 2>&1
+    else
+        ZENOH_TEST_ROUTER="$LOCATOR" "$TESTBIN" "$LOCATOR" > client."$TEST_NAME_WE".log 2>&1
+    fi
     RETCODE=$?
 
     echo "> Logs of $TESTBIN ..."

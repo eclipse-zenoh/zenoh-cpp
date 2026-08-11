@@ -15,6 +15,7 @@
 #include <chrono>
 #include <thread>
 
+#include "router_test_config.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
@@ -47,8 +48,8 @@ class SHMAllocator {
 template <typename Talloc>
 void pub_sub(Talloc& alloc) {
     KeyExpr ke("zenoh/test");
-    auto session1 = Session::open(Config::create_default());
-    auto session2 = Session::open(Config::create_default());
+    auto session1 = Session::open(router_test_config());
+    auto session2 = Session::open(router_test_config());
 
     auto publisher = session1.declare_publisher(ke);
 
@@ -83,8 +84,8 @@ void pub_sub(Talloc& alloc) {
 template <typename Talloc>
 void put_sub(Talloc& alloc) {
     KeyExpr ke("zenoh/test");
-    auto session1 = Session::open(Config::create_default());
-    auto session2 = Session::open(Config::create_default());
+    auto session1 = Session::open(router_test_config());
+    auto session2 = Session::open(router_test_config());
 
     std::this_thread::sleep_for(1s);
 
@@ -115,8 +116,8 @@ void put_sub(Talloc& alloc) {
 template <typename Talloc>
 void put_sub_fifo_channel(Talloc& alloc) {
     KeyExpr ke("zenoh/test");
-    auto session1 = Session::open(Config::create_default());
-    auto session2 = Session::open(Config::create_default());
+    auto session1 = Session::open(router_test_config());
+    auto session2 = Session::open(router_test_config());
 
     std::this_thread::sleep_for(1s);
 
@@ -160,8 +161,8 @@ void put_sub_fifo_channel(Talloc& alloc) {
 template <typename Talloc>
 void put_sub_ring_channel(Talloc& alloc) {
     KeyExpr ke("zenoh/test");
-    auto session1 = Session::open(Config::create_default());
-    auto session2 = Session::open(Config::create_default());
+    auto session1 = Session::open(router_test_config());
+    auto session2 = Session::open(router_test_config());
 
     std::this_thread::sleep_for(1s);
 
@@ -228,7 +229,7 @@ void test_with_alloc() {
 
 void publisher_get_keyexpr() {
     KeyExpr ke("zenoh/test_publisher_keyexpr");
-    auto session = Session::open(Config::create_default());
+    auto session = Session::open(router_test_config());
     auto publisher = session.declare_publisher(ke);
     assert(publisher.get_keyexpr().as_string_view() == "zenoh/test_publisher_keyexpr");
 }

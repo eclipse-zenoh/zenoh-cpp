@@ -16,6 +16,7 @@
 #include <thread>
 #include <unordered_set>
 
+#include "router_test_config.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
@@ -27,8 +28,8 @@ using namespace std::chrono_literals;
 void test_liveliness_get() {
     KeyExpr ke("zenoh/liveliness/test/*");
     KeyExpr token_ke("zenoh/liveliness/test/1");
-    auto session1 = Session::open(Config::create_default());
-    auto session2 = Session::open(Config::create_default());
+    auto session1 = Session::open(router_test_config());
+    auto session2 = Session::open(router_test_config());
     auto token = session1.liveliness_declare_token(token_ke);
     std::this_thread::sleep_for(1s);
 
@@ -54,8 +55,8 @@ void test_liveliness_subscriber() {
     KeyExpr ke("zenoh/liveliness/test/*");
     KeyExpr token_ke1("zenoh/liveliness/test/1");
     KeyExpr token_ke2("zenoh/liveliness/test/2");
-    auto session1 = Session::open(Config::create_default());
-    auto session2 = Session::open(Config::create_default());
+    auto session1 = Session::open(router_test_config());
+    auto session2 = Session::open(router_test_config());
 
     std::unordered_set<std::string> put_tokens;
     std::unordered_set<std::string> delete_tokens;
