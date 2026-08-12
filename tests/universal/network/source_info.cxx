@@ -15,7 +15,7 @@
 #include <chrono>
 #include <thread>
 
-#include "router_test_config.hxx"
+#include "test_config.hxx"
 #include "zenoh.hxx"
 #undef NDEBUG
 #include <assert.h>
@@ -25,8 +25,8 @@ using namespace std::chrono_literals;
 
 void pub_sub() {
     std::cout << "Test source info: pub_sub\n";
-    auto session1 = Session::open(router_test_config());
-    auto session2 = Session::open(router_test_config());
+    auto session1 = Session::open(test_config());
+    auto session2 = Session::open(test_config());
     KeyExpr ke = "test/source_info/pub_sub";
     auto publisher = session1.declare_publisher(ke);
     auto subscriber = session2.declare_subscriber(ke, channels::FifoChannel(16));
@@ -65,8 +65,8 @@ void pub_sub() {
 
 void put_sub() {
     std::cout << "Test source info: put_sub\n";
-    auto session1 = Session::open(router_test_config());
-    auto session2 = Session::open(router_test_config());
+    auto session1 = Session::open(test_config());
+    auto session2 = Session::open(test_config());
     KeyExpr ke = "test/source_info/put_sub";
     auto subscriber = session2.declare_subscriber(ke, channels::FifoChannel(16));
 
@@ -104,8 +104,8 @@ void put_sub() {
 
 void query_reply() {
     std::cout << "Test source info: query_reply\n";
-    auto session1 = Session::open(router_test_config());
-    auto session2 = Session::open(router_test_config());
+    auto session1 = Session::open(test_config());
+    auto session2 = Session::open(test_config());
     KeyExpr ke = "test/source_info/query_reply";
     auto queryable = session2.declare_queryable(ke, channels::FifoChannel(16));
 
@@ -169,8 +169,8 @@ void query_reply() {
 
 void querier_reply() {
     std::cout << "Test source info: querier_reply\n";
-    auto session1 = Session::open(router_test_config());
-    auto session2 = Session::open(router_test_config());
+    auto session1 = Session::open(test_config());
+    auto session2 = Session::open(test_config());
     KeyExpr ke = "test/source_info/querier_reply";
     auto querier = session1.declare_querier(ke);
     auto queryable = session2.declare_queryable(ke, channels::FifoChannel(16));

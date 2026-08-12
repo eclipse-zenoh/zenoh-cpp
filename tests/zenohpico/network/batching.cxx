@@ -15,7 +15,7 @@
 #include <chrono>
 #include <thread>
 
-#include "router_test_config.hxx"
+#include "test_config.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
@@ -25,7 +25,7 @@ using namespace std::chrono_literals;
 #include <assert.h>
 
 void test_multiple_batching() {
-    auto session1 = Session::open(router_test_config());
+    auto session1 = Session::open(test_config());
     auto batch_guard = session1.start_batching();
 
     ZResult err = Z_OK;
@@ -34,8 +34,8 @@ void test_multiple_batching() {
 }
 
 void test_batching() {
-    auto session1 = Session::open(router_test_config());
-    auto session2 = Session::open(router_test_config());
+    auto session1 = Session::open(test_config());
+    auto session2 = Session::open(test_config());
 
     auto subscriber = session2.declare_subscriber("test/batching", channels::FifoChannel(3));
     std::this_thread::sleep_for(1s);
@@ -57,8 +57,8 @@ void test_batching() {
 }
 
 void test_batching_drop() {
-    auto session1 = Session::open(router_test_config());
-    auto session2 = Session::open(router_test_config());
+    auto session1 = Session::open(test_config());
+    auto session2 = Session::open(test_config());
 
     auto subscriber = session2.declare_subscriber("test/batching", channels::FifoChannel(3));
     std::this_thread::sleep_for(1s);

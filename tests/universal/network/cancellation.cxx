@@ -15,7 +15,7 @@
 #include <chrono>
 #include <thread>
 
-#include "router_test_config.hxx"
+#include "test_config.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
@@ -27,8 +27,8 @@ using namespace std::chrono_literals;
 void test_get() {
     std::cout << "test_get\n";
 
-    auto session1 = Session::open(router_test_config());
-    auto session2 = Session::open(router_test_config());
+    auto session1 = Session::open(test_config());
+    auto session2 = Session::open(test_config());
     KeyExpr ke("zenoh-cpp/query/cancellation/test");
     auto queryable = session1.declare_queryable(ke, channels::FifoChannel(3));
     std::this_thread::sleep_for(1s);
@@ -101,8 +101,8 @@ void test_get() {
 void test_querier_get() {
     std::cout << "test_querier_get\n";
 
-    auto session1 = Session::open(router_test_config());
-    auto session2 = Session::open(router_test_config());
+    auto session1 = Session::open(test_config());
+    auto session2 = Session::open(test_config());
     KeyExpr ke("zenoh-cpp/querier/cancellation/test");
     auto queryable = session1.declare_queryable(ke, channels::FifoChannel(3));
     auto querier = session2.declare_querier(ke);
@@ -176,8 +176,8 @@ void test_querier_get() {
 void test_liveliness_get() {
     std::cout << "test_liveliness_get\n";
 
-    auto session1 = Session::open(router_test_config());
-    auto session2 = Session::open(router_test_config());
+    auto session1 = Session::open(test_config());
+    auto session2 = Session::open(test_config());
     KeyExpr ke("zenoh-cpp/liveliness/cancellation/test");
     auto liveliness_token = session1.liveliness_declare_token(ke);
     std::this_thread::sleep_for(1s);

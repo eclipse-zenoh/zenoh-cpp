@@ -19,7 +19,7 @@
 #include <variant>
 #include <vector>
 
-#include "router_test_config.hxx"
+#include "test_config.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
@@ -33,13 +33,13 @@ std::array<std::string, 6> VALUES_TO_PUBLISH = {"test_value_1", "test_value_2", 
 
 void test_pub_sub() {
     KeyExpr ke("zenoh/advanced_pub_sub_test");
-    auto config1 = router_test_config();
+    auto config1 = test_config();
 #if defined(ZENOHCXX_ZENOHC)
     config1.insert_json5(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");
 #endif
 
     auto session1 = Session::open(std::move(config1));
-    auto session2 = Session::open(router_test_config());
+    auto session2 = Session::open(test_config());
 
     ext::SessionExt::AdvancedPublisherOptions opts;
     opts.cache.emplace().max_samples = VALUES_TO_PUBLISH.size();
@@ -84,13 +84,13 @@ void test_pub_sub() {
 
 void test_pub_sub_channels() {
     KeyExpr ke("zenoh/advanced_pub_sub_chennels_test");
-    auto config1 = router_test_config();
+    auto config1 = test_config();
 #if defined(ZENOHCXX_ZENOHC)
     config1.insert_json5(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");
 #endif
 
     auto session1 = Session::open(std::move(config1));
-    auto session2 = Session::open(router_test_config());
+    auto session2 = Session::open(test_config());
 
     ext::SessionExt::AdvancedPublisherOptions opts;
     opts.cache.emplace().max_samples = VALUES_TO_PUBLISH.size();

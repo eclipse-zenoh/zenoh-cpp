@@ -11,18 +11,15 @@
 
 #pragma once
 
-#include <cstdlib>
-
 #include "zenoh.hxx"
 
-inline zenoh::Config router_test_config() {
+inline zenoh::Config test_config() {
     auto config = zenoh::Config::create_default();
 
 #ifdef ZENOHCXX_ZENOHPICO
-    if (const char* locator = std::getenv("ZENOH_TEST_ROUTER")) {
-        config.insert(Z_CONFIG_CONNECT_KEY, locator);
-        config.insert(Z_CONFIG_MULTICAST_SCOUTING_KEY, "false");
-    }
+    // Pico's multicast scouting cannot discover the loopback-only test router, so connect directly instead.
+    config.insert(Z_CONFIG_CONNECT_KEY, "tcp/127.0.0.1:7447");
+    config.insert(Z_CONFIG_MULTICAST_SCOUTING_KEY, "false");
 #endif
 
     return config;

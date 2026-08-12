@@ -17,7 +17,7 @@ using namespace zenoh;
 #undef NDEBUG
 #include <assert.h>
 
-#include "router_test_config.hxx"
+#include "test_config.hxx"
 
 void key_expr() {
     KeyExpr foo("FOO");
@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
     intersects();
 
     // Session based tests
-    Config config = router_test_config();
+    Config config = test_config();
     auto session = Session::open(std::move(config));
     declare(session);
 }
