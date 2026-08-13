@@ -17,6 +17,8 @@ using namespace zenoh;
 #undef NDEBUG
 #include <assert.h>
 
+#include "test_config.hxx"
+
 void key_expr() {
     KeyExpr foo("FOO");
     assert(interop::detail::check(foo));
@@ -113,7 +115,7 @@ int main(int argc, char** argv) {
     intersects();
 
     // Session based tests
-    Config config = Config::create_default();
+    Config config = test_config();
     auto session = Session::open(std::move(config));
     declare(session);
 }
