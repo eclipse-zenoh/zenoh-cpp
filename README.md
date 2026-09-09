@@ -89,9 +89,9 @@ Examples are placed into `build/examples/zenohc` and `build/examples/zenohpico` 
 
 ## Running the examples
 
-See information about running examples [here](./examples/README.md).
+See [documentation](./examples/README.md) about running examples.
 
-Examples of linking [zenoh-cpp] to an external project can be found [here](./examples/simple/Readme.md).
+[Examples of linking zenoh-cpp](./examples/simple/Readme.md) to an external project.
 
 ## Library usage
 
