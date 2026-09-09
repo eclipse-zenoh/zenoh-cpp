@@ -61,7 +61,7 @@ jobs:
           github-token: ${{ secrets.BOT_TOKEN_WORKFLOW }}
 
       - name: Clone this repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ steps.create-release-branch.outputs.branch }}
 
@@ -82,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone this repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.tag.outputs.branch }}
 
@@ -101,33 +101,33 @@ jobs:
           cp ${zip_filename} zenoh-cpp-${{ inputs.version || '0.0.0'}}-aarch64-apple-darwin-standalone.zip
 
       - name: Upload library archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ steps.build.outputs.archive-lib }}
           path: ${{ steps.build.outputs.archive-lib }}
 
       # Hack to upload header-only package in a format that homebrew release action can use.
       - name: Upload archive for Homebrew (x86_64)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: zenoh-cpp-${{ inputs.version || '0.0.0'}}-x86_64-apple-darwin-standalone.zip
           path: zenoh-cpp-${{ inputs.version || '0.0.0'}}-x86_64-apple-darwin-standalone.zip
 
       # Hack to upload header-only package in a format that homebrew release action can use.
       - name: Upload archive for Homebrew (aarch64)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: zenoh-cpp-${{ inputs.version || '0.0.0'}}-aarch64-apple-darwin-standalone.zip
           path: zenoh-cpp-${{ inputs.version || '0.0.0'}}-aarch64-apple-darwin-standalone.zip
 
       - name: Upload DEB archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ steps.build.outputs.archive-deb }}
           path: ${{ steps.build.outputs.archive-deb }}
 
       - name: Upload RPM archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ steps.build.outputs.archive-rpm }}
           path: ${{ steps.build.outputs.archive-rpm }}
