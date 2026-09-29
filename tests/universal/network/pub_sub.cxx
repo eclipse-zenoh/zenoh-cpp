@@ -48,8 +48,7 @@ class SHMAllocator {
 template <typename Talloc>
 void pub_sub(Talloc& alloc) {
     KeyExpr ke("zenoh/test");
-    auto session1 = Session::open(test_config());
-    auto session2 = Session::open(test_config());
+    auto [session1, session2] = open_test_session_pair();
 
     auto publisher = session1.declare_publisher(ke);
 
@@ -84,8 +83,7 @@ void pub_sub(Talloc& alloc) {
 template <typename Talloc>
 void put_sub(Talloc& alloc) {
     KeyExpr ke("zenoh/test");
-    auto session1 = Session::open(test_config());
-    auto session2 = Session::open(test_config());
+    auto [session1, session2] = open_test_session_pair();
 
     std::this_thread::sleep_for(1s);
 
@@ -116,8 +114,7 @@ void put_sub(Talloc& alloc) {
 template <typename Talloc>
 void put_sub_fifo_channel(Talloc& alloc) {
     KeyExpr ke("zenoh/test");
-    auto session1 = Session::open(test_config());
-    auto session2 = Session::open(test_config());
+    auto [session1, session2] = open_test_session_pair();
 
     std::this_thread::sleep_for(1s);
 
@@ -161,8 +158,7 @@ void put_sub_fifo_channel(Talloc& alloc) {
 template <typename Talloc>
 void put_sub_ring_channel(Talloc& alloc) {
     KeyExpr ke("zenoh/test");
-    auto session1 = Session::open(test_config());
-    auto session2 = Session::open(test_config());
+    auto [session1, session2] = open_test_session_pair();
 
     std::this_thread::sleep_for(1s);
 
