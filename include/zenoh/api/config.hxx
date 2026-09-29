@@ -90,7 +90,7 @@ class Config : public Owned<::z_owned_config_t> {
     std::string get(std::string_view key, ZResult* err = nullptr) const {
         detail::String s;
         __ZENOH_RESULT_CHECK(::zc_config_get_from_substr(interop::as_loaned_c_ptr(*this), key.data(), key.size(),
-                                                        interop::as_owned_c_ptr(s)),
+                                                         interop::as_owned_c_ptr(s)),
                              err, std::string("Failed to get config value for the key: ").append(key));
         return s.as_string();
     }
