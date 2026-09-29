@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <deque>
 #include <functional>
 #include <random>
 #include <string>
@@ -34,6 +35,15 @@ using ConfigFactory = std::function<zenoh::Config()>;
 
 inline zenoh::Config default_config() { return zenoh::Config::create_default(); }
 
+#ifdef ZENOHCXX_ZENOHPICO
+// Zenoh-pico may keep pointers to inserted config values instead of copying them, so the values must outlive both
+// the config and the session opened from it. Keep dynamically built values until the test process exits.
+inline const char* persistent_c_str(const std::string& value) {
+    static std::deque<std::string> storage;
+    return storage.emplace_back(value).c_str();
+}
+#endif
+
 // Restricts the session to the given endpoints: with scouting disabled it cannot discover sessions of other
 // test processes running on the same host.
 inline void isolate_config(zenoh::Config& config, const std::string& listen, const std::string& connect) {
@@ -50,8 +60,8 @@ inline void isolate_config(zenoh::Config& config, const std::string& listen, con
     // Pico sessions can only listen in peer mode.
     config.insert(Z_CONFIG_MODE_KEY, "peer");
     config.insert(Z_CONFIG_MULTICAST_SCOUTING_KEY, "false");
-    if (!listen.empty()) config.insert(Z_CONFIG_LISTEN_KEY, listen.c_str());
-    if (!connect.empty()) config.insert(Z_CONFIG_CONNECT_KEY, connect.c_str());
+    if (!listen.empty()) config.insert(Z_CONFIG_LISTEN_KEY, persistent_c_str(listen));
+    if (!connect.empty()) config.insert(Z_CONFIG_CONNECT_KEY, persistent_c_str(connect));
 #endif
 }
 
