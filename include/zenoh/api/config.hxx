@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 
+#include "../detail/string.hxx"
 #include "base.hxx"
 #include "interop.hxx"
 
@@ -87,23 +88,20 @@ class Config : public Owned<::z_owned_config_t> {
     /// @return value of the config parameter in JSON format.
     /// @note Zenoh-c only.
     std::string get(std::string_view key, ZResult* err = nullptr) const {
-        ::z_owned_string_t s;
-        __ZENOH_RESULT_CHECK(::zc_config_get_from_substr(interop::as_loaned_c_ptr(*this), key.data(), key.size(), &s),
+        detail::String s;
+        __ZENOH_RESULT_CHECK(::zc_config_get_from_substr(interop::as_loaned_c_ptr(*this), key.data(), key.size(),
+                                                        interop::as_owned_c_ptr(s)),
                              err, std::string("Failed to get config value for the key: ").append(key));
-        std::string out = std::string(::z_string_data(::z_loan(s)), ::z_string_len(::z_loan(s)));
-        ::z_drop(::z_move(s));
-        return out;
+        return s.as_string();
     }
 
     /// @brief Get the whole config as a JSON string.
     /// @return string with config in json format.
     /// @note Zenoh-c only.
     std::string to_string() const {
-        ::z_owned_string_t s;
-        ::zc_config_to_string(interop::as_loaned_c_ptr(*this), &s);
-        std::string out = std::string(::z_string_data(::z_loan(s)), ::z_string_len(::z_loan(s)));
-        ::z_drop(::z_move(s));
-        return out;
+        detail::String s;
+        ::zc_config_to_string(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s));
+        return s.as_string();
     }
 
     /// @brief Insert a config parameter by the string key.

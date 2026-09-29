@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "../detail/string.hxx"
 #include "../detail/string_array.hxx"
 #include "../zenohc.hxx"
 #include "base.hxx"
@@ -42,30 +43,25 @@ class Link : public Owned<::z_owned_link_t> {
     /// @brief Get the source address of the link.
     /// @return source address string.
     std::string get_src() const {
-        ::z_owned_string_t str_out;
-        ::z_link_src(interop::as_loaned_c_ptr(*this), &str_out);
-        std::string result(::z_string_data(::z_loan(str_out)), ::z_string_len(::z_loan(str_out)));
-        ::z_drop(::z_move(str_out));
-        return result;
+        detail::String str_out;
+        ::z_link_src(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(str_out));
+        return str_out.as_string();
     }
 
     /// @brief Get the destination address of the link.
     /// @return destination address string.
     std::string get_dst() const {
-        ::z_owned_string_t str_out;
-        ::z_link_dst(interop::as_loaned_c_ptr(*this), &str_out);
-        std::string result(::z_string_data(::z_loan(str_out)), ::z_string_len(::z_loan(str_out)));
-        ::z_drop(::z_move(str_out));
-        return result;
+        detail::String str_out;
+        ::z_link_dst(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(str_out));
+        return str_out.as_string();
     }
 
     /// @brief Get the group of the link.
     /// @return group string or `std::nullopt` if not available.
     std::optional<std::string> get_group() const {
-        ::z_owned_string_t str_out;
-        ::z_link_group(interop::as_loaned_c_ptr(*this), &str_out);
-        std::string result(::z_string_data(::z_loan(str_out)), ::z_string_len(::z_loan(str_out)));
-        ::z_drop(::z_move(str_out));
+        detail::String str_out;
+        ::z_link_group(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(str_out));
+        std::string result = str_out.as_string();
         if (result.empty()) return std::nullopt;
         return result;
     }
@@ -73,10 +69,9 @@ class Link : public Owned<::z_owned_link_t> {
     /// @brief Get the authentication identifier of the link.
     /// @return authentication identifier string or `std::nullopt` if not available.
     std::optional<std::string> get_auth_identifier() const {
-        ::z_owned_string_t str_out;
-        ::z_link_auth_identifier(interop::as_loaned_c_ptr(*this), &str_out);
-        std::string result(::z_string_data(::z_loan(str_out)), ::z_string_len(::z_loan(str_out)));
-        ::z_drop(::z_move(str_out));
+        detail::String str_out;
+        ::z_link_auth_identifier(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(str_out));
+        std::string result = str_out.as_string();
         if (result.empty()) return std::nullopt;
         return result;
     }
