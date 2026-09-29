@@ -33,7 +33,7 @@ struct MatchingStatus {
 
 namespace detail::closures {
 extern "C" {
-inline void _zenoh_on_status_change_call(const ::z_matching_status_t* status, void* context) {
+inline void _zenoh_on_status_change_call(const ::z_matching_status_t* status, void* context) noexcept {
     IClosure<void, const MatchingStatus&>::call_from_context(context, MatchingStatus{status->matching});
 }
 }

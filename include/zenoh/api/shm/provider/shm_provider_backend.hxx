@@ -41,25 +41,27 @@ class CppShmProviderBackendThreadsafe : public CppShmProviderBackend {};
 // Ensure that function pointers are defined with extern C linkage
 namespace shm::provider_backend::closures {
 extern "C" {
-inline void _z_cpp_shm_provider_backend_drop_fn(void *context) { delete static_cast<CppShmProviderBackend *>(context); }
+inline void _z_cpp_shm_provider_backend_drop_fn(void *context) noexcept {
+    delete static_cast<CppShmProviderBackend *>(context);
+}
 inline void _z_cpp_shm_provider_backend_alloc_fn(struct z_owned_chunk_alloc_result_t *out_result,
-                                                 const struct z_loaned_memory_layout_t *layout, void *context) {
+                                              const struct z_loaned_memory_layout_t *layout, void *context) noexcept {
     *out_result = interop::move_to_c_obj(
         static_cast<CppShmProviderBackend *>(context)->alloc(interop::as_owned_cpp_ref<MemoryLayout>(layout)));
 }
-inline void _z_cpp_shm_provider_backend_free_fn(const struct z_chunk_descriptor_t *chunk, void *context) {
+inline void _z_cpp_shm_provider_backend_free_fn(const struct z_chunk_descriptor_t *chunk, void *context) noexcept {
     static_cast<CppShmProviderBackend *>(context)->free(*chunk);
 }
-inline size_t _z_cpp_shm_provider_backend_defragment_fn(void *context) {
+inline size_t _z_cpp_shm_provider_backend_defragment_fn(void *context) noexcept {
     return static_cast<CppShmProviderBackend *>(context)->defragment();
 }
-inline size_t _z_cpp_shm_provider_backend_available_fn(void *context) {
+inline size_t _z_cpp_shm_provider_backend_available_fn(void *context) noexcept {
     return static_cast<CppShmProviderBackend *>(context)->available();
 }
-inline void _z_cpp_shm_provider_backend_layout_for_fn(struct z_owned_memory_layout_t *layout, void *context) {
+inline void _z_cpp_shm_provider_backend_layout_for_fn(struct z_owned_memory_layout_t *layout, void *context) noexcept {
     static_cast<CppShmProviderBackend *>(context)->layout_for(interop::as_owned_cpp_ref<MemoryLayout>(layout));
 }
-inline ProtocolId _z_cpp_shm_provider_backend_id_fn(void *context) {
+inline ProtocolId _z_cpp_shm_provider_backend_id_fn(void *context) noexcept {
     return static_cast<CppShmProviderBackend *>(context)->id();
 }
 }

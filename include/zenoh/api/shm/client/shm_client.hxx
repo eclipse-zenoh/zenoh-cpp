@@ -34,7 +34,7 @@ class CppShmClient {
 // Ensure that function pointers are defined with extern C linkage
 namespace shm::client::closures {
 extern "C" {
-inline bool _z_cpp_shm_client_attach_fn(struct z_shm_segment_t* out_segment, z_segment_id_t id, void* context) {
+inline bool _z_cpp_shm_client_attach_fn(struct z_shm_segment_t* out_segment, z_segment_id_t id, void* context) noexcept {
     if (auto segment = static_cast<CppShmClient*>(context)->attach(id)) {
         out_segment->context.context.ptr = segment.release();
         out_segment->context.delete_fn = &shm::segment::closures::_z_cpp_shm_segment_drop_fn;
@@ -44,9 +44,9 @@ inline bool _z_cpp_shm_client_attach_fn(struct z_shm_segment_t* out_segment, z_s
     return false;
 }
 
-inline ProtocolId _z_cpp_shm_client_id_fn(void* context) { return static_cast<CppShmClient*>(context)->id(); }
+inline ProtocolId _z_cpp_shm_client_id_fn(void* context) noexcept { return static_cast<CppShmClient*>(context)->id(); }
 
-inline void _z_cpp_shm_client_drop_fn(void* context) { delete static_cast<CppShmClient*>(context); }
+inline void _z_cpp_shm_client_drop_fn(void* context) noexcept { delete static_cast<CppShmClient*>(context); }
 }
 }  // namespace shm::client::closures
 

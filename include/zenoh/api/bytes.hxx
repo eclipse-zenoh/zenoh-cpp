@@ -33,7 +33,7 @@ namespace zenoh {
 namespace detail::closures {
 extern "C" {
 
-inline void _zenoh_drop_with_context(void* data, void* context) {
+inline void _zenoh_drop_with_context(void* data, void* context) noexcept {
     (void)data;
     IDroppable::delete_from_context(context);
 }

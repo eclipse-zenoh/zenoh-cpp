@@ -35,12 +35,12 @@ struct PrecomputedLayoutAsyncInterface {
 // Ensure that function pointers are defined with extern C linkage
 namespace shm::provider::closures {
 extern "C" {
-inline void _z_precomputed_layout_async_interface_result_fn(void* context, struct z_buf_alloc_result_t* result) {
+inline void _z_precomputed_layout_async_interface_result_fn(void* context, struct z_buf_alloc_result_t* result) noexcept {
     auto interface = static_cast<PrecomputedLayoutAsyncInterface*>(context);
     interface->on_result(Converters::from(*result));
 }
 
-inline void _z_precomputed_layout_async_interface_drop_fn(void* context) {
+inline void _z_precomputed_layout_async_interface_drop_fn(void* context) noexcept {
     auto interface = static_cast<PrecomputedLayoutAsyncInterface*>(context);
     delete interface;
 }

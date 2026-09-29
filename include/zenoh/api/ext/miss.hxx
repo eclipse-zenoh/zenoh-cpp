@@ -38,7 +38,7 @@ struct Miss {
 
 namespace zenoh::detail::closures {
 extern "C" {
-inline void _zenoh_on_miss_detected_call(const ::ze_miss_t* miss, void* context) {
+inline void _zenoh_on_miss_detected_call(const ::ze_miss_t* miss, void* context) noexcept {
     IClosure<void, const zenoh::ext::Miss&>::call_from_context(
         context,
         zenoh::ext::Miss{zenoh::interop::into_copyable_cpp_obj<zenoh::EntityGlobalId>(miss->source), miss->nb});

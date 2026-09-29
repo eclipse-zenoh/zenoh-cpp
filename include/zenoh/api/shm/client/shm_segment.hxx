@@ -27,10 +27,10 @@ class CppShmSegment {
 // Ensure that function pointers are defined with extern C linkage
 namespace shm::segment::closures {
 extern "C" {
-inline uint8_t* _z_cpp_shm_segment_map_fn(z_chunk_id_t chunk, void* context) {
+inline uint8_t* _z_cpp_shm_segment_map_fn(z_chunk_id_t chunk, void* context) noexcept {
     return static_cast<CppShmSegment*>(context)->map(chunk);
 }
-inline void _z_cpp_shm_segment_drop_fn(void* context) { delete static_cast<CppShmSegment*>(context); }
+inline void _z_cpp_shm_segment_drop_fn(void* context) noexcept { delete static_cast<CppShmSegment*>(context); }
 }
 }  // namespace shm::segment::closures
 

@@ -30,6 +30,14 @@ function(add_test_instance file mode lib option)
 	else()
 		add_test(NAME "test_${target}" COMMAND ${target})
 	endif()
+	if(filename STREQUAL "callback_exceptions")
+		foreach(case call drop bytes_drop shm_map)
+			add_test(NAME "test_${target}_${case}"
+				COMMAND ${CMAKE_COMMAND} -DTEST_EXECUTABLE=$<TARGET_FILE:${target}> -DCASE=${case}
+				-P ${CMAKE_CURRENT_SOURCE_DIR}/expect_termination.cmake)
+			set_tests_properties("test_${target}_${case}" PROPERTIES SKIP_REGULAR_EXPRESSION "SKIP: required feature disabled")
+		endforeach()
+	endif()
 	copy_dlls(${target})
 endfunction()
 

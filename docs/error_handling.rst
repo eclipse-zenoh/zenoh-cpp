@@ -27,6 +27,15 @@ If corresponding method is expected to return or consume (via ``std::move``) any
 gravestone state (i.e. None of the functions or methods will work with the object in this state, except 
 explicit conversion to ``bool``, which will return false).
 
+Callbacks
+---------
+
+User callbacks, including drop callbacks and custom shared-memory implementations,
+should handle exceptions internally. If an exception escapes into a C++ callback
+adapter, ``std::terminate()`` is called. The adapters are ``noexcept`` so that
+exceptions cannot unwind through the underlying C or Rust runtime. This also
+applies to exceptions raised while converting callback arguments or results.
+
 .. doxygenclass:: zenoh::ZException
    :members:
    :membergroups: Constructors Operators Methods
