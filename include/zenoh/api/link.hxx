@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "../detail/string_array.hxx"
 #include "../zenohc.hxx"
 #include "base.hxx"
 #include "enums.hxx"
@@ -91,17 +92,9 @@ class Link : public Owned<::z_owned_link_t> {
     /// @brief Get the network interfaces associated with this link.
     /// @return vector of interface names.
     std::vector<std::string> get_interfaces() const {
-        ::z_owned_string_array_t interfaces_out;
-        ::z_link_interfaces(interop::as_loaned_c_ptr(*this), &interfaces_out);
-        auto loaned = ::z_loan(interfaces_out);
-        std::vector<std::string> result;
-        result.reserve(::z_string_array_len(loaned));
-        for (size_t i = 0; i < ::z_string_array_len(loaned); i++) {
-            auto s = ::z_string_array_get(loaned, i);
-            result.emplace_back(::z_string_data(s), ::z_string_len(s));
-        }
-        ::z_drop(::z_move(interfaces_out));
-        return result;
+        detail::StringArray interfaces;
+        ::z_link_interfaces(interop::as_loaned_c_ptr(*this), &interfaces.value);
+        return interfaces.copy();
     }
 
     /// @brief Get the priority range supported by this link.

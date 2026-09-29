@@ -15,6 +15,7 @@
 #include <string_view>
 #include <vector>
 
+#include "../detail/string_array.hxx"
 #include "../zenohc.hxx"
 #include "base.hxx"
 #include "enums.hxx"
@@ -40,9 +41,9 @@ class Hello : public Owned<::z_owned_hello_t> {
     /// @return the array of locators of the entity.
     std::vector<std::string_view> get_locators() const {
 #ifdef ZENOHCXX_ZENOHC
-        ::z_owned_string_array_t out;
-        ::z_hello_locators(interop::as_loaned_c_ptr(*this), &out);
-        auto out_loaned = ::z_loan(out);
+        detail::StringArray out;
+        ::z_hello_locators(interop::as_loaned_c_ptr(*this), &out.value);
+        auto out_loaned = ::z_loan(out.value);
 #else
         auto out_loaned = ::zp_hello_locators(interop::as_loaned_c_ptr(*this));
 #endif
@@ -51,9 +52,6 @@ class Hello : public Owned<::z_owned_hello_t> {
             auto s = ::z_string_array_get(out_loaned, i);
             locators[i] = std::string_view(reinterpret_cast<const char*>(::z_string_data(s)), ::z_string_len(s));
         }
-#ifdef ZENOHCXX_ZENOHC
-        z_drop(z_move(out));
-#endif
         return locators;
     }
 
