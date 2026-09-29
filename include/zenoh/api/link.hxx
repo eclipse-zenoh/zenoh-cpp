@@ -94,7 +94,7 @@ class Link : public Owned<::z_owned_link_t> {
     std::vector<std::string> get_interfaces() const {
         detail::StringArray interfaces;
         ::z_link_interfaces(interop::as_loaned_c_ptr(*this), &interfaces.value);
-        return interfaces.copy();
+        return interfaces.as_vector();
     }
 
     /// @brief Get the priority range supported by this link.

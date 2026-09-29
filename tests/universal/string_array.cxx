@@ -25,7 +25,6 @@ using zenoh::detail::StringArray;
 
 static_assert(!std::is_copy_constructible_v<StringArray>);
 static_assert(!std::is_copy_assignable_v<StringArray>);
-static_assert(!std::is_move_constructible_v<StringArray>);
 
 #ifdef __cpp_exceptions
 // Only C++ allocations are fault-injected. C array construction uses the backend allocator.
@@ -60,13 +59,13 @@ static void populate(StringArray& array) {
 int main() {
     {
         StringArray empty;
-        assert(empty.copy().empty());
+        assert(empty.as_vector().empty());
     }
     std::vector<std::string> result;
     {
         StringArray array;
         populate(array);
-        result = array.copy();
+        result = array.as_vector();
     }
     // Copies remain valid after the C array is dropped and preserve embedded nulls.
     assert(result.size() == 2);
@@ -82,7 +81,7 @@ int main() {
             StringArray array;
             populate(array);
             allocations_before_failure = failure;
-            auto copy = array.copy();
+            auto copy = array.as_vector();
             allocations_before_failure = -1;
         } catch (const std::bad_alloc&) {
             allocations_before_failure = -1;

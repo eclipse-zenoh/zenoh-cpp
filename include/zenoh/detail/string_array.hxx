@@ -29,7 +29,7 @@ struct StringArray {
     StringArray(const StringArray&) = delete;
     StringArray& operator=(const StringArray&) = delete;
 
-    std::vector<std::string> copy() const {
+    std::vector<std::string> as_vector() const {
         const auto* loan = ::z_loan(value);
         std::vector<std::string> result;
         result.reserve(::z_string_array_len(loan));
