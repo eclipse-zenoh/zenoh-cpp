@@ -40,8 +40,7 @@ void queryable_get() {
     std::vector<std::string> replies;
     std::vector<std::string> errors;
     bool queryable_dropped = false;
-    auto session1 = Session::open(test_config());
-    auto session2 = Session::open(test_config());
+    auto [session1, session2] = open_test_session_pair();
     size_t queries_processed = 0;
 
     auto queryable = session1.declare_queryable(
@@ -112,8 +111,7 @@ void queryable_get_channel() {
     KeyExpr ke("zenoh/test/*");
     KeyExpr selector("zenoh/test/1");
     std::vector<QueryData> queries;
-    auto session1 = Session::open(test_config());
-    auto session2 = Session::open(test_config());
+    auto [session1, session2] = open_test_session_pair();
     size_t queries_processed = 0;
     auto queryable = session1.declare_queryable(ke, channels::FifoChannel(3));
     std::this_thread::sleep_for(1s);
@@ -187,8 +185,7 @@ void queryable_get_accept_replies() {
     KeyExpr query_ke("zenoh/test/accept_replies/1");
     KeyExpr disjoint_reply_ke("zenoh/test/accept_replies/2");
 
-    auto session1 = Session::open(test_config());
-    auto session2 = Session::open(test_config());
+    auto [session1, session2] = open_test_session_pair();
 
     // --- Test 1: default accept_replies (Z_REPLY_KEYEXPR_MATCHING_QUERY) ---
     // The queryable inspects the query's accept_replies setting and verifies it matches
@@ -295,8 +292,7 @@ void queryable_querier_accept_replies() {
     KeyExpr query_ke("zenoh/test/querier_accept_replies/1");
     KeyExpr disjoint_reply_ke("zenoh/test/querier_accept_replies/2");
 
-    auto session1 = Session::open(test_config());
-    auto session2 = Session::open(test_config());
+    auto [session1, session2] = open_test_session_pair();
 
     // --- Test 1: default accept_replies (Z_REPLY_KEYEXPR_MATCHING_QUERY) ---
     {

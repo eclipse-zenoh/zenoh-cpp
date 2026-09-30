@@ -15,6 +15,7 @@
 #include <chrono>
 #include <thread>
 
+#include "test_config.hxx"
 #include "zenoh.hxx"
 
 using namespace zenoh;
@@ -27,53 +28,18 @@ using namespace std::chrono_literals;
 // On zenoh-pico: tests peer+peer only (router mode not supported for listeners).
 //   Session disconnect events (DELETE) are not reported by zenoh-pico.
 
+Config listener_config() {
+    auto config = Config::create_default();
 #ifdef ZENOHCXX_ZENOHC
-Config create_config(const char* mode, const char* listen, const char* connect) {
-    auto config = Config::create_default();
-    config.insert_json5("mode", mode);
-    config.insert_json5("scouting/multicast/enabled", "false");
-    config.insert_json5("scouting/gossip/enabled", "false");
-    config.insert_json5("listen/endpoints", listen);
-    config.insert_json5("connect/endpoints", connect);
-    return config;
-}
-
-Session create_listening_session(const char* port) {
-    std::string listen = std::string("[\"tcp/127.0.0.1:") + port + "\"]";
-    return Session::open(create_config("\"router\"", listen.c_str(), "[]"));
-}
-
-Session create_connecting_session(const char* port) {
-    std::string connect = std::string("[\"tcp/127.0.0.1:") + port + "\"]";
-    return Session::open(create_config("\"peer\"", "[]", connect.c_str()));
-}
-#else  // ZENOHCXX_ZENOHPICO
-Config create_config(const char* mode, const char* listen, const char* connect) {
-    auto config = Config::create_default();
-    config.insert(Z_CONFIG_MODE_KEY, mode);
-    if (listen != nullptr) config.insert(Z_CONFIG_LISTEN_KEY, listen);
-    if (connect != nullptr) config.insert(Z_CONFIG_CONNECT_KEY, connect);
-    config.insert(Z_CONFIG_MULTICAST_SCOUTING_KEY, "false");
-    return config;
-}
-
-Session create_listening_session(const char* port) {
-    std::string listen_addr = std::string("tcp/127.0.0.1:") + port;
-    return Session::open(create_config("peer", listen_addr.c_str(), nullptr));
-}
-
-Session create_connecting_session(const char* port) {
-    std::string connect_addr = std::string("tcp/127.0.0.1:") + port;
-    return Session::open(create_config("peer", nullptr, connect_addr.c_str()));
-}
+    config.insert_json5("mode", "\"router\"");
 #endif
+    return config;
+}
 
-std::pair<Session, Session> create_session_pair(const char* port) {
-    auto s1 = create_listening_session(port);
+std::pair<Session, Session> create_session_pair() {
+    auto pair = open_linked_session_pair(listener_config);
     std::this_thread::sleep_for(1s);
-    auto s2 = create_connecting_session(port);
-    std::this_thread::sleep_for(1s);
-    return {std::move(s1), std::move(s2)};
+    return pair;
 }
 
 void test_info_zid() {
@@ -83,10 +49,7 @@ void test_info_zid() {
     // zenoh-c only: router (listening) + peer (connecting)
     // s1 (router) sees s2 as a peer; s2 sees s1 as its router
     {
-        auto s1 = create_listening_session("17447");
-        std::this_thread::sleep_for(1s);
-        auto s2 = create_connecting_session("17447");
-        std::this_thread::sleep_for(1s);
+        auto [s1, s2] = create_session_pair();
 
         auto s1_zid = s1.get_zid();
         auto s2_zid = s2.get_zid();
@@ -104,10 +67,10 @@ void test_info_zid() {
     }
 #endif
 
-#ifdef ZENOHCXX_ZENOPICO
+#ifdef ZENOHCXX_ZENOHPICO
     // peer+peer: both see each other as peers, no routers (zenoh-pico only)
     {
-        auto [s1, s2] = create_session_pair("17457");
+        auto [s1, s2] = create_session_pair();
 
         auto s1_zid = s1.get_zid();
         auto s2_zid = s2.get_zid();
@@ -132,7 +95,7 @@ void test_info_zid() {
 
 void test_transports_and_links() {
     printf("=== test_transports_and_links ===\n");
-    auto [s1, s2] = create_session_pair("17448");
+    auto [s1, s2] = create_session_pair();
 
     auto transports = s1.get_transports();
     assert(transports.size() == 1);
@@ -147,7 +110,7 @@ void test_transports_and_links() {
 
 void test_links_filtered() {
     printf("=== test_links_filtered ===\n");
-    auto [s1, s2] = create_session_pair("17449");
+    auto [s1, s2] = create_session_pair();
 
     auto t1 = s1.get_transports();
     auto t2 = s2.get_transports();
@@ -167,7 +130,7 @@ void test_links_filtered() {
 
 void test_transport_events() {
     printf("=== test_transport_events ===\n");
-    auto s1 = create_listening_session("17450");
+    auto [s1, locator] = open_listening_session(listener_config);
 
     std::vector<std::pair<SampleKind, Id>> events;
     Session::TransportEventsListenerOptions tel_opts_1;
@@ -178,7 +141,7 @@ void test_transport_events() {
 
     assert(events.empty());
 
-    auto s2 = create_connecting_session("17450");
+    auto s2 = open_connecting_session(locator);
     std::this_thread::sleep_for(1s);
 
     assert(events.size() == 1);
@@ -205,7 +168,7 @@ void test_transport_events() {
 
 void test_transport_events_history() {
     printf("=== test_transport_events_history ===\n");
-    auto [s1, s2] = create_session_pair("17451");
+    auto [s1, s2] = create_session_pair();
 
     std::vector<SampleKind> events;
     Session::TransportEventsListenerOptions tel_opts_2;
@@ -225,11 +188,11 @@ void test_transport_events_history() {
 void test_transport_events_background() {
     printf("=== test_transport_events_background ===\n");
     std::vector<SampleKind> events;
-    auto s1 = create_listening_session("17452");
+    auto [s1, locator] = open_listening_session(listener_config);
     s1.declare_background_transport_events_listener([&events](TransportEvent& e) { events.push_back(e.get_kind()); },
                                                     closures::none);
 
-    auto s2 = create_connecting_session("17452");
+    auto s2 = open_connecting_session(locator);
     std::this_thread::sleep_for(1s);
 
     assert(events.size() == 1);
@@ -240,7 +203,7 @@ void test_transport_events_background() {
 
 void test_link_events() {
     printf("=== test_link_events ===\n");
-    auto s1 = create_listening_session("17453");
+    auto [s1, locator] = open_listening_session(listener_config);
 
     std::vector<std::pair<SampleKind, Id>> events;
     Session::LinkEventsListenerOptions lel_opts_1;
@@ -251,7 +214,7 @@ void test_link_events() {
 
     assert(events.empty());
 
-    auto s2 = create_connecting_session("17453");
+    auto s2 = open_connecting_session(locator);
     std::this_thread::sleep_for(1s);
 
     assert(events.size() == 1);
@@ -278,7 +241,7 @@ void test_link_events() {
 
 void test_link_events_history() {
     printf("=== test_link_events_history ===\n");
-    auto [s1, s2] = create_session_pair("17454");
+    auto [s1, s2] = create_session_pair();
 
     std::vector<SampleKind> events;
     Session::LinkEventsListenerOptions lel_opts_2;
@@ -298,11 +261,11 @@ void test_link_events_history() {
 void test_link_events_background() {
     printf("=== test_link_events_background ===\n");
     std::vector<SampleKind> events;
-    auto s1 = create_listening_session("17455");
+    auto [s1, locator] = open_listening_session(listener_config);
     s1.declare_background_link_events_listener([&events](LinkEvent& e) { events.push_back(e.get_kind()); },
                                                closures::none);
 
-    auto s2 = create_connecting_session("17455");
+    auto s2 = open_connecting_session(locator);
     std::this_thread::sleep_for(1s);
 
     assert(events.size() == 1);
@@ -313,7 +276,7 @@ void test_link_events_background() {
 
 void test_link_events_filtered() {
     printf("=== test_link_events_filtered ===\n");
-    auto [s1, s2] = create_session_pair("17456");
+    auto [s1, s2] = create_session_pair();
 
     auto t1 = s1.get_transports();
     auto t2 = s2.get_transports();
