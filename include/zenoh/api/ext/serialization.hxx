@@ -87,6 +87,20 @@ class Deserializer : public Copyable<::ze_deserializer_t> {
     template <class T>
     T deserialize(zenoh::ZResult* err = nullptr);
 
+    /// @brief Read a sequence length without allocating or deserializing its elements.
+    /// The elements can then be read individually with deserialize(), after checking an application-defined limit.
+    /// This reads only the length prefix and does not check that all elements are present.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception
+    /// will be thrown in case of error (or the process will abort if exceptions are disabled).
+    /// @return The sequence length, or zero on failure when err is provided. Check err to distinguish failure
+    /// from an empty sequence.
+    size_t deserialize_sequence_length(zenoh::ZResult* err = nullptr) {
+        size_t length = 0;
+        auto result = ::ze_deserializer_deserialize_sequence_length(interop::as_copyable_c_ptr(*this), &length);
+        __ZENOH_RESULT_CHECK(result, err, "Failed to read sequence length");
+        return result == Z_OK ? length : 0;
+    }
+
     /// @brief Checks if deserializer has parsed all the data.
     /// @return `true` if there is no more data to parse, `false` otherwise.
     bool is_done() const { return ::ze_deserializer_is_done(&this->_0); }
@@ -301,11 +315,8 @@ bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserialize
            deserialize_with_deserializer(deserializer, value.second, err);
 }
 
-#define _ZENOH_DESERIALIZE_SEQUENCE_BEGIN                                                                          \
-    size_t len;                                                                                                    \
-    __ZENOH_RESULT_CHECK(                                                                                          \
-        ::ze_deserializer_deserialize_sequence_length(zenoh::interop::as_copyable_c_ptr(deserializer), &len), err, \
-        "Deserialization failure:: Failed to read sequence length");                                               \
+#define _ZENOH_DESERIALIZE_SEQUENCE_BEGIN                       \
+    size_t len = deserializer.deserialize_sequence_length(err); \
     if (err != nullptr && *err != Z_OK) return false;
 
 #define _ZENOH_DESERIALIZE_SEQUENCE_END return (err == nullptr || *err == Z_OK);
