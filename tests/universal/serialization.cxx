@@ -96,7 +96,6 @@ void deserialize_sequence_length_test() {
     ext::Deserializer bounded_deserializer(length_only);
     const auto length = bounded_deserializer.deserialize_sequence_length();
     assert(length == 1048576);
-    assert(length > 16);
     assert(bounded_deserializer.is_done());
 }
 
