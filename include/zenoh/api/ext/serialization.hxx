@@ -97,7 +97,7 @@ class Deserializer : public Copyable<::ze_deserializer_t> {
     size_t deserialize_sequence_length(zenoh::ZResult* err = nullptr) {
         size_t length = 0;
         auto result = ::ze_deserializer_deserialize_sequence_length(interop::as_copyable_c_ptr(*this), &length);
-        __ZENOH_RESULT_CHECK(result, err, "Failed to read sequence length");
+        __ZENOH_RESULT_CHECK(result, err, "Deserialization failure:: Failed to read sequence length");
         return result == Z_OK ? length : 0;
     }
 
