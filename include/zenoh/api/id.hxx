@@ -35,6 +35,8 @@ class Id : public Copyable<::z_id_t> {
    public:
     /// @name Constructors
 
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future
+    /// release.
     /// @brief Construct a Zenoh ID from its 16-byte, least-significant-byte-first representation.
     /// @param bytes byte sequence in the same order as returned by bytes(). Must not be all zero.
     /// The bytes are copied and need not outlive the ID.
@@ -68,6 +70,11 @@ class Id : public Copyable<::z_id_t> {
     /// @param other an id to compare with.
     /// @return ``true`` if both zenoh ids are equal, ``false`` otherwise.
     bool operator==(const Id& other) const { return this->bytes() == other.bytes(); };
+
+    /// @brief Inequality relation.
+    /// @param other an id to compare with.
+    /// @return ``true`` if the zenoh ids differ, ``false`` otherwise.
+    bool operator!=(const Id& other) const { return !(*this == other); }
 };
 
 /// @brief Print ``Id`` in the hex format.

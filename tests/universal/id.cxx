@@ -31,12 +31,14 @@ static void test_from_bytes() {
     assert(id == Id(id.bytes()));
     const auto copy = id;
     assert(copy == id);
+    assert(!(copy != id));
     bytes.fill(0);
     assert(id.bytes()[0] == 1 && id.bytes()[15] == 16);
 
     // Single nonzero bytes at either end exercise the full little-endian ID range.
     bytes[0] = 1;
     assert(Id(bytes).bytes() == bytes);
+    assert(Id(bytes) != id);
     bytes[0] = 0;
     bytes[15] = 0x80;
     assert(Id(bytes).to_string() == "80000000000000000000000000000000");
