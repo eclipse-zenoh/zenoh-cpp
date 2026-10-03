@@ -69,9 +69,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
         : KeyExpr(std::string_view(key_expr), autocanonize, err){};
 
     /// @brief Copy constructor.
-    KeyExpr(const KeyExpr& other) : KeyExpr(zenoh::detail::null_object) {
-        this->_clone_from(other);
-    };
+    KeyExpr(const KeyExpr& other) : KeyExpr(zenoh::detail::null_object) { this->_clone_from(other); };
 
     KeyExpr(KeyExpr&& other) = default;
 

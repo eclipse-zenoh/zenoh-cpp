@@ -21,9 +21,7 @@ jobs:
 
       - name: Run clang-format dry-run
         shell: bash
-        run: |
-          clang-format --version
-          find include/ tests/ examples/ -iname "*.hxx" -o -iname "*.cxx" | xargs clang-format -n -Werror
+        run: python3 scripts/format.py --check
 
   build:
     name: Build on ${{ matrix.os }} in ${{ matrix.build_type }} unstable ${{ matrix.unstable }}  shm ${{ matrix.shm }}
@@ -107,7 +105,7 @@ jobs:
   ci:
     name: CI status checks
     runs-on: ubuntu-latest
-    needs: [build, markdown_lint]
+    needs: [check_format, build, markdown_lint]
     if: always()
     steps:
       - name: Check whether all jobs pass
