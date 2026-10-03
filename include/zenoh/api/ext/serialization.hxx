@@ -30,6 +30,7 @@
 #include <utility>
 #include <vector>
 
+#include "../../detail/string.hxx"
 #include "../base.hxx"
 #include "../bytes.hxx"
 #include "../interop.hxx"
@@ -274,11 +275,11 @@ __ZENOH_DESERIALIZE_ARITHMETIC(bool, bool)
 #undef __ZENOH_DESERIALIZE_ARITHMETIC
 inline bool __zenoh_deserialize_with_deserializer(zenoh::ext::Deserializer& deserializer, std::string& value,
                                                   zenoh::ZResult* err) {
-    z_owned_string_t s;
-    __ZENOH_RESULT_CHECK(::ze_deserializer_deserialize_string(interop::as_copyable_c_ptr(deserializer), &s), err,
-                         "Deserialization failure");
-    value = std::string(::z_string_data(::z_loan(s)), ::z_string_len(::z_loan(s)));
-    ::z_drop(::z_move(s));
+    zenoh::detail::String s;
+    __ZENOH_RESULT_CHECK(
+        ::ze_deserializer_deserialize_string(interop::as_copyable_c_ptr(deserializer), interop::as_owned_c_ptr(s)), err,
+        "Deserialization failure");
+    value = s.as_string();
     return err == nullptr || *err == Z_OK;
 }
 
