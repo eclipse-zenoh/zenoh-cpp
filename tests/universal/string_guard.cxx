@@ -33,8 +33,15 @@ static_assert(!std::is_copy_assignable_v<detail::String>);
 static thread_local int allocations_before_failure = -1;
 
 void* operator new(std::size_t size) {
-    if (allocations_before_failure == 0) throw std::bad_alloc();
-    if (allocations_before_failure > 0) --allocations_before_failure;
+    // MSVC debug containers allocate a two-pointer iterator proxy, even in
+    // noexcept constructors. Only fault-inject larger result-storage allocations.
+    if (size > 2 * sizeof(void*)) {
+        if (allocations_before_failure == 0) {
+            allocations_before_failure = -1;
+            throw std::bad_alloc();
+        }
+        if (allocations_before_failure > 0) --allocations_before_failure;
+    }
     if (void* ptr = std::malloc(size == 0 ? 1 : size)) return ptr;
     throw std::bad_alloc();
 }
