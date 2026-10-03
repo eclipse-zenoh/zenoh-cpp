@@ -54,7 +54,7 @@ class Transport : public Owned<::z_owned_transport_t> {
 #endif
 
     /// @brief Copy constructor.
-    Transport(const Transport& other) : Owned(nullptr) { this->_clone_from(other, ::z_transport_clone); }
+    Transport(const Transport& other) : Owned(nullptr) { this->_clone_from(other); }
 
     /// @brief Move constructor.
     Transport(Transport&& other) = default;
@@ -64,7 +64,7 @@ class Transport : public Owned<::z_owned_transport_t> {
     /// @brief Assignment operator.
     Transport& operator=(const Transport& other) {
         if (this != &other) {
-            this->_clone_from(other, ::z_transport_clone);
+            this->_clone_from(other);
         }
         return *this;
     }

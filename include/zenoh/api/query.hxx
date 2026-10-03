@@ -253,7 +253,7 @@ class Query : public Owned<::z_owned_query_t> {
     /// The query responses will be sent only when the last clone is destroyed.
     Query clone() const {
         Query q(zenoh::detail::null_object);
-        q._clone_from(*this, ::z_query_clone);
+        q._clone_from(*this);
         return q;
     };
 };

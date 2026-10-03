@@ -58,7 +58,7 @@ class Hello : public Owned<::z_owned_hello_t> {
     }
 
     /// @brief Copy constructor.
-    Hello(const Hello& other) : Owned(nullptr) { this->_clone_from(other, ::z_hello_clone); };
+    Hello(const Hello& other) : Owned(nullptr) { this->_clone_from(other); };
 
     /// @brief Move constructor.
     Hello(Hello&& other) = default;
@@ -68,7 +68,7 @@ class Hello : public Owned<::z_owned_hello_t> {
     /// @brief Assignment operator.
     Hello& operator=(const Hello& other) {
         if (this != &other) {
-            this->_clone_from(other, ::z_hello_clone);
+            this->_clone_from(other);
         }
         return *this;
     };

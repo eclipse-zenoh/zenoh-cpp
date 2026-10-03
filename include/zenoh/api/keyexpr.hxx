@@ -70,7 +70,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
 
     /// @brief Copy constructor.
     KeyExpr(const KeyExpr& other) : KeyExpr(zenoh::detail::null_object) {
-        this->_clone_from(other, ::z_keyexpr_clone);
+        this->_clone_from(other);
     };
 
     KeyExpr(KeyExpr&& other) = default;
@@ -199,7 +199,7 @@ class KeyExpr : public Owned<::z_owned_keyexpr_t> {
     /// @brief Assignment operator.
     KeyExpr& operator=(const KeyExpr& other) {
         if (this != &other) {
-            this->_clone_from(other, ::z_keyexpr_clone);
+            this->_clone_from(other);
         }
         return *this;
     };

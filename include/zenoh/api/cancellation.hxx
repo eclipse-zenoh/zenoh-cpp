@@ -35,6 +35,7 @@ class CancellationToken : public Owned<::z_owned_cancellation_token_t> {
     ///
     /// Cancelling a token also cancels all of its copies.
     CancellationToken(const CancellationToken& other) : Owned(nullptr) {
+        // zenoh-pico has no generic C++ z_clone overload for cancellation token, so pass the clone function explicitly.
         this->_clone_from(other, ::z_cancellation_token_clone);
     }
 

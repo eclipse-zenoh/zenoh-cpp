@@ -125,7 +125,7 @@ class Link : public Owned<::z_owned_link_t> {
     }
 
     /// @brief Copy constructor.
-    Link(const Link& other) : Owned(nullptr) { this->_clone_from(other, ::z_link_clone); }
+    Link(const Link& other) : Owned(nullptr) { this->_clone_from(other); }
 
     /// @brief Move constructor.
     Link(Link&& other) = default;
@@ -135,7 +135,7 @@ class Link : public Owned<::z_owned_link_t> {
     /// @brief Assignment operator.
     Link& operator=(const Link& other) {
         if (this != &other) {
-            this->_clone_from(other, ::z_link_clone);
+            this->_clone_from(other);
         }
         return *this;
     }

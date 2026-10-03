@@ -35,7 +35,7 @@ class Encoding : public Owned<::z_owned_encoding_t> {
     }
 
     /// @brief Copy constructor.
-    Encoding(const Encoding& other) : Encoding() { this->_clone_from(other, ::z_encoding_clone); };
+    Encoding(const Encoding& other) : Encoding() { this->_clone_from(other); };
 
     Encoding(Encoding&& other) = default;
 
@@ -65,7 +65,7 @@ class Encoding : public Owned<::z_owned_encoding_t> {
     /// @brief Assignment operator.
     Encoding& operator=(const Encoding& other) {
         if (this != &other) {
-            this->_clone_from(other, ::z_encoding_clone);
+            this->_clone_from(other);
         }
         return *this;
     };

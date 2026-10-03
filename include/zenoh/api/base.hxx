@@ -90,9 +90,14 @@ class Owned {
         }
         return *this;
     }
-    /// Replace owned value with a clone of `v` made by `clone_fn(OwnedType*, const LoanedType*)`.
+    /// Replace owned value with a clone of `v`.
     /// If `v` is not valid (e.g. moved-from or failed to construct), the value is left in the null state,
     /// since loaning an invalid object is undefined behavior.
+    void _clone_from(const Owned& v) {
+        this->_clone_from(v, [](OwnedType* dst, const auto* src) { ::z_clone(dst, src); });
+    }
+    /// Same as above, but clone with `clone_fn(OwnedType*, const LoanedType*)` instead of generic `z_clone`,
+    /// for types not covered by it.
     template <class CloneFn>
     void _clone_from(const Owned& v, CloneFn clone_fn) {
         ::z_drop(::z_move(this->_0));
