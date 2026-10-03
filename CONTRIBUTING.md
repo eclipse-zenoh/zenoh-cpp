@@ -15,9 +15,6 @@ Eclipse zenoh provides is a stack  designed to
 
 ## Developer resources
 
-For the pinned C++ formatter and the commands used locally and in CI, see
-[C++ formatting](ci/README.md#c-formatting).
-
 Information regarding source code management, builds, coding standards, and
 more.
 
