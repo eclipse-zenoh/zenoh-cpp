@@ -123,7 +123,7 @@ class Bytes : public Owned<::z_owned_bytes_t> {
     /// @brief Construct a shallow copy of this data.
     Bytes clone() const {
         Bytes b;
-        ::z_bytes_clone(&b._0, interop::as_loaned_c_ptr(*this));
+        b._clone_from(*this, ::z_bytes_clone);
         return b;
     }
 

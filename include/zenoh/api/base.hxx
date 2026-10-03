@@ -90,6 +90,18 @@ class Owned {
         }
         return *this;
     }
+    /// Replace owned value with a clone of `v` made by `clone_fn(OwnedType*, const LoanedType*)`.
+    /// If `v` is not valid (e.g. moved-from or failed to construct), the value is left in the null state,
+    /// since loaning an invalid object is undefined behavior.
+    template <class CloneFn>
+    void _clone_from(const Owned& v, CloneFn clone_fn) {
+        ::z_drop(::z_move(this->_0));
+        if (::z_internal_check(v._0)) {
+            clone_fn(&this->_0, ::z_loan(v._0));
+        } else {
+            ::z_internal_null(&this->_0);
+        }
+    }
     /// Destructor drops owned value using z_drop from zenoh API
     ~Owned() { ::z_drop(::z_move(_0)); }
 

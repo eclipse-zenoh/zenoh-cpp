@@ -123,7 +123,7 @@ class Reply : public Owned<::z_owned_reply_t> {
     /// The reply will be sent only when the last clone is destroyed.
     Reply clone() const {
         Reply reply(zenoh::detail::null_object);
-        ::z_reply_clone(&reply._0, interop::as_loaned_c_ptr(*this));
+        reply._clone_from(*this, ::z_reply_clone);
         return reply;
     };
 };

@@ -119,7 +119,7 @@ class Sample : public Owned<::z_owned_sample_t> {
     /// @brief Construct a shallow copy of this sample.
     Sample clone() const {
         Sample s(zenoh::detail::null_object);
-        ::z_sample_clone(&s._0, interop::as_loaned_c_ptr(*this));
+        s._clone_from(*this, ::z_sample_clone);
         return s;
     };
 };

@@ -54,9 +54,7 @@ class Transport : public Owned<::z_owned_transport_t> {
 #endif
 
     /// @brief Copy constructor.
-    Transport(const Transport& other) : Owned(nullptr) {
-        ::z_transport_clone(&this->_0, interop::as_loaned_c_ptr(other));
-    }
+    Transport(const Transport& other) : Owned(nullptr) { this->_clone_from(other, ::z_transport_clone); }
 
     /// @brief Move constructor.
     Transport(Transport&& other) = default;
@@ -66,8 +64,7 @@ class Transport : public Owned<::z_owned_transport_t> {
     /// @brief Assignment operator.
     Transport& operator=(const Transport& other) {
         if (this != &other) {
-            ::z_drop(z_move(this->_0));
-            ::z_transport_clone(&this->_0, interop::as_loaned_c_ptr(other));
+            this->_clone_from(other, ::z_transport_clone);
         }
         return *this;
     }

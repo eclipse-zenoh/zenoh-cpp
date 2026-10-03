@@ -35,15 +35,14 @@ class CancellationToken : public Owned<::z_owned_cancellation_token_t> {
     ///
     /// Cancelling a token also cancels all of its copies.
     CancellationToken(const CancellationToken& other) : Owned(nullptr) {
-        ::z_cancellation_token_clone(interop::as_owned_c_ptr(*this), interop::as_loaned_c_ptr(other));
+        this->_clone_from(other, ::z_cancellation_token_clone);
     }
 
     /// @name Operators
     /// @brief Assignment operator.
     CancellationToken& operator=(const CancellationToken& other) {
         if (this != &other) {
-            ::z_drop(interop::as_moved_c_ptr(*this));
-            ::z_cancellation_token_clone(interop::as_owned_c_ptr(*this), interop::as_loaned_c_ptr(other));
+            this->_clone_from(other, ::z_cancellation_token_clone);
         }
         return *this;
     };
