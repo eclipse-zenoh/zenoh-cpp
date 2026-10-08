@@ -1626,8 +1626,15 @@ class Session : public Owned<::z_owned_session_t> {
         BatchGuard& operator=(const BatchGuard&) = delete;
 
        public:
-        BatchGuard(BatchGuard&&) = default;
-        BatchGuard& operator=(BatchGuard&&) = default;
+        BatchGuard(BatchGuard&& other) : session(other.session) { z_internal_null(&other.session); }
+        BatchGuard& operator=(BatchGuard&& other) {
+            if (this != &other) {
+                stop();
+                session = other.session;
+                z_internal_null(&other.session);
+            }
+            return *this;
+        }
 
         /// @name Methods
 
@@ -1641,10 +1648,14 @@ class Session : public Owned<::z_owned_session_t> {
             }
         }
 
-        ~BatchGuard() {
+        ~BatchGuard() { stop(); }
+
+       private:
+        void stop() {
             if (z_internal_check(this->session)) {
                 zp_batch_stop(z_loan(this->session));
-                z_drop(z_move(this->session));
+                // Release the guard's reference without explicitly closing the shared session.
+                _z_session_rc_drop(&this->session._rc);
             }
         }
     };
