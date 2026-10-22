@@ -69,6 +69,34 @@ void serialize_container() {
     assert(zenoh_test_serialization(m2));
 }
 
+void serialize_sequence_length_test() {
+    const std::vector<std::string> values = {"first", "second"};
+    for (bool report_error : {false, true}) {
+        ext::Serializer serializer;
+        ZResult err = Z_EINVAL;
+        serializer.serialize_sequence_length(values.size(), report_error ? &err : nullptr);
+        if (report_error) assert(err == Z_OK);
+        for (const auto& value : values) serializer.serialize(value);
+        serializer.serialize(uint16_t(500));
+        auto bytes = std::move(serializer).finish();
+        assert(bytes.as_vector() == ext::serialize(std::make_tuple(values, uint16_t(500))).as_vector());
+        ext::Deserializer deserializer(bytes);
+        assert(deserializer.deserialize<std::vector<std::string>>() == values);
+        assert(deserializer.deserialize<uint16_t>() == 500);
+        assert(deserializer.is_done());
+    }
+
+    ext::Serializer empty_serializer;
+    empty_serializer.serialize_sequence_length(0);
+    assert(std::move(empty_serializer).finish().as_vector() == ext::serialize(std::vector<uint8_t>{}).as_vector());
+
+    // Writing a length alone must not add element data.
+    ext::Serializer length_only_serializer;
+    length_only_serializer.serialize_sequence_length(1048576);
+    const std::vector<uint8_t> expected_prefix = {0x80, 0x80, 0x40};
+    assert(std::move(length_only_serializer).finish().as_vector() == expected_prefix);
+}
+
 void deserialize_sequence_length_test() {
     const std::vector<std::string> values = {"first", "second"};
     auto bytes = ext::serialize(std::make_tuple(values, uint16_t(500)));
@@ -176,6 +204,7 @@ int main(int argc, char** argv) {
     serialize_primitive();
     serialize_tuple();
     serialize_container();
+    serialize_sequence_length_test();
     deserialize_sequence_length_test();
     deserialize_sequence_length_error_test();
     serialize_custom();

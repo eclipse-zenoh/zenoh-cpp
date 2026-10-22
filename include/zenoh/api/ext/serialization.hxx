@@ -57,6 +57,16 @@ class Serializer : public Owned<::ze_owned_serializer_t> {
     template <class T>
     void serialize(const T& value, ZResult* err = nullptr);
 
+    /// @brief Write a sequence length without serializing its elements.
+    /// The elements can then be written individually with serialize(). The caller must write exactly length elements.
+    /// @param length number of elements in the sequence.
+    /// @param err if not null, the result code will be written to this location, otherwise ZException exception
+    /// will be thrown in case of error (or the process will abort if exceptions are disabled).
+    void serialize_sequence_length(size_t length, ZResult* err = nullptr) {
+        __ZENOH_RESULT_CHECK(::ze_serializer_serialize_sequence_length(interop::as_loaned_c_ptr(*this), length), err,
+                             "Failed to serialize sequence length");
+    }
+
     /// @brief Finalize serialization and return the underlying `Bytes` object.
     /// @return underlying `Bytes` object.
     Bytes finish() && {
@@ -197,8 +207,7 @@ bool __zenoh_serialize_with_serializer(zenoh::ext::Serializer& serializer, const
 template <class It>
 bool __serialize_sequence_with_serializer(zenoh::ext::Serializer& serializer, It begin, It end, size_t n,
                                           ZResult* err) {
-    __ZENOH_RESULT_CHECK(::ze_serializer_serialize_sequence_length(zenoh::interop::as_loaned_c_ptr(serializer), n), err,
-                         "Failed to serialize sequence length");
+    serializer.serialize_sequence_length(n, err);
     if (err != nullptr && *err != Z_OK) {
         return false;
     }
