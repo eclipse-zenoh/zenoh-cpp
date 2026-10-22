@@ -69,6 +69,86 @@ void serialize_container() {
     assert(zenoh_test_serialization(m2));
 }
 
+void serialize_sequence_length_test() {
+    const std::vector<std::string> values = {"first", "second"};
+    for (bool report_error : {false, true}) {
+        ext::Serializer serializer;
+        ZResult err = Z_EINVAL;
+        serializer.serialize_sequence_length(values.size(), report_error ? &err : nullptr);
+        if (report_error) assert(err == Z_OK);
+        for (const auto& value : values) serializer.serialize(value);
+        serializer.serialize(uint16_t(500));
+        auto bytes = std::move(serializer).finish();
+        assert(bytes.as_vector() == ext::serialize(std::make_tuple(values, uint16_t(500))).as_vector());
+        ext::Deserializer deserializer(bytes);
+        assert(deserializer.deserialize<std::vector<std::string>>() == values);
+        assert(deserializer.deserialize<uint16_t>() == 500);
+        assert(deserializer.is_done());
+    }
+
+    ext::Serializer empty_serializer;
+    empty_serializer.serialize_sequence_length(0);
+    assert(std::move(empty_serializer).finish().as_vector() == ext::serialize(std::vector<uint8_t>{}).as_vector());
+
+    // Writing a length alone must not add element data.
+    ext::Serializer length_only_serializer;
+    length_only_serializer.serialize_sequence_length(1048576);
+    const std::vector<uint8_t> expected_prefix = {0x80, 0x80, 0x40};
+    assert(std::move(length_only_serializer).finish().as_vector() == expected_prefix);
+}
+
+void deserialize_sequence_length_test() {
+    const std::vector<std::string> values = {"first", "second"};
+    auto bytes = ext::serialize(std::make_tuple(values, uint16_t(500)));
+    ext::Deserializer deserializer(bytes);
+    ZResult err = Z_EINVAL;
+    assert(deserializer.deserialize_sequence_length(&err) == values.size());
+    assert(err == Z_OK);
+    assert(!deserializer.is_done());
+    for (const auto& value : values) {
+        assert(deserializer.deserialize<std::string>() == value);
+    }
+    // Reading the sequence length must leave both its elements and the following value available.
+    assert(deserializer.deserialize<uint16_t>() == 500);
+    assert(deserializer.is_done());
+
+    auto empty = ext::serialize(std::vector<uint8_t>{});
+    ext::Deserializer empty_deserializer(empty);
+    assert(empty_deserializer.deserialize_sequence_length(&err) == 0);
+    assert(err == Z_OK);
+    assert(empty_deserializer.is_done());
+
+    // A length-only prefix advertising 1,048,576 elements can be read and rejected
+    // against a limit before allocating a container or attempting to read any elements.
+    Bytes length_only(std::vector<uint8_t>{0x80, 0x80, 0x40});
+    ext::Deserializer bounded_deserializer(length_only);
+    const auto length = bounded_deserializer.deserialize_sequence_length();
+    assert(length == 1048576);
+    assert(bounded_deserializer.is_done());
+}
+
+void deserialize_sequence_length_error_test() {
+    // Missing and truncated length prefixes fail in both error-reporting modes.
+    for (const auto& wire : {std::vector<uint8_t>{}, std::vector<uint8_t>{0x81}}) {
+        Bytes bytes(wire);
+        ext::Deserializer deserializer(bytes);
+        ZResult err = Z_OK;
+        assert(deserializer.deserialize_sequence_length(&err) == 0);
+        assert(err != Z_OK);
+#ifdef __cpp_exceptions
+        ext::Deserializer throwing_deserializer(bytes);
+        bool caught = false;
+        try {
+            throwing_deserializer.deserialize_sequence_length();
+        } catch (const ZException& exception) {
+            caught = true;
+            assert(exception.e == err);
+        }
+        assert(caught);
+#endif
+    }
+}
+
 struct CustomStruct {
     std::vector<double> vd;
     int32_t i;
@@ -124,6 +204,9 @@ int main(int argc, char** argv) {
     serialize_primitive();
     serialize_tuple();
     serialize_container();
+    serialize_sequence_length_test();
+    deserialize_sequence_length_test();
+    deserialize_sequence_length_error_test();
     serialize_custom();
     binary_format_test();
 }
