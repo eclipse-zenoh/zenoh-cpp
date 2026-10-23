@@ -18,6 +18,7 @@
 #include <iostream>
 #include <string_view>
 
+#include "../detail/string.hxx"
 #include "../zenohc.hxx"
 #include "base.hxx"
 #include "interop.hxx"
@@ -39,11 +40,9 @@ class Id : public Copyable<::z_id_t> {
 
     /// @brief Formats the ``Id`` into 16-digit hex string (LSB-first order).
     std::string to_string() const {
-        ::z_owned_string_t s;
-        ::z_id_to_string(interop::as_copyable_c_ptr(*this), &s);
-        std::string ss(::z_string_data(::z_loan(s)), ::z_string_len(::z_loan(s)));
-        ::z_drop(::z_move(s));
-        return ss;
+        detail::String s;
+        ::z_id_to_string(interop::as_copyable_c_ptr(*this), interop::as_owned_c_ptr(s));
+        return s.as_string();
     }
 
     /// @name Operators
@@ -56,10 +55,9 @@ class Id : public Copyable<::z_id_t> {
 
 /// @brief Print ``Id`` in the hex format.
 inline std::ostream& operator<<(std::ostream& os, const Id& id) {
-    ::z_owned_string_t s;
-    ::z_id_to_string(interop::as_copyable_c_ptr(id), &s);
-    os << std::string_view(::z_string_data(::z_loan(s)), ::z_string_len(::z_loan(s)));
-    ::z_drop(::z_move(s));
+    detail::String s;
+    ::z_id_to_string(interop::as_copyable_c_ptr(id), interop::as_owned_c_ptr(s));
+    os << s.as_string_view();
     return os;
 }
 }  // namespace zenoh

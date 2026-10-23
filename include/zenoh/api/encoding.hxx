@@ -14,6 +14,7 @@
 #pragma once
 #include <string>
 
+#include "../detail/string.hxx"
 #include "../zenohc.hxx"
 #include "base.hxx"
 #include "interop.hxx"
@@ -43,11 +44,9 @@ class Encoding : public Owned<::z_owned_encoding_t> {
 
     /// @brief Get string representation of encoding.
     std::string as_string() const {
-        ::z_owned_string_t s;
-        ::z_encoding_to_string(interop::as_loaned_c_ptr(*this), &s);
-        std::string out = std::string(::z_string_data(::z_loan(s)), ::z_string_len(::z_loan(s)));
-        ::z_drop(::z_move(s));
-        return out;
+        detail::String s;
+        ::z_encoding_to_string(interop::as_loaned_c_ptr(*this), interop::as_owned_c_ptr(s));
+        return s.as_string();
     }
 
     /// @brief Set a schema to this encoding from a string.
