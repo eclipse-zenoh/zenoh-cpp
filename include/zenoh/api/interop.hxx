@@ -13,7 +13,9 @@
 #pragma once
 
 #include <optional>
+#include <string>
 #include <type_traits>
+#include <vector>
 
 #include "base.hxx"
 
@@ -179,6 +181,23 @@ OwnedType move_to_c_obj(Owned<OwnedType>&& owned_cpp_obj) {
 }
 
 namespace detail {
+// Copy the strings into a vector and consume the C array, including on exceptions.
+inline std::vector<std::string> string_array_to_vector(::z_owned_string_array_t& array) {
+    struct DropGuard {
+        ::z_owned_string_array_t& array;
+        ~DropGuard() { ::z_drop(::z_move(array)); }
+    } guard{array};
+    const auto* loaned = ::z_loan(guard.array);
+    const size_t count = ::z_string_array_len(loaned);
+    std::vector<std::string> result;
+    result.reserve(count);
+    for (size_t i = 0; i < count; ++i) {
+        const auto* value = ::z_string_array_get(loaned, i);
+        result.emplace_back(::z_string_data(value), ::z_string_len(value));
+    }
+    return result;
+}
+
 template <class OwnedType>
 bool check(const Owned<OwnedType>& owned_cpp_obj) {
     return ::z_internal_check(*as_owned_c_ptr(owned_cpp_obj));
