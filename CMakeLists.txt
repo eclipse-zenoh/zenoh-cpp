@@ -41,6 +41,9 @@ add_library(zenohcxx INTERFACE)
 target_include_directories(zenohcxx INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 if(ZENOHCXX_ZENOHPICO)
+    include(FetchContent)
+	include(zenoh-pico)
+
 	if(NOT TARGET zenohpico::lib) # Only find if target is not already available
 		find_package(zenohpico REQUIRED)
 	endif()
@@ -58,6 +61,9 @@ if(ZENOHCXX_ZENOHPICO)
 endif()
 
 if(ZENOHCXX_ZENOHC)
+    include(FetchContent)
+	include(zenoh-c)
+	
 	if(NOT TARGET zenohc::lib) # Only find if target is not already available
 		find_package(zenohc REQUIRED)
 	endif()
