@@ -230,6 +230,42 @@ void publisher_get_keyexpr() {
     assert(publisher.get_keyexpr().as_string_view() == "zenoh/test_publisher_keyexpr");
 }
 
+void put_delete_sub_timestamp() {
+    KeyExpr ke("zenoh/test_timestamp");
+    auto [session1, session2] = open_test_session_pair();
+    auto subscriber = session2.declare_subscriber(ke, channels::FifoChannel(16));
+
+    std::this_thread::sleep_for(1s);
+
+    auto put_ts = session1.new_timestamp();
+    Session::PutOptions put_opts;
+    put_opts.timestamp = put_ts;
+    session1.put(ke, "data", std::move(put_opts));
+
+    auto delete_ts = session1.new_timestamp();
+    Session::DeleteOptions delete_opts;
+    delete_opts.timestamp = delete_ts;
+    session1.delete_resource(ke, std::move(delete_opts));
+
+    std::this_thread::sleep_for(1s);
+
+    auto res = subscriber.handler().try_recv();
+    assert(std::holds_alternative<Sample>(res));
+    assert(std::get<Sample>(res).get_kind() == Z_SAMPLE_KIND_PUT);
+    auto ts = std::get<Sample>(res).get_timestamp();
+    assert(ts.has_value());
+    assert(ts->get_time() == put_ts.get_time());
+    assert(ts->get_id() == put_ts.get_id());
+
+    res = subscriber.handler().try_recv();
+    assert(std::holds_alternative<Sample>(res));
+    assert(std::get<Sample>(res).get_kind() == Z_SAMPLE_KIND_DELETE);
+    ts = std::get<Sample>(res).get_timestamp();
+    assert(ts.has_value());
+    assert(ts->get_time() == delete_ts.get_time());
+    assert(ts->get_id() == delete_ts.get_id());
+}
+
 int main(int argc, char** argv) {
     test_with_alloc<CommonAllocator>();
 #if defined Z_FEATURE_SHARED_MEMORY && defined Z_FEATURE_UNSTABLE_API
@@ -237,5 +273,6 @@ int main(int argc, char** argv) {
     test_with_alloc<SHMAllocator, false>();
 #endif
     publisher_get_keyexpr();
+    put_delete_sub_timestamp();
     return 0;
 }

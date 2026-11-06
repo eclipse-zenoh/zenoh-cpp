@@ -671,6 +671,7 @@ class Session : public Owned<::z_owned_session_t> {
 #if defined(Z_FEATURE_UNSTABLE_API)
         opts.reliability = options.reliability;
 #endif
+        opts.timestamp = interop::as_copyable_c_ptr(options.timestamp);
 
         __ZENOH_RESULT_CHECK(::z_delete(interop::as_loaned_c_ptr(*this), interop::as_loaned_c_ptr(key_expr), &opts),
                              err, "Failed to perform delete operation");
