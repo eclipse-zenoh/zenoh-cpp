@@ -35,6 +35,7 @@
 #include "api/scout.hxx"
 #include "api/session.hxx"
 #include "api/subscriber.hxx"
+#include "api/wasm_runtime.hxx"
 #include "api/timestamp.hxx"
 #if defined(Z_FEATURE_UNSTABLE_API) && (defined(ZENOHCXX_ZENOHC) || Z_FEATURE_CONNECTIVITY == 1)
 #include "api/link.hxx"
